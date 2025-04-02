@@ -1,0 +1,14 @@
+ags-hyprpanel-git
+catppuccin-gtk-theme-macchiato
+grimblast-git
+kvantum-theme-catppuccin-git
+matugen-bin
+microsoft-edge-stable-bin
+mullvad-vpn-bin
+paru
+paru-debug
+qt6ct-kde
+razergenie
+rtw89-dkms-git
+ttf-joypixels
+zsh-vi-mode

@@ -1,0 +1,3 @@
+dev.vencord.Vesktop
+org.prismlauncher.PrismLauncher
+org.remmina.Remmina
