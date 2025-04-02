@@ -1,0 +1,112 @@
+{
+  "bar.layouts": {
+    "0": {
+      "left": [
+        "dashboard",
+        "systray",
+        "cava"
+      ],
+      "middle": [
+        "microphone",
+        "workspaces",
+        "volume"
+      ],
+      "right": [
+        "windowtitle",
+        "network",
+        "bluetooth",
+        "notifications",
+        "weather",
+        "clock"
+      ]
+    },
+    "1": {
+      "left": [
+        "dashboard",
+        "workspaces",
+        "windowtitle"
+      ],
+      "middle": [
+        "media"
+      ],
+      "right": [
+        "volume",
+        "clock",
+        "notifications"
+      ]
+    },
+    "2": {
+      "left": [
+        "ram",
+        "cpu",
+        "cputemp"
+      ],
+      "middle": [
+        "microphone",
+        "workspaces",
+        "volume"
+      ],
+      "right": [
+        "updates",
+        "notifications",
+        "weather",
+        "clock"
+      ]
+    }
+  },
+  "bar.autoHide": "never",
+  "theme.bar.floating": false,
+  "theme.bar.buttons.enableBorders": false,
+  "theme.bar.border.location": "none",
+  "theme.bar.enableShadow": false,
+  "bar.workspaces.show_icons": false,
+  "theme.bar.location": "top",
+  "menus.clock.weather.location": "Bucharest",
+  "theme.bar.transparent": true,
+  "bar.bluetooth.label": false,
+  "theme.bar.buttons.network.enableBorder": false,
+  "bar.network.showWifiInfo": false,
+  "bar.network.label": false,
+  "theme.font.size": "1rem",
+  "bar.workspaces.show_numbered": false,
+  "bar.workspaces.showWsIcons": false,
+  "menus.clock.time.military": false,
+  "menus.clock.time.hideSeconds": false,
+  "bar.clock.showTime": true,
+  "theme.bar.buttons.clock.enableBorder": false,
+  "bar.clock.format": "%H:%M:%S",
+  "wallpaper.pywal": true,
+  "wallpaper.image": "/home/bida/Downloads/flower-field-3.png",
+  "wallpaper.enable": true,
+  "theme.matugen": false,
+  "theme.matugen_settings.variation": "standard_1",
+  "theme.matugen_settings.mode": "dark",
+  "theme.matugen_settings.scheme_type": "tonal-spot",
+  "bar.windowtitle.custom_title": true,
+  "theme.bar.buttons.windowtitle.enableBorder": false,
+  "theme.bar.buttons.workspaces.enableBorder": false,
+  "menus.media.hideAuthor": false,
+  "menus.media.displayTime": false,
+  "bar.workspaces.monitorSpecific": true,
+  "bar.workspaces.showApplicationIcons": false,
+  "bar.workspaces.numbered_active_indicator": "highlight",
+  "menus.clock.weather.key": "/home/bida/keys/weather.json",
+  "bar.workspaces.showAllActive": true,
+  "theme.bar.buttons.workspaces.smartHighlight": true,
+  "bar.workspaces.applicationIconOncePerWorkspace": true,
+  "bar.workspaces.workspaceMask": false,
+  "bar.customModules.microphone.label": true,
+  "bar.customModules.weather.unit": "metric",
+  "menus.clock.weather.unit": "metric",
+  "menus.clock.weather.enabled": true,
+  "theme.bar.buttons.modules.microphone.enableBorder": false,
+  "bar.customModules.cava.leftClick": "menu:media",
+  "bar.customModules.cava.stereo": false,
+  "theme.bar.buttons.modules.cava.enableBorder": false,
+  "bar.customModules.microphone.rightClick": "bash ~/.local/bin/toggle_mute",
+  "menus.dashboard.stats.enabled": false,
+  "bar.volume.rightClick": "pactl set-sink-mute @DEFAULT_SINK@ toggle",
+  "bar.volume.label": true,
+  "theme.bar.buttons.modules.cpu.enableBorder": false,
+  "bar.customModules.cpuTemp.sensor": "/sys/devices/pci0000:00/0000:00:18.3/hwmon/hwmon5/temp1_input"
+}
