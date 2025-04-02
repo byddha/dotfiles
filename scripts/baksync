@@ -1,0 +1,7 @@
+#!/bin/sh
+
+pkglist_dir="$HOME/dotfiles"
+
+pacman -Qqen >"$pkglist_dir/pkglist.txt"
+pacman -Qqem >"$pkglist_dir/pkglist-aur.txt"
+flatpak list --app --columns=application > "$pkglist_dir/flatpak.txt"

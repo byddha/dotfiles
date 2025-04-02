@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# Store current window ID (more specific than class)
+PREV_WINDOW_ID=$(hyprctl activewindow -j | jq -r '.address')
+
+# Toggle system-wide mic mute (CORRECTED)
+pactl set-source-mute @DEFAULT_SOURCE@ toggle
+
+# Focus Discord window (Vesktop)
+hyprctl dispatch focuswindow "class:vesktop"
+
+# Small delay to ensure focus
+sleep 0.2
+
+# Send mute shortcut to Discord (Ctrl+Shift+M)
+wtype -M ctrl -M shift m -m shift -m ctrl
+
+# Slightly longer delay before switching back
+sleep 0.1
+
+# Return to previous window using the specific window ID
+hyprctl dispatch focuswindow "address:$PREV_WINDOW_ID"
