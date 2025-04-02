@@ -1,5 +1,5 @@
 configuration{
-    modi: "drun,clipboard:~/.local/bin/rofi-cliphist,window,combi,ssh";
+    modi: "drun,clipboard:~/scripts/rofi-cliphist,window,combi,ssh";
     icon-theme: "Adwaita";
     show-icons: true;
     terminal: "kitty";
