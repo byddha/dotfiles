@@ -1,0 +1,3 @@
+[submodule "lua/plugins/debugging/dotnet"]
+	path = lua/plugins/debugging/dotnet
+	url = https://github.com/drzbida/dap-dotnet
