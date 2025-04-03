@@ -5,6 +5,7 @@ git clone https://github.com/drzbida/dotfiles ~/dotfiles
 cd ~/dotfiles
 stow .
 ```
+
 - Neovim in docker
 ```bash
 docker run -w /root -it --rm alpine:edge sh -uelic '
@@ -14,6 +15,19 @@ docker run -w /root -it --rm alpine:edge sh -uelic '
   cd ~/.config/nvim
   nvim
 '
+```
+
+- Fresh arch hyprland install
+```bash
+sudo pacman -S --needed base-devel
+git clone https://aur.archlinux.org/paru.git
+cd paru
+makepkg -si
+sudo pacman -S - < pkglist.txt
+paru -S - < pgklist-aur.txt
+git clone https://github.com/drzbida/dotfiles ~/dotfiles
+cd ~/dotfiles
+stow .
 ```
 
 # Docs quick access
