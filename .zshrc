@@ -119,3 +119,12 @@ source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
 source /usr/share/zsh/plugins/zsh-vi-mode/zsh-vi-mode.plugin.zsh
 
 export PATH="$PATH:$HOME/scripts"
+
+eval "$(zoxide init zsh)"
+
+. "$HOME/.local/bin/env"
+
+export ROCM_PATH=/opt/rocm
+# export HSA_OVERRIDE_GFX_VERSION=12.0.1
+export HIP_VISIBLE_DEVICES=0 
+
