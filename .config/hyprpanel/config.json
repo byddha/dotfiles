@@ -4,7 +4,8 @@
       "left": [
         "dashboard",
         "systray",
-        "cava"
+        "cava",
+        "custom/vpn"
       ],
       "middle": [
         "microphone",

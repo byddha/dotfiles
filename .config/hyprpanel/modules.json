@@ -1,0 +1,18 @@
+{
+    "custom/vpn": {
+        "icon": {
+            "fortivpn": "󱕽",
+            "mullvad": "󰦝",
+            "both": "󰕥",
+            "none": "󰦞"
+        },
+        "label": "{display}",
+        "tooltip": "{details}",
+        "execute": "~/.config/hyprpanel/scripts/vpn/status.sh",
+        "interval": 5000,
+        "hideOnEmpty": false,
+        "actions": {
+            "onRightClick": "~/.config/hyprpanel/scripts/vpn/openfortitoggle.sh"
+        }
+    }
+}
