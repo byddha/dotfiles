@@ -125,6 +125,13 @@ eval "$(zoxide init zsh)"
 . "$HOME/.local/bin/env"
 
 export ROCM_PATH=/opt/rocm
-# export HSA_OVERRIDE_GFX_VERSION=12.0.1
 export HIP_VISIBLE_DEVICES=0 
 
+function y() {
+	local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
+	yazi "$@" --cwd-file="$tmp"
+	if cwd="$(command cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
+		builtin cd -- "$cwd"
+	fi
+	rm -f -- "$tmp"
+}
