@@ -77,8 +77,8 @@
   "theme.bar.buttons.clock.enableBorder": false,
   "bar.clock.format": "%H:%M:%S",
   "wallpaper.pywal": true,
-  "wallpaper.image": "/home/bida/dotfiles/wallpaper.jpg",
-  "wallpaper.enable": true,
+  "wallpaper.image": "",
+  "wallpaper.enable": false,
   "theme.matugen": false,
   "theme.matugen_settings.variation": "standard_1",
   "theme.matugen_settings.mode": "dark",
@@ -110,5 +110,7 @@
   "bar.volume.label": true,
   "theme.bar.buttons.modules.cpu.enableBorder": false,
   "bar.customModules.cpuTemp.sensor": "/sys/devices/pci0000:00/0000:00:18.3/hwmon/hwmon5/temp1_input",
-  "theme.bar.menus.monochrome": false
+  "theme.bar.menus.monochrome": false,
+  "theme.bar.menus.background": "#000000",
+  "theme.bar.buttons.style": "default"
 }
