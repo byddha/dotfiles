@@ -1,6 +1,8 @@
 ags-hyprpanel-git
 catppuccin-gtk-theme-macchiato
 grimblast-git
+kanagawa-gtk-theme-git
+kanagawa-icon-theme-git
 kvantum-theme-catppuccin-git
 matugen-bin
 microsoft-edge-stable-bin
@@ -11,4 +13,5 @@ qt6ct-kde
 razergenie
 rtw89-dkms-git
 ttf-joypixels
+zen-browser-bin
 zsh-vi-mode

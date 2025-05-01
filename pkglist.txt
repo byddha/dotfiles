@@ -1,3 +1,4 @@
+act
 amd-ucode
 archlinux-xdg-menu
 ark
@@ -12,6 +13,7 @@ btrfs-progs
 cliphist
 corectrl
 dart-sass
+docker
 dolphin
 dotnet-runtime
 dotnet-sdk
@@ -50,6 +52,7 @@ linux
 linux-firmware
 linux-headers
 ly
+mpv
 nano
 neovim
 networkmanager
@@ -77,17 +80,24 @@ pipewire-jack
 pipewire-pulse
 polkit-kde-agent
 power-profiles-daemon
+pyenv
+python-pip
 qbittorrent
 qt5-wayland
 qt6-wayland
+rocm-hip-sdk
+rocm-opencl-sdk
 rocm-smi-lib
 rofi-wayland
+samba
 slurp
 smartmontools
+spotify-launcher
 steam
 stow
 swww
 timeshift
+tk
 ttf-0xproto-nerd
 ttf-3270-nerd
 ttf-agave-nerd
@@ -166,6 +176,7 @@ xf86-video-vmware
 xorg-server
 xorg-xinit
 yazi
+zoxide
 zram-generator
 zsh
 zsh-autosuggestions
