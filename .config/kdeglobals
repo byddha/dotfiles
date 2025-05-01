@@ -1,3 +1,6 @@
+[Icons]
+Theme=Kanagawa
+
 [KDE]
 TerminalApplication=kitty
 TerminalService=kitty.desktop
