@@ -88,6 +88,7 @@ qt6-wayland
 rocm-hip-sdk
 rocm-opencl-sdk
 rocm-smi-lib
+rofi-calc
 rofi-wayland
 samba
 slurp

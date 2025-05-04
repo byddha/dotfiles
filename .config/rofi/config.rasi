@@ -1,17 +1,17 @@
 configuration{
-    modi: "drun,clipboard:~/scripts/rofi-cliphist,window,combi,ssh";
-    icon-theme: "Kanagawa";
+    modi: "drun,clipboard:~/scripts/rofi-cliphist,calc,window,ssh";
+    icon-theme: "Adwaita";
     show-icons: true;
     terminal: "kitty";
     drun-display-format: "{icon} {name}";
     location: 0;
     disable-history: false;
     hide-scrollbar: true;
-    display-combi: "    All ";
     display-drun: "    Run ";
     display-window: "    Win";
     display-ssh: "    SSH ";
     display-clipboard: "    Clip";
+    display-calc: "    Calc";
     sidebar-mode: true;
 }
 
