@@ -1,0 +1,13 @@
+[project]
+name = "hyprsnake"
+version = "0.1.0"
+description = "Event emitter for Hyprland socket events; Custom handlers for custom hyprsnake_api events"
+requires-python = ">=3.8"
+authors = [
+  { name = "bida", email = "andrei-bp@protonmail.com" }
+]
+dependencies = []
+
+[tool.pyright]
+reportExplicitAny = false
+reportAny = false
