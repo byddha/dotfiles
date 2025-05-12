@@ -1,5 +1,6 @@
 ags-hyprpanel-git
 catppuccin-gtk-theme-macchiato
+freetype2-qdoled
 grimblast-git
 kanagawa-gtk-theme-git
 kanagawa-icon-theme-git
@@ -13,5 +14,6 @@ qt6ct-kde
 razergenie
 rtw89-dkms-git
 ttf-joypixels
+vk-hdr-layer-kwin6-git
 zen-browser-bin
 zsh-vi-mode

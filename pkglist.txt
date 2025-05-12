@@ -7,12 +7,14 @@ base-devel
 blueman
 bluez
 bluez-utils
+bridge-utils
 brightnessctl
 btop
 btrfs-progs
 cliphist
 corectrl
 dart-sass
+dnsmasq
 docker
 dolphin
 dotnet-runtime
@@ -24,6 +26,7 @@ fd
 firefox
 flatpak
 fzf
+gamescope
 git
 git-delta
 github-cli
@@ -34,6 +37,7 @@ gst-plugin-pipewire
 gvfs
 gwenview
 htop
+hypridle
 hyprland
 hyprpicker
 imagemagick
@@ -44,7 +48,9 @@ jq
 kitty
 kvantum
 lazygit
+lib32-mangohud
 libgtop
+libguestfs
 libnotify
 libpulse
 libva-intel-driver
@@ -52,6 +58,8 @@ linux
 linux-firmware
 linux-headers
 ly
+mangohud
+mesa-utils
 mpv
 nano
 neovim
@@ -83,6 +91,7 @@ power-profiles-daemon
 pyenv
 python-pip
 qbittorrent
+qemu-full
 qt5-wayland
 qt6-wayland
 rocm-hip-sdk
@@ -93,10 +102,13 @@ rofi-wayland
 samba
 slurp
 smartmontools
+socat
 spotify-launcher
 steam
 stow
+swtpm
 swww
+thunar
 timeshift
 tk
 ttf-0xproto-nerd
@@ -154,9 +166,13 @@ ttf-ubuntu-mono-nerd
 ttf-ubuntu-nerd
 ttf-victor-mono-nerd
 ttf-zed-mono-nerd
+umu-launcher
 vim
+virt-manager
+virt-viewer
 vulkan-intel
 vulkan-radeon
+vulkan-tools
 wf-recorder
 wget
 wine
