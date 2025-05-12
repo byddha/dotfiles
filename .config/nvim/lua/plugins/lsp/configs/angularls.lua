@@ -27,6 +27,6 @@ return {
         new_config.cmd = cmd
     end,
     root_dir = function(fname)
-        return util.root_pattern("angular.json", ".git")(fname) or vim.fn.getcwd()
+        return util.root_pattern "angular.json"(fname)
     end,
 }
