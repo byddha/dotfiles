@@ -15,6 +15,14 @@ async def main():
         if keycode != 133:
             em.extend_hold("panel")
 
+    @em.on("activewindowv2")
+    def activewindowv2(addr: str):
+        em.extend_hold("panel")
+
+    @em.on("focusedmonv2")
+    def focusedmonv2(addr: str):
+        em.extend_hold("panel")
+
     @em.on("submap")
     def submap(name: str):
         nonlocal latest_submap
@@ -22,7 +30,7 @@ async def main():
 
     @em.on(
         "keyhold_start",
-        hold_threshold=0.5,
+        hold_threshold=1.0,
         hold_id="panel",
         key_filter=lambda kb, code: code == WIN_KEY,
     )
@@ -36,7 +44,7 @@ async def main():
 
     @em.on(
         "keyhold_end",
-        hold_threshold=0.5,
+        hold_threshold=1.0,
         hold_id="panel",
         key_filter=lambda kb, code: code == WIN_KEY,
     )
