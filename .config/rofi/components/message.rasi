@@ -1,0 +1,9 @@
+error-message {
+    padding: 50px;
+    background-color: @background;
+    text-color: @foreground;
+}
+textbox {
+    background-color: @background;
+    text-color: @foreground;
+}

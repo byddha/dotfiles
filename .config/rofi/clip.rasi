@@ -1,0 +1,48 @@
+@import "shared/colors.rasi"
+@import "shared/fonts.rasi"
+@import "components/window.rasi"
+@import "components/inputbar.rasi"
+@import "components/listview.rasi"
+@import "components/scrollbar.rasi"
+@import "components/element.rasi"
+@import "components/message.rasi"
+
+* {
+    background-color:            transparent;
+}
+
+configuration {
+    modi: "clipboard:~/.config/rofi/scripts/rofi-cliphist.sh";
+    display-clipboard: " Clip";
+}
+
+window {
+    children: [ listview-split, wrap ];
+    background-color: transparent;
+    border: 0px;
+}
+
+wrap {
+    expand: false;
+    orientation: vertical;
+    children: [ inputbar, message ];
+    background-color: @background;
+    border: 0px 2px 0px 2px solid;
+    border-color: @selected;
+    padding: 5px;
+}
+
+listview-split {
+    children: [ icon-current-entry, listview ];
+}
+
+icon-current-entry {
+    size: 50%;
+}
+
+listview {
+    columns: 1;
+    lines: 6;
+    border: 2px 2px 0px 2px solid;
+    border-color: @selected;
+}

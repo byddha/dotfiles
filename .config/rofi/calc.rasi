@@ -1,0 +1,37 @@
+@import "shared/colors.rasi"
+@import "shared/fonts.rasi"
+@import "components/window.rasi"
+@import "components/mainbox.rasi"
+@import "components/inputbar.rasi"
+@import "components/listview.rasi"
+@import "components/scrollbar.rasi"
+@import "components/element.rasi"
+@import "components/message.rasi"
+
+configuration {
+    modi: "calc";
+    display-calc: " Calc";
+}
+
+mainbox {
+    children: [listview, message, inputbar];
+}
+
+textbox {
+    vertical-align: 0.5;
+    horizontal-align: 0.5;
+    padding: 10px;
+    text-color: @urgent;
+    border: 2px 0px 0px 0px solid;
+    border-color: @selected;
+}
+
+entry {
+    width: 350px;
+    placeholder: "Calculate...";
+}
+
+listview {
+    columns: 1;
+    lines: 5;
+}

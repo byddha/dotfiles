@@ -1,0 +1,34 @@
+inputbar {
+    enabled: true;
+    spacing: 20px;
+    margin: 0% 8%;
+    padding: 0px;
+    border: 0px;
+    background-color: @background;
+    text-color: @foreground;
+    children: [ "prompt", "entry" ];
+}
+
+prompt {
+    enabled: true;
+    padding: 15px;
+    border-radius: 15px;
+    background-color: @selected;
+    text-color: @background;
+}
+
+textbox-prompt-colon {
+    expand: false;
+    str: "::";
+}
+
+entry {
+    expand: false;
+    width: 350px;
+    padding: 15px 20px;
+    border-radius: 15px;
+    background-color: @background-alt;
+    text-color: @foreground;
+    cursor: text;
+    placeholder: "Search...";
+}

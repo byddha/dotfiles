@@ -1,0 +1,23 @@
+@import "shared/colors.rasi"
+@import "shared/fonts.rasi"
+@import "components/window.rasi"
+@import "components/mainbox.rasi"
+@import "components/inputbar.rasi"
+@import "components/listview.rasi"
+@import "components/scrollbar.rasi"
+@import "components/element.rasi"
+@import "components/message.rasi"
+
+configuration {
+    modi:                       "drun";
+    show-icons:                 true;
+    display-drun:               " Apps";
+    drun-display-format:        "{name}";
+    icon-theme:                 "Adwaita";
+}
+
+listview {
+    columns: 7;
+    lines: 1;
+    layout: vertical;
+}

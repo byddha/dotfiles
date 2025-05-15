@@ -1,0 +1,10 @@
+mainbox {
+    enabled: true;
+    spacing: 20px;
+    margin: 0px;
+    padding: 10px;
+    border: 0px solid;
+    border-radius: 0px;
+    background-color: transparent;
+    children: [ "listview", "inputbar" ];
+}
