@@ -128,7 +128,7 @@ class EventBus:
         else:  # state == "up"
             # keyup
             for fn in self._handlers.get("keyup", []):
-                fn(keyboard=kb, keycode=code)  # type: ignore
+                fn(keyboard=kb, keycode=code, mods=mods)  # type: ignore
 
             # complete hold
             for hid, st in list(self._hold_state.items()):
