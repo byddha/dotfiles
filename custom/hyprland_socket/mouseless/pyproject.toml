@@ -10,3 +10,6 @@ dependencies = [
     "pyqt6>=6.9.0",
     "qasync>=0.27.1",
 ]
+
+[tool.pyright]
+typeCheckingMode = "standard"
