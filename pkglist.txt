@@ -1,5 +1,6 @@
 act
 amd-ucode
+appmenu-gtk-module
 archlinux-xdg-menu
 ark
 base
@@ -49,6 +50,7 @@ kitty
 kvantum
 lazygit
 lib32-mangohud
+libappindicator-gtk3
 libgtop
 libguestfs
 libnotify
@@ -99,6 +101,7 @@ rocm-opencl-sdk
 rocm-smi-lib
 rofi-calc
 rofi-wayland
+rofimoji
 samba
 slurp
 smartmontools
@@ -173,6 +176,9 @@ virt-viewer
 vulkan-intel
 vulkan-radeon
 vulkan-tools
+webkit2gtk
+webkit2gtk-4.1
+wev
 wf-recorder
 wget
 wine
@@ -193,6 +199,7 @@ xf86-video-vmware
 xorg-server
 xorg-xinit
 yazi
+ydotool
 zoxide
 zram-generator
 zsh

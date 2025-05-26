@@ -14,6 +14,6 @@ qt6ct-kde
 razergenie
 rtw89-dkms-git
 ttf-joypixels
-vk-hdr-layer-kwin6-git
+wl-kbptr
 zen-browser-bin
 zsh-vi-mode
