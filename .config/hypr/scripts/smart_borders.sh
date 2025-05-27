@@ -3,7 +3,7 @@
 # Started from https://github.com/devadathanmb/hyprland-smart-borders/blob/main/dynamic-borders.sh
 # Refactored it to my liking and fixed some issues (particularly with applications that spawn new windows for context menus)
 
-source ipc_helper.sh
+source ~/dotfiles/.config/hypr/scripts/ipc_helper.sh
 
 
 set_border() {
