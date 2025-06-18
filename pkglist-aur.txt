@@ -1,6 +1,7 @@
 ags-hyprpanel-git
 catppuccin-gtk-theme-macchiato
 freetype2-qdoled
+gallery-dl-bin
 grimblast-git
 kanagawa-gtk-theme-git
 kanagawa-icon-theme-git
@@ -12,8 +13,10 @@ paru
 paru-debug
 qt6ct-kde
 razergenie
+rofi-nerdy
 rtw89-dkms-git
 ttf-joypixels
 wl-kbptr
+xf86-video-vmware
 zen-browser-bin
 zsh-vi-mode
