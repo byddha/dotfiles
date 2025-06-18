@@ -1,0 +1,23 @@
+@import "shared/colors.rasi"
+@import "components/window.rasi"
+@import "components/mainbox.rasi"
+@import "components/inputbar.rasi"
+@import "components/listview.rasi"
+@import "components/scrollbar.rasi"
+@import "components/element.rasi"
+
+configuration {
+    modi: "nerdy";
+    display-nerdy: " Nerd Icons";
+}
+
+listview {
+    columns: 4;
+    lines: 4;
+    flow: horizontal;
+}
+
+element {
+    font: "JetBrainsMono Nerd Font 24";
+    vertical-align: 0.5;
+}
