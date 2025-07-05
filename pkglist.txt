@@ -22,6 +22,7 @@ docker
 dolphin
 dotnet-runtime
 dotnet-sdk
+dotnet-sdk-8.0
 dunst
 efibootmgr
 fastfetch
@@ -173,6 +174,7 @@ ttf-ubuntu-nerd
 ttf-victor-mono-nerd
 ttf-zed-mono-nerd
 umu-launcher
+unzip
 vim
 virt-manager
 virt-viewer

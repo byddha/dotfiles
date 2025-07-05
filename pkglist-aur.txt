@@ -1,5 +1,6 @@
 ags-hyprpanel-git
 catppuccin-gtk-theme-macchiato
+flameshot-git
 freetype2-qdoled
 gallery-dl-bin
 grimblast-git
@@ -12,6 +13,7 @@ mullvad-vpn-bin
 paru
 paru-debug
 qt6ct-kde
+r2modman-bin
 razergenie
 rofi-nerdy
 rtw89-dkms-git
