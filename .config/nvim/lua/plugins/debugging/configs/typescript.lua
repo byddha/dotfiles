@@ -1,8 +1,9 @@
 local dap = require "dap"
 
-local mason_registry = require "mason-registry"
-local vscode_js_debug = mason_registry.get_package "js-debug-adapter"
-local js_dap_executable = vscode_js_debug:get_install_path() .. "/js-debug/src/dapDebugServer.js"
+local mason_root = vim.fn.expand "$MASON"
+local js_dbg_pkg = mason_root .. "/packages/js-debug-adapter"
+local js_dap_executable = js_dbg_pkg .. "/js-debug/src/dapDebugServer.js"
+
 for _, adapter in ipairs { "pwa-node", "pwa-chrome", "pwa-msedge", "node-terminal", "pwa-extensionHost" } do
     dap.adapters[adapter] = {
         type = "server",

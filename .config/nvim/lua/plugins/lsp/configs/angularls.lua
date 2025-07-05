@@ -1,11 +1,6 @@
-local ok, mason_registry = pcall(require, "mason-registry")
-if not ok then
-    vim.notify("Could not load mason registry for angularls", vim.log.levels.ERROR)
-    return nil
-end
-
 local util = require "lspconfig/util"
-local angularls_path = mason_registry.get_package("angular-language-server"):get_install_path()
+local mason_root = vim.fn.expand "$MASON"
+local angularls_path = mason_root .. "/packages/angular-language-server"
 local cmd = {
     "ngserver",
     "--stdio",

@@ -63,10 +63,6 @@ return {
         require "plugins.debugging.configs.debugpy"
         require "plugins.debugging.configs.typescript"
         require "plugins.debugging.configs.codelldb"
-
-        local ok, _ = pcall(require, "plugins.debugging.dotnet.dotnet")
-        if not ok then
-            vim.notify("dap-dotnet not installed", vim.log.levels.WARN)
-        end
+        local _, _ = pcall(require, "plugins.debugging.dotnet.dotnet")
     end,
 }
