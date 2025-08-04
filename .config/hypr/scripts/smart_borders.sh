@@ -61,8 +61,11 @@ update_workspace_borders() {
 
         # Process *real* windows
         if [[ "$is_floating" == "true" ]]; then
-            # Real floating windows always get borders (noborder 0)
-            set_border "$address" 0
+            if [[ "$window_count" -eq 1 ]]; then
+                set_border "$address" 1
+            else
+                set_border "$address" 0
+            fi
         elif [[ "$window_count" -eq 1 ]]; then
             # Single tiled window gets no border (noborder 1)
             set_border "$address" 1
