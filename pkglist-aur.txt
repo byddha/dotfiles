@@ -13,6 +13,7 @@ mullvad-vpn-bin
 paru
 paru-debug
 qt6ct-kde
+quickshell
 r2modman-bin
 razergenie
 rofi-nerdy

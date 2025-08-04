@@ -1,6 +1,7 @@
 7zip
 act
 amd-ucode
+android-tools
 appmenu-gtk-module
 archlinux-xdg-menu
 ark
