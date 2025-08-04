@@ -38,6 +38,7 @@ return {
             "bashls",
             "ruff",
             "lua_ls",
+            "qmlls",
         }
 
         local lspconfig = require "lspconfig"
