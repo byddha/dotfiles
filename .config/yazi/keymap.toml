@@ -1,0 +1,5 @@
+[mgr]
+prepend_keymap = [
+    { on = "*", run = "plugin fzf" },
+    { on = "z", run = "plugin zoxide" }
+]
