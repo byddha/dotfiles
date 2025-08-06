@@ -25,6 +25,7 @@ o.relativenumber = true
 o.number = true
 o.numberwidth = 2
 o.ruler = false
+vim.opt.sessionoptions = { "buffers", "curdir", "tabpages", "winsize", "help", "globals", "skiprtp", "folds" }
 -- }}}
 
 -- {{{ Indentation Settings
