@@ -76,7 +76,7 @@
   "bar.clock.showTime": true,
   "theme.bar.buttons.clock.enableBorder": false,
   "bar.clock.format": "%H:%M:%S",
-  "wallpaper.pywal": true,
+  "wallpaper.pywal": false,
   "wallpaper.image": "",
   "wallpaper.enable": false,
   "theme.matugen": false,
@@ -112,5 +112,8 @@
   "bar.customModules.cpuTemp.sensor": "/sys/devices/pci0000:00/0000:00:18.3/hwmon/hwmon5/temp1_input",
   "theme.bar.menus.monochrome": false,
   "theme.bar.menus.background": "#000000",
-  "theme.bar.buttons.style": "default"
+  "theme.bar.buttons.style": "default",
+  "bar.customModules.storage.paths": [
+    "/"
+  ]
 }
