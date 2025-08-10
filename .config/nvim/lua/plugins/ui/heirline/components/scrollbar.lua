@@ -3,7 +3,7 @@ local surrounds = require "plugins.ui.heirline.surrounds"
 
 local ScrollBarIcon = {
     provider = function()
-        return "" .. " "
+        return "" .. " "
     end,
     hl = { fg = "bright_bg" },
 }
