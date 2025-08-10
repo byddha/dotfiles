@@ -1,6 +1,6 @@
 return {
     "saghen/blink.cmp",
-    -- dir = "D:/Dev/neovim-plugins/blink.cmp/",
+
     dependencies = {
         "rafamadriz/friendly-snippets",
         "echasnovski/mini.nvim",
