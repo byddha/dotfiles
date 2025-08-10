@@ -1,6 +1,6 @@
 return {
     "nvim-tree/nvim-tree.lua",
-    cmd = { "NvimTreeToggle", "NvimTreeFocus" },
+    event = "VeryLazy",
     keys = {
         {
             "<leader>e",
@@ -8,7 +8,6 @@ return {
             desc = "Tree UI",
         },
     },
-    lazy = false,
     opts = {
         filters = { dotfiles = false },
         disable_netrw = true,
