@@ -70,7 +70,7 @@
   "bar.network.label": false,
   "theme.font.size": "1rem",
   "bar.workspaces.show_numbered": false,
-  "bar.workspaces.showWsIcons": false,
+  "bar.workspaces.showWsIcons": true,
   "menus.clock.time.military": false,
   "menus.clock.time.hideSeconds": false,
   "bar.clock.showTime": true,
@@ -89,12 +89,12 @@
   "menus.media.hideAuthor": false,
   "menus.media.displayTime": false,
   "bar.workspaces.monitorSpecific": true,
-  "bar.workspaces.showApplicationIcons": false,
-  "bar.workspaces.numbered_active_indicator": "highlight",
+  "bar.workspaces.showApplicationIcons": true,
+  "bar.workspaces.numbered_active_indicator": "underline",
   "menus.clock.weather.key": "/home/bida/keys/weather.json",
-  "bar.workspaces.showAllActive": true,
+  "bar.workspaces.showAllActive": false,
   "theme.bar.buttons.workspaces.smartHighlight": true,
-  "bar.workspaces.applicationIconOncePerWorkspace": true,
+  "bar.workspaces.applicationIconOncePerWorkspace": false,
   "bar.workspaces.workspaceMask": false,
   "bar.customModules.microphone.label": true,
   "bar.customModules.weather.unit": "metric",
@@ -115,5 +115,7 @@
   "theme.bar.buttons.style": "default",
   "bar.customModules.storage.paths": [
     "/"
-  ]
+  ],
+  "bar.workspaces.applicationIconEmptyWorkspace": "",
+  "bar.workspaces.workspaces": 5
 }
