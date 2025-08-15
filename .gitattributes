@@ -1,1 +1,1 @@
-dotnet.lua filter=git-crypt diff=git-crypt
+encrypted_dotnet.lua filter=git-crypt diff=git-crypt

@@ -68,7 +68,7 @@ return {
             pattern = "cs",
             once = true,
             callback = function()
-                require "plugins.debugging.configs.dotnet"
+                require "plugins.debugging.configs.encrypted_dotnet"
             end,
         })
     end,
