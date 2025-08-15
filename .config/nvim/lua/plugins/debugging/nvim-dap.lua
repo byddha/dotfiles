@@ -63,6 +63,7 @@ return {
         require "plugins.debugging.configs.debugpy"
         require "plugins.debugging.configs.typescript"
         require "plugins.debugging.configs.codelldb"
+        require "plugins.debugging.configs.dotnet"
         local _, _ = pcall(require, "plugins.debugging.dotnet.dotnet")
     end,
 }
