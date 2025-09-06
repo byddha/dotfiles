@@ -31,7 +31,10 @@ zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
 zstyle ':completion:*' menu no
 
 # Aliases
-alias ls='ls --color'
+alias ls='eza --color=always --group-directories-first --icons'
+alias lst='eza --color=always --group-directories-first --icons --tree'
+alias lst2='eza --color=always --group-directories-first --icons --tree --level=2'
+alias lg=='lazygit'
 function y() {
 	local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
 	yazi "$@" --cwd-file="$tmp"
