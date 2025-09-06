@@ -12,6 +12,7 @@ microsoft-edge-stable-bin
 mullvad-vpn-bin
 paru
 paru-debug
+protontricks
 qt6ct-kde
 quickshell
 r2modman-bin
@@ -19,7 +20,7 @@ razergenie
 rofi-nerdy
 rtw89-dkms-git
 ttf-joypixels
+visual-studio-code-bin
 wl-kbptr
 xf86-video-vmware
 zen-browser-bin
-zsh-vi-mode

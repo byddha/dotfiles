@@ -5,6 +5,7 @@ android-tools
 appmenu-gtk-module
 archlinux-xdg-menu
 ark
+aspnet-runtime
 base
 base-devel
 blender
@@ -26,6 +27,7 @@ dotnet-sdk
 dotnet-sdk-8.0
 dunst
 efibootmgr
+eza
 fastfetch
 fd
 firefox
@@ -33,6 +35,7 @@ flatpak
 fzf
 gamescope
 git
+git-crypt
 git-delta
 github-cli
 grim
@@ -104,8 +107,8 @@ qt6-wayland
 rocm-hip-sdk
 rocm-opencl-sdk
 rocm-smi-lib
+rofi
 rofi-calc
-rofi-wayland
 rofimoji
 samba
 slurp
@@ -208,5 +211,3 @@ ydotool
 zoxide
 zram-generator
 zsh
-zsh-autosuggestions
-zsh-syntax-highlighting

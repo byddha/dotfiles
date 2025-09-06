@@ -1,5 +1,5 @@
 com.bambulab.BambuStudio
-com.github.Matoking.protontricks
+com.heroicgameslauncher.hgl
 dev.vencord.Vesktop
 org.prismlauncher.PrismLauncher
 org.remmina.Remmina
