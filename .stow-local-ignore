@@ -2,6 +2,8 @@ flatpak.txt
 pkglist-aur.txt
 pkglist.txt
 scripts
+windows
+custom
 
 RCS
 .+,v
@@ -17,6 +19,7 @@ _darcs
 \.git
 \.gitignore
 \.gitmodules
+\.gitattributes
 
 .+~          # emacs backup files
 \#.*\#       # emacs autosave files
@@ -24,6 +27,3 @@ _darcs
 ^/README.*
 ^/LICENSE.*
 ^/COPYING
-
-wallpaper.jpg
-\.custom
