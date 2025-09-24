@@ -1,0 +1,18 @@
+window {
+    transparency: "real";
+    location: south;
+    anchor: south;
+    fullscreen: false;
+    width: 45%;
+    x-offset: 0px;
+    y-offset: 0px;
+
+    enabled: true;
+    margin: 0px;
+    padding: 0px;
+    border: 2px 2px 0px 2px solid;
+    border-radius: 5px;
+    border-color: @selected;
+    background-color: @background;
+    cursor: "default";
+}

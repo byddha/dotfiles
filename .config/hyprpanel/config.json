@@ -6,7 +6,9 @@
         "systray",
         "cava",
         "custom/vpn",
-        "custom/recording"
+        "custom/recording",
+        "custom/vpn",
+        "battery"
       ],
       "middle": [
         "microphone",
