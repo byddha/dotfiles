@@ -86,6 +86,7 @@ if command -v ng >/dev/null 2>&1; then
 fi
 
 
+autoload -Uz compinit && compinit
 zinit cdreplay -q
 
 # To customize prompt, run `p10k configure` or edit ~/dotfiles/.p10k.zsh.
