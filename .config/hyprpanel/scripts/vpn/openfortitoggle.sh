@@ -13,7 +13,7 @@ else
     fi
     
     if [ -n "$PASSWORD" ]; then
-        sudo openfortivpn -p "$PASSWORD" &
+        sudo openfortivpn --set-dns=1 -p "$PASSWORD" &
         
         notify-send "FortiVPN" "Connecting..." -i network-vpn
     else
