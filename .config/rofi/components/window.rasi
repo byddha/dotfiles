@@ -3,7 +3,7 @@ window {
     location: south;
     anchor: south;
     fullscreen: false;
-    width: 30%;
+    width: 45%;
     x-offset: 0px;
     y-offset: 0px;
 

@@ -5,7 +5,8 @@
         "dashboard",
         "systray",
         "cava",
-        "custom/vpn"
+        "custom/vpn",
+        "battery"
       ],
       "middle": [
         "microphone",
