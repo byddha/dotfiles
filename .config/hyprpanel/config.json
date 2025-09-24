@@ -104,7 +104,7 @@
   "bar.customModules.cava.leftClick": "menu:media",
   "bar.customModules.cava.stereo": false,
   "theme.bar.buttons.modules.cava.enableBorder": false,
-  "bar.customModules.microphone.rightClick": "bash ~/scripts/toggle_mute",
+  "bar.customModules.microphone.rightClick": "bash ~/dotfiles/.config/hyprpanel/scripts/toggle_mute",
   "menus.dashboard.stats.enabled": false,
   "bar.volume.rightClick": "pactl set-sink-mute @DEFAULT_SINK@ toggle",
   "bar.volume.label": true,
