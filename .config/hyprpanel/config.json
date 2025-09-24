@@ -14,6 +14,7 @@
       ],
       "right": [
         "windowtitle",
+        "custom/airplane",
         "network",
         "bluetooth",
         "notifications",

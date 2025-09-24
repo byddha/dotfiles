@@ -14,5 +14,15 @@
         "actions": {
             "onRightClick": "~/.config/hyprpanel/scripts/vpn/openfortitoggle.sh"
         }
+    },
+    "custom/airplane": {
+        "icon": {
+            "airplane": "󰀝"
+        },
+        "label": "Mode",
+        "tooltip": "Airplane mode is activated",
+        "execute": "~/.config/hyprpanel/scripts/airplane/airplane_mode.sh",
+        "interval": 15000,
+        "hideOnEmpty": true
     }
 }
