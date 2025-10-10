@@ -1,0 +1,33 @@
+[
+    {
+        "alang": ["eng?", "und"],
+        "slang": ["en%-us", "eng?", "und"],
+        "condition": "sub.forced"
+    },
+    {
+        "alang": ["jpn", "ja"],
+        "slang": "eng?",
+        "blacklist": [ "sign" ]
+    },
+    {
+        "inherit": "^",
+        "slang": "und"
+    },
+    {
+        "alang": "eng?",
+        "slang": [ "en%-us", "eng?", "und" ],
+        "whitelist": [ "sign", "song" ]
+    },
+    {
+        "alang": "eng?",
+        "slang": "no"
+    },
+    {
+        "alang": "*",
+        "slang": [ "en%-us", "eng?", "und" ]
+    },
+    {
+        "alang": "no",
+        "slang": "no"
+    }
+]
