@@ -1,5 +1,5 @@
-com.bambulab.BambuStudio
 com.heroicgameslauncher.hgl
+com.mastermindzh.tidal-hifi
 dev.vencord.Vesktop
 org.prismlauncher.PrismLauncher
 org.remmina.Remmina

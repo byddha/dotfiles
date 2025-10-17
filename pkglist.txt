@@ -8,6 +8,7 @@ ark
 aspnet-runtime
 base
 base-devel
+bind
 blender
 blueman
 bluez
@@ -43,7 +44,6 @@ grub
 grub-btrfs
 gst-plugin-pipewire
 gvfs
-gwenview
 htop
 hypridle
 hyprland
@@ -114,7 +114,6 @@ samba
 slurp
 smartmontools
 socat
-spotify-launcher
 steam
 stow
 swtpm
@@ -177,6 +176,7 @@ ttf-ubuntu-mono-nerd
 ttf-ubuntu-nerd
 ttf-victor-mono-nerd
 ttf-zed-mono-nerd
+tumbler
 umu-launcher
 unzip
 vim
