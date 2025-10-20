@@ -1,0 +1,282 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+readonly C_RESET='\033[0m'
+readonly C_BOLD='\033[1m'
+readonly C_CYAN='\033[36m'
+readonly C_YELLOW='\033[33m'
+readonly C_GREEN='\033[32m'
+
+find_steam_libraries() {
+    local -a libraries
+
+    local vdf_locations=(
+        "$HOME/.local/share/Steam/steamapps/libraryfolders.vdf"
+        "$HOME/.steam/steam/steamapps/libraryfolders.vdf"
+    )
+
+    local vdf_file=""
+    for location in "${vdf_locations[@]}"; do
+        if [[ -f "$location" ]]; then
+            vdf_file="$location"
+            break
+        fi
+    done
+
+    if [[ -z "$vdf_file" ]]; then
+        echo "Error: Could not find libraryfolders.vdf" >&2
+        return 1
+    fi
+
+    while IFS= read -r line; do
+        if [[ "$line" =~ \"path\"[[:space:]]+\"([^\"]+)\" ]]; then
+            local library_path="${BASH_REMATCH[1]}"
+            if [[ -d "${library_path}/steamapps" ]]; then
+                libraries+=("${library_path}/steamapps")
+            fi
+        fi
+    done < "$vdf_file"
+
+    if [[ ${#libraries[@]} -eq 0 ]]; then
+        local default_steam="$HOME/.local/share/Steam/steamapps"
+        if [[ -d "$default_steam" ]]; then
+            libraries+=("$default_steam")
+        fi
+    fi
+
+    printf '%s\n' "${libraries[@]}"
+}
+
+parse_vdf_value() {
+    echo "$1" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's/^"//' -e 's/"$//'
+}
+
+get_vdf_value() {
+    local file="$1"
+    local key="$2"
+
+    if [[ ! -f "$file" ]]; then
+        return 1
+    fi
+
+    local value=$(grep -E "^[[:space:]]*\"${key}\"[[:space:]]+" "$file" | head -n1 | sed -E "s/^[[:space:]]*\"${key}\"[[:space:]]+//")
+
+    if [[ -n "$value" ]]; then
+        parse_vdf_value "$value"
+        return 0
+    fi
+
+    return 1
+}
+
+get_game_info() {
+    local appmanifest="$1"
+    local appid="$2"
+
+    if [[ ! -f "$appmanifest" ]]; then
+        return 1
+    fi
+
+    local name
+    local installdir
+    name=$(get_vdf_value "$appmanifest" "name") || return 1
+    installdir=$(get_vdf_value "$appmanifest" "installdir") || return 1
+
+    echo "${name}|${installdir}"
+    return 0
+}
+
+main() {
+    local show_all=false
+    for arg in "$@"; do
+        case "$arg" in
+            --all)
+                show_all=true
+                ;;
+            *)
+                echo "Unknown argument: $arg" >&2
+                echo "Usage: $0 [--all]" >&2
+                exit 1
+                ;;
+        esac
+    done
+
+    echo "Scanning Steam libraries for Proton compatibility data..."
+
+    local -a steam_libraries
+    while IFS= read -r library; do
+        steam_libraries+=("$library")
+    done < <(find_steam_libraries)
+
+    if [[ ${#steam_libraries[@]} -eq 0 ]]; then
+        echo "Error: No Steam libraries found" >&2
+        exit 1
+    fi
+
+    echo "Found ${#steam_libraries[@]} Steam library location(s):"
+    for lib in "${steam_libraries[@]}"; do
+        echo "  - $lib"
+    done
+    echo ""
+
+    # Arrays for Proton games
+    local -a proton_names
+    local -a proton_install_paths
+    local -a proton_compatdata_paths
+
+    # Arrays for Native games
+    local -a native_names
+    local -a native_install_paths
+
+    # Iterate through each library and collect all games
+    for steamapps_path in "${steam_libraries[@]}"; do
+        # Find all appmanifest files
+        for appmanifest in "$steamapps_path"/appmanifest_*.acf; do
+            if [[ ! -f "$appmanifest" ]]; then
+                continue
+            fi
+
+            # Extract app ID from filename (appmanifest_XXXXX.acf)
+            local filename=$(basename "$appmanifest")
+            local appid="${filename#appmanifest_}"
+            appid="${appid%.acf}"
+
+            # Get game information
+            local game_info
+            game_info=$(get_game_info "$appmanifest" "$appid") || continue
+
+            local game_name="${game_info%%|*}"
+            local install_dir="${game_info##*|}"
+            local install_path="${steamapps_path}/common/${install_dir}"
+
+            # Check if this game has Proton compatibility data
+            local compatdata_dir="${steamapps_path}/compatdata/${appid}/pfx"
+            if [[ -d "$compatdata_dir" ]]; then
+                # Proton game
+                proton_names+=("$game_name")
+                proton_install_paths+=("$install_path")
+                proton_compatdata_paths+=("$compatdata_dir")
+            else
+                # Native game
+                native_names+=("$game_name")
+                native_install_paths+=("$install_path")
+            fi
+        done
+    done
+
+    # Filter out Proton versions unless --all is specified
+    if [[ "$show_all" == false ]]; then
+        # Filter Proton games
+        local -a filtered_proton_names
+        local -a filtered_proton_install
+        local -a filtered_proton_compatdata
+
+        for i in "${!proton_names[@]}"; do
+            if [[ ! "${proton_names[$i]}" =~ ^Proton[[:space:]] ]] && \
+               [[ ! "${proton_names[$i]}" =~ ^Steam\ Linux\ Runtime[[:space:]] ]] && \
+               [[ ! "${proton_names[$i]}" =~ ^Steamworks\ Common[[:space:]] ]]; then
+                filtered_proton_names+=("${proton_names[$i]}")
+                filtered_proton_install+=("${proton_install_paths[$i]}")
+                filtered_proton_compatdata+=("${proton_compatdata_paths[$i]}")
+            fi
+        done
+
+        proton_names=("${filtered_proton_names[@]}")
+        proton_install_paths=("${filtered_proton_install[@]}")
+        proton_compatdata_paths=("${filtered_proton_compatdata[@]}")
+
+        # Filter Native games
+        local -a filtered_native_names
+        local -a filtered_native_install
+
+        for i in "${!native_names[@]}"; do
+            if [[ ! "${native_names[$i]}" =~ ^Proton[[:space:]] ]] && \
+               [[ ! "${native_names[$i]}" =~ ^Steam\ Linux\ Runtime[[:space:]] ]] && \
+               [[ ! "${native_names[$i]}" =~ ^Steamworks\ Common[[:space:]] ]]; then
+                filtered_native_names+=("${native_names[$i]}")
+                filtered_native_install+=("${native_install_paths[$i]}")
+            fi
+        done
+
+        native_names=("${filtered_native_names[@]}")
+        native_install_paths=("${filtered_native_install[@]}")
+    fi
+
+    local total_native=${#native_names[@]}
+    local total_proton=${#proton_names[@]}
+    local total_games=$((total_native + total_proton))
+
+    if [[ $total_games -eq 0 ]]; then
+        echo "No games found."
+        return
+    fi
+
+    local filter_msg=""
+    if [[ "$show_all" == false ]]; then
+        filter_msg=" (System components hidden, use --all to show all)"
+    fi
+
+    # Display Native Linux Games table
+    if [[ $total_native -gt 0 ]]; then
+        echo -e "${C_BOLD}Native Linux Games (${total_native} games found)${filter_msg}${C_RESET}"
+        echo ""
+
+        # Sort native games by name
+        local -a sorted_native_indices
+        while IFS= read -r idx; do
+            sorted_native_indices+=("$idx")
+        done < <(
+            for i in "${!native_names[@]}"; do
+                echo "$i|${native_names[$i]}"
+            done | sort -t'|' -k2 | cut -d'|' -f1
+        )
+
+        {
+            printf "${C_BOLD}Game Name${C_RESET}\t${C_BOLD}Install Path${C_RESET}\n"
+
+            for idx in "${sorted_native_indices[@]}"; do
+                local name="${native_names[$idx]}"
+                local install="${native_install_paths[$idx]}"
+
+                printf "${C_CYAN}%s${C_RESET}\t${C_YELLOW}%s${C_RESET}\n" "$name" "$install"
+            done
+        } | column -t -s $'\t' -o ' │ '
+
+        echo ""
+    fi
+
+    # Display Proton Games table
+    if [[ $total_proton -gt 0 ]]; then
+        echo -e "${C_BOLD}Proton Games (${total_proton} games found)${filter_msg}${C_RESET}"
+        echo ""
+
+        # Sort proton games by name
+        local -a sorted_proton_indices
+        while IFS= read -r idx; do
+            sorted_proton_indices+=("$idx")
+        done < <(
+            for i in "${!proton_names[@]}"; do
+                echo "$i|${proton_names[$i]}"
+            done | sort -t'|' -k2 | cut -d'|' -f1
+        )
+
+        {
+            printf "${C_BOLD}Game Name${C_RESET}\t${C_BOLD}Install Path${C_RESET}\t${C_BOLD}Compatdata Path${C_RESET}\n"
+
+            for idx in "${sorted_proton_indices[@]}"; do
+                local name="${proton_names[$idx]}"
+                local install="${proton_install_paths[$idx]}"
+                local compatdata="${proton_compatdata_paths[$idx]}"
+
+                printf "${C_CYAN}%s${C_RESET}\t${C_YELLOW}%s${C_RESET}\t${C_GREEN}%s${C_RESET}\n" "$name" "$install" "$compatdata"
+            done
+        } | column -t -s $'\t' -o ' │ '
+
+        echo ""
+    fi
+
+    echo "Total: ${total_native} native + ${total_proton} proton = ${total_games} games"
+}
+
+main "$@"
