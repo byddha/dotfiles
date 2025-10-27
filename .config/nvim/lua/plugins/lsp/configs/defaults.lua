@@ -5,7 +5,7 @@ M.on_attach = function(client, bufnr)
 end
 
 M.on_init = function(client, _)
-    if client.supports_method "textDocument/semanticTokens" then
+    if client:supports_method "textDocument/semanticTokens" then
         client.server_capabilities.semanticTokensProvider = nil
     end
 end

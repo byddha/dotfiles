@@ -41,13 +41,12 @@ return {
             "qmlls",
         }
 
-        local lspconfig = require "lspconfig"
-
         for _, lsp in ipairs(servers) do
             local ok, server_config = pcall(require, "plugins.lsp.configs." .. lsp)
             if ok then
                 local config = merge(default_config(), server_config)
-                lspconfig[lsp].setup(config)
+                vim.lsp.config(lsp, config)
+                vim.lsp.enable(lsp)
             else
                 vim.notify(lsp .. " configuration could not be loaded", vim.log.levels.ERROR)
             end
