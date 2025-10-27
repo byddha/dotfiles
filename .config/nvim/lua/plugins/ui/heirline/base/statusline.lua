@@ -34,6 +34,8 @@ local DefaultStatusline = {
     require "plugins.ui.heirline.components.vimode",
     Space,
     require "plugins.ui.heirline.components.git",
+    Space,
+    require "plugins.ui.heirline.components.pythonvenv",
     Align,
     --
     require "plugins.ui.heirline.components.macrorec",
