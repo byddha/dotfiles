@@ -35,7 +35,7 @@ local DefaultStatusline = {
     Space,
     require "plugins.ui.heirline.components.git",
     Space,
-    require "plugins.ui.heirline.components.pythonvenv",
+    require "plugins.ui.heirline.components.language-env",
     Align,
     --
     require "plugins.ui.heirline.components.macrorec",

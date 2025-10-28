@@ -1,6 +1,25 @@
+local PYTHON_FILES = {
+    ["pyproject.toml"] = true,
+    ["setup.cfg"] = true,
+    ["requirements.txt"] = true,
+    ["Pipfile"] = true,
+    ["tox.ini"] = true,
+    ["uv.lock"] = true,
+}
+
 return {
     condition = function()
-        return vim.bo.filetype == "python"
+        if vim.bo.filetype == "python" then
+            return true
+        end
+        local buf = vim.api.nvim_buf_get_name(0)
+
+        local filename = vim.fn.fnamemodify(buf, ":t")
+        if PYTHON_FILES[filename] then
+            return true
+        end
+
+        return false
     end,
 
     provider = function()
@@ -22,11 +41,11 @@ return {
 
         local venv_path = vim.env.VIRTUAL_ENV
         if venv_path and venv_path ~= "" then
-            return " " .. venv_path .. "/bin/python3"
+            return " " .. venv_path .. "/bin/python"
         end
 
         return " System"
     end,
 
-    hl = { fg = "blue", bold = true },
+    hl = { fg = "green", bold = true },
 }
