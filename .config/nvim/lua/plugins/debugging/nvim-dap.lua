@@ -5,9 +5,6 @@ return {
             "<F5>",
             function()
                 require("overseer").enable_dap()
-                if vim.fn.filereadable ".vscode/launch.json" then
-                    require("dap.ext.vscode").load_launchjs()
-                end
                 require("dap").continue()
             end,
             desc = "Start / Continue execution",
@@ -49,12 +46,12 @@ return {
         },
     },
     config = function()
-        vim.fn.sign_define("DapBreakpoint", { text = "🤡", texthl = "", linehl = "", numhl = "" })
-        vim.fn.sign_define("DapBreakpointCondition", { text = "💀", texthl = "", linehl = "", numhl = "" })
-        vim.fn.sign_define("DapBreakpointRejected", { text = "😵", texthl = "", linehl = "", numhl = "" })
+        vim.fn.sign_define("DapBreakpoint", { text = " ", texthl = "", linehl = "", numhl = "" })
+        vim.fn.sign_define("DapBreakpointCondition", { text = " ", texthl = "", linehl = "", numhl = "" })
+        vim.fn.sign_define("DapBreakpointRejected", { text = " ", texthl = "", linehl = "", numhl = "" })
         vim.fn.sign_define(
             "DapStopped",
-            { text = "", texthl = "DapStopped", linehl = "DapStopped", numhl = "DapStopped" }
+            { text = " ", texthl = "DapStopped", linehl = "DapStopped", numhl = "DapStopped" }
         )
 
         require("nvim-dap-virtual-text").setup()
@@ -63,13 +60,6 @@ return {
         require "plugins.debugging.configs.debugpy"
         require "plugins.debugging.configs.typescript"
         require "plugins.debugging.configs.codelldb"
-
-        vim.api.nvim_create_autocmd("FileType", {
-            pattern = "cs",
-            once = true,
-            callback = function()
-                require "plugins.debugging.configs.encrypted_dotnet"
-            end,
-        })
+        require "plugins.debugging.configs.encrypted_dotnet"
     end,
 }

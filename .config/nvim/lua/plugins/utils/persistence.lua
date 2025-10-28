@@ -38,7 +38,7 @@ return {
         vim.api.nvim_create_autocmd("User", {
             pattern = "PersistenceSavePre",
             callback = function()
-                require("dapui").close()
+                require("dap-view").close(true)
             end,
         })
     end,

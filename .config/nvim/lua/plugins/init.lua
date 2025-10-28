@@ -4,7 +4,13 @@ return {
         lazy = false,
         priority = 1500,
         config = function()
-            require("kanagawa").setup {}
+            require("kanagawa").setup {
+                overrides = function(_)
+                    return {
+                        DapStopped = { bg = "#2a2a37" }, -- LineNr
+                    }
+                end,
+            }
             vim.cmd.colorscheme "kanagawa"
         end,
     },
