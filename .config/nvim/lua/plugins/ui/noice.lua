@@ -32,6 +32,9 @@ return {
                 enabled = false,
                 silent = true,
             },
+            progress = {
+                enabled = false, -- https://github.com/dotnet/roslyn/issues/79939
+            },
         },
         presets = {
             bottom_search = true,

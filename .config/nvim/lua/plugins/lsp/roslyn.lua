@@ -1,13 +1,8 @@
 return {
     "seblj/roslyn.nvim",
-    -- dir = "D:/Dev/roslyn.nvim",
     ft = "cs",
     opts = {
         config = {
-            -- exe = {
-            --     "dotnet",
-            --     "D:/Dev/roslyn/artifacts/obj/Microsoft.CodeAnalysis.LanguageServer/Debug/net9.0/Microsoft.CodeAnalysis.LanguageServer.dll",
-            -- },
             handlers = {
                 ["textDocument/hover"] = function(err, result, ctx, config)
                     if result and result.contents and result.contents.value then
