@@ -1,6 +1,11 @@
 return {
     "folke/sidekick.nvim",
     opts = {
+        nes = {
+            enabled = function(_)
+                return false
+            end,
+        },
         cli = {
             mux = {
                 backend = "zellij",
