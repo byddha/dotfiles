@@ -56,6 +56,20 @@ return {
             desc = "Resume",
         },
         {
+            "<leader>fz",
+            function()
+                Snacks.picker.zoxide()
+            end,
+            desc = "Zoxide",
+        },
+        {
+            "<leader>fu",
+            function()
+                Snacks.picker.undo()
+            end,
+            desc = "Undo Tree",
+        },
+        {
             "<leader>uC",
             function()
                 Snacks.picker.colorschemes()
