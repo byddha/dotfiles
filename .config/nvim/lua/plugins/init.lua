@@ -8,6 +8,7 @@ return {
                 overrides = function(_)
                     return {
                         DapStopped = { bg = "#2a2a37" }, -- LineNr
+                        SnacksPickerTree = { bg = "#16161D", fg = "#727169" }, -- NormalFloat, Comment
                     }
                 end,
             }

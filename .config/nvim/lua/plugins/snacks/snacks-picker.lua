@@ -18,7 +18,7 @@ return {
             function()
                 Snacks.picker.files()
             end,
-            desc = "Smart Find Files",
+            desc = "Find files",
         },
         {
             "<leader>,",
@@ -49,7 +49,7 @@ return {
             desc = "Help Pages",
         },
         {
-            "<leader>fR",
+            "<leader>fr",
             function()
                 Snacks.picker.resume()
             end,
