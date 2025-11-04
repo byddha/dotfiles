@@ -1,0 +1,210 @@
+#!/usr/bin/env python
+import sys
+import re
+import subprocess
+from collections import defaultdict
+
+HEADER_COLOR = "\033[1;33m"
+GRAY = "\033[38;5;240m"
+NEW_VERSION_COLOR = "\033[1;32m"
+BOLD = "\033[1m"
+RESET = "\033[0m"
+
+ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
+
+
+def sync_databases():
+    try:
+        _ = subprocess.run(["paru", "-Sy"], check=True)
+        return True
+    except subprocess.CalledProcessError:
+        _ = sys.stderr.write("Error: Failed to sync databases\n")
+        return False
+    except KeyboardInterrupt:
+        _ = sys.stderr.write("\nInterrupted by user\n")
+        sys.exit(130)
+
+
+def get_updates():
+    try:
+        proc = subprocess.run(
+            ["paru", "-Qu", "--color=always"],
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+        )
+        return proc.stdout.decode(errors="ignore").splitlines()
+    except subprocess.CalledProcessError as e:
+        if e.returncode == 1:
+            return []
+        _ = sys.stderr.write(f"Error checking for updates: {e}\n")
+        sys.exit(2)
+    except KeyboardInterrupt:
+        _ = sys.stderr.write("\nInterrupted by user\n")
+        sys.exit(130)
+
+
+def get_prefix(pkg: str) -> str:
+    if not pkg or "-" not in pkg:
+        return pkg or "misc"
+    return pkg.split("-", 1)[0]
+
+
+def parse_package_line(raw_line: str) -> dict[str, str] | None:
+    plain = ANSI_RE.sub("", raw_line)
+    parts = plain.split()
+    if len(parts) < 3 or "->" not in parts:
+        return None
+
+    pkgname = parts[0]
+    arrow_idx = parts.index("->")
+    old_version = " ".join(parts[1:arrow_idx])
+    new_version = " ".join(parts[arrow_idx + 1 :])
+
+    return {"pkgname": pkgname, "old_version": old_version, "new_version": new_version}
+
+
+def format_package_name(pkgname: str, prefix: str, is_other_group: bool =False):
+    """Format package name with faded prefix."""
+    # For "other" group, don't fade anything
+    if is_other_group:
+        return pkgname, len(pkgname)
+
+    # Exact match of group - fade entirely
+    if pkgname == prefix:
+        return f"{GRAY}{pkgname}{RESET}", len(pkgname)
+
+    # Starts with prefix-
+    if pkgname.startswith(prefix + "-"):
+        faded_prefix = f"{GRAY}{prefix}-{RESET}"
+        rest_of_name = pkgname[len(prefix) + 1 :]
+        return faded_prefix + rest_of_name, len(pkgname)
+
+    return pkgname, len(pkgname)
+
+
+def display_grouped_packages(lines):
+    if not lines:
+        print(f"{BOLD}:: No updates available{RESET}")
+        return 0
+
+    groups = defaultdict(list)
+
+    for raw in lines:
+        if not raw.strip():
+            continue
+
+        plain = ANSI_RE.sub("", raw)
+        first = plain.split()[0] if plain.split() else ""
+
+        if first.startswith("::") or first.lower().startswith("total"):
+            groups["misc"].append((raw, None))
+            continue
+
+        prefix = get_prefix(first)
+        parsed = parse_package_line(raw)
+        groups[prefix].append((raw, parsed))
+
+    singleton_items = []
+    final_groups = {}
+
+    for prefix, items in groups.items():
+        if len(items) == 1:
+            singleton_items.extend(items)
+        else:
+            final_groups[prefix] = items
+
+    if singleton_items:
+        final_groups["other"] = singleton_items
+
+    sorted_groups = sorted(final_groups.items(), key=lambda kv: (-len(kv[1]), kv[0]))
+
+    total = sum(len(items) for _, items in sorted_groups)
+    print(f"{BOLD}:: {total} packages to upgrade{RESET}\n")
+
+    for prefix, items in sorted_groups:
+        is_other_group = prefix == "other"
+
+        max_name_width = 0
+        max_new_width = 0
+
+        for raw_line, parsed in items:
+            if parsed:
+                _, visible_len = format_package_name(
+                    parsed["pkgname"], prefix, is_other_group
+                )
+                max_name_width = max(max_name_width, visible_len)
+                max_new_width = max(max_new_width, len(parsed["new_version"]))
+
+        _ = sys.stdout.write(f"{HEADER_COLOR}{prefix}:{RESET}\n")
+
+        for raw_line, parsed in items:
+            if not parsed:
+                _ = sys.stdout.write(raw_line + "\n")
+                continue
+
+            formatted_name, visible_len = format_package_name(
+                parsed["pkgname"], prefix, is_other_group
+            )
+            name_padding = " " * (max_name_width - visible_len)
+            new_padding = " " * (max_new_width - len(parsed["new_version"]))
+
+            line = (
+                f"{formatted_name}{name_padding}  "
+                f"{NEW_VERSION_COLOR}{parsed['new_version']}{RESET}{new_padding} <- "
+                f"{GRAY}{parsed['old_version']}{RESET}"
+            )
+
+            _ = sys.stdout.write(line + "\n")
+
+        _ = sys.stdout.write("\n")
+
+    return total
+
+
+def confirm_upgrade():
+    try:
+        response = input(f"{BOLD}:: Proceed with upgrade? [Y/n]{RESET} ").strip().lower()
+        return response in ("", "y", "yes")
+    except (EOFError, KeyboardInterrupt):
+        print()
+        return False
+
+
+def perform_upgrade():
+    """Execute the system upgrade."""
+    try:
+        _ = subprocess.run(["paru", "-Su"], check=True)
+        return True
+    except subprocess.CalledProcessError:
+        _ = sys.stderr.write("Error: Upgrade failed\n")
+        return False
+    except KeyboardInterrupt:
+        _ = sys.stderr.write("\nInterrupted by user\n")
+        sys.exit(130)
+
+
+def main():
+    if not sync_databases():
+        sys.exit(1)
+
+    print()  
+
+    lines = get_updates()
+    package_count = display_grouped_packages(lines)
+
+    if package_count == 0:
+        sys.exit(0)
+
+    if not confirm_upgrade():
+        print("Upgrade cancelled.")
+        sys.exit(0)
+
+    print()
+
+    if not perform_upgrade():
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
