@@ -11,6 +11,13 @@ return {
     },
     keys = {
         {
+            "<leader>e",
+            function()
+                Snacks.explorer()
+            end,
+            desc = "Open File Explorer",
+        },
+        {
             "<leader>go",
             function()
                 Snacks.lazygit()
