@@ -1,0 +1,130 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ask() { local p="$1" d="${2-}"; if [[ -n $d ]]; then read -rp "$p [$d]: " a; a="${a:-$d}"; else read -rp "$p: " a; fi; printf '%s' "$a"; }
+
+sanitise_name() { printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9._ -]/-/g' | tr ' ' '-'; }
+
+abs_path() { local p="$1"; if command -v realpath >/dev/null 2>&1; then realpath "$p"; elif command -v readlink >/dev/null 2>&1 && readlink -f / >/dev/null 2>&1; then readlink -f "$p"; else (cd "$(dirname "$p")" 2>/dev/null && printf '%s/%s' "$(pwd -P)" "$(basename "$p")") || printf '%s' "$p"; fi; }
+
+is_image_file() {
+  local f="$1"; [[ -f $f ]] || return 1
+  if command -v file >/dev/null 2>&1; then
+    [[ "$(file --mime-type -b "$f" 2>/dev/null || true)" == image/* ]]
+  else
+    case "${f,,}" in *.png|*.svg|*.svgz|*.ico|*.icns|*.xpm|*.jpg|*.jpeg|*.gif) return 0;; esac
+    return 1
+  fi
+}
+
+call_yazi_choose_file() {
+  local tmp; tmp="$(mktemp)"; trap 'rm -f "$tmp"' RETURN
+  yazi --chooser-file="$tmp"
+  [[ -s $tmp ]] || { echo "yazi provided no selection" >&2; return 1; }
+  mapfile -t lines < <(grep -v '^[[:space:]]*$' "$tmp" || true)
+  [[ ${#lines[@]} -eq 1 ]] || { echo "Expected exactly one selection from yazi; got ${#lines[@]}" >&2; return 2; }
+  printf '%s' "${lines[0]}"
+}
+
+download_icon_from_url() {
+  local url="$1" destdir="$2" tmp
+  mkdir -p "$destdir"
+  tmp="$(mktemp)"; trap 'rm -f "$tmp"' RETURN
+  if command -v curl >/dev/null 2>&1; then curl -fsSL --max-redirs 5 -o "$tmp" "$url" || { echo "Download failed" >&2; return 2; }
+  elif command -v wget >/dev/null 2>&1; then wget -q -O "$tmp" "$url" || { echo "Download failed" >&2; return 2; }
+  else echo "curl or wget required" >&2; return 1; fi
+
+  local mt=""
+  if command -v file >/dev/null 2>&1; then mt="$(file --mime-type -b "$tmp" 2>/dev/null || true)"; fi
+
+  if [[ $mt == image/* ]]; then
+    local ext
+    case "$mt" in image/png) ext=png ;; image/svg+xml) ext=svg ;; image/x-icon|image/vnd.microsoft.icon) ext=ico ;; image/jpeg) ext=jpg ;; image/gif) ext=gif ;; *) ext="${url##*.}" ;; esac
+    local out="$destdir/icon.$ext"; mv "$tmp" "$out"
+    is_image_file "$out" || { rm -f "$out"; echo "Downloaded file not an image" >&2; return 3; }
+    printf '%s' "$out"; return 0
+  fi
+
+  if grep -qi "<svg" "$tmp"; then
+    local out="$destdir/icon.svg"
+    awk 'BEGIN{found=0} /<svg/{found=1} found{print} /<\/svg>/{if(found){exit}}' "$tmp" > "$out" || true
+    [[ -s $out && "$(file --mime-type -b "$out" 2>/dev/null || true)" == image/* ]] || { rm -f "$out"; echo "Could not extract valid SVG" >&2; return 4; }
+    printf '%s' "$out"; return 0
+  fi
+
+  echo "Downloaded content not an image and no inline SVG (mime: ${mt:-unknown})" >&2; return 5
+}
+
+# interactive
+name="$(ask 'Name for the application')"; [[ -n $name ]] || { echo "Name required" >&2; exit 1; }
+san_name="$(sanitise_name "$name")"
+desktop_dir="${XDG_DATA_HOME:-$HOME/.local/share}/applications"; mkdir -p "$desktop_dir"
+
+# ICON: must be exactly one of:
+# - 'y' -> yazi chooser (result must be image)
+# - existing file path (after ~ expansion) that is an image
+# - URL starting with http(s)
+icon_input="$(ask "Icon (path, URL starting with http(s), or 'y' for chooser)")"
+icon_path=""
+if [[ $icon_input =~ ^[Yy]$ ]]; then
+  sel="$(call_yazi_choose_file)" || exit 1
+  sel="$(abs_path "$sel")"
+  is_image_file "$sel" || { echo "Selected file is not a recognized image" >&2; exit 1; }
+  icon_path="$sel"
+elif [[ $icon_input =~ ^https?:// ]]; then
+  destdir="${XDG_DATA_HOME:-$HOME/.local/share}/icons/$san_name"
+  icon_path="$(download_icon_from_url "$icon_input" "$destdir")" || exit 1
+else
+  ip="${icon_input/#\~/$HOME}"
+  if [[ -f $ip ]]; then
+    ip="$(abs_path "$ip")"
+    is_image_file "$ip" || { echo "File exists but is not a recognized image" >&2; exit 1; }
+    icon_path="$ip"
+  else
+    echo "Icon input invalid: must be 'y', an existing image path, or an http(s) URL" >&2
+    exit 1
+  fi
+fi
+
+# EXEC: must be exactly one of:
+# - 'y' -> yazi chooser (result must be executable)
+# - a path (contains a '/') pointing to an existing executable
+# - a command+args (no '/') where command exists in PATH
+exec_input="$(ask "Exec (path containing '/', command+args with command in PATH, or 'y' for chooser)")"
+exec_field=""
+if [[ $exec_input =~ ^[Yy]$ ]]; then
+  sel="$(call_yazi_choose_file)" || exit 1
+  sel="$(abs_path "$sel")"
+  [[ -x $sel ]] || { echo "Selected file is not executable" >&2; exit 1; }
+  exec_field="$sel"
+else
+  ei="${exec_input/#\~/$HOME}"
+  if [[ $ei == *'/'* ]]; then
+    first="${ei%% *}"
+    [[ -f $first ]] || { echo "Executable path not found: $first" >&2; exit 1; }
+    [[ -x $first ]] || { echo "File is not executable: $first" >&2; exit 1; }
+    first="$(abs_path "$first")"
+    rest="${ei#"$first"}"; rest="${rest#"${rest%%[! ]*}"}"
+    exec_field="$first${rest:+ $rest}"
+  else
+    cmd="${ei%% *}"
+    command -v "$cmd" >/dev/null 2>&1 || { echo "Command not found in PATH: $cmd" >&2; exit 1; }
+    exec_field="$ei"
+  fi
+fi
+
+term_choice="$(ask 'Run in terminal? (y/N)' "N")"; terminal_default="false"; [[ $term_choice =~ ^[Yy]$ ]] && terminal_default="true"
+
+desktop_file="$desktop_dir/$san_name.desktop"
+cat > "$desktop_file" <<EOF
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=$name
+Exec=$exec_field
+Icon=$icon_path
+Terminal=$terminal_default
+Categories=Utility;
+EOF
+chmod 644 "$desktop_file"
+printf '%s\n' "$desktop_file"
