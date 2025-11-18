@@ -24,5 +24,15 @@
         "execute": "~/.config/hyprpanel/scripts/airplane/airplane_mode.sh",
         "interval": 15000,
         "hideOnEmpty": true
+    },
+    "custom/recording": {
+        "icon": {
+            "recording": "󰻃"
+        },
+        "label": "REC",
+        "tooltip": "Currently recording screen",
+        "execute": "~/.config/hyprpanel/scripts/recording/recording_status.sh",
+        "interval": 3000,
+        "hideOnEmpty": true 
     }
 }
