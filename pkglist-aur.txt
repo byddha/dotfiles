@@ -1,5 +1,6 @@
 ags-hyprpanel-git
 catppuccin-gtk-theme-macchiato
+etcher-bin
 freetype2-qdoled
 gallery-dl-bin
 grimblast-git
@@ -15,6 +16,7 @@ paru-debug
 protontricks
 qimgv-git
 qt6ct-kde
+quickemu-git
 quickshell-git
 r2modman-bin
 razergenie
@@ -22,15 +24,8 @@ rofi-nerdy
 rtw89-dkms-git
 shell-color-scripts-git
 ttf-joypixels
-ttf-ms-win10
-ttf-ms-win10-japanese
-ttf-ms-win10-korean
-ttf-ms-win10-other
-ttf-ms-win10-sea
-ttf-ms-win10-thai
-ttf-ms-win10-zh_cn
-ttf-ms-win10-zh_tw
 visual-studio-code-bin
+winboat-bin
 wl-kbptr
 xf86-video-vmware
 zen-browser-bin

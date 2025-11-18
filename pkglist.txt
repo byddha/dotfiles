@@ -17,12 +17,12 @@ bridge-utils
 brightnessctl
 btop
 btrfs-progs
+chafa
 cliphist
 corectrl
 dart-sass
 dnsmasq
 docker
-dolphin
 dotnet-runtime
 dotnet-sdk
 dotnet-sdk-8.0
@@ -38,6 +38,7 @@ gamescope
 git
 git-crypt
 git-delta
+git-filter-repo
 github-cli
 grim
 grub
@@ -49,6 +50,7 @@ hypridle
 hyprland
 hyprlock
 hyprpicker
+hyprpolkitagent
 imagemagick
 inetutils
 inotify-tools
@@ -108,6 +110,7 @@ qbittorrent
 qemu-full
 qt5-wayland
 qt6-wayland
+ripgrep
 rocm-hip-sdk
 rocm-opencl-sdk
 rocm-smi-lib
@@ -115,6 +118,7 @@ rofi
 rofi-calc
 rofimoji
 samba
+satty
 slurp
 smartmontools
 socat
@@ -122,6 +126,7 @@ steam
 stow
 swtpm
 swww
+syncplay
 thunar
 timeshift
 tk
