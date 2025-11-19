@@ -1,5 +1,4 @@
 ags-hyprpanel-git
-catppuccin-gtk-theme-macchiato
 elephant-calc
 elephant-clipboard
 elephant-desktopapplications
@@ -13,7 +12,6 @@ gallery-dl-bin
 grimblast-git
 kanagawa-gtk-theme-git
 kanagawa-icon-theme-git
-kvantum-theme-catppuccin-git
 matugen-bin
 microsoft-edge-stable-bin
 mullvad-vpn-bin
