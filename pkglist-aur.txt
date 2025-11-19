@@ -1,5 +1,12 @@
 ags-hyprpanel-git
 catppuccin-gtk-theme-macchiato
+elephant-calc
+elephant-clipboard
+elephant-desktopapplications
+elephant-files
+elephant-menus
+elephant-providerlist
+elephant-symbols
 etcher-bin
 freetype2-qdoled
 gallery-dl-bin
@@ -25,6 +32,7 @@ rtw89-dkms-git
 shell-color-scripts-git
 ttf-joypixels
 visual-studio-code-bin
+walker
 winboat-bin
 wl-kbptr
 xf86-video-vmware

@@ -80,6 +80,7 @@ neovim
 networkmanager
 nwg-displays
 nwg-look
+openbsd-netcat
 openfortivpn
 openrazer-daemon
 openssh
