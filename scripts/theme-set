@@ -1,0 +1,78 @@
+#!/bin/bash
+set -e
+
+THEME_NAME="$1"
+BASE16_DIR="$HOME/.config/base16"
+THEME_FILE="$BASE16_DIR/$THEME_NAME.yaml"
+CACHE_DIR="$HOME/.cache/theme"
+
+[[ -z "$THEME_NAME" ]] && echo "Usage: theme-set <theme-name>" && exit 1
+[[ ! -f "$THEME_FILE" ]] && echo "Theme not found: $THEME_NAME" && exit 1
+
+mkdir -p "$CACHE_DIR"
+
+# Parse YAML colors using yq (strip quotes with tr)
+get_color() { yq ".palette.$1" "$THEME_FILE" | tr -d '"'; }
+
+base00=$(get_color base00)
+base01=$(get_color base01)
+base02=$(get_color base02)
+base03=$(get_color base03)
+base04=$(get_color base04)
+base05=$(get_color base05)
+base06=$(get_color base06)
+base07=$(get_color base07)
+base08=$(get_color base08)
+base09=$(get_color base09)
+base0A=$(get_color base0A)
+base0B=$(get_color base0B)
+base0C=$(get_color base0C)
+base0D=$(get_color base0D)
+base0E=$(get_color base0E)
+base0F=$(get_color base0F)
+
+# Generate Kitty theme
+cat > "$CACHE_DIR/kitty.conf" << EOF
+# Base16 theme: $THEME_NAME
+foreground $base05
+background $base00
+selection_foreground $base00
+selection_background $base05
+cursor $base05
+cursor_text_color $base00
+color0 $base00
+color1 $base08
+color2 $base0B
+color3 $base0A
+color4 $base0D
+color5 $base0E
+color6 $base0C
+color7 $base05
+color8 $base03
+color9 $base08
+color10 $base0B
+color11 $base0A
+color12 $base0D
+color13 $base0E
+color14 $base0C
+color15 $base07
+EOF
+
+# Generate Walker colors CSS
+cat > "$CACHE_DIR/walker-colors.css" << EOF
+/* Base16 theme: $THEME_NAME */
+@define-color window_bg_color $base00;
+@define-color accent_bg_color $base0D;
+@define-color theme_fg_color $base05;
+@define-color error_bg_color $base08;
+@define-color error_fg_color $base05;
+EOF
+
+# Save current theme name
+echo "$THEME_NAME" > "$CACHE_DIR/current"
+
+# Reload applications
+pkill -SIGUSR1 kitty 2>/dev/null || true
+qs ipc call theme setTheme "$THEME_NAME" 2>/dev/null || true
+
+echo "Theme set to: $THEME_NAME"

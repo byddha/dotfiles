@@ -77,6 +77,10 @@ prefix = ","
 provider = "menus:nerdfonts"
 
 [[providers.prefixes]]
+prefix = "["
+provider = "menus:colorschemes"
+
+[[providers.prefixes]]
 prefix = "="
 provider = "calc"
 

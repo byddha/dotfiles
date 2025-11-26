@@ -1,8 +1,5 @@
-@define-color window_bg_color #1f1f28;
-@define-color accent_bg_color #7eb3c9;
-@define-color theme_fg_color #ddd8bb;
-@define-color error_bg_color #e46a78;
-@define-color error_fg_color #ddd8bb;
+/* Colors imported from theme-set generated file */
+@import url("/home/bida/.cache/theme/walker-colors.css");
 
 * {
   all: unset;
@@ -34,9 +31,7 @@ scrollbar {
   background: @window_bg_color;
   padding: 20px;
   border-radius: 20px 20px 0 0;
-  border-top: 2px solid darker(@accent_bg_color);
-  border-left: 2px solid darker(@accent_bg_color);
-  border-right: 2px solid darker(@accent_bg_color);
+  border: 2px solid darker(@accent_bg_color);
 }
 
 .preview-box,
