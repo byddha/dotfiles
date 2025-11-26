@@ -1,4 +1,5 @@
 #!/bin/bash
+# Deps: yq, python, adw-gtk3, kvantum, themix-icons-papirus-git (AUR)
 set -e
 
 THEME_NAME="$1"

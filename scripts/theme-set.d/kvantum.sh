@@ -134,3 +134,4 @@ cat > "$KVANTUM_DIR/kvantum.kvconfig" << EOF
 [General]
 theme=base16
 EOF
+
