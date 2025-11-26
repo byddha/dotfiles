@@ -281,6 +281,3 @@ cat > "$ZEN_CHROME/userContent.css" << EOF
   }
 }
 EOF
-
-# Notify user about restart requirement
-notify-send "Theme Changed" "Restart Zen Browser to apply: $THEME_NAME" -i web-browser 2>/dev/null || true

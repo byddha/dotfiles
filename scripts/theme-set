@@ -40,3 +40,6 @@ for module in "$SCRIPT_DIR/theme-set.d"/*.sh; do
 done
 
 echo "Theme set to: $THEME_NAME"
+
+# Notify user about apps that need restart
+notify-send "Theme: $THEME_NAME" "Restart Zen, GTK, and Qt apps to apply" -i preferences-desktop-theme 2>/dev/null || true
