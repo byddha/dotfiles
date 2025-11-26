@@ -1,8 +1,0 @@
-[hyprsnake_api]
-author      = "bida"
-version     = "0.1"
-description = "Forwards per-keyboard keypress events to Hyprland IPC"
-
-[hyprsnake_api.build]
-output = "hyprsnake_api.so"
-steps  = ["make all"]
