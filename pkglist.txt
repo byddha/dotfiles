@@ -1,5 +1,6 @@
 7zip
 act
+adw-gtk-theme
 amd-ucode
 android-tools
 appmenu-gtk-module
@@ -14,7 +15,6 @@ blueman
 bluez
 bluez-utils
 bridge-utils
-brightnessctl
 btop
 btrfs-progs
 chafa
@@ -218,6 +218,7 @@ xorg-server
 xorg-xinit
 yazi
 ydotool
+yq
 yt-dlp
 zellij
 zoxide

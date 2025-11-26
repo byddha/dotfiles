@@ -6,6 +6,7 @@ elephant-files
 elephant-menus
 elephant-providerlist
 elephant-symbols
+elephant-todo
 etcher-bin
 freetype2-qdoled
 gallery-dl-bin
@@ -28,6 +29,7 @@ razergenie
 rofi-nerdy
 rtw89-dkms-git
 shell-color-scripts-git
+themix-icons-papirus-git
 ttf-joypixels
 visual-studio-code-bin
 walker
