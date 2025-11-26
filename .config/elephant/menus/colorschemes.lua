@@ -1,7 +1,7 @@
 Name = "colorschemes"
 NamePretty = "Color Schemes"
-Cache = false
-Action = "theme-set %VALUE%"
+Cache = true
+Action = "bash ~/dotfiles/scripts/theme-set %VALUE%"
 HideFromProviderlist = false
 Description = "Base16 Color Schemes"
 SearchName = true
