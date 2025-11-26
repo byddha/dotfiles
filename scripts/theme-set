@@ -12,10 +12,8 @@ SCRIPT_DIR="$(dirname "$(realpath "$0")")"
 
 mkdir -p "$CACHE_DIR"
 
-# Parse YAML colors using yq (strip quotes with tr)
 get_color() { yq ".palette.$1" "$THEME_FILE" | tr -d '"'; }
 
-# Export all base16 colors for module scripts
 export base00=$(get_color base00)
 export base01=$(get_color base01)
 export base02=$(get_color base02)
@@ -33,13 +31,10 @@ export base0D=$(get_color base0D)
 export base0E=$(get_color base0E)
 export base0F=$(get_color base0F)
 
-# Export other variables needed by modules
 export CACHE_DIR THEME_NAME
 
-# Save current theme name
 echo "$THEME_NAME" > "$CACHE_DIR/current"
 
-# Run all module scripts
 for module in "$SCRIPT_DIR/theme-set.d"/*.sh; do
     [[ -f "$module" ]] && source "$module"
 done
