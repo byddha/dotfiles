@@ -136,6 +136,21 @@ cat > "$ZEN_CHROME/userChrome.css" << EOF
   #zen-appcontent-navbar-container {
     background-color: $base01 !important;
   }
+
+  /* Web page select dropdowns */
+  menupopup.in-menulist {
+    background-color: $base00 !important;
+    color: $base05 !important;
+    --content-select-background-image: none !important;
+  }
+
+  menupopup.in-menulist menuitem {
+    color: $base05 !important;
+  }
+
+  menupopup.in-menulist menuitem[_moz-menuactive="true"] {
+    background-color: $base02 !important;
+  }
 }
 EOF
 
