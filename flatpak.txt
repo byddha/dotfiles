@@ -1,6 +1,6 @@
 com.github.mtkennerly.ludusavi
-com.heroicgameslauncher.hgl
 com.mastermindzh.tidal-hifi
 dev.vencord.Vesktop
+io.missioncenter.MissionCenter
 org.prismlauncher.PrismLauncher
 org.remmina.Remmina
