@@ -48,7 +48,7 @@ cat > "$GTK3_DIR/gtk.css" << EOF
 @define-color sidebar_backdrop_color $base01;
 @define-color sidebar_shade_color @black;
 
-@define-color headerbar_bg_color alpha(@foreground, 0.1);
+@define-color headerbar_bg_color $base01;
 @define-color headerbar_fg_color @foreground;
 @define-color headerbar_backdrop_color @black;
 @define-color headerbar_shade_color @black;
