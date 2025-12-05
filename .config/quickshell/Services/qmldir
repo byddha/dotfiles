@@ -1,0 +1,30 @@
+singleton Battery 1.0 System/Battery.qml
+singleton Brightness 1.0 System/Brightness.qml
+singleton KeyboardBrightness 1.0 System/KeyboardBrightness.qml
+singleton Idle 1.0 System/Idle.qml
+singleton System 1.0 System/System.qml
+singleton AirplaneMode 1.0 System/AirplaneMode.qml
+singleton Hdr 1.0 System/Hdr.qml
+
+singleton Compositor 1.0 Hyprland/Compositor.qml
+singleton HyprlandData 1.0 Hyprland/HyprlandData.qml
+singleton HyprWhichKeyService 1.0 Hyprland/HyprWhichKeyService.qml
+
+singleton Network 1.0 Connectivity/Network.qml
+singleton Bluetooth 1.0 Connectivity/Bluetooth.qml
+singleton Vpn 1.0 Connectivity/Vpn.qml
+
+singleton Audio 1.0 Media/Audio.qml
+singleton MprisController 1.0 Media/MprisController.qml
+singleton Recording 1.0 Media/Recording.qml
+singleton Whisper 1.0 Media/Whisper.qml
+
+singleton Icons 1.0 UI/Icons.qml
+singleton AppIcons 1.0 UI/AppIcons.qml
+singleton IconResolver 1.0 UI/IconResolver.qml
+singleton Notifications 1.0 UI/Notifications.qml
+singleton Actions 1.0 UI/Actions.qml
+singleton AppSearch 1.0 UI/AppSearch.qml
+
+singleton ThemeService 1.0 External/ThemeService.qml
+singleton WeatherService 1.0 External/WeatherService.qml

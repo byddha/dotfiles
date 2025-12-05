@@ -1,0 +1,22 @@
+singleton BarStyle 1.0 BarStyle.qml
+Bar 1.0 Bar.qml
+Workspaces 1.0 Workspaces.qml
+MenuButton 1.0 MenuButton.qml
+ActiveWindowTitle 1.0 ActiveWindowTitle.qml
+NetworkButton 1.0 NetworkButton.qml
+VolumeButton 1.0 VolumeButton.qml
+MicButton 1.0 MicButton.qml
+BatteryButton 1.0 BatteryButton.qml
+Clock 1.0 Clock.qml
+CalendarPopup 1.0 CalendarPopup.qml
+PowerButton 1.0 PowerButton.qml
+Spacer 1.0 Spacer.qml
+Tray 1.0 Tray.qml
+TrayMenu 1.0 TrayMenu.qml
+MediaButton 1.0 MediaButton.qml
+MediaPopup 1.0 MediaPopup.qml
+PowerPopup 1.0 PowerPopup.qml
+NotificationButton 1.0 NotificationButton.qml
+VpnButton 1.0 VpnButton.qml
+RecordingButton 1.0 RecordingButton.qml
+WhisperButton 1.0 WhisperButton.qml

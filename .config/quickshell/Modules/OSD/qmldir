@@ -1,0 +1,4 @@
+module OSD
+
+OSD 1.0 OSD.qml
+OsdValueIndicator 1.0 OsdValueIndicator.qml

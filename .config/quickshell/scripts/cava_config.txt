@@ -1,0 +1,13 @@
+[general]
+framerate = 30
+autosens = 1
+bars = 8
+
+[output]
+method = raw
+raw_target = /dev/stdout
+data_format = ascii
+ascii_max_range = 1000
+
+[smoothing]
+noise_reduction = 20
