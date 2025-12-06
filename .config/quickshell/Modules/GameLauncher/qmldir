@@ -1,0 +1,7 @@
+module Modules.GameLauncher
+
+GameLauncher 1.0 GameLauncher.qml
+GameLauncherContent 1.0 GameLauncherContent.qml
+GameCarousel 1.0 GameCarousel.qml
+GameCard 1.0 GameCard.qml
+SearchBar 1.0 SearchBar.qml

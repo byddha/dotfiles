@@ -11,6 +11,7 @@ import "Modules/Overview"
 import "Modules/Bar"
 import "Modules/Sidebar"
 import "Modules/OSD"
+import "Modules/GameLauncher"
 
 ShellRoot {
     id: root
@@ -51,5 +52,9 @@ ShellRoot {
 
     OSD {
         id: osd
+    }
+
+    GameLauncher {
+        id: gameLauncher
     }
 }
