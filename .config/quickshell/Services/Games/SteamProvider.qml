@@ -221,17 +221,13 @@ Item {
         }
 
         // Use a single command to find and parse all manifests at once
-        // Extract appid, name, size, and installdir from each manifest file
         const searchPaths = root.libraryPaths.map(p => `"${p}/steamapps"`).join(' ');
         manifestParser.command = ["sh", "-c", `
             for f in $(find ${searchPaths} -maxdepth 1 -name 'appmanifest_*.acf' 2>/dev/null); do
                 appid=$(grep -m1 '"appid"' "$f" | sed 's/.*"appid"[[:space:]]*"\\([^"]*\\)".*/\\1/')
                 name=$(grep -m1 '"name"' "$f" | sed 's/.*"name"[[:space:]]*"\\([^"]*\\)".*/\\1/')
-                size=$(grep -m1 '"SizeOnDisk"' "$f" | sed 's/.*"SizeOnDisk"[[:space:]]*"\\([^"]*\\)".*/\\1/')
-                installdir=$(grep -m1 '"installdir"' "$f" | sed 's/.*"installdir"[[:space:]]*"\\([^"]*\\)".*/\\1/')
-                libpath=$(dirname "$f")
                 if [ -n "$appid" ] && [ -n "$name" ]; then
-                    echo "$appid|$name|$size|$libpath/common/$installdir"
+                    echo "$appid|$name"
                 fi
             done
         `];
@@ -252,8 +248,6 @@ Item {
                     if (parts.length >= 2) {
                         const appid = parts[0];
                         const name = parts[1];
-                        const sizeBytes = parseInt(parts[2]) || 0;
-                        const installPath = parts[3] || "";
 
                         // Filter out non-game entries
                         if (isNonGame(name))
@@ -267,11 +261,6 @@ Item {
                             platform: "steam",
                             coverArt: "",
                             heroArt: "",
-                            lastPlayed: 0,
-                            playtime: 0,
-                            playtime2wks: 0,
-                            sizeBytes: sizeBytes,
-                            installPath: installPath,
                             launchCommand: ["steam", `steam://rungameid/${appid}`]
                         });
                     }
@@ -346,119 +335,7 @@ Item {
                 }
                 Logger.info(`SteamProvider: ${Object.keys(coverMap).length} covers, ${Object.keys(heroMap).length} heroes`);
 
-                findLastPlayed();
-            }
-        }
-    }
-
-    // ========================================================================
-    // LAST PLAYED DATA
-    // ========================================================================
-
-    function findLastPlayed() {
-        // Find localconfig.vdf with most LastPlayed entries (main user account)
-        const steamPath = root.activeSteamPath;
-        lastPlayedParser.command = ["sh", "-c", `
-            # Find config with most LastPlayed entries
-            config=""
-            max=0
-            for f in "${steamPath}"/userdata/*/config/localconfig.vdf; do
-                [ -f "$f" ] || continue
-                c=$(grep -c '"LastPlayed"' "$f" 2>/dev/null || echo 0)
-                if [ "$c" -gt "$max" ]; then
-                    max=$c
-                    config=$f
-                fi
-            done
-
-            if [ -f "$config" ]; then
-                # Parse appid|lastPlayed|playtime|playtime2wks using awk
-                awk '
-                    /^[[:space:]]*"[0-9]+"[[:space:]]*$/ {
-                        # New app section - print previous if exists
-                        if (appid && (lastPlayed || playtime || playtime2wks)) {
-                            print appid "|" lastPlayed+0 "|" playtime+0 "|" playtime2wks+0
-                        }
-                        gsub(/"/, "", $0)
-                        gsub(/[[:space:]]/, "", $0)
-                        appid = $0
-                        lastPlayed = 0
-                        playtime = 0
-                        playtime2wks = 0
-                    }
-                    /"LastPlayed"/ {
-                        val = $0
-                        gsub(/.*"LastPlayed"[[:space:]]*"/, "", val)
-                        gsub(/".*/, "", val)
-                        if (val ~ /^[0-9]+$/) lastPlayed = val
-                    }
-                    /"Playtime"[[:space:]]*"/ {
-                        val = $0
-                        gsub(/.*"Playtime"[[:space:]]*"/, "", val)
-                        gsub(/".*/, "", val)
-                        if (val ~ /^[0-9]+$/) playtime = val
-                    }
-                    /"Playtime2wks"/ {
-                        val = $0
-                        gsub(/.*"Playtime2wks"[[:space:]]*"/, "", val)
-                        gsub(/".*/, "", val)
-                        if (val ~ /^[0-9]+$/) playtime2wks = val
-                    }
-                    END {
-                        if (appid && (lastPlayed || playtime || playtime2wks)) {
-                            print appid "|" lastPlayed+0 "|" playtime+0 "|" playtime2wks+0
-                        }
-                    }
-                ' "$config"
-            fi
-        `];
-        lastPlayedParser.running = true;
-    }
-
-    Process {
-        id: lastPlayedParser
-        running: false
-
-        stdout: StdioCollector {
-            onStreamFinished: {
-                Logger.debug(`SteamProvider stats raw output: ${text.substring(0, 500)}`);
-
-                const statsMap = {};
-                const lines = text.trim().split('\n').filter(l => l.length > 0);
-
-                for (let line of lines) {
-                    const parts = line.split('|');
-                    if (parts.length === 4) {
-                        const appid = parts[0];
-                        statsMap[appid] = {
-                            lastPlayed: parseInt(parts[1]) || 0,
-                            playtime: parseInt(parts[2]) || 0,
-                            playtime2wks: parseInt(parts[3]) || 0
-                        };
-                    }
-                }
-
-                Logger.info(`SteamProvider: Found ${Object.keys(statsMap).length} game stats entries`);
-
-                // Update games with stats
-                for (let game of root.loadedGames) {
-                    const stats = statsMap[game.appid];
-                    if (stats) {
-                        game.lastPlayed = stats.lastPlayed;
-                        game.playtime = stats.playtime;
-                        game.playtime2wks = stats.playtime2wks;
-                    }
-                }
-
                 finishLoading();
-            }
-        }
-
-        stderr: StdioCollector {
-            onStreamFinished: {
-                if (text.trim()) {
-                    Logger.warn(`SteamProvider lastPlayed stderr: ${text}`);
-                }
             }
         }
     }
@@ -468,13 +345,8 @@ Item {
     // ========================================================================
 
     function finishLoading() {
-        // Sort by recently played (descending), then alphabetically
-        root.loadedGames.sort((a, b) => {
-            if (b.lastPlayed !== a.lastPlayed) {
-                return b.lastPlayed - a.lastPlayed;
-            }
-            return a.name.localeCompare(b.name);
-        });
+        // Sort alphabetically (sorting by lastPlayed is done in GameService)
+        root.loadedGames.sort((a, b) => a.name.localeCompare(b.name));
         root.games = root.loadedGames;
         root.isLoading = false;
         root.lastError = "";

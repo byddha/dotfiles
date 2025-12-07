@@ -46,6 +46,15 @@ Singleton {
     // PROVIDERS
     // ========================================================================
 
+    Connections {
+        target: PlayTimeDb
+        function onDataLoaded() {
+            if (steamProvider.games.length > 0) {
+                root.aggregateGames();
+            }
+        }
+    }
+
     SteamProvider {
         id: steamProvider
         onGamesChanged: root.aggregateGames()
@@ -72,6 +81,7 @@ Singleton {
         }
 
         Logger.info(`GameService: Launching ${game.name}`);
+        PlayTimeDb.recordPlay(game.id);
         gameLauncher.command = game.launchCommand;
         gameLauncher.running = true;
     }
@@ -84,8 +94,16 @@ Singleton {
         // Combine games from all providers
         let all = [...steamProvider.games];
 
-        // Games are already sorted by SteamProvider (lastPlayed desc, then alpha)
-        // Must change sorting here if adding more providers
+        // Sort by lastPlayed (descending), then alphabetically
+        all.sort((a, b) => {
+            const aLastPlayed = PlayTimeDb.getLastPlayed(a.id);
+            const bLastPlayed = PlayTimeDb.getLastPlayed(b.id);
+            if (bLastPlayed !== aLastPlayed) {
+                return bLastPlayed - aLastPlayed;
+            }
+            return a.name.localeCompare(b.name);
+        });
+
         root.games = all;
         root.lastError = steamProvider.lastError;
 

@@ -1,4 +1,5 @@
 module Services.Games
 
 singleton GameService 1.0 GameService.qml
+singleton PlayTimeDb 1.0 PlayTimeDb.qml
 SteamProvider 1.0 SteamProvider.qml
