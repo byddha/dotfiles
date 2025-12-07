@@ -73,7 +73,7 @@ Singleton {
     }
 
     // Storage path
-    readonly property string cacheDir: StandardPaths.standardLocations(StandardPaths.CacheLocation)[0] + "/bidshell/notifications"
+    readonly property string cacheDir: StandardPaths.standardLocations(StandardPaths.CacheLocation)[0] + "/bidshell"
     readonly property string filePath: cacheDir + "/notifications.json"
 
     // State

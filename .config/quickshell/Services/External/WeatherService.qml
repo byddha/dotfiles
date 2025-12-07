@@ -22,7 +22,7 @@ Singleton {
     }
 
     // Cache directory and file
-    readonly property string cacheDir: (StandardPaths.writableLocation ? StandardPaths.writableLocation(StandardPaths.CacheLocation) : "~/.cache") + "/bidshell"
+    readonly property string cacheDir: StandardPaths.standardLocations(StandardPaths.CacheLocation)[0] + "/bidshell"
     readonly property string cacheFile: cacheDir + "/weather.json"
 
     // Update interval (30 minutes in seconds)
