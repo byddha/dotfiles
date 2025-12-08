@@ -158,7 +158,12 @@ Singleton {
 
                 property var weather: JsonObject {
                     property bool enabled: true
-                    property string location: "London"  // City name for geocoding
+                    property string location: "Bucharest"  // City name for geocoding
+                }
+
+                property var holidays: JsonObject {
+                    property bool enabled: true
+                    property string countryCode: "RO"  // ISO 3166-1 alpha-2
                 }
             }
         }

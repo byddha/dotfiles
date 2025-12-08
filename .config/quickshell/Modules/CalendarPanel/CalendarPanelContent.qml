@@ -339,12 +339,15 @@ Item {
                         const prevMonthDays = prevMonth.getDate();
                         for (let i = daysBefore - 1; i >= 0; i--) {
                             const day = prevMonthDays - i;
+                            const prevYear = month === 0 ? year - 1 : year;
+                            const prevMonthIdx = month - 1;
                             days.push({
                                 day: day,
-                                month: month - 1,
-                                year: month === 0 ? year - 1 : year,
+                                month: prevMonthIdx,
+                                year: prevYear,
                                 today: false,
-                                currentMonth: false
+                                currentMonth: false,
+                                holiday: HolidayService.getHoliday(prevYear, prevMonthIdx, day)
                             });
                         }
 
@@ -357,18 +360,22 @@ Item {
                                 month: month,
                                 year: year,
                                 today: isToday,
-                                currentMonth: true
+                                currentMonth: true,
+                                holiday: HolidayService.getHoliday(year, month, day)
                             });
                         }
 
                         // Next month days
                         for (let i = 1; i <= daysAfter; i++) {
+                            const nextYear = month === 11 ? year + 1 : year;
+                            const nextMonthIdx = month + 1;
                             days.push({
                                 day: i,
-                                month: month + 1,
-                                year: month === 11 ? year + 1 : year,
+                                month: nextMonthIdx,
+                                year: nextYear,
                                 today: false,
-                                currentMonth: false
+                                currentMonth: false,
+                                holiday: HolidayService.getHoliday(nextYear, nextMonthIdx, i)
                             });
                         }
 
@@ -379,8 +386,13 @@ Item {
                         model: calendarGrid.daysModel
 
                         Item {
+                            id: dayCell
                             Layout.fillWidth: true
                             Layout.preferredHeight: 32
+
+                            property var event: modelData.holiday
+                            property bool hasEvent: event !== null && event !== undefined
+                            property string eventType: hasEvent ? event.type : ""
 
                             Rectangle {
                                 width: 32
@@ -404,8 +416,215 @@ Item {
                                     }
                                     opacity: modelData.currentMonth ? 1.0 : 0.4
                                 }
+
+                                // Event indicators
+                                // Dot for user events
+                                Rectangle {
+                                    visible: dayCell.hasEvent && modelData.currentMonth && dayCell.eventType === "user"
+                                    width: 6
+                                    height: 6
+                                    radius: 3
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    anchors.bottom: parent.bottom
+                                    anchors.bottomMargin: 2
+                                    color: Theme.primary
+                                }
+
+                                // Diamond for public holiday
+                                Rectangle {
+                                    visible: dayCell.hasEvent && modelData.currentMonth && dayCell.eventType === "public"
+                                    width: 6
+                                    height: 6
+                                    rotation: 45
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    anchors.bottom: parent.bottom
+                                    anchors.bottomMargin: 2
+                                    color: Theme.accentRed
+                                }
+
+                                // Cross for nameday
+                                Text {
+                                    visible: dayCell.hasEvent && modelData.currentMonth && dayCell.eventType === "nameday"
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    anchors.bottom: parent.bottom
+                                    anchors.bottomMargin: -2
+                                    text: Icons.cross
+                                    font.pixelSize: 12
+                                    color: Theme.primary
+                                }
+
+                                // Asterisk for observance
+                                Text {
+                                    visible: dayCell.hasEvent && modelData.currentMonth && dayCell.eventType === "observance"
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    anchors.bottom: parent.bottom
+                                    anchors.bottomMargin: -1
+                                    text: "∗"
+                                    font.pixelSize: 10
+                                    color: Theme.primary
+                                }
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                                onEntered: {
+                                    if (dayCell.hasEvent) {
+                                        dayTooltip.text = dayCell.event.name;
+                                        dayTooltip.target = dayCell;
+                                        dayTooltip.show();
+                                    }
+                                }
+                                onExited: dayTooltip.hide()
+                                onClicked: mouse => {
+                                    if (mouse.button === Qt.RightButton) {
+                                        dayTooltip.hide();
+                                        const existingText = UserEventsService.getEvent(modelData.year, modelData.month, modelData.day) || "";
+                                        inlineInput.show(modelData.year, modelData.month, modelData.day, existingText);
+                                    }
+                                }
                             }
                         }
+                    }
+                }
+            }
+        }
+
+        // Tooltip for holidays
+        Tooltip {
+            id: dayTooltip
+        }
+
+        // Inline input for adding/editing events
+        Rectangle {
+            id: inlineInput
+            Layout.fillWidth: true
+            Layout.preferredHeight: visible ? inputRow.implicitHeight + Theme.spacingBase * 2 : 0
+            visible: false
+            color: Theme.colLayer1
+            radius: Theme.radiusBase
+            border.color: Theme.colLayer0Border
+            border.width: 1
+
+            property int targetYear: 0
+            property int targetMonth: 0
+            property int targetDay: 0
+
+            function show(year, month, day, text) {
+                targetYear = year;
+                targetMonth = month;
+                targetDay = day;
+                eventInput.text = text || "";
+                visible = true;
+            }
+
+            function hide() {
+                visible = false;
+                eventInput.text = "";
+            }
+
+            onVisibleChanged: {
+                if (visible) {
+                    focusTimer.restart();
+                }
+            }
+
+            Timer {
+                id: focusTimer
+                interval: 100
+                onTriggered: eventInput.forceActiveFocus()
+            }
+
+            function save() {
+                const trimmed = eventInput.text.trim();
+                if (trimmed) {
+                    UserEventsService.setEvent(targetYear, targetMonth, targetDay, trimmed);
+                } else {
+                    // Empty = delete
+                    UserEventsService.deleteEvent(targetYear, targetMonth, targetDay);
+                }
+                hide();
+            }
+
+            RowLayout {
+                id: inputRow
+                anchors.fill: parent
+                anchors.margins: Theme.spacingBase
+                spacing: Theme.spacingSmall
+
+                Text {
+                    text: inlineInput.targetDay + "/" + (inlineInput.targetMonth + 1)
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSizeSmall
+                    font.weight: Font.Bold
+                    color: Theme.textSecondary
+                }
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 32
+                    radius: Theme.radiusSmall
+                    color: Theme.colLayer0
+                    border.color: eventInput.activeFocus ? Theme.primary : Theme.colLayer0Border
+                    border.width: 1
+
+                    TextInput {
+                        id: eventInput
+                        anchors.fill: parent
+                        anchors.margins: 8
+                        verticalAlignment: TextInput.AlignVCenter
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSizeBase
+                        color: Theme.textColor
+                        clip: true
+
+                        onAccepted: inlineInput.save()
+                        Keys.onEscapePressed: inlineInput.hide()
+                    }
+                }
+
+                Rectangle {
+                    implicitWidth: 32
+                    implicitHeight: 32
+                    radius: Theme.radiusSmall
+                    color: saveMouse.containsMouse ? Qt.darker(Theme.primary, 1.1) : Theme.primary
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: "✓"
+                        font.pixelSize: 16
+                        color: Theme.primaryText
+                    }
+
+                    MouseArea {
+                        id: saveMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: inlineInput.save()
+                    }
+                }
+
+                Rectangle {
+                    implicitWidth: 32
+                    implicitHeight: 32
+                    radius: Theme.radiusSmall
+                    color: cancelMouse.containsMouse ? Theme.colLayer2 : Theme.colLayer1
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: "✕"
+                        font.pixelSize: 16
+                        color: Theme.textColor
+                    }
+
+                    MouseArea {
+                        id: cancelMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: inlineInput.hide()
                     }
                 }
             }

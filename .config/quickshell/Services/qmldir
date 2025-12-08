@@ -28,5 +28,7 @@ singleton AppSearch 1.0 UI/AppSearch.qml
 
 singleton ThemeService 1.0 External/ThemeService.qml
 singleton WeatherService 1.0 External/WeatherService.qml
+singleton HolidayService 1.0 External/HolidayService.qml
+singleton UserEventsService 1.0 External/UserEventsService.qml
 
 singleton GameService 1.0 Games/GameService.qml

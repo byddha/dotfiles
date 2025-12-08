@@ -164,4 +164,8 @@ Singleton {
     readonly property string device: ""
     readonly property string checkmark: ""
     readonly property string emptyState: ""
+    readonly property string cross: "✝"
+    readonly property string star: "★"
+    readonly property string flag: "⚑"
+    readonly property string heart: "♡"
 }
