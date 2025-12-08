@@ -9,6 +9,7 @@ return {
             typescript = { "eslint" },
             python = {},
             cs = { "csharpier" },
+            go = { "goimports" },
         },
 
         format_on_save = {

@@ -60,6 +60,7 @@ return {
         require "plugins.debugging.configs.debugpy"
         require "plugins.debugging.configs.typescript"
         require "plugins.debugging.configs.codelldb"
+        require "plugins.debugging.configs.delve"
         require "plugins.debugging.configs.encrypted_dotnet"
     end,
 }
