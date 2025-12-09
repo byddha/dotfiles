@@ -52,7 +52,6 @@ PopupWindow {
         Logger.info(`Executing: ${args.join(" ")}`);
         commandProcess.command = args;
         commandProcess.running = true;
-        hidePanel();
     }
 
     Process {
