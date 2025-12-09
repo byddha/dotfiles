@@ -159,7 +159,6 @@ Scope {
                 VolumeButton {}
 
                 NotificationButton {}
-                NetworkButton {}
             }
         }
     }

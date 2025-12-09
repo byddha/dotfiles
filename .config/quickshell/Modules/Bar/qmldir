@@ -3,7 +3,6 @@ Bar 1.0 Bar.qml
 Workspaces 1.0 Workspaces.qml
 MenuButton 1.0 MenuButton.qml
 ActiveWindowTitle 1.0 ActiveWindowTitle.qml
-NetworkButton 1.0 NetworkButton.qml
 VolumeButton 1.0 VolumeButton.qml
 MicButton 1.0 MicButton.qml
 BatteryButton 1.0 BatteryButton.qml
