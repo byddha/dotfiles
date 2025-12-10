@@ -446,6 +446,10 @@ QtObject {
                 icon: "󰢔",
                 name: "Virt Manager"
             },
+            "io.missioncenter.missioncenter": {
+                icon: "",
+                name: "Mission Center"
+            },
 
             // Cloud Services and Sync
             "dropbox": {

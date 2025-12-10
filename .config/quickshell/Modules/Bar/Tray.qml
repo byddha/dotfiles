@@ -19,7 +19,7 @@ Item {
     required property var barWindow  // Pass the bar's window to get screen
 
     visible: SystemTray.items.values.length > 0
-    implicitWidth: trayBackground.width
+    implicitWidth: visible ? trayBackground.width : 0
     implicitHeight: BarStyle.barHeight
 
     // Track currently open menu for focus management
