@@ -25,6 +25,7 @@ Item {
         fillMode: Image.PreserveAspectCrop
         asynchronous: true
         visible: false
+        layer.enabled: true
     }
 
     // Animated bloom shader
