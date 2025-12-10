@@ -69,7 +69,7 @@ Singleton {
     property int iconSize: 20
 
     property int roundingScreen: 23
-    property int roundingWindow: 18
+    property int roundingWindow: 10
 
     property real elevationMargin: 10
 

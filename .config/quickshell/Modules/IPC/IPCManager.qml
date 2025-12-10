@@ -97,4 +97,26 @@ Item {
             return `HyprWhichKey ${HyprWhichKeyService.visible ? "shown" : "hidden"}`;
         }
     }
+
+    IpcHandler {
+        target: "screenshot"
+
+        function region(): string {
+            Settings.regionSelectorVisible = true;
+            Logger.info("IPC: screenshot.region");
+            return "Opening region selector";
+        }
+
+        function toggle(): string {
+            Settings.regionSelectorVisible = !Settings.regionSelectorVisible;
+            Logger.info("IPC: screenshot.toggle →", Settings.regionSelectorVisible ? "shown" : "hidden");
+            return `Region selector ${Settings.regionSelectorVisible ? "shown" : "hidden"}`;
+        }
+
+        function hide(): string {
+            Settings.regionSelectorVisible = false;
+            Logger.info("IPC: screenshot.hide");
+            return "Region selector hidden";
+        }
+    }
 }

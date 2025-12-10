@@ -12,6 +12,7 @@ import "Modules/Bar"
 import "Modules/Sidebar"
 import "Modules/OSD"
 import "Modules/GameLauncher"
+import "Modules/RegionSelector"
 
 ShellRoot {
     id: root
@@ -56,5 +57,9 @@ ShellRoot {
 
     GameLauncher {
         id: gameLauncher
+    }
+
+    RegionSelector {
+        id: regionSelector
     }
 }

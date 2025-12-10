@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell.Io
 import "../../Config"
 import "../../Services"
 
@@ -8,8 +9,21 @@ Rectangle {
     visible: Recording.recording
     width: visible ? recordingRow.implicitWidth + BarStyle.spacing * 2 : 0
     height: BarStyle.buttonSize
-    color: BarStyle.buttonBackground
+    color: mouseArea.containsMouse ? BarStyle.buttonBackgroundHover : BarStyle.buttonBackground
     radius: BarStyle.buttonRadius
+
+    MouseArea {
+        id: mouseArea
+        anchors.fill: parent
+        hoverEnabled: true
+        cursorShape: Qt.PointingHandCursor
+        onClicked: stopRecording.startDetached()
+    }
+
+    Process {
+        id: stopRecording
+        command: ["pkill", "-INT", "wf-recorder"]  // SIGINT allows proper file finalization
+    }
 
     property int elapsedSeconds: 0
 
