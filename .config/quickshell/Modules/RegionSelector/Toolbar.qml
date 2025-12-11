@@ -6,8 +6,10 @@ Rectangle {
     id: root
 
     required property int action
+    required property bool adjusting
     signal dismiss()
     signal actionRequested(int newAction)
+    signal cropRequested()
 
     radius: Theme.radiusBase * 1.5
     color: Theme.alpha(Theme.colLayer1, 0.9)
@@ -58,7 +60,8 @@ Rectangle {
                             font.pixelSize: Theme.fontSizeSmall
                             font.weight: Font.Medium
                             color: root.action === RegionSelector.SnipAction.Copy ? Theme.primaryText : Theme.textSecondary
-                            text: "Screenshot"
+                            textFormat: Text.RichText
+                            text: `<u>S</u>creenshot`
                         }
                     }
 
@@ -92,7 +95,8 @@ Rectangle {
                             font.pixelSize: Theme.fontSizeSmall
                             font.weight: Font.Medium
                             color: root.action === RegionSelector.SnipAction.Record ? Theme.primaryText : Theme.textSecondary
-                            text: "Record"
+                            textFormat: Text.RichText
+                            text: `<u>R</u>ecord`
                         }
                     }
 
@@ -107,17 +111,30 @@ Rectangle {
 
         // Fullscreen button
         Rectangle {
-            Layout.preferredWidth: 36
+            Layout.preferredWidth: fullscreenContent.width + 16
             Layout.preferredHeight: 36
             radius: Theme.radiusBase
             color: fullscreenMouse.containsMouse ? Theme.alpha(Theme.colLayer2, 0.8) : Theme.alpha(Theme.colLayer0, 0.6)
 
-            Text {
+            RowLayout {
+                id: fullscreenContent
                 anchors.centerIn: parent
-                font.family: Theme.fontFamilyIcons
-                font.pixelSize: 18
-                color: Theme.textColor
-                text: "󰍉"
+                spacing: 6
+
+                Text {
+                    font.family: Theme.fontFamilyIcons
+                    font.pixelSize: 16
+                    color: Theme.textColor
+                    text: "󰍉"
+                }
+                Text {
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSizeSmall
+                    font.weight: Font.Medium
+                    color: Theme.textSecondary
+                    textFormat: Text.RichText
+                    text: `<u>F</u>ull`
+                }
             }
 
             MouseArea {
@@ -129,19 +146,69 @@ Rectangle {
             }
         }
 
+        // Crop button (shrink to content)
+        Rectangle {
+            Layout.preferredWidth: cropContent.width + 16
+            Layout.preferredHeight: 36
+            radius: Theme.radiusBase
+            color: cropMouse.containsMouse && root.adjusting ? Theme.alpha(Theme.colLayer2, 0.8) : Theme.alpha(Theme.colLayer0, 0.6)
+            opacity: root.adjusting ? 1.0 : 0.4
+
+            RowLayout {
+                id: cropContent
+                anchors.centerIn: parent
+                spacing: 6
+
+                Text {
+                    font.family: Theme.fontFamilyIcons
+                    font.pixelSize: 16
+                    color: root.adjusting ? Theme.textColor : Theme.textSecondary
+                    text: "󰆞"
+                }
+                Text {
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSizeSmall
+                    font.weight: Font.Medium
+                    color: root.adjusting ? Theme.textSecondary : Theme.textSecondary
+                    textFormat: Text.RichText
+                    text: `<u>C</u>rop`
+                }
+            }
+
+            MouseArea {
+                id: cropMouse
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: root.adjusting ? Qt.PointingHandCursor : Qt.ArrowCursor
+                onClicked: if (root.adjusting) root.cropRequested()
+            }
+        }
+
         // Cancel button
         Rectangle {
-            Layout.preferredWidth: 36
+            Layout.preferredWidth: cancelContent.width + 16
             Layout.preferredHeight: 36
             radius: Theme.radiusBase
             color: cancelMouse.containsMouse ? Theme.alpha(Theme.accentRed, 0.2) : Theme.alpha(Theme.colLayer0, 0.6)
 
-            Text {
+            RowLayout {
+                id: cancelContent
                 anchors.centerIn: parent
-                font.family: Theme.fontFamilyIcons
-                font.pixelSize: 18
-                color: cancelMouse.containsMouse ? Theme.accentRed : Theme.textSecondary
-                text: "󰅖"
+                spacing: 6
+
+                Text {
+                    font.family: Theme.fontFamilyIcons
+                    font.pixelSize: 16
+                    color: cancelMouse.containsMouse ? Theme.accentRed : Theme.textSecondary
+                    text: "󰅖"
+                }
+                Text {
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSizeSmall
+                    font.weight: Font.Medium
+                    color: cancelMouse.containsMouse ? Theme.accentRed : Theme.textSecondary
+                    text: "Esc"
+                }
             }
 
             MouseArea {
