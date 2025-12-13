@@ -315,6 +315,10 @@ QtObject {
                 icon: "󰕼",
                 name: "VLC"
             },
+            "qimgv": {
+                icon: "",
+                name: "qimgv"
+            },
 
             // Graphics Tools
             "blender": {
@@ -364,6 +368,10 @@ QtObject {
             "steam": {
                 icon: "",
                 name: "Steam"
+            },
+            "com.github.mtkennerly.ludusavi": {
+                icon: "󰆔",
+                name: "Ludasavi"
             },
 
             // Office and Productivity
@@ -450,6 +458,18 @@ QtObject {
                 icon: "",
                 name: "Mission Center"
             },
+            "swappy": {
+                icon: "",
+                name: "Swappy"
+            },
+            "kvantummanager": {
+                icon: "󰔎",
+                name: "Kvantum"
+            },
+            "nwg-look": {
+                icon: "",
+                name: "GTK Theme"
+            },
 
             // Cloud Services and Sync
             "dropbox": {
@@ -460,7 +480,7 @@ QtObject {
             // Fallback
             "unknown": {
                 icon: "",
-                name: "Desktop"
+                name: "Unknown"
             }
         })
 
@@ -507,7 +527,7 @@ QtObject {
             }
         }
 
-        Logger.debug("No icon mapping found for class '" + className + "' and title '" + title + "'; using default.");
+        Logger.warn("No icon mapping found for class '" + className + "' and title '" + title + "'; using default.");
         return iconMap["unknown"];
     }
 

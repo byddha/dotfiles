@@ -23,7 +23,7 @@ PopupWindow {
     Process {
         id: cavaProc
         running: root.visible
-        command: ["cava", "-p", Qt.resolvedUrl("../../scripts/cava_config.txt").toString().replace("file://", "")]
+        command: ["cava", "-p", Qt.resolvedUrl("../../../scripts/cava_config.txt").toString().replace("file://", "")]
         stdout: SplitParser {
             onRead: data => {
                 root.visualizerValues = data.split(";").map(p => parseFloat(p.trim())).filter(p => !isNaN(p));
