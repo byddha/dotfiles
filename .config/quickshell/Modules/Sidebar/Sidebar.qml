@@ -4,6 +4,7 @@ import Quickshell.Wayland
 import Quickshell.Hyprland
 import "../../Config"
 import "../../Utils"
+import "../../Services"
 
 Scope {
     id: root
@@ -54,6 +55,7 @@ Scope {
             // Activate focus grab when sidebar becomes visible
             onVisibleChanged: {
                 if (visible) {
+                    Hdr.refresh();
                     // Delay slightly to ensure window is ready
                     Qt.callLater(() => {
                         focusGrab.active = true;

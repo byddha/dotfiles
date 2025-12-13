@@ -3,100 +3,104 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import QtCore
+import Quickshell.Hyprland
 import "../../Config"
 import "../../Utils"
 
-/**
- * HDR - HDR toggle service
- *
- * Manages HDR state by modifying ~/.config/hypr/monitors.conf
- * Swaps between "cm, srgb" and "cm, hdr" for HDR-capable monitors
- */
 Singleton {
     id: root
 
     property bool enabled: false
-    readonly property string monitorsConfigPath: StandardPaths.writableLocation(StandardPaths.HomeLocation) + "/.config/hypr/monitors.conf"
+    property var hdrMonitors: []
+    property int pendingToggles: 0
+    property bool pendingToggle: false
+
+    function refresh() {
+        queryMonitors.running = true;
+    }
 
     function toggle() {
-        enabled = !enabled;
-        updateConfig();
+        if (hdrMonitors.length === 0) return;
+        pendingToggle = true;
+        queryMonitors.running = true;
     }
 
-    function updateConfig() {
-        monitorsFileView.reload();
+    function doToggle() {
+        const newState = enabled ? "srgb" : "hdr";
+        pendingToggles = hdrMonitors.length;
+        for (const mon of hdrMonitors) {
+            const proc = toggleComponent.createObject(root, {
+                command: ["hyprctl", "keyword", `monitorv2[${mon}]:cm`, newState]
+            });
+            proc.running = true;
+        }
     }
 
-    FileView {
-        id: monitorsFileView
-        path: root.monitorsConfigPath
+    Process {
+        id: queryMonitors
+        command: ["hyprctl", "monitors", "-j"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const monitors = JSON.parse(text);
+                    const configMonitors = Config.options?.monitors || {};
 
-        onLoaded: {
-            let content = monitorsFileView.text();
-            const monitors = Config.options?.monitors || {};
-            let modified = false;
-
-            for (const monitorId in monitors) {
-                if (monitors[monitorId].hdrCapable) {
-                    // Create regex to match this monitor's line
-                    const monitorRegex = new RegExp(`(monitor\\s*=\\s*${monitorId}.*,\\s*cm,\\s*)(srgb|hdr)`, 'g');
-
-                    if (root.enabled) {
-                        // Replace srgb with hdr
-                        const newContent = content.replace(monitorRegex, '$1hdr');
-                        if (newContent !== content) {
-                            content = newContent;
-                            modified = true;
-                        }
-                    } else {
-                        // Replace hdr with srgb
-                        const newContent = content.replace(monitorRegex, '$1srgb');
-                        if (newContent !== content) {
-                            content = newContent;
-                            modified = true;
+                    root.hdrMonitors = [];
+                    for (const monName in configMonitors) {
+                        if (configMonitors[monName].hdrCapable) {
+                            root.hdrMonitors.push(monName);
                         }
                     }
-                }
-            }
 
-            if (modified) {
-                monitorsFileView.setText(content);
-                Logger.info(`HDR ${root.enabled ? "enabled" : "disabled"} - monitors.conf updated`);
-            }
-        }
-
-        onLoadFailed: error => {
-            Logger.error(`Failed to load monitors.conf: ${error}`);
-        }
-    }
-
-    // Check initial state on startup
-    Component.onCompleted: {
-        checkInitialState.reload();
-    }
-
-    FileView {
-        id: checkInitialState
-        path: root.monitorsConfigPath
-
-        onLoaded: {
-            const content = checkInitialState.text();
-            const monitors = Config.options?.monitors || {};
-
-            // Check if any HDR-capable monitor has "cm, hdr"
-            for (const monitorId in monitors) {
-                if (monitors[monitorId].hdrCapable) {
-                    const hdrRegex = new RegExp(`monitor\\s*=\\s*${monitorId}.*,\\s*cm,\\s*hdr`);
-                    if (hdrRegex.test(content)) {
-                        root.enabled = true;
-                        Logger.info("HDR state loaded: enabled");
-                        return;
+                    for (const mon of monitors) {
+                        if (root.hdrMonitors.includes(mon.name)) {
+                            if (mon.colorManagementPreset === "hdr") {
+                                root.enabled = true;
+                                Logger.info("HDR state: enabled");
+                                if (root.pendingToggle) {
+                                    root.pendingToggle = false;
+                                    root.doToggle();
+                                }
+                                return;
+                            }
+                        }
                     }
+                    root.enabled = false;
+                    Logger.info("HDR state: disabled");
+
+                    if (root.pendingToggle) {
+                        root.pendingToggle = false;
+                        root.doToggle();
+                    }
+                } catch (e) {
+                    Logger.error("Failed to parse monitors:", e);
                 }
             }
-            root.enabled = false;
-            Logger.info("HDR state loaded: disabled");
         }
     }
+
+    Component {
+        id: toggleComponent
+        Process {
+            onExited: (code) => {
+                root.pendingToggles--;
+                if (root.pendingToggles === 0 && code === 0) {
+                    root.enabled = !root.enabled;
+                    Logger.info(`HDR ${root.enabled ? "enabled" : "disabled"}`);
+                }
+                destroy();
+            }
+        }
+    }
+
+    Connections {
+        target: Hyprland
+        function onRawEvent(event) {
+            if (event.name === "monitoraddedv2" || event.name === "monitorremoved" || event.name === "configreloaded") {
+                queryMonitors.running = true;
+            }
+        }
+    }
+
+    Component.onCompleted: queryMonitors.running = true
 }
