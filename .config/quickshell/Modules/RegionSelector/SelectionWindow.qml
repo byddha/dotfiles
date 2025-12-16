@@ -46,7 +46,6 @@ PanelWindow {
     property real draggingX: 0
     property real draggingY: 0
     property bool dragging: false
-    property int mouseButton: Qt.LeftButton
 
     // Region (settable for adjustment)
     property real regionX: 0
@@ -56,6 +55,7 @@ PanelWindow {
 
     // Adjustment mode (after initial drag, before confirming)
     property bool adjusting: false
+    property bool editMode: false  // When true, snip opens in Swappy instead of copying
     property string adjustHandle: ""  // Which handle is being dragged: "", "move", "nw", "ne", "sw", "se", "n", "s", "e", "w"
     property real adjustStartX: 0
     property real adjustStartY: 0
@@ -375,8 +375,8 @@ PanelWindow {
         // Region in slurp format for wf-recorder
         const slurpRegion = `${Math.round(root.regionX + root.monitorOffsetX)},${Math.round(root.regionY + root.monitorOffsetY)} ${rw}x${rh}`;
 
-        // Right-click opens in swappy regardless of mode
-        if (root.mouseButton === Qt.RightButton && effectiveAction === RegionSelector.SnipAction.Copy) {
+        // Edit mode opens in swappy instead of copying
+        if (root.editMode && effectiveAction === RegionSelector.SnipAction.Copy) {
             snipProc.command = ["bash", "-c", `${cropToStdout} | swappy -f - && ${cleanup}`];
             Logger.info("RegionSelector: Opening region in swappy");
         } else {
@@ -395,8 +395,8 @@ PanelWindow {
 
         snipProc.startDetached();
 
-        // Show feedback only for Copy mode (not Record or edit via right-click)
-        if (effectiveAction === RegionSelector.SnipAction.Copy && root.mouseButton !== Qt.RightButton) {
+        // Show feedback only for Copy mode (not edit mode)
+        if (effectiveAction === RegionSelector.SnipAction.Copy && !root.editMode) {
             feedbackAnimation.start();
         } else {
             root.dismiss();
@@ -419,9 +419,18 @@ PanelWindow {
             case Qt.Key_Space:
             case Qt.Key_Return:
             case Qt.Key_Enter:
-                // Confirm and capture
+                // Confirm and copy to clipboard
                 if (root.adjusting && root.regionWidth > 0 && root.regionHeight > 0 && mouseArea.containsMouse) {
                     root.snipping = true;
+                    root.editMode = false;
+                    root.snip();
+                }
+                break;
+            case Qt.Key_E:
+                // Confirm and open in Swappy for editing
+                if (root.adjusting && root.regionWidth > 0 && root.regionHeight > 0 && mouseArea.containsMouse) {
+                    root.snipping = true;
+                    root.editMode = true;
                     root.snip();
                 }
                 break;
@@ -441,9 +450,7 @@ PanelWindow {
                 root.regionY = 0;
                 root.regionWidth = root.width;
                 root.regionHeight = root.height;
-                if (event.modifiers & Qt.ShiftModifier) {
-                    root.mouseButton = Qt.RightButton;  // Triggers edit mode
-                }
+                root.editMode = (event.modifiers & Qt.ShiftModifier);
                 root.snip();
                 break;
             case Qt.Key_C:
@@ -458,7 +465,7 @@ PanelWindow {
         MouseArea {
             id: mouseArea
             anchors.fill: parent
-            acceptedButtons: Qt.LeftButton | Qt.RightButton
+            acceptedButtons: Qt.LeftButton
             hoverEnabled: true
 
             // Get initial cursor position from Hyprland (Qt's mouseX/Y is stale on Wayland)
@@ -482,8 +489,6 @@ PanelWindow {
             }
 
             onPressed: mouse => {
-                root.mouseButton = mouse.button;
-
                 if (root.adjusting) {
                     // Check if clicking on a handle or inside selection
                     const handle = root.getHandleAt(mouse.x, mouse.y);
