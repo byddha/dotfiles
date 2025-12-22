@@ -34,11 +34,17 @@ if pgrep -f "pw-record.*Whisper" > /dev/null 2>&1; then
     # Trim leading/trailing whitespace and copy to clipboard
     TRANSCRIPT=$(sed 's/^[[:space:]]*//;s/[[:space:]]*$//' "$TRANSCRIPT_FILE" | tr -d '\n')
     log "Transcript content: $TRANSCRIPT"
-    echo -n "$TRANSCRIPT" | wl-copy
-    log "Copied to clipboard"
 
-    hyprctl dispatch sendshortcut "CTRL SHIFT, V, activewindow"
-    log "Sent paste shortcut to active window"
+    if [[ -z "$TRANSCRIPT" ]]; then
+        log "Empty transcript, sending notification"
+        notify-send -u low -t 2000 "WhisperT" "No speech detected"
+    else
+        echo -n "$TRANSCRIPT" | wl-copy
+        log "Copied to clipboard"
+
+        hyprctl dispatch sendshortcut "CTRL SHIFT, V, activewindow"
+        log "Sent paste shortcut to active window"
+    fi
 
     rm -f "$STATE_FILE"
     log "Cleaned up state file"
