@@ -16,6 +16,11 @@ layout(std140, binding = 0) uniform buf {
     vec4 selection;
     // Pack resolution and cornerRadius together
     vec4 resolutionAndRadius;  // xy = resolution, z = cornerRadius
+    // Cutout regions for floating windows (up to 4)
+    vec4 cutout1;  // x, y, width, height (0,0,0,0 = disabled)
+    vec4 cutout2;
+    vec4 cutout3;
+    vec4 cutout4;
 };
 
 #define resolution resolutionAndRadius.xy
@@ -25,6 +30,14 @@ layout(std140, binding = 0) uniform buf {
 float roundedBoxSDF(vec2 p, vec2 size, float radius) {
     vec2 q = abs(p) - size + radius;
     return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - radius;
+}
+
+// Check if point is inside a cutout region (returns true if inside)
+bool inCutout(vec2 p, vec4 cutout) {
+    // Skip if cutout is disabled (zero size)
+    if (cutout.z <= 0.0 || cutout.w <= 0.0) return false;
+    return p.x >= cutout.x && p.x <= cutout.x + cutout.z &&
+           p.y >= cutout.y && p.y <= cutout.y + cutout.w;
 }
 
 void main() {
@@ -47,6 +60,13 @@ void main() {
                        fragCoord.y <= selection.y + selection.w;
 
     if (inSelection) {
+        fragColor = vec4(0.0);
+        return;
+    }
+
+    // Check if inside any floating window cutout region
+    if (inCutout(fragCoord, cutout1) || inCutout(fragCoord, cutout2) ||
+        inCutout(fragCoord, cutout3) || inCutout(fragCoord, cutout4)) {
         fragColor = vec4(0.0);
         return;
     }

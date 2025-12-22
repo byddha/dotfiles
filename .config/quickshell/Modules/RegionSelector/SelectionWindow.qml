@@ -64,13 +64,50 @@ PanelWindow {
     property real adjustStartRegionW: 0
     property real adjustStartRegionH: 0
 
-    // Window regions from HyprlandData (reversed so topmost windows are checked first)
-    readonly property var windowRegions: HyprlandData.windowList.filter(w => w.workspace.id === root.activeWorkspaceId).map(w => ({
-                at: [w.at[0] - root.monitorOffsetX, w.at[1] - root.monitorOffsetY],
-                size: w.size,
-                class: w.class,
-                title: w.title
-            })).reverse()
+    // Window regions from HyprlandData, sorted for proper z-order (floating above tiled)
+    readonly property var windowRegions: {
+        const workspaceWindows = HyprlandData.windowList.filter(w =>
+            w.workspace.id === root.activeWorkspaceId
+        );
+
+        // If any window is fullscreen or maximized, only show that window (others are occluded)
+        // fullscreen: 1 = real fullscreen, 2 = maximized
+        const fullscreenWindow = workspaceWindows.find(w => w.fullscreen > 0);
+        if (fullscreenWindow) {
+            return [{
+                at: [fullscreenWindow.at[0] - root.monitorOffsetX, fullscreenWindow.at[1] - root.monitorOffsetY],
+                size: fullscreenWindow.size,
+                class: fullscreenWindow.class,
+                title: fullscreenWindow.title,
+                floating: fullscreenWindow.floating
+            }];
+        }
+
+        // Sort: floating windows first (higher z-order), then tiled
+        // Among floating windows, smaller ones first (easier to target, likely on top)
+        const sorted = [...workspaceWindows].sort((a, b) => {
+            if (a.floating && !b.floating) return -1;
+            if (!a.floating && b.floating) return 1;
+            // Both floating: smaller area first (higher priority for targeting)
+            if (a.floating && b.floating) {
+                const areaA = a.size[0] * a.size[1];
+                const areaB = b.size[0] * b.size[1];
+                return areaA - areaB;
+            }
+            return 0;
+        });
+
+        return sorted.map(w => ({
+            at: [w.at[0] - root.monitorOffsetX, w.at[1] - root.monitorOffsetY],
+            size: w.size,
+            class: w.class,
+            title: w.title,
+            floating: w.floating
+        }));
+    }
+
+    // Floating windows only (for computing cutouts in tiled windows)
+    readonly property var floatingWindows: windowRegions.filter(w => w.floating)
 
     // Targeted window region (for click-to-select)
     property real targetedRegionX: -1
@@ -650,9 +687,45 @@ PanelWindow {
                     required property var modelData
                     required property int index
                     readonly property bool isDraggingRegion: root.regionWidth > 5 || root.regionHeight > 5
+                    readonly property bool isTiled: !modelData.floating
                     clientDimensions: modelData
                     targeted: !isDraggingRegion && !root.snipping && !root.adjusting && root.targetedRegionX === modelData.at[0] && root.targetedRegionY === modelData.at[1]
                     opacity: (isDraggingRegion || root.snipping || root.adjusting) ? 0 : 1.0
+                    // Compute cutouts: for tiled windows, cut out all floating windows
+                    // For floating windows, cut out smaller floating windows (higher priority)
+                    cutouts: {
+                        const tx = modelData.at[0];
+                        const ty = modelData.at[1];
+                        const tw = modelData.size[0];
+                        const th = modelData.size[1];
+                        const myArea = tw * th;
+
+                        // Windows to cut out: all floating windows that should appear "above" this one
+                        const windowsToCut = isTiled
+                            ? root.floatingWindows  // Tiled: cut out all floating
+                            : root.floatingWindows.filter(fw => {
+                                // Floating: cut out smaller floating windows (they have priority)
+                                const fwArea = fw.size[0] * fw.size[1];
+                                return fwArea < myArea;
+                            });
+
+                        return windowsToCut.map(fw => {
+                            const fx = fw.at[0];
+                            const fy = fw.at[1];
+                            const fww = fw.size[0];
+                            const fwh = fw.size[1];
+                            // Compute intersection
+                            const ix = Math.max(tx, fx);
+                            const iy = Math.max(ty, fy);
+                            const ix2 = Math.min(tx + tw, fx + fww);
+                            const iy2 = Math.min(ty + th, fy + fwh);
+                            if (ix < ix2 && iy < iy2) {
+                                // Convert to local coordinates
+                                return { x: ix - tx, y: iy - ty, width: ix2 - ix, height: iy2 - iy };
+                            }
+                            return null;
+                        }).filter(c => c !== null);
+                    }
                 }
             }
 

@@ -30,6 +30,11 @@ Item {
         property color hatchColor: root.hatchColor
         property vector4d selection: Qt.vector4d(root.regionX, root.regionY, root.regionWidth, root.regionHeight)
         property vector4d resolutionAndRadius: Qt.vector4d(root.width, root.height, 0, 0)  // No corner rounding for fullscreen
+        // No cutouts for selection overlay
+        property vector4d cutout1: Qt.vector4d(0, 0, 0, 0)
+        property vector4d cutout2: Qt.vector4d(0, 0, 0, 0)
+        property vector4d cutout3: Qt.vector4d(0, 0, 0, 0)
+        property vector4d cutout4: Qt.vector4d(0, 0, 0, 0)
 
         fragmentShader: "shaders/selection_overlay.frag.qsb"
     }
