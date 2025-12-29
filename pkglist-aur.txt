@@ -1,4 +1,5 @@
 ags-hyprpanel-git
+c++utilities
 elephant-calc
 elephant-clipboard
 elephant-desktopapplications
@@ -10,16 +11,16 @@ elephant-todo
 etcher-bin
 freetype2-qdoled
 gallery-dl-bin
-grimblast-git
 microsoft-edge-stable-bin
 mullvad-vpn-bin
-onlyoffice-bin
-opencode-bin
+neothesia
 paru
 paru-debug
+pianobooster-custom
 protontricks
 qimgv-git
 qt6ct-kde
+qtutilities-qt6
 quickemu-git
 quickshell-git
 r2modman-bin

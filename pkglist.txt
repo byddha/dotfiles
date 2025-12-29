@@ -1,6 +1,7 @@
 7zip
 act
 adw-gtk-theme
+alsa-utils
 amd-ucode
 android-tools
 appmenu-gtk-module
@@ -18,6 +19,7 @@ bridge-utils
 btop
 btrfs-progs
 chafa
+clang
 cliphist
 corectrl
 dart-sass
@@ -54,11 +56,13 @@ hyprland-guiutils
 hyprland-protocols
 hyprlang
 hyprlock
+hyprpaper
 hyprpicker
 hyprpolkitagent
 hyprtoolkit
 hyprutils
 hyprwayland-scanner
+hyprwire
 imagemagick
 inetutils
 inotify-tools
@@ -75,6 +79,7 @@ libgtop
 libguestfs
 libnotify
 libpulse
+libreoffice-still
 libva-intel-driver
 linux
 linux-firmware
@@ -123,12 +128,13 @@ rocm-hip-sdk
 rocm-opencl-sdk
 rocm-smi-lib
 samba
-satty
 slurp
 smartmontools
 socat
+soundfont-fluid
 steam
 stow
+swappy
 swtpm
 swww
 syncplay
