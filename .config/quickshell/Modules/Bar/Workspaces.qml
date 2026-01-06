@@ -115,23 +115,47 @@ Item {
     implicitWidth: workspaceBackground.width
     implicitHeight: BarStyle.barHeight
 
-    // Scroll to switch workspaces (cycles within configured range)
+    // Find next occupied workspace in a direction (1 = forward, -1 = backward)
+    function findNextOccupied(currentId, direction) {
+        for (let i = 1; i <= workspacesShown; i++) {
+            let nextId = currentId + (direction * i);
+            if (nextId > endWorkspace)
+                nextId = startWorkspace + (nextId - endWorkspace - 1);
+            else if (nextId < startWorkspace)
+                nextId = endWorkspace - (startWorkspace - nextId - 1);
+
+            const index = nextId - startWorkspace;
+            if (workspaceOccupied[index])
+                return nextId;
+        }
+        // No occupied workspace found, return next in sequence
+        let fallback = currentId + direction;
+        if (fallback > endWorkspace)
+            fallback = startWorkspace;
+        else if (fallback < startWorkspace)
+            fallback = endWorkspace;
+        return fallback;
+    }
+
+    // Scroll to switch workspaces (cycles within configured range, skipping empty)
     WheelHandler {
         onWheel: event => {
             const currentId = monitor?.activeWorkspace?.id ?? startWorkspace;
             let nextId;
 
             if (event.angleDelta.y > 0) {
-                // Scroll up = next workspace (wrap to start)
-                nextId = currentId >= endWorkspace ? startWorkspace : currentId + 1;
+                // Scroll up = next occupied workspace
+                nextId = findNextOccupied(currentId, 1);
             } else if (event.angleDelta.y < 0) {
-                // Scroll down = previous workspace (wrap to end)
-                nextId = currentId <= startWorkspace ? endWorkspace : currentId - 1;
+                // Scroll down = previous occupied workspace
+                nextId = findNextOccupied(currentId, -1);
             } else {
                 return;
             }
 
-            Hyprland.dispatch(`workspace ${nextId}`);
+            if (nextId !== currentId) {
+                Hyprland.dispatch(`workspace ${nextId}`);
+            }
         }
         acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
     }
