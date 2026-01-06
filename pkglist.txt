@@ -22,13 +22,13 @@ chafa
 clang
 cliphist
 corectrl
+cups
 dart-sass
 dnsmasq
 docker
 dotnet-runtime
 dotnet-sdk
 dotnet-sdk-8.0
-dunst
 efibootmgr
 eza
 fastfetch
@@ -37,6 +37,7 @@ firefox
 flatpak
 fzf
 gamescope
+ghostty
 git
 git-crypt
 git-delta
@@ -47,6 +48,7 @@ grub
 grub-btrfs
 gst-plugin-pipewire
 gvfs
+hplip
 htop
 hyprcursor
 hyprgraphics
@@ -128,6 +130,8 @@ rocm-hip-sdk
 rocm-opencl-sdk
 rocm-smi-lib
 samba
+sane
+simple-scan
 slurp
 smartmontools
 socat
@@ -139,6 +143,7 @@ swtpm
 swww
 syncplay
 sysstat
+system-config-printer
 thunar
 timeshift
 tk
@@ -206,6 +211,7 @@ virt-viewer
 vulkan-intel
 vulkan-radeon
 vulkan-tools
+waydroid
 webkit2gtk
 webkit2gtk-4.1
 wev

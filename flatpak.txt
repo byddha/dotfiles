@@ -1,3 +1,4 @@
+com.bambulab.BambuStudio
 com.github.mtkennerly.ludusavi
 com.mastermindzh.tidal-hifi
 dev.vencord.Vesktop
