@@ -319,6 +319,10 @@ QtObject {
                 icon: "",
                 name: "qimgv"
             },
+            "waydroid.app.komikku": {
+                icon: "",
+                name: "Komikku"
+            },
 
             // Graphics Tools
             "blender": {
