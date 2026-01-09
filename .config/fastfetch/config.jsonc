@@ -35,161 +35,252 @@
 
 {
     "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+    "display": {
+        "key": {
+            "width": 18
+        },
+        "size": {
+            "binaryPrefix": "SI"
+        },
+        "percent": {
+            "width": 5
+        }
+    },
     "logo": {
-        "source": "~/.config/fastfetch/kanagawa.png",
-        "type": "kitty",
-        "height": 15,
-        "width": 30,
+        "source": "~/.config/fastfetch/hk.ans",
+        "type": "file-raw",
         "padding": {
-            "top": 10,
-           "left": 4
+            "top": 8,
+            "left": 2
         }
     },
     "modules": [
         "break",
         {
             "type": "custom",
-            "format": "┌────────────────────── Hardware ──────────────────────┐",
-            "outputColor": "red"
+            "format": "┌───────────────────────────── Hardware ──────────────────────────────┐",
+            "outputColor": "dim_white"
         },
         {
             "type": "title",
-            "key": " PC",
+            "key": "  PC",
+            "outputColor": "green",
             "keyColor": "green"
         },
         {
+            "type": "board",
+            "key": "   󰊠 Board",
+            "format": "{vendor} {name}",
+            "outputColor": "magenta",
+            "keyColor": "magenta"
+        },
+        {
+            "type": "bios",
+            "key": "   󰒋 BIOS",
+            "outputColor": "magenta",
+            "keyColor": "magenta"
+        },
+        {
+            "type": "display",
+            "key": "   󰍹 Monitor",
+            "outputColor": "cyan",
+            "keyColor": "cyan",
+            "format": "{name}: {width}×{height} @ {refresh-rate}Hz",
+            "barWidth": 10
+        },
+        {
             "type": "cpu",
-            "key": "│ ├󰍛 CPU",
+            "key": "   󰍛 CPU",
             "showPeCoreCount": true,
-            "format": "{1} ({4}) @ {7}",
+            "temp": true,
+            "format": "[{temperature}] {name} ({cores-logical}) @ {freq-max}",
+            "outputColor": "green",
             "keyColor": "green"
         },
         {
             "type": "gpu",
-            "key": "│ ├󰍛 GPU",
+            "key": "   󰍛 GPU",
+            "temp": true,
+            "format": "[{temperature}] {name} [{type}]",
+            "outputColor": "green",
             "keyColor": "green"
+        },
+        {
+            "type": "physicaldisk",
+            "key": "   󰋊 SSD",
+            "temp": true,
+            "format": "[{temperature}] {name} ({size})",
+            "outputColor": "yellow",
+            "keyColor": "yellow"
         },
         {
             "type": "disk",
-            "key": "│ ├󰍛 Disk",
-            "keyColor": "green"
-        },
-        {
-            "type": "display",
-            "key": "│ ├󰍛 Monitor",
-            "keyColor": "green",
-            "format": "{6} ({7}): {1}×{2} @ {3}Hz",
-            "barWidth": 10
+            "key": "   󰨣 Disk",
+            "format": "[{size-percentage}] {size-used} / {size-total} - {filesystem}",
+            "outputColor": "yellow",
+            "keyColor": "yellow"
         },
         {
             "type": "memory",
-            "key": "│ ├󰍛 Mem",
+            "key": "   󰍛 Mem",
+            "format": "[{percentage}] {used} / {total}",
+            "outputColor": "green",
             "keyColor": "green"
         },
         {
             "type": "swap",
-            "key": "└ └󰍛 Swap",
+            "key": "   󰍛 Swap",
+            "format": "[{percentage}] {used} / {total}",
+            "outputColor": "green",
             "keyColor": "green"
         },
         {
             "type": "custom",
-            "format": "└──────────────────────────────────────────────────────┘",
-            "outputColor": "red"
+            "format": "└─────────────────────────────────────────────────────────────────────┘",
+            "outputColor": "dim_white"
         },
         "break",
         {
             "type": "custom",
-            "format": "┌────────────────────── Software ──────────────────────┐",
-            "outputColor": "red"
+            "format": "┌───────────────────────────── Software ──────────────────────────────┐",
+            "outputColor": "dim_white"
         },
         {
             "type": "os",
-            "key": " OS",
+            "key": "  OS",
+            "outputColor": "yellow",
             "keyColor": "yellow"
         },
         {
             "type": "kernel",
-            "key": "│ ├ Kernel",
+            "key": "    Kernel",
+            "outputColor": "yellow",
             "keyColor": "yellow"
         },
         {
             "type": "packages",
-            "key": "│ ├󰏖 Packages",
+            "key": "   󰏖 Packages",
+            "format": "{pacman} pacman + {flatpak-all} flatpak",
+            "outputColor": "yellow",
             "keyColor": "yellow"
         },
         {
             "type": "shell",
-            "key": "│ ├ Shell",
+            "key": "    Shell",
+            "outputColor": "yellow",
             "keyColor": "yellow"
         },
         {
             "type": "command",
-            "key": "│ ├ OS Age",
+            "key": "   󰻀 OS Age",
+            "outputColor": "yellow",
             "keyColor": "yellow",
             "text": "birth_install=$(stat -c %W /); current=$(date +%s); time_progression=$((current - birth_install)); days_difference=$((time_progression / 86400)); echo $days_difference days"
         },
         {
             "type": "uptime",
-            "key": "└ └ Uptime",
+            "key": "   󰅒 Uptime",
+            "outputColor": "yellow",
             "keyColor": "yellow"
         },
-        "break",
         {
             "type": "de",
-            "key": " DE",
+            "key": "  DE",
+            "outputColor": "blue",
             "keyColor": "blue"
         },
         {
             "type": "wm",
-            "key": " WM",
+            "key": "  WM",
+            "outputColor": "blue",
             "keyColor": "blue"
         },
         {
             "type": "lm",
-            "key": "│ ├ LM",
+            "key": "   󱙫 LM",
+            "outputColor": "blue",
             "keyColor": "blue"
         },
         {
             "type": "wmtheme",
-            "key": "│ ├󰉼 WM Theme",
+            "key": "   󰉼 WM Theme",
+            "outputColor": "blue",
             "keyColor": "blue"
         },
         {
-            "type": "theme",
-            "key": "│ ├󰉼 Theme",
-            "keyColor": "blue"
-        },
-        {
-            "type": "gpu",
-            "key": "│ ├󰍛 GPU Driver",
-            "format": "{3}",
+            "type": "vulkan",
+            "key": "   󰍛 GPU Driver",
+            "outputColor": "blue",
             "keyColor": "blue"
         },
         {
             "type": "terminal",
-            "key": "│ ├ Terminal",
-            "keyColor": "blue"
+            "key": "    Term",
+            "outputColor": "cyan",
+            "keyColor": "cyan"
         },
         {
             "type": "terminalfont",
-            "key": "│ ├ Terminal Font",
-            "keyColor": "blue"
+            "key": "    Term Font",
+            "outputColor": "cyan",
+            "keyColor": "cyan"
+        },
+        {
+            "type": "theme",
+            "key": "   󰉼 Theme",
+            "outputColor": "magenta",
+            "keyColor": "magenta"
+        },
+        {
+            "type": "icons",
+            "key": "   󰀻 Icons",
+            "outputColor": "magenta",
+            "keyColor": "magenta"
         },
         {
             "type": "font",
-            "key": "└ └ Font",
-            "keyColor": "blue"
+            "key": "    Font",
+            "outputColor": "magenta",
+            "keyColor": "magenta"
+        },
+        {
+            "type": "custom",
+            "format": "└─────────────────────────────────────────────────────────────────────┘",
+            "outputColor": "dim_white"
         },
         "break",
         {
             "type": "custom",
-            "format": "└────────────────────────────────────────────────────┘",
-            "outputColor": "red"
+            "format": "┌───────────────────────────── Network ───────────────────────────────┐",
+            "outputColor": "dim_white"
+        },
+        {
+            "type": "localip",
+            "key": " 󰛳 Local IP",
+            "outputColor": "cyan",
+            "keyColor": "cyan"
+        },
+        {
+            "type": "publicip",
+            "key": "   󰩟 Public IP",
+            "outputColor": "cyan",
+            "keyColor": "cyan"
+        },
+        {
+            "type": "dns",
+            "key": "   󰇖 DNS",
+            "outputColor": "cyan",
+            "keyColor": "cyan"
         },
         {
             "type": "custom",
-            "format": "               \u001b[90m  \u001b[31m  \u001b[32m  \u001b[33m  \u001b[34m  \u001b[35m  \u001b[36m  \u001b[37m "
+            "format": "└─────────────────────────────────────────────────────────────────────┘",
+            "outputColor": "dim_white"
         },
-        "break",
+        {
+            "type": "custom",
+            "format": "                          \u001b[90m  \u001b[31m  \u001b[32m  \u001b[33m  \u001b[34m  \u001b[35m  \u001b[36m  \u001b[37m "
+        },
+        "break"
     ]
 }
