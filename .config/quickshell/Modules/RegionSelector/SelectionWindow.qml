@@ -56,6 +56,7 @@ PanelWindow {
     // Adjustment mode (after initial drag, before confirming)
     property bool adjusting: false
     property bool editMode: false  // When true, snip opens in Swappy instead of copying
+    property bool saveMode: false  // When true, save directly to file instead of clipboard
     property string adjustHandle: ""  // Which handle is being dragged: "", "move", "nw", "ne", "sw", "se", "n", "s", "e", "w"
     property real adjustStartX: 0
     property real adjustStartY: 0
@@ -66,28 +67,30 @@ PanelWindow {
 
     // Window regions from HyprlandData, sorted for proper z-order (floating above tiled)
     readonly property var windowRegions: {
-        const workspaceWindows = HyprlandData.windowList.filter(w =>
-            w.workspace.id === root.activeWorkspaceId
-        );
+        const workspaceWindows = HyprlandData.windowList.filter(w => w.workspace.id === root.activeWorkspaceId);
 
         // If any window is fullscreen or maximized, only show that window (others are occluded)
         // fullscreen: 1 = real fullscreen, 2 = maximized
         const fullscreenWindow = workspaceWindows.find(w => w.fullscreen > 0);
         if (fullscreenWindow) {
-            return [{
-                at: [fullscreenWindow.at[0] - root.monitorOffsetX, fullscreenWindow.at[1] - root.monitorOffsetY],
-                size: fullscreenWindow.size,
-                class: fullscreenWindow.class,
-                title: fullscreenWindow.title,
-                floating: fullscreenWindow.floating
-            }];
+            return [
+                {
+                    at: [fullscreenWindow.at[0] - root.monitorOffsetX, fullscreenWindow.at[1] - root.monitorOffsetY],
+                    size: fullscreenWindow.size,
+                    class: fullscreenWindow.class,
+                    title: fullscreenWindow.title,
+                    floating: fullscreenWindow.floating
+                }
+            ];
         }
 
         // Sort: floating windows first (higher z-order), then tiled
         // Among floating windows, smaller ones first (easier to target, likely on top)
         const sorted = [...workspaceWindows].sort((a, b) => {
-            if (a.floating && !b.floating) return -1;
-            if (!a.floating && b.floating) return 1;
+            if (a.floating && !b.floating)
+                return -1;
+            if (!a.floating && b.floating)
+                return 1;
             // Both floating: smaller area first (higher priority for targeting)
             if (a.floating && b.floating) {
                 const areaA = a.size[0] * a.size[1];
@@ -98,12 +101,12 @@ PanelWindow {
         });
 
         return sorted.map(w => ({
-            at: [w.at[0] - root.monitorOffsetX, w.at[1] - root.monitorOffsetY],
-            size: w.size,
-            class: w.class,
-            title: w.title,
-            floating: w.floating
-        }));
+                    at: [w.at[0] - root.monitorOffsetX, w.at[1] - root.monitorOffsetY],
+                    size: w.size,
+                    class: w.class,
+                    title: w.title,
+                    floating: w.floating
+                }));
     }
 
     // Floating windows only (for computing cutouts in tiled windows)
@@ -412,8 +415,13 @@ PanelWindow {
         // Region in slurp format for wf-recorder
         const slurpRegion = `${Math.round(root.regionX + root.monitorOffsetX)},${Math.round(root.regionY + root.monitorOffsetY)} ${rw}x${rh}`;
 
-        // Edit mode opens in swappy instead of copying
-        if (root.editMode && effectiveAction === RegionSelector.SnipAction.Copy) {
+        // Save mode saves directly to file
+        if (root.saveMode && effectiveAction === RegionSelector.SnipAction.Copy) {
+            const saveCmd = `mkdir -p ~/Pictures/Screenshots && ${cropToStdout} > ~/Pictures/Screenshots/screenshot_$(date +%Y-%m-%d_%H-%M-%S).png && ${cleanup}`;
+            snipProc.command = ["bash", "-c", saveCmd];
+            Logger.info("RegionSelector: Saving screenshot to ~/Pictures/Screenshots");
+        } else if (root.editMode && effectiveAction === RegionSelector.SnipAction.Copy) {
+            // Edit mode opens in swappy instead of copying
             snipProc.command = ["bash", "-c", `${cropToStdout} | swappy -f - && ${cleanup}`];
             Logger.info("RegionSelector: Opening region in swappy");
         } else {
@@ -472,7 +480,18 @@ PanelWindow {
                 }
                 break;
             case Qt.Key_S:
-                root.actionChangeRequested(RegionSelector.SnipAction.Copy);
+                if (event.modifiers & Qt.ControlModifier) {
+                    // Ctrl+S: Save directly to file
+                    if (root.adjusting && root.regionWidth > 0 && root.regionHeight > 0 && mouseArea.containsMouse) {
+                        root.snipping = true;
+                        root.saveMode = true;
+                        root.editMode = false;
+                        root.snip();
+                    }
+                } else {
+                    // Plain S: Switch to Screenshot mode
+                    root.actionChangeRequested(RegionSelector.SnipAction.Copy);
+                }
                 break;
             case Qt.Key_R:
                 root.actionChangeRequested(RegionSelector.SnipAction.Record);
@@ -701,13 +720,12 @@ PanelWindow {
                         const myArea = tw * th;
 
                         // Windows to cut out: all floating windows that should appear "above" this one
-                        const windowsToCut = isTiled
-                            ? root.floatingWindows  // Tiled: cut out all floating
-                            : root.floatingWindows.filter(fw => {
-                                // Floating: cut out smaller floating windows (they have priority)
-                                const fwArea = fw.size[0] * fw.size[1];
-                                return fwArea < myArea;
-                            });
+                        const windowsToCut = isTiled ? root.floatingWindows  // Tiled: cut out all floating
+                        : root.floatingWindows.filter(fw => {
+                            // Floating: cut out smaller floating windows (they have priority)
+                            const fwArea = fw.size[0] * fw.size[1];
+                            return fwArea < myArea;
+                        });
 
                         return windowsToCut.map(fw => {
                             const fx = fw.at[0];
@@ -721,7 +739,12 @@ PanelWindow {
                             const iy2 = Math.min(ty + th, fy + fwh);
                             if (ix < ix2 && iy < iy2) {
                                 // Convert to local coordinates
-                                return { x: ix - tx, y: iy - ty, width: ix2 - ix, height: iy2 - iy };
+                                return {
+                                    x: ix - tx,
+                                    y: iy - ty,
+                                    width: ix2 - ix,
+                                    height: iy2 - iy
+                                };
                             }
                             return null;
                         }).filter(c => c !== null);
