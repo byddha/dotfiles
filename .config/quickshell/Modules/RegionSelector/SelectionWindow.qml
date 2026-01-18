@@ -58,6 +58,9 @@ PanelWindow {
     property bool editMode: false  // When true, snip opens in Swappy instead of copying
     property bool saveMode: false  // When true, save directly to file instead of clipboard
     property bool lensMode: false  // When true, send to Google Lens for visual search
+    property bool ocrMode: false   // When true, extract text via Tesseract OCR
+    property bool ocrAllLangs: false // When true, use all installed languages; otherwise English only
+    property bool ocrTranslate: false // When true, open OCR result in Kagi Translate
     property string adjustHandle: ""  // Which handle is being dragged: "", "move", "nw", "ne", "sw", "se", "n", "s", "e", "w"
     property real adjustStartX: 0
     property real adjustStartY: 0
@@ -430,6 +433,17 @@ PanelWindow {
                 `rm '${cropPath}' '${root.screenshotPath}'`;
             snipProc.command = ["bash", "-c", lensCmd];
             Logger.info("RegionSelector: Sending region to Google Lens");
+        } else if (root.ocrMode && effectiveAction === RegionSelector.SnipAction.Copy) {
+            // Tesseract OCR - extract text and copy to clipboard (or translate)
+            const langFlag = root.ocrAllLangs
+                ? `$(tesseract --list-langs 2>/dev/null | tail -n +2 | paste -sd+)`
+                : "eng";
+            const ocrBase = `magick '${root.screenshotPath}' -crop ${rw}x${rh}+${rx}+${ry} +repage png:- | tesseract -l ${langFlag} stdin stdout`;
+            const ocrCmd = root.ocrTranslate
+                ? `text=$(${ocrBase}) && printf '%s' "$text" | wl-copy && xdg-open "https://translate.kagi.com/?from=auto&to=&text=$(printf '%s' "$text" | jq -sRr @uri)" && ${cleanup}`
+                : `${ocrBase} | wl-copy && ${cleanup}`;
+            snipProc.command = ["bash", "-c", ocrCmd];
+            Logger.info(`RegionSelector: Extracting text via OCR (${root.ocrAllLangs ? "all langs" : "eng"}${root.ocrTranslate ? ", translate" : ""})`);
         } else if (root.editMode && effectiveAction === RegionSelector.SnipAction.Copy) {
             // Edit mode opens in swappy instead of copying
             snipProc.command = ["bash", "-c", `${cropToStdout} | swappy -f - && ${cleanup}`];
@@ -479,6 +493,8 @@ PanelWindow {
                     root.snipping = true;
                     root.editMode = false;
                     root.lensMode = false;
+                    root.ocrMode = false;
+                    root.ocrTranslate = false;
                     root.snip();
                 }
                 break;
@@ -488,6 +504,8 @@ PanelWindow {
                     root.snipping = true;
                     root.editMode = true;
                     root.lensMode = false;
+                    root.ocrMode = false;
+                    root.ocrTranslate = false;
                     root.snip();
                 }
                 break;
@@ -499,6 +517,8 @@ PanelWindow {
                         root.saveMode = true;
                         root.editMode = false;
                         root.lensMode = false;
+                        root.ocrMode = false;
+                        root.ocrTranslate = false;
                         root.snip();
                     }
                 } else {
@@ -521,6 +541,8 @@ PanelWindow {
                 root.regionHeight = root.height;
                 root.editMode = (event.modifiers & Qt.ShiftModifier);
                 root.lensMode = false;
+                root.ocrMode = false;
+                root.ocrTranslate = false;
                 root.snip();
                 break;
             case Qt.Key_C:
@@ -535,6 +557,21 @@ PanelWindow {
                     root.snipping = true;
                     root.editMode = false;
                     root.lensMode = true;
+                    root.ocrMode = false;
+                    root.ocrTranslate = false;
+                    root.snip();
+                }
+                break;
+            case Qt.Key_T:
+                // Extract text via Tesseract OCR
+                // T = English, Shift+T = all languages, Ctrl+T = all languages + Kagi Translate
+                if (root.adjusting && root.regionWidth > 0 && root.regionHeight > 0 && mouseArea.containsMouse) {
+                    root.snipping = true;
+                    root.editMode = false;
+                    root.lensMode = false;
+                    root.ocrMode = true;
+                    root.ocrTranslate = (event.modifiers & Qt.ControlModifier);
+                    root.ocrAllLangs = (event.modifiers & Qt.ShiftModifier) || root.ocrTranslate;
                     root.snip();
                 }
                 break;
@@ -797,6 +834,8 @@ PanelWindow {
                         root.regionHeight = root.height;
                         root.editMode = false;
                         root.lensMode = false;
+                        root.ocrMode = false;
+                        root.ocrTranslate = false;
                         root.snip();
                     } else {
                         root.action = newAction;
