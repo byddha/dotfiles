@@ -57,6 +57,7 @@ PanelWindow {
     property bool adjusting: false
     property bool editMode: false  // When true, snip opens in Swappy instead of copying
     property bool saveMode: false  // When true, save directly to file instead of clipboard
+    property bool lensMode: false  // When true, send to Google Lens for visual search
     property string adjustHandle: ""  // Which handle is being dragged: "", "move", "nw", "ne", "sw", "se", "n", "s", "e", "w"
     property real adjustStartX: 0
     property real adjustStartY: 0
@@ -420,6 +421,15 @@ PanelWindow {
             const saveCmd = `mkdir -p ~/Pictures/Screenshots && ${cropToStdout} > ~/Pictures/Screenshots/screenshot_$(date +%Y-%m-%d_%H-%M-%S).png && ${cleanup}`;
             snipProc.command = ["bash", "-c", saveCmd];
             Logger.info("RegionSelector: Saving screenshot to ~/Pictures/Screenshots");
+        } else if (root.lensMode && effectiveAction === RegionSelector.SnipAction.Copy) {
+            // Google Lens visual search - upload to temp host, then open Lens
+            const cropPath = "/tmp/bidshell-lens.png";
+            const lensCmd = `magick '${root.screenshotPath}' -crop ${rw}x${rh}+${rx}+${ry} +repage '${cropPath}' && ` +
+                `imageLink=$(curl -sF files[]=@'${cropPath}' 'https://uguu.se/upload' | jq -r '.files[0].url') && ` +
+                `xdg-open "https://lens.google.com/uploadbyurl?url=\${imageLink}" && ` +
+                `rm '${cropPath}' '${root.screenshotPath}'`;
+            snipProc.command = ["bash", "-c", lensCmd];
+            Logger.info("RegionSelector: Sending region to Google Lens");
         } else if (root.editMode && effectiveAction === RegionSelector.SnipAction.Copy) {
             // Edit mode opens in swappy instead of copying
             snipProc.command = ["bash", "-c", `${cropToStdout} | swappy -f - && ${cleanup}`];
@@ -468,6 +478,7 @@ PanelWindow {
                 if (root.adjusting && root.regionWidth > 0 && root.regionHeight > 0 && mouseArea.containsMouse) {
                     root.snipping = true;
                     root.editMode = false;
+                    root.lensMode = false;
                     root.snip();
                 }
                 break;
@@ -476,6 +487,7 @@ PanelWindow {
                 if (root.adjusting && root.regionWidth > 0 && root.regionHeight > 0 && mouseArea.containsMouse) {
                     root.snipping = true;
                     root.editMode = true;
+                    root.lensMode = false;
                     root.snip();
                 }
                 break;
@@ -486,6 +498,7 @@ PanelWindow {
                         root.snipping = true;
                         root.saveMode = true;
                         root.editMode = false;
+                        root.lensMode = false;
                         root.snip();
                     }
                 } else {
@@ -507,12 +520,22 @@ PanelWindow {
                 root.regionWidth = root.width;
                 root.regionHeight = root.height;
                 root.editMode = (event.modifiers & Qt.ShiftModifier);
+                root.lensMode = false;
                 root.snip();
                 break;
             case Qt.Key_C:
                 // Shrink selection to content bounds
                 if (root.adjusting && mouseArea.containsMouse) {
                     root.shrinkToContent();
+                }
+                break;
+            case Qt.Key_L:
+                // Send to Google Lens for visual search
+                if (root.adjusting && root.regionWidth > 0 && root.regionHeight > 0 && mouseArea.containsMouse) {
+                    root.snipping = true;
+                    root.editMode = false;
+                    root.lensMode = true;
+                    root.snip();
                 }
                 break;
             }
@@ -772,6 +795,8 @@ PanelWindow {
                         root.regionY = 0;
                         root.regionWidth = root.width;
                         root.regionHeight = root.height;
+                        root.editMode = false;
+                        root.lensMode = false;
                         root.snip();
                     } else {
                         root.action = newAction;
