@@ -118,6 +118,7 @@ Singleton {
     // Modifier Key Icons
     // ==================
     readonly property string keyCtrl: "󰘴"
+    readonly property string keyShift: "󰘶"
     readonly property string keySuper: "󰣇"
     readonly property string keyCaps: "󰪛"
     readonly property string keyWorkspace: "󰆾"
@@ -155,6 +156,19 @@ Singleton {
     readonly property string wind: "󰖝"
     readonly property string rain: "󰖗"
     readonly property string spinner: ""
+
+    // ==================
+    // Screenshot/Region Selector Icons
+    // ==================
+    readonly property string screenshot: "󰆏"
+    readonly property string record: "󰻃"
+    readonly property string fullscreen: "󰍉"
+    readonly property string crop: "󰆞"
+    readonly property string lens: "󰈈"
+    readonly property string ocr: "󰊄"
+    readonly property string ocrAll: "󰗊"
+    readonly property string translate: "󰗺"
+    readonly property string cancel: "󰅖"
 
     // ==================
     // Misc Icons

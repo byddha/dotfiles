@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import "../../Config"
+import "../../Services/UI"
 
 Rectangle {
     id: root
@@ -10,6 +11,10 @@ Rectangle {
     signal dismiss()
     signal actionRequested(int newAction)
     signal cropRequested()
+    signal lensRequested()
+    signal ocrRequested()        // English only
+    signal ocrAllRequested()     // All languages
+    signal translateRequested()  // OCR + Kagi Translate
 
     radius: Theme.radiusBase * 1.5
     color: Theme.alpha(Theme.colLayer1, 0.9)
@@ -53,7 +58,7 @@ Rectangle {
                             font.family: Theme.fontFamilyIcons
                             font.pixelSize: 14
                             color: root.action === RegionSelector.SnipAction.Copy ? Theme.primaryText : Theme.textSecondary
-                            text: "󰆏"
+                            text: Icons.screenshot
                         }
                         Text {
                             font.family: Theme.fontFamily
@@ -88,7 +93,7 @@ Rectangle {
                             font.family: Theme.fontFamilyIcons
                             font.pixelSize: 14
                             color: root.action === RegionSelector.SnipAction.Record ? Theme.primaryText : Theme.textSecondary
-                            text: "󰻃"
+                            text: Icons.record
                         }
                         Text {
                             font.family: Theme.fontFamily
@@ -125,7 +130,7 @@ Rectangle {
                     font.family: Theme.fontFamilyIcons
                     font.pixelSize: 16
                     color: Theme.textColor
-                    text: "󰍉"
+                    text: Icons.fullscreen
                 }
                 Text {
                     font.family: Theme.fontFamily
@@ -163,7 +168,7 @@ Rectangle {
                     font.family: Theme.fontFamilyIcons
                     font.pixelSize: 16
                     color: root.adjusting ? Theme.textColor : Theme.textSecondary
-                    text: "󰆞"
+                    text: Icons.crop
                 }
                 Text {
                     font.family: Theme.fontFamily
@@ -184,6 +189,156 @@ Rectangle {
             }
         }
 
+        // Lens button (Google Lens visual search)
+        Rectangle {
+            Layout.preferredWidth: lensContent.width + 16
+            Layout.preferredHeight: 36
+            radius: Theme.radiusBase
+            color: lensMouse.containsMouse && root.adjusting ? Theme.alpha(Theme.colLayer2, 0.8) : Theme.alpha(Theme.colLayer0, 0.6)
+            opacity: root.adjusting ? 1.0 : 0.4
+
+            RowLayout {
+                id: lensContent
+                anchors.centerIn: parent
+                spacing: 6
+
+                Text {
+                    font.family: Theme.fontFamilyIcons
+                    font.pixelSize: 16
+                    color: root.adjusting ? Theme.textColor : Theme.textSecondary
+                    text: Icons.lens
+                }
+                Text {
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSizeSmall
+                    font.weight: Font.Medium
+                    color: root.adjusting ? Theme.textSecondary : Theme.textSecondary
+                    textFormat: Text.RichText
+                    text: `<u>L</u>ens`
+                }
+            }
+
+            MouseArea {
+                id: lensMouse
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: root.adjusting ? Qt.PointingHandCursor : Qt.ArrowCursor
+                onClicked: if (root.adjusting) root.lensRequested()
+            }
+        }
+
+        // Text button (OCR English)
+        Rectangle {
+            Layout.preferredWidth: textContent.width + 16
+            Layout.preferredHeight: 36
+            radius: Theme.radiusBase
+            color: textMouse.containsMouse && root.adjusting ? Theme.alpha(Theme.colLayer2, 0.8) : Theme.alpha(Theme.colLayer0, 0.6)
+            opacity: root.adjusting ? 1.0 : 0.4
+
+            RowLayout {
+                id: textContent
+                anchors.centerIn: parent
+                spacing: 6
+
+                Text {
+                    font.family: Theme.fontFamilyIcons
+                    font.pixelSize: 16
+                    color: root.adjusting ? Theme.textColor : Theme.textSecondary
+                    text: Icons.ocr
+                }
+                Text {
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSizeSmall
+                    font.weight: Font.Medium
+                    color: root.adjusting ? Theme.textSecondary : Theme.textSecondary
+                    textFormat: Text.RichText
+                    text: `<u>T</u>ext`
+                }
+            }
+
+            MouseArea {
+                id: textMouse
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: root.adjusting ? Qt.PointingHandCursor : Qt.ArrowCursor
+                onClicked: if (root.adjusting) root.ocrRequested()
+            }
+        }
+
+        // Text+ button (OCR All Languages)
+        Rectangle {
+            Layout.preferredWidth: textPlusContent.width + 16
+            Layout.preferredHeight: 36
+            radius: Theme.radiusBase
+            color: textPlusMouse.containsMouse && root.adjusting ? Theme.alpha(Theme.colLayer2, 0.8) : Theme.alpha(Theme.colLayer0, 0.6)
+            opacity: root.adjusting ? 1.0 : 0.4
+
+            RowLayout {
+                id: textPlusContent
+                anchors.centerIn: parent
+                spacing: 6
+
+                Text {
+                    font.family: Theme.fontFamilyIcons
+                    font.pixelSize: 16
+                    color: root.adjusting ? Theme.textColor : Theme.textSecondary
+                    text: Icons.ocrAll
+                }
+                Text {
+                    font.pixelSize: Theme.fontSizeSmall
+                    font.weight: Font.Medium
+                    color: root.adjusting ? Theme.textSecondary : Theme.textSecondary
+                    textFormat: Text.RichText
+                    text: `<u><font face="${Theme.fontFamilyIcons}">${Icons.keyShift}</font>T</u>ext all langs`
+                }
+            }
+
+            MouseArea {
+                id: textPlusMouse
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: root.adjusting ? Qt.PointingHandCursor : Qt.ArrowCursor
+                onClicked: if (root.adjusting) root.ocrAllRequested()
+            }
+        }
+
+        // Translate button (OCR + Kagi Translate)
+        Rectangle {
+            Layout.preferredWidth: translateContent.width + 16
+            Layout.preferredHeight: 36
+            radius: Theme.radiusBase
+            color: translateMouse.containsMouse && root.adjusting ? Theme.alpha(Theme.colLayer2, 0.8) : Theme.alpha(Theme.colLayer0, 0.6)
+            opacity: root.adjusting ? 1.0 : 0.4
+
+            RowLayout {
+                id: translateContent
+                anchors.centerIn: parent
+                spacing: 6
+
+                Text {
+                    font.family: Theme.fontFamilyIcons
+                    font.pixelSize: 16
+                    color: root.adjusting ? Theme.textColor : Theme.textSecondary
+                    text: Icons.translate
+                }
+                Text {
+                    font.pixelSize: Theme.fontSizeSmall
+                    font.weight: Font.Medium
+                    color: root.adjusting ? Theme.textSecondary : Theme.textSecondary
+                    textFormat: Text.RichText
+                    text: `<u><font face="${Theme.fontFamilyIcons}">${Icons.keyCtrl}</font>T</u>ranslate`
+                }
+            }
+
+            MouseArea {
+                id: translateMouse
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: root.adjusting ? Qt.PointingHandCursor : Qt.ArrowCursor
+                onClicked: if (root.adjusting) root.translateRequested()
+            }
+        }
+
         // Cancel button
         Rectangle {
             Layout.preferredWidth: cancelContent.width + 16
@@ -200,7 +355,7 @@ Rectangle {
                     font.family: Theme.fontFamilyIcons
                     font.pixelSize: 16
                     color: cancelMouse.containsMouse ? Theme.accentRed : Theme.textSecondary
-                    text: "󰅖"
+                    text: Icons.cancel
                 }
                 Text {
                     font.family: Theme.fontFamily

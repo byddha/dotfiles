@@ -824,6 +824,41 @@ PanelWindow {
                 adjusting: root.adjusting
                 onDismiss: root.dismiss()
                 onCropRequested: root.shrinkToContent()
+                onLensRequested: {
+                    root.snipping = true;
+                    root.editMode = false;
+                    root.lensMode = true;
+                    root.ocrMode = false;
+                    root.ocrTranslate = false;
+                    root.snip();
+                }
+                onOcrRequested: {
+                    root.snipping = true;
+                    root.editMode = false;
+                    root.lensMode = false;
+                    root.ocrMode = true;
+                    root.ocrAllLangs = false;
+                    root.ocrTranslate = false;
+                    root.snip();
+                }
+                onOcrAllRequested: {
+                    root.snipping = true;
+                    root.editMode = false;
+                    root.lensMode = false;
+                    root.ocrMode = true;
+                    root.ocrAllLangs = true;
+                    root.ocrTranslate = false;
+                    root.snip();
+                }
+                onTranslateRequested: {
+                    root.snipping = true;
+                    root.editMode = false;
+                    root.lensMode = false;
+                    root.ocrMode = true;
+                    root.ocrAllLangs = true;
+                    root.ocrTranslate = true;
+                    root.snip();
+                }
                 onActionRequested: newAction => {
                     if (newAction === -1) {
                         // Fullscreen
