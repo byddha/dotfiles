@@ -1,5 +1,6 @@
 com.bambulab.BambuStudio
 com.github.mtkennerly.ludusavi
+com.github.wwmm.easyeffects
 com.mastermindzh.tidal-hifi
 dev.vencord.Vesktop
 io.missioncenter.MissionCenter

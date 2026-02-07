@@ -1,4 +1,6 @@
 ags-hyprpanel-git
+ascii-image-converter-git
+bridge-utils
 c++utilities
 elephant-calc
 elephant-clipboard
@@ -17,7 +19,6 @@ neothesia
 paru
 paru-debug
 pianobooster-custom
-protontricks
 qimgv-git
 qt6ct-kde
 qtutilities-qt6
@@ -31,5 +32,6 @@ themix-icons-papirus-git
 ttf-joypixels
 visual-studio-code-bin
 walker
+xdg-desktop-portal-termfilechooser-boydaihungst-git
 xf86-video-vmware
 zen-browser-bin
