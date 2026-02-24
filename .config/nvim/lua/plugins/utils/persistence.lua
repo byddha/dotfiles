@@ -39,6 +39,14 @@ return {
             pattern = "PersistenceSavePre",
             callback = function()
                 require("dap-view").close(true)
+
+                for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+                    local buf = vim.api.nvim_win_get_buf(win)
+                    if vim.api.nvim_buf_get_name(buf):find "codediff" then
+                        vim.cmd "CodeDiff"
+                        break
+                    end
+                end
             end,
         })
     end,

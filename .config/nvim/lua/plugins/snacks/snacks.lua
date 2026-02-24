@@ -32,13 +32,6 @@ return {
             desc = "Open Git Web",
         },
         {
-            "<leader>gf",
-            function()
-                Snacks.lazygit.log_file()
-            end,
-            desc = "File History",
-        },
-        {
             "]]",
             function()
                 Snacks.words.jump(vim.v.count1)
