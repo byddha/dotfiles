@@ -8,13 +8,13 @@ Rectangle {
 
     required property int action
     required property bool adjusting
-    signal dismiss()
+    signal dismiss
     signal actionRequested(int newAction)
-    signal cropRequested()
-    signal lensRequested()
-    signal ocrRequested()        // English only
-    signal ocrAllRequested()     // All languages
-    signal translateRequested()  // OCR + Kagi Translate
+    signal cropRequested
+    signal lensRequested
+    signal ocrRequested        // English only
+    signal ocrAllRequested     // All languages
+    signal translateRequested  // OCR + Kagi Translate
 
     radius: Theme.radiusBase * 1.5
     color: Theme.alpha(Theme.colLayer1, 0.9)
@@ -185,7 +185,8 @@ Rectangle {
                 anchors.fill: parent
                 hoverEnabled: true
                 cursorShape: root.adjusting ? Qt.PointingHandCursor : Qt.ArrowCursor
-                onClicked: if (root.adjusting) root.cropRequested()
+                onClicked: if (root.adjusting)
+                    root.cropRequested()
             }
         }
 
@@ -223,7 +224,8 @@ Rectangle {
                 anchors.fill: parent
                 hoverEnabled: true
                 cursorShape: root.adjusting ? Qt.PointingHandCursor : Qt.ArrowCursor
-                onClicked: if (root.adjusting) root.lensRequested()
+                onClicked: if (root.adjusting)
+                    root.lensRequested()
             }
         }
 
@@ -252,7 +254,7 @@ Rectangle {
                     font.weight: Font.Medium
                     color: root.adjusting ? Theme.textSecondary : Theme.textSecondary
                     textFormat: Text.RichText
-                    text: `<u>T</u>ext`
+                    text: `<u>O</u>CR copy (En)`
                 }
             }
 
@@ -261,7 +263,8 @@ Rectangle {
                 anchors.fill: parent
                 hoverEnabled: true
                 cursorShape: root.adjusting ? Qt.PointingHandCursor : Qt.ArrowCursor
-                onClicked: if (root.adjusting) root.ocrRequested()
+                onClicked: if (root.adjusting)
+                    root.ocrRequested()
             }
         }
 
@@ -289,7 +292,7 @@ Rectangle {
                     font.weight: Font.Medium
                     color: root.adjusting ? Theme.textSecondary : Theme.textSecondary
                     textFormat: Text.RichText
-                    text: `<u><font face="${Theme.fontFamilyIcons}">${Icons.keyShift}</font>T</u>ext all langs`
+                    text: `<u><font face="${Theme.fontFamilyIcons}">${Icons.keyShift}</font>O</u>CR copy (All)`
                 }
             }
 
@@ -298,7 +301,8 @@ Rectangle {
                 anchors.fill: parent
                 hoverEnabled: true
                 cursorShape: root.adjusting ? Qt.PointingHandCursor : Qt.ArrowCursor
-                onClicked: if (root.adjusting) root.ocrAllRequested()
+                onClicked: if (root.adjusting)
+                    root.ocrAllRequested()
             }
         }
 
@@ -326,7 +330,7 @@ Rectangle {
                     font.weight: Font.Medium
                     color: root.adjusting ? Theme.textSecondary : Theme.textSecondary
                     textFormat: Text.RichText
-                    text: `<u><font face="${Theme.fontFamilyIcons}">${Icons.keyCtrl}</font>T</u>ranslate`
+                    text: `<u><font face="${Theme.fontFamilyIcons}">${Icons.keyCtrl}</font>O</u>CR + Translate`
                 }
             }
 
@@ -335,7 +339,8 @@ Rectangle {
                 anchors.fill: parent
                 hoverEnabled: true
                 cursorShape: root.adjusting ? Qt.PointingHandCursor : Qt.ArrowCursor
-                onClicked: if (root.adjusting) root.translateRequested()
+                onClicked: if (root.adjusting)
+                    root.translateRequested()
             }
         }
 

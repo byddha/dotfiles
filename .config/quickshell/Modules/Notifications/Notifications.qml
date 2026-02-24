@@ -1,13 +1,14 @@
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
-import Quickshell.Hyprland
 import "../../Config"
 import "../../Services"
 import "../../Components/Notifications"
 import "../../Utils"
 
 Scope {
+    readonly property string primaryMonitorName: Object.keys(Config.options.monitors)[0] ?? ""
+
     Variants {
         model: Quickshell.screens
 
@@ -20,7 +21,7 @@ Scope {
             visible: (Notifications.popupList.length > 0) &&
                      Settings.notificationsVisible &&
                      Config?.options.notifications.enabled &&
-                     modelData.name === Hyprland.focusedMonitor?.name
+                     modelData.name === primaryMonitorName
 
             WlrLayershell.namespace: "bidshell:notificationPopup"
             WlrLayershell.layer: WlrLayer.Overlay

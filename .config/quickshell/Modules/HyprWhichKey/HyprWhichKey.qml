@@ -2,16 +2,21 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
+import Quickshell.Hyprland
 import "../../Config"
 import "../../Services"
 import "../../Utils"
 
 Scope {
-    PanelWindow {
-        id: whichKey
+    Variants {
+        model: Quickshell.screens
 
-        screen: Quickshell.screens[0]
-        visible: Config?.options.hyprWhichKey.enabled && Settings.hyprWhichKeyVisible 
+        delegate: PanelWindow {
+            id: whichKey
+
+            required property ShellScreen modelData
+            screen: modelData
+            visible: Config?.options.hyprWhichKey.enabled && Settings.hyprWhichKeyVisible && modelData.name === Hyprland.focusedMonitor?.name
 
         anchors {
             bottom: true
@@ -149,6 +154,7 @@ Scope {
                     Logger.info(`Populated ${HyprWhichKeyService.keybindList.length} keybinds, maxKeyWidth: ${maxKeyWidth}`);
                 }
             }
+        }
         }
     }
 }
