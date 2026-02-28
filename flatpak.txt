@@ -2,6 +2,7 @@ com.bambulab.BambuStudio
 com.github.mtkennerly.ludusavi
 com.github.wwmm.easyeffects
 com.mastermindzh.tidal-hifi
+com.rustdesk.RustDesk
 dev.vencord.Vesktop
 io.missioncenter.MissionCenter
 org.prismlauncher.PrismLauncher

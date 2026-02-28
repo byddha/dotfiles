@@ -1,6 +1,7 @@
 7zip
 act
 adw-gtk-theme
+aha
 alsa-utils
 amd-ucode
 android-tools
@@ -24,6 +25,7 @@ cliphist
 corectrl
 cups
 dart-sass
+difftastic
 dmidecode
 dnsmasq
 docker
@@ -99,6 +101,7 @@ ly
 man-db
 man-pages
 mesa-utils
+micro
 mpv
 neovim
 networkmanager
