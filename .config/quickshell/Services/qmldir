@@ -7,7 +7,6 @@ singleton AirplaneMode 1.0 System/AirplaneMode.qml
 singleton Hdr 1.0 System/Hdr.qml
 
 singleton Compositor 1.0 Hyprland/Compositor.qml
-singleton HyprlandData 1.0 Hyprland/HyprlandData.qml
 singleton HyprWhichKeyService 1.0 Hyprland/HyprWhichKeyService.qml
 
 singleton Network 1.0 Connectivity/Network.qml

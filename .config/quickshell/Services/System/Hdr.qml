@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import ".."
 import "../../Config"
 import "../../Utils"
 
@@ -11,7 +12,6 @@ Singleton {
 
     property bool enabled: false
     property var hdrMonitors: []
-    property int pendingToggles: 0
     property bool pendingToggle: false
 
     function refresh() {
@@ -59,26 +59,8 @@ Singleton {
 
     function doToggle() {
         const newState = enabled ? "srgb" : "hdr";
-        pendingToggles = hdrMonitors.length;
         for (const mon of hdrMonitors) {
-            const proc = toggleComponent.createObject(root, {
-                command: ["hyprctl", "keyword", `monitorv2[${mon}]:cm`, newState]
-            });
-            proc.running = true;
-        }
-    }
-
-    Component {
-        id: toggleComponent
-        Process {
-            onExited: (code) => {
-                root.pendingToggles--;
-                if (root.pendingToggles === 0 && code === 0) {
-                    root.enabled = !root.enabled;
-                    Logger.info(`HDR ${root.enabled ? "enabled" : "disabled"}`);
-                }
-                destroy();
-            }
+            Compositor.setMonitorColorManagement(mon, newState);
         }
     }
 
