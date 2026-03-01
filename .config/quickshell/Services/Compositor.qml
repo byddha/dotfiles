@@ -12,7 +12,18 @@ Singleton {
     property var backend: null
 
     Component.onCompleted: {
-        var comp = Qt.createComponent("Hyprland/HyprlandBackend.qml");
+        var backendPath;
+        if (Quickshell.env("NIRI_SOCKET")) {
+            backendPath = "Niri/NiriBackend.qml";
+        } else if (Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE")) {
+            backendPath = "Hyprland/HyprlandBackend.qml";
+        } else {
+            Logger.error("No supported compositor detected (need Hyprland or Niri). Exiting...");
+            Qt.callLater(Qt.quit);
+            return;
+        }
+
+        var comp = Qt.createComponent(backendPath);
         if (comp.status === Component.Ready) {
             backend = comp.createObject(compositor);
         } else {
