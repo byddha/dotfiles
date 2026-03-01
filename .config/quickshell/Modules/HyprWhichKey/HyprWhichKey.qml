@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
-import Quickshell.Hyprland
 import "../../Config"
 import "../../Services"
 import "../../Utils"
@@ -16,7 +15,7 @@ Scope {
 
             required property ShellScreen modelData
             screen: modelData
-            visible: Config?.options.hyprWhichKey.enabled && Settings.hyprWhichKeyVisible && modelData.name === Hyprland.focusedMonitor?.name
+            visible: Config?.options.hyprWhichKey.enabled && Settings.hyprWhichKeyVisible && modelData.name === Compositor.focusedMonitorName
 
         anchors {
             bottom: true

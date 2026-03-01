@@ -1,10 +1,10 @@
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
-import Quickshell.Hyprland
 import "../../Config"
 import "../../Utils"
 import "../../Services"
+import "../../Components"
 
 Scope {
     id: root
@@ -17,7 +17,7 @@ Scope {
             required property ShellScreen modelData
 
             screen: modelData
-            visible: Settings.sidebarVisible && Config.options.sidebar.enabled && modelData.name === Hyprland.focusedMonitor?.name
+            visible: Settings.sidebarVisible && Config.options.sidebar.enabled && modelData.name === Compositor.focusedMonitorName
 
             anchors {
                 right: true
@@ -40,7 +40,7 @@ Scope {
 
             // Click-outside-to-close using HyprlandFocusGrab
             // NOTE: active must NOT be bound to visibility - must be manually controlled
-            HyprlandFocusGrab {
+            FocusGrab {
                 id: focusGrab
                 windows: [sidebarWindow]
                 active: false  // Manually activated after window is visible

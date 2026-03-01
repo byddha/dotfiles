@@ -1,9 +1,9 @@
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
-import Quickshell.Hyprland
 import "../../Config"
 import "../../Utils"
+import "../../Services"
 import "../../Components"
 
 /**
@@ -20,7 +20,7 @@ Scope {
     property var activeWindow: null
 
     // Focus grab at Scope level (like Tray pattern)
-    HyprlandFocusGrab {
+    FocusGrab {
         id: focusGrab
         windows: root.activeWindow ? [root.activeWindow] : []
         active: Settings.calendarPanelVisible && root.activeWindow !== null
@@ -41,7 +41,7 @@ Scope {
             required property ShellScreen modelData
 
             screen: modelData
-            visible: Settings.calendarPanelVisible && (Config.options.calendar?.enabled ?? true) && modelData.name === Hyprland.focusedMonitor?.name
+            visible: Settings.calendarPanelVisible && (Config.options.calendar?.enabled ?? true) && modelData.name === Compositor.focusedMonitorName
 
             // Position: top-right, below bar
             anchors {
@@ -66,7 +66,7 @@ Scope {
 
             // Register this window for focus grab when it becomes active
             onVisibleChanged: {
-                if (visible && modelData.name === Hyprland.focusedMonitor?.name) {
+                if (visible && modelData.name === Compositor.focusedMonitorName) {
                     root.activeWindow = calendarWindow;
                     Logger.info("Registered window for focus grab");
                 } else if (!visible && root.activeWindow === calendarWindow) {

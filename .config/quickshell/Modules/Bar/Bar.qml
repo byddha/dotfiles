@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
-import Quickshell.Hyprland
 import "../../Config"
 
 Scope {
@@ -15,9 +14,8 @@ Scope {
             required property ShellScreen modelData
             screen: modelData
 
-            // Get monitor info for workspace configuration
-            readonly property HyprlandMonitor hyprMonitor: Hyprland.monitorFor(bar.screen)
-            readonly property string monitorName: hyprMonitor?.name ?? ""
+            // Monitor name for workspace configuration
+            readonly property string monitorName: bar.screen?.name ?? ""
 
             // Workspace range - computed fresh each time dependencies change
             property var workspaceRange: null
