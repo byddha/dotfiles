@@ -3,7 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
-import "../../Utils"
+import "../Utils"
 
 Singleton {
     id: compositor
@@ -12,7 +12,7 @@ Singleton {
     property var backend: null
 
     Component.onCompleted: {
-        var comp = Qt.createComponent("HyprlandBackend.qml");
+        var comp = Qt.createComponent("Hyprland/HyprlandBackend.qml");
         if (comp.status === Component.Ready) {
             backend = comp.createObject(compositor);
         } else {
