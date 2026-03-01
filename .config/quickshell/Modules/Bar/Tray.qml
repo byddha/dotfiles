@@ -1,6 +1,5 @@
 import QtQuick
 import Quickshell
-import Quickshell.Hyprland
 import Quickshell.Services.SystemTray
 import Quickshell.Widgets
 import "../../Utils"
@@ -31,7 +30,7 @@ Item {
     property real pendingMenuY: 0
 
     // Parent-level focus grab handles the single tray menu window (ii pattern)
-    HyprlandFocusGrab {
+    FocusGrab {
         id: focusGrab
         active: false
         windows: [root.activeMenu]

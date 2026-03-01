@@ -1,7 +1,7 @@
 import QtQuick
-import Quickshell.Hyprland
 import "../../Utils"
 import "../../Services"
+import "../../Components"
 import "Popups"
 
 Rectangle {
@@ -14,7 +14,7 @@ Rectangle {
 
     property var activePopup: null
 
-    HyprlandFocusGrab {
+    FocusGrab {
         id: focusGrab
         active: false
         windows: powerButton.activePopup ? [powerButton.activePopup] : []

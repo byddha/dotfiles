@@ -1,9 +1,9 @@
 import QtQuick
 import Quickshell
-import Quickshell.Hyprland
 import "../../Config"
 import "../../Services"
 import "../../Utils"
+import "../../Components"
 import "Popups"
 
 /**
@@ -36,7 +36,7 @@ Rectangle {
     property var activePopup: null
 
     // Focus grab - starts INACTIVE (same as Tray pattern)
-    HyprlandFocusGrab {
+    FocusGrab {
         id: focusGrab
         active: false  // NOT bound to visibility!
         windows: clock.activePopup ? [clock.activePopup] : []

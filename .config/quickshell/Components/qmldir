@@ -16,3 +16,4 @@ QuickToggleButton 1.0 QuickToggleButton.qml
 AudioVisualizer 1.0 AudioVisualizer.qml
 MediaCard 1.0 MediaCard.qml
 VpnSelector 1.0 VpnSelector.qml
+FocusGrab 1.0 FocusGrab.qml
