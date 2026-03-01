@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Controls
 import Quickshell
 import Quickshell.Wayland
-import Quickshell.Hyprland
 import "../../Config"
 import "../../Services"
 import "../../Utils"
@@ -23,14 +22,16 @@ Item {
 
     // Configuration
     readonly property int workspacesShown: endWorkspace - startWorkspace + 1
-    readonly property HyprlandMonitor monitor: Hyprland.monitorFor(root.QsWindow.window?.screen)
     readonly property Toplevel activeWindow: ToplevelManager.activeToplevel
+
+    // Active workspace for this monitor (updated via signal)
+    property int currentActiveWorkspaceId: Compositor.activeWorkspaceIdForScreen(root.QsWindow.window?.screen)
 
     // Workspace state (initialized with false values to avoid undefined access before updateWorkspaceOccupied runs)
     property list<bool> workspaceOccupied: Array(workspacesShown).fill(false)
     // Index within this group (-1 if active workspace is outside our range)
     property int workspaceIndexInGroup: {
-        const activeId = monitor?.activeWorkspace?.id ?? 1;
+        const activeId = currentActiveWorkspaceId;
         if (activeId >= startWorkspace && activeId <= endWorkspace) {
             return activeId - startWorkspace;
         }
@@ -49,7 +50,7 @@ Item {
             length: root.workspacesShown
         }, (_, i) => {
             const wsId = root.startWorkspace + i;
-            return Hyprland.workspaces.values.some(ws => ws.id === wsId);
+            return Compositor.workspaces.some(ws => ws.id === wsId);
         });
     }
 
@@ -59,7 +60,7 @@ Item {
     property real activeWorkspaceWidth: 0
 
     function updateActiveWorkspacePosition() {
-        const activeId = monitor?.activeWorkspace?.id ?? startWorkspace;
+        const activeId = currentActiveWorkspaceId;
         // If active workspace is outside our range, hide the indicator
         if (activeId < startWorkspace || activeId > endWorkspace) {
             activeWorkspaceWidth = 0;
@@ -71,12 +72,12 @@ Item {
             const wsId = startWorkspace + i;
             if (wsId === activeId) {
                 activeWorkspaceX = xPos;
-                const apps = HyprlandData.getWorkspaceApps(wsId);
+                const apps = Compositor.getWorkspaceApps(wsId);
                 const appCount = apps.length;
                 activeWorkspaceWidth = (iconSize * Math.max(1, appCount)) + (iconSpacing * Math.max(0, appCount - 1)) + 8;
                 break;
             }
-            const apps = HyprlandData.getWorkspaceApps(wsId);
+            const apps = Compositor.getWorkspaceApps(wsId);
             const appCount = apps.length;
             const width = (iconSize * Math.max(1, appCount)) + (iconSpacing * Math.max(0, appCount - 1)) + 8;
             xPos += width;
@@ -90,22 +91,19 @@ Item {
     }
 
     Connections {
-        target: Hyprland.workspaces
-        function onValuesChanged() {
+        target: Compositor
+
+        function onWorkspaceFocusChanged() {
+            currentActiveWorkspaceId = Compositor.activeWorkspaceIdForScreen(root.QsWindow.window?.screen);
             updateWorkspaceOccupied();
         }
-    }
 
-    Connections {
-        target: Hyprland
-        function onFocusedWorkspaceChanged() {
+        function onWorkspacesChanged() {
             updateWorkspaceOccupied();
         }
-    }
 
-    Connections {
-        target: HyprlandData
-        function onWindowListChanged() {
+        function onWindowDataUpdated() {
+            currentActiveWorkspaceId = Compositor.activeWorkspaceIdForScreen(root.QsWindow.window?.screen);
             updateActiveWorkspacePosition();
         }
     }
@@ -140,7 +138,7 @@ Item {
     // Scroll to switch workspaces (cycles within configured range, skipping empty)
     WheelHandler {
         onWheel: event => {
-            const currentId = monitor?.activeWorkspace?.id ?? startWorkspace;
+            const currentId = root.currentActiveWorkspaceId;
             let nextId;
 
             if (event.angleDelta.y > 0) {
@@ -154,7 +152,7 @@ Item {
             }
 
             if (nextId !== currentId) {
-                Hyprland.dispatch(`workspace ${nextId}`);
+                Compositor.switchWorkspace(nextId);
             }
         }
         acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
@@ -189,9 +187,9 @@ Item {
             Item {
                 id: workspaceContainer
                 property int workspaceValue: root.startWorkspace + index
-                property var workspaceApps: HyprlandData.getWorkspaceApps(workspaceValue)
+                property var workspaceApps: Compositor.getWorkspaceApps(workspaceValue)
                 property int appCount: workspaceApps.length
-                property bool isActive: (monitor?.activeWorkspace?.id ?? root.startWorkspace) === workspaceValue
+                property bool isActive: root.currentActiveWorkspaceId === workspaceValue
                 property bool isOccupied: workspaceOccupied[index] ?? false
 
                 // Dynamic width calculation (treat empty as 1 icon for consistent spacing)
@@ -205,7 +203,7 @@ Item {
                     id: workspaceMouseArea
                     anchors.fill: parent
                     hoverEnabled: true
-                    onClicked: Hyprland.dispatch(`workspace ${workspaceContainer.workspaceValue}`)
+                    onClicked: Compositor.switchWorkspace(workspaceContainer.workspaceValue)
                 }
 
                 // Content: workspace number OR app icons
