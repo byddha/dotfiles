@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
-import Quickshell.Hyprland
 import "../../Config"
 import "../../Services"
 import "../../Utils"
@@ -88,8 +87,7 @@ Scope {
         PanelWindow {
             id: osdWindow
             required property var modelData
-            readonly property HyprlandMonitor monitor: Hyprland.monitorFor(osdWindow.screen)
-            property bool monitorIsFocused: Hyprland.focusedMonitor?.id === monitor?.id
+            property bool monitorIsFocused: Compositor.focusedMonitorName === modelData.name
 
             screen: modelData
             visible: Settings.osdVisible && Config.options.osd?.enabled && monitorIsFocused

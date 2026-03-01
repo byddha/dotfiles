@@ -4,7 +4,6 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
-import Quickshell.Hyprland
 import "../../Config"
 import "../../Services"
 import "../../Utils"
@@ -19,8 +18,7 @@ Scope {
         PanelWindow {
             id: root
             required property var modelData
-            readonly property HyprlandMonitor monitor: Hyprland.monitorFor(root.screen)
-            property bool monitorIsFocused: (Hyprland.focusedMonitor?.id == monitor?.id)
+            property bool monitorIsFocused: Compositor.focusedMonitorName === modelData.name
             screen: modelData
             visible: Settings.overviewVisible && monitorIsFocused
 
@@ -74,13 +72,10 @@ Scope {
     }
 
     Connections {
-        target: Hyprland
-        function onRawEvent(event) {
-            // Listen for workspace and monitor focus change events
-            if (event.name === "workspace" || event.name === "workspacev2" || event.name === "focusedmon" || event.name === "focusedmonv2") {
-                Settings.overviewVisible = true;
-                autoHideTimer.restart();
-            }
+        target: Compositor
+        function onWorkspaceFocusChanged() {
+            Settings.overviewVisible = true;
+            autoHideTimer.restart();
         }
     }
 

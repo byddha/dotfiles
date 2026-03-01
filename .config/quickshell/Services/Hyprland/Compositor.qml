@@ -19,6 +19,8 @@ Singleton {
     property string focusedMonitorName: Hyprland.focusedMonitor?.name ?? ""
     property int focusedMonitorId: Hyprland.focusedMonitor?.id ?? -1
 
+    signal workspaceFocusChanged()
+
     Component.onCompleted: {
         detectCompositor();
     }
@@ -52,7 +54,14 @@ Singleton {
 
         function onFocusedWorkspaceChanged() {
             activeWorkspace = Hyprland.focusedWorkspace?.id ?? 1;
+            workspaceFocusChanged();
             Logger.debug("Workspace →", activeWorkspace);
+        }
+
+        function onFocusedMonitorChanged() {
+            focusedMonitorName = Hyprland.focusedMonitor?.name ?? "";
+            focusedMonitorId = Hyprland.focusedMonitor?.id ?? -1;
+            workspaceFocusChanged();
         }
     }
 
@@ -74,5 +83,9 @@ Singleton {
     function moveWindowToWorkspace(id) {
         Logger.debug("Moving window to workspace", id);
         Hyprland.dispatch(`movetoworkspace ${id}`);
+    }
+
+    function logout() {
+        Hyprland.dispatch("exit");
     }
 }

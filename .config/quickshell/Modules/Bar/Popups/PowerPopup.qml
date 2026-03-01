@@ -1,7 +1,6 @@
 pragma ComponentBehavior: Bound
 import QtQuick
 import Quickshell
-import Quickshell.Hyprland
 import Quickshell.Io
 import "../../../Config"
 import "../../../Utils"
@@ -92,8 +91,8 @@ PopupWindow {
                 PowerActionButton {
                     icon: Icons.logout
                     onClicked: {
-                        Logger.info("Logging out via Hyprland");
-                        Hyprland.dispatch("exit");
+                        Logger.info("Logging out via compositor");
+                        Compositor.logout();
                         powerPopup.hidePanel();
                     }
                 }
