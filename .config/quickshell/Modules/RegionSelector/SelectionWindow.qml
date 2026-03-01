@@ -1,11 +1,9 @@
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
-import Quickshell.Hyprland
 import Quickshell.Io
 import "../../Config"
 import "../../Services"
-import "../../Services/Hyprland"
 import "../../Utils"
 
 PanelWindow {
@@ -29,12 +27,12 @@ PanelWindow {
         bottom: true
     }
 
-    // Monitor info
-    readonly property HyprlandMonitor hyprlandMonitor: Hyprland.monitorFor(screen)
-    readonly property real monitorScale: hyprlandMonitor?.scale ?? 1
-    readonly property real monitorOffsetX: hyprlandMonitor?.x ?? 0
-    readonly property real monitorOffsetY: hyprlandMonitor?.y ?? 0
-    property int activeWorkspaceId: hyprlandMonitor?.activeWorkspace?.id ?? 0
+    // Monitor info (snapshot)
+    readonly property var monitorInfo: Compositor.monitorForScreen(screen)
+    readonly property real monitorScale: monitorInfo?.scale ?? 1
+    readonly property real monitorOffsetX: monitorInfo?.x ?? 0
+    readonly property real monitorOffsetY: monitorInfo?.y ?? 0
+    property int activeWorkspaceId: monitorInfo?.activeWorkspaceId ?? 0
 
     // Screenshot paths
     readonly property string screenshotDir: "/tmp/bidshell-screenshots"
@@ -71,7 +69,7 @@ PanelWindow {
 
     // Window regions from HyprlandData, sorted for proper z-order (floating above tiled)
     readonly property var windowRegions: {
-        const workspaceWindows = HyprlandData.windowList.filter(w => w.workspace.id === root.activeWorkspaceId);
+        const workspaceWindows = Compositor.windowList.filter(w => w.workspace.id === root.activeWorkspaceId);
 
         // If any window is fullscreen or maximized, only show that window (others are occluded)
         // fullscreen: 1 = real fullscreen, 2 = maximized
@@ -584,22 +582,25 @@ PanelWindow {
             acceptedButtons: Qt.LeftButton
             hoverEnabled: true
 
-            // Get initial cursor position from Hyprland (Qt's mouseX/Y is stale on Wayland)
-            Process {
-                id: cursorPosProc
-                command: ["hyprctl", "cursorpos"]
-                running: root.visible && root.preparationDone
-                stdout: SplitParser {
-                    onRead: data => {
-                        const parts = data.trim().split(", ");
-                        if (parts.length === 2) {
-                            const globalX = parseInt(parts[0]);
-                            const globalY = parseInt(parts[1]);
-                            // Convert to monitor-local coordinates
+            // Get initial cursor position (Qt's mouseX/Y is stale on Wayland)
+            Component.onCompleted: {
+                if (root.visible && root.preparationDone) {
+                    Compositor.getCursorPosition((globalX, globalY) => {
+                        const localX = globalX - root.monitorOffsetX;
+                        const localY = globalY - root.monitorOffsetY;
+                        root.updateTargetedRegion(localX, localY);
+                    });
+                }
+            }
+            Connections {
+                target: root
+                function onPreparationDoneChanged() {
+                    if (root.preparationDone && root.visible) {
+                        Compositor.getCursorPosition((globalX, globalY) => {
                             const localX = globalX - root.monitorOffsetX;
                             const localY = globalY - root.monitorOffsetY;
                             root.updateTargetedRegion(localX, localY);
-                        }
+                        });
                     }
                 }
             }
