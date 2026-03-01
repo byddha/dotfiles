@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
-import Quickshell.Hyprland
 import "../../Config"
 import "../../Services"
 import "../../Utils"
@@ -12,8 +11,10 @@ import "."
 Item {
     id: root
     required property var panelWindow
-    readonly property HyprlandMonitor monitor: Hyprland.monitorFor(panelWindow.screen)
-    readonly property string monitorName: monitor?.name ?? ""
+    // Monitor snapshot — refreshed via Compositor signals
+    property var monitorInfo: Compositor.monitorForScreen(panelWindow.screen)
+    readonly property string monitorName: monitorInfo?.name ?? ""
+    readonly property int monitorId: monitorInfo?.id ?? -1
     readonly property var toplevels: ToplevelManager.toplevels
     // Get all workspaces assigned to this monitor from centralized config
     readonly property var currentMonitorWorkspaces: {
@@ -28,23 +29,33 @@ Item {
         }
         return workspaces;
     }
-    property bool monitorIsFocused: (Hyprland.focusedMonitor?.name == monitor.name)
-    property var windows: HyprlandData.windowList
-    property var windowByAddress: HyprlandData.windowByAddress
-    property var windowAddresses: HyprlandData.addresses
-    property var monitorData: HyprlandData.monitors.find(m => m.id === root.monitor?.id)
+    property bool monitorIsFocused: Compositor.focusedMonitorName === monitorName
+    property var windows: Compositor.windowList
+    property var windowByAddress: Compositor.windowByAddress
+    property var windowAddresses: Compositor.addresses
     property real scale: Config.options.overview.scale
     property color activeBorderColor: Theme.colSecondary
 
-    property real workspaceImplicitWidth: (monitorData?.transform % 2 === 1) ? ((monitor.height / monitor.scale - (monitorData?.reserved?.[0] ?? 0) - (monitorData?.reserved?.[2] ?? 0)) * root.scale) : ((monitor.width / monitor.scale - (monitorData?.reserved?.[0] ?? 0) - (monitorData?.reserved?.[2] ?? 0)) * root.scale)
-    property real workspaceImplicitHeight: (monitorData?.transform % 2 === 1) ? ((monitor.width / monitor.scale - (monitorData?.reserved?.[1] ?? 0) - (monitorData?.reserved?.[3] ?? 0)) * root.scale) : ((monitor.height / monitor.scale - (monitorData?.reserved?.[1] ?? 0) - (monitorData?.reserved?.[3] ?? 0)) * root.scale)
+    property real workspaceImplicitWidth: (monitorInfo?.transform % 2 === 1) ? ((monitorInfo.height / monitorInfo.scale - (monitorInfo?.reserved?.[0] ?? 0) - (monitorInfo?.reserved?.[2] ?? 0)) * root.scale) : ((monitorInfo.width / monitorInfo.scale - (monitorInfo?.reserved?.[0] ?? 0) - (monitorInfo?.reserved?.[2] ?? 0)) * root.scale)
+    property real workspaceImplicitHeight: (monitorInfo?.transform % 2 === 1) ? ((monitorInfo.width / monitorInfo.scale - (monitorInfo?.reserved?.[1] ?? 0) - (monitorInfo?.reserved?.[3] ?? 0)) * root.scale) : ((monitorInfo.height / monitorInfo.scale - (monitorInfo?.reserved?.[1] ?? 0) - (monitorInfo?.reserved?.[3] ?? 0)) * root.scale)
 
     property real workspaceNumberMargin: 80
-    property real workspaceNumberSize: 250 * monitor.scale
+    property real workspaceNumberSize: 250 * (monitorInfo?.scale ?? 1)
     property int workspaceZ: 0
     property int windowZ: 1
     property int indicatorZ: 9999
     property real workspaceSpacing: 5
+
+    // Refresh monitor snapshot when data updates
+    Connections {
+        target: Compositor
+        function onMonitorDataUpdated() {
+            root.monitorInfo = Compositor.monitorForScreen(panelWindow.screen);
+        }
+        function onWorkspaceFocusChanged() {
+            root.monitorInfo = Compositor.monitorForScreen(panelWindow.screen);
+        }
+    }
 
     implicitWidth: overviewBackground.implicitWidth + Theme.elevationMargin * 2
     implicitHeight: overviewBackground.implicitHeight + Theme.elevationMargin * 2
@@ -108,12 +119,12 @@ Item {
                 spacing: 8
 
                 Repeater {
-                    model: HyprlandData.monitors
+                    model: Compositor.monitors
                     Rectangle {
                         id: monitorIndicator
                         required property var modelData
                         required property int index
-                        property bool isCurrentMonitor: modelData.id === root.monitor?.id
+                        property bool isCurrentMonitor: modelData.id === root.monitorId
                         property int activeWorkspaceId: modelData.activeWorkspace?.id ?? 1
 
                         implicitWidth: isCurrentMonitor ? 60 : 48
@@ -155,18 +166,15 @@ Item {
                 model: ScriptModel {
                     values: {
                         return ToplevelManager.toplevels.values.filter(toplevel => {
-                            const address = `0x${toplevel.HyprlandToplevel.address}`;
-                            var win = windowByAddress[address];
+                            var win = Compositor.windowForToplevel(toplevel);
                             // Only show windows on current monitor's workspaces
-                            const onCurrentMonitor = win?.monitor === root.monitor?.id;
+                            const onCurrentMonitor = win?.monitor === root.monitorId;
                             const inCurrentWorkspaces = root.currentMonitorWorkspaces.includes(win?.workspace?.id);
                             return onCurrentMonitor && inCurrentWorkspaces;
                         }).sort((a, b) => {
-                            // Proper stacking order based on Hyprland's window properties
-                            const addrA = `0x${a.HyprlandToplevel.address}`;
-                            const addrB = `0x${b.HyprlandToplevel.address}`;
-                            const winA = windowByAddress[addrA];
-                            const winB = windowByAddress[addrB];
+                            // Proper stacking order based on window properties
+                            const winA = Compositor.windowForToplevel(a);
+                            const winB = Compositor.windowForToplevel(b);
 
                             // 1. Pinned windows are always on top
                             if (winA?.pinned !== winB?.pinned) {
@@ -188,19 +196,18 @@ Item {
                     id: window
                     required property var modelData
                     required property int index
-                    property var address: `0x${modelData.HyprlandToplevel.address}`
-                    windowData: windowByAddress[address]
+                    windowData: Compositor.windowForToplevel(modelData)
                     toplevel: modelData
-                    monitorData: root.monitorData
+                    monitorData: root.monitorInfo
 
-                    property real sourceMonitorWidth: (monitorData?.transform % 2 === 1) ? (root.monitor.height / root.monitor.scale - (monitorData?.reserved?.[0] ?? 0) - (monitorData?.reserved?.[2] ?? 0)) : (root.monitor.width / root.monitor.scale - (monitorData?.reserved?.[0] ?? 0) - (monitorData?.reserved?.[2] ?? 0))
-                    property real sourceMonitorHeight: (monitorData?.transform % 2 === 1) ? (root.monitor.width / root.monitor.scale - (monitorData?.reserved?.[1] ?? 0) - (monitorData?.reserved?.[3] ?? 0)) : (root.monitor.height / root.monitor.scale - (monitorData?.reserved?.[1] ?? 0) - (monitorData?.reserved?.[3] ?? 0))
+                    property real sourceMonitorWidth: (monitorData?.transform % 2 === 1) ? (root.monitorInfo.height / root.monitorInfo.scale - (monitorData?.reserved?.[0] ?? 0) - (monitorData?.reserved?.[2] ?? 0)) : (root.monitorInfo.width / root.monitorInfo.scale - (monitorData?.reserved?.[0] ?? 0) - (monitorData?.reserved?.[2] ?? 0))
+                    property real sourceMonitorHeight: (monitorData?.transform % 2 === 1) ? (root.monitorInfo.width / root.monitorInfo.scale - (monitorData?.reserved?.[1] ?? 0) - (monitorData?.reserved?.[3] ?? 0)) : (root.monitorInfo.height / root.monitorInfo.scale - (monitorData?.reserved?.[1] ?? 0) - (monitorData?.reserved?.[3] ?? 0))
 
                     scale: Math.min(root.workspaceImplicitWidth / sourceMonitorWidth, root.workspaceImplicitHeight / sourceMonitorHeight)
 
                     availableWorkspaceWidth: root.workspaceImplicitWidth
                     availableWorkspaceHeight: root.workspaceImplicitHeight
-                    widgetMonitorId: root.monitor.id
+                    widgetMonitorId: root.monitorId
 
                     // Find workspace index in current monitor's workspace list
                     property int workspaceIndex: root.currentMonitorWorkspaces.indexOf(windowData?.workspace?.id ?? 1)
@@ -215,7 +222,7 @@ Item {
 
             Rectangle { // Focused workspace indicator
                 id: focusedWorkspaceIndicator
-                property int activeWorkspaceId: monitor.activeWorkspace?.id ?? 1
+                property int activeWorkspaceId: root.monitorInfo?.activeWorkspaceId ?? 1
                 property int activeWorkspaceIndex: root.currentMonitorWorkspaces.indexOf(activeWorkspaceId)
 
                 // Simple linear position calculation
