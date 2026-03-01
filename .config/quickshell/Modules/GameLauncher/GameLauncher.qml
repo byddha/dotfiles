@@ -1,10 +1,10 @@
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
-import Quickshell.Hyprland
 import "../../Config"
 import "../../Services"
 import "../../Utils"
+import "../../Components"
 
 Scope {
     id: root
@@ -17,7 +17,7 @@ Scope {
             required property ShellScreen modelData
 
             screen: modelData
-            visible: Settings.gameLauncherVisible && modelData.name === Hyprland.focusedMonitor?.name
+            visible: Settings.gameLauncherVisible && modelData.name === Compositor.focusedMonitorName
 
             anchors {
                 left: true
@@ -34,7 +34,7 @@ Scope {
             color: Theme.colLayer0
 
             // Click-outside-to-close using HyprlandFocusGrab
-            HyprlandFocusGrab {
+            FocusGrab {
                 id: focusGrab
                 windows: [launcherWindow]
                 active: false

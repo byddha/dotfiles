@@ -16,6 +16,8 @@ Singleton {
     property int activeWorkspace: 1
     property string activeWindow: ""
     property string activeWindowClass: ""
+    property string focusedMonitorName: Hyprland.focusedMonitor?.name ?? ""
+    property int focusedMonitorId: Hyprland.focusedMonitor?.id ?? -1
 
     Component.onCompleted: {
         detectCompositor();
