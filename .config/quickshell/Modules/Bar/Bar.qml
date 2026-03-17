@@ -153,6 +153,7 @@ Scope {
                 WhisperButton {}
                 VpnButton {}
                 BatteryButton {}
+                PeripheralBatteryButton {}
                 MicButton {}
                 VolumeButton {}
 

@@ -53,6 +53,9 @@ Singleton {
     readonly property string keyboard: "󰌌"
     readonly property string laptop: "󰌢"
     readonly property string controller: "󰖺"
+    readonly property string trackpad: "󰟸"
+    readonly property string headset: "󰋎"
+    readonly property string speaker: "󰓃"
 
     // ==================
     // Quick Toggle Icons

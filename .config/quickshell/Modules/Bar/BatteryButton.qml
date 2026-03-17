@@ -36,7 +36,7 @@ Rectangle {
             text: Battery.getIcon()
             font.family: BarStyle.iconFont
             font.pixelSize: BarStyle.iconSize
-            color: Battery.charging ? Theme.primary : (Battery.isLow ? Theme.accentOrange : Theme.primary)
+            color: Battery.isCritical ? Theme.colLayer0 : (Battery.charging ? Theme.primary : (Battery.isLow ? Theme.accentOrange : Theme.primary))
         }
 
         Text {

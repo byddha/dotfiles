@@ -6,6 +6,7 @@ ActiveWindowTitle 1.0 ActiveWindowTitle.qml
 VolumeButton 1.0 VolumeButton.qml
 MicButton 1.0 MicButton.qml
 BatteryButton 1.0 BatteryButton.qml
+PeripheralBatteryButton 1.0 PeripheralBatteryButton.qml
 Clock 1.0 Clock.qml
 CalendarPopup 1.0 CalendarPopup.qml
 PowerButton 1.0 PowerButton.qml
