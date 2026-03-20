@@ -6,6 +6,17 @@ selection_wrap = false          # wrap list if at bottom or top
 global_argument_delimiter = "#" # query: firefox#https://benz.dev => part after delimiter will be ignored when querying. this should be the same as in the elephant config
 exact_search_prefix = "'"       # disable fuzzy searching
 theme = "bytheme"               # theme to use
+installed_providers = [          # workaround: elephant listproviders race condition with async menu loading
+  "desktopapplications",
+  "calc",
+  "clipboard",
+  "files",
+  "providerlist",
+  "symbols",
+  "todo",
+  "menus:nerdfonts",
+  "menus:colorschemes",
+]
 disable_mouse = false           # disable mouse (on input and list only)
 debug = false                   # enables debug printing for some stuff, f.e. keybinds
 page_jump_items = 10            # number of items to skip with Page Up/Down
