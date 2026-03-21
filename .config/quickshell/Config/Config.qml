@@ -159,6 +159,11 @@ Singleton {
                 devices: []
             })
 
+            property var brandLogos: JsonObject {
+                property string apiKey: ""      // logo.dev publishable key (for logo images)
+                property string secretKey: ""   // logo.dev secret key (for brand search)
+            }
+
             property var calendar: JsonObject {
                 property bool enabled: true
 

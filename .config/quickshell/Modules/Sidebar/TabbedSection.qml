@@ -9,6 +9,7 @@ import "VolumeMixer"
 import "NotificationHistory"
 import "BluetoothTab"
 import "NetworkTab"
+import "PeripheralsTab"
 
 Card {
     id: root
@@ -23,7 +24,8 @@ Card {
         { icon: Icons.volumeHigh, name: "Volume" },
         { icon: Icons.bell, name: "Notifications" },
         { icon: Icons.bluetoothOn, name: "Bluetooth" },
-        { icon: Icons.wifiOn, name: "Network" }
+        { icon: Icons.wifiOn, name: "Network" },
+        { icon: Icons.device, name: "Peripherals" }
     ]
 
     ColumnLayout {
@@ -127,6 +129,12 @@ Card {
             Loader {
                 active: root.selectedTab === 3
                 sourceComponent: NetworkTab {}
+            }
+
+            // Peripherals tab
+            Loader {
+                active: root.selectedTab === 4
+                sourceComponent: PeripheralsTab {}
             }
         }
     }

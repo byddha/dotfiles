@@ -178,7 +178,7 @@ Singleton {
     // ==================
     readonly property string menu: "☰"
     readonly property string workspace: ""
-    readonly property string device: ""
+    readonly property string device: "󰒔"
     readonly property string checkmark: ""
     readonly property string emptyState: ""
     readonly property string cross: "✝"
