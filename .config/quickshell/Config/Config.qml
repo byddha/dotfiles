@@ -94,8 +94,6 @@ Singleton {
 
             property var notifications: JsonObject {
                 property bool enabled: true
-                property int timeout: 5000
-                property int maxVisible: 3
             }
 
             property var hyprWhichKey: JsonObject {
@@ -150,7 +148,6 @@ Singleton {
             property var osd: JsonObject {
                 property bool enabled: true
                 property int timeout: 1000
-                property string position: "right"  // "left" or "right"
             }
 
             // Custom peripheral battery sources

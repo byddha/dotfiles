@@ -5,7 +5,6 @@ import "../../Config"
 import "../../Services"
 import "../../Utils"
 import ".."
-import "notification_utils.js" as NotifUtils
 
 MouseArea {
     id: root

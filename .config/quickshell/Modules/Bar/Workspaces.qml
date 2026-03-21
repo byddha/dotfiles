@@ -5,7 +5,6 @@ import Quickshell.Wayland
 import "../../Config"
 import "../../Services"
 import "../../Utils"
-import "../Common"
 
 /**
  * Workspaces - Multi-icon workspace indicator

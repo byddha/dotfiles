@@ -1,7 +1,6 @@
 singleton BarStyle 1.0 BarStyle.qml
 Bar 1.0 Bar.qml
 Workspaces 1.0 Workspaces.qml
-MenuButton 1.0 MenuButton.qml
 ActiveWindowTitle 1.0 ActiveWindowTitle.qml
 VolumeButton 1.0 VolumeButton.qml
 MicButton 1.0 MicButton.qml
@@ -10,7 +9,6 @@ PeripheralBatteryButton 1.0 PeripheralBatteryButton.qml
 Clock 1.0 Clock.qml
 CalendarPopup 1.0 CalendarPopup.qml
 PowerButton 1.0 PowerButton.qml
-Spacer 1.0 Spacer.qml
 Tray 1.0 Tray.qml
 TrayMenu 1.0 TrayMenu.qml
 MediaButton 1.0 MediaButton.qml
