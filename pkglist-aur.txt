@@ -1,5 +1,6 @@
 ags-hyprpanel-git
 ascii-image-converter-git
+autofs
 bridge-utils
 c++utilities
 elephant-calc
