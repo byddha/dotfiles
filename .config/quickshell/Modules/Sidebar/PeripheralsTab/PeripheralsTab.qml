@@ -63,6 +63,6 @@ ColumnLayout {
     }
 
     Component.onCompleted: {
-        Logger.info("Peripherals tab loaded");
+        PeripheralBatteries.repollRequested();
     }
 }

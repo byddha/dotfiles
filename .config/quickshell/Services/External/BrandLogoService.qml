@@ -21,8 +21,8 @@ Singleton {
     property var _ouiCache: ({})       // OUI → vendor name
     property var _domainCache: ({})    // vendor name → domain
     property var _deviceBrands: ({})   // device id → vendor name
+    property var _logoDownloaded: ({}) // domain → true (persisted)
     property var _pendingOui: ({})
-    property var _logoDownloaded: ({})
 
     signal brandResolved()
 
@@ -34,9 +34,8 @@ Singleton {
         if (!brand) return "";
         const domain = _domainCache[brand];
         if (!domain) {
-            // Search for domain if we don't have it cached
             if (_domainCache[brand] === undefined && _secretKey) {
-                _domainCache[brand] = null; // mark as pending
+                _domainCache[brand] = null;
                 _searchDomain(brand);
             }
             return "";
@@ -46,9 +45,10 @@ Singleton {
 
         if (_logoDownloaded[domain]) return localPath;
 
+        // Trigger download — path returned after download completes via brandResolved → rebuild
         if (_logoDownloaded[domain] === undefined) {
             _logoDownloaded[domain] = false;
-            _checkLogoExists(domain, localPath);
+            _downloadLogo(domain);
         }
 
         return "";
@@ -102,12 +102,6 @@ Singleton {
 
     function _saveCache() { saveTimer.restart() }
 
-    function _checkLogoExists(domain, localPath) {
-        const proc = logoCheckComponent.createObject(root, { domain: domain });
-        proc.command = ["test", "-f", localPath];
-        proc.running = true;
-    }
-
     function _downloadLogo(domain) {
         if (!_publishableKey) return;
         const url = `https://img.logo.dev/${domain}?token=${_publishableKey}&size=64&format=png`;
@@ -120,10 +114,30 @@ Singleton {
     function _searchDomain(brand) {
         if (!_secretKey) return;
         const cleaned = brand.split(/\s/)[0].replace(/,$/, "");
-        const proc = domainSearchComponent.createObject(root, { brand: brand });
-        proc.command = ["curl", "-sf", "-H", `Authorization: Bearer ${_secretKey}`,
-                        `https://api.logo.dev/search?q=${encodeURIComponent(cleaned)}`];
-        proc.running = true;
+        const xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState !== XMLHttpRequest.DONE) return;
+            if (xhr.status === 200) {
+                try {
+                    const results = JSON.parse(xhr.responseText);
+                    if (results.length > 0) {
+                        _domainCache[brand] = results[0].domain;
+                        _saveCache();
+                        _downloadLogo(results[0].domain);
+                        Logger.debug(`Brand search: "${brand}" → ${results[0].domain}`);
+                    } else {
+                        _domainCache[brand] = "";
+                    }
+                } catch (e) {
+                    _domainCache[brand] = "";
+                }
+            } else {
+                _domainCache[brand] = "";
+            }
+        };
+        xhr.open("GET", `https://api.logo.dev/search?q=${encodeURIComponent(cleaned)}`);
+        xhr.setRequestHeader("Authorization", `Bearer ${_secretKey}`);
+        xhr.send();
     }
 
     // ==================
@@ -141,6 +155,7 @@ Singleton {
                 root._ouiCache = data.oui || {};
                 root._domainCache = data.domains || {};
                 root._deviceBrands = data.devices || {};
+                root._logoDownloaded = data.logos || {};
                 Logger.info(`Brand cache loaded: ${Object.keys(root._ouiCache).length} OUI, ${Object.keys(root._domainCache).length} domains, ${Object.keys(root._deviceBrands).length} devices`);
             } catch (e) {
                 Logger.warn("Failed to parse brand cache:", e);
@@ -159,7 +174,8 @@ Singleton {
             cacheFileView.setText(JSON.stringify({
                 oui: root._ouiCache,
                 domains: root._domainCache,
-                devices: root._deviceBrands
+                devices: root._deviceBrands,
+                logos: root._logoDownloaded
             }, null, 2));
         }
     }
@@ -207,69 +223,6 @@ Singleton {
     }
 
     // ==================
-    // Domain search (logo.dev brand search API)
-    // ==================
-
-    Component {
-        id: domainSearchComponent
-
-        Process {
-            id: searchProc
-            property string brand: ""
-
-            stdout: StdioCollector {
-                onStreamFinished: {
-                    try {
-                        const results = JSON.parse(text);
-                        if (results.length > 0) {
-                            const domain = results[0].domain;
-                            root._domainCache[searchProc.brand] = domain;
-                            root._saveCache();
-                            root._downloadLogo(domain);
-                            Logger.debug(`Brand search: "${searchProc.brand}" → ${domain}`);
-                        } else {
-                            root._domainCache[searchProc.brand] = "";
-                        }
-                    } catch (e) {
-                        root._domainCache[searchProc.brand] = "";
-                    }
-                    searchProc.destroy();
-                }
-            }
-
-            onExited: (code, status) => {
-                if (code !== 0) {
-                    root._domainCache[brand] = "";
-                    destroy();
-                }
-            }
-        }
-    }
-
-    // ==================
-    // Logo file check
-    // ==================
-
-    Component {
-        id: logoCheckComponent
-
-        Process {
-            id: checkProc
-            property string domain: ""
-
-            onExited: (code, status) => {
-                if (code === 0) {
-                    root._logoDownloaded[domain] = true;
-                    root.brandResolved();
-                } else {
-                    root._downloadLogo(domain);
-                }
-                destroy();
-            }
-        }
-    }
-
-    // ==================
     // Logo download
     // ==================
 
@@ -283,6 +236,7 @@ Singleton {
             onExited: (code, status) => {
                 if (code === 0) {
                     root._logoDownloaded[domain] = true;
+                    root._saveCache();
                     root.brandResolved();
                     Logger.info(`Logo downloaded: ${domain}`);
                 } else {

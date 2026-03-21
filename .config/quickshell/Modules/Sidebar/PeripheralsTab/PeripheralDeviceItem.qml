@@ -41,7 +41,6 @@ Rectangle {
                 anchors.fill: parent
                 source: root.logoPath
                 fillMode: Image.PreserveAspectFit
-                asynchronous: true
                 cache: true
                 visible: status === Image.Ready
                 smooth: true
