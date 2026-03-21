@@ -52,10 +52,6 @@ Singleton {
         };
     }
 
-    function notifToString(notif) {
-        return JSON.stringify(notifToJSON(notif), null, 2);
-    }
-
     component NotifTimer: Timer {
         required property int notificationId
         interval: 4000
@@ -78,7 +74,6 @@ Singleton {
 
     // State
     property bool dnd: false  // Do Not Disturb mode
-    property int unread: 0
     property list<Notif> list: []
     property var popupList: list.filter(notif => notif.popup)
     property bool popupInhibited: (Settings.sidebarVisible ?? false) || dnd
@@ -90,13 +85,6 @@ Singleton {
 
     // ID offset to avoid collisions with saved notifications
     property int idOffset
-
-    // Signals
-    signal initDone
-    signal notify(notification: var)
-    signal discard(id: int)
-    signal discardAll
-    signal timeout(id: var)
 
     // Components
     Component {
@@ -142,16 +130,10 @@ Singleton {
                         "interval": notification.expireTimeout < 0 ? 7000 : notification.expireTimeout
                     });
                 }
-                root.unread++;
             }
-            root.notify(newNotifObject);
             Logger.info(`New notification from ${newNotifObject.appName}: ${newNotifObject.summary}`);
             notifFileView.setText(stringifyList(root.list));
         }
-    }
-
-    function markAllRead() {
-        root.unread = 0;
     }
 
     function discardNotification(id) {
@@ -166,7 +148,6 @@ Singleton {
         if (notifServerIndex !== -1) {
             notifServer.trackedNotifications.values[notifServerIndex].dismiss();
         }
-        root.discard(id);
     }
 
     function discardAllNotifications() {
@@ -177,29 +158,12 @@ Singleton {
             notif.dismiss();
         });
         Logger.info("All notifications discarded");
-        root.discardAll();
-    }
-
-    function cancelTimeout(id) {
-        const index = root.list.findIndex(notif => notif.notificationId === id);
-        if (root.list[index] != null)
-            root.list[index].timer.stop();
     }
 
     function timeoutNotification(id) {
         const index = root.list.findIndex(notif => notif.notificationId === id);
         if (root.list[index] != null)
             root.list[index].popup = false;
-        root.timeout(id);
-    }
-
-    function timeoutAll() {
-        root.popupList.forEach(notif => {
-            root.timeout(notif.notificationId);
-        });
-        root.popupList.forEach(notif => {
-            notif.popup = false;
-        });
     }
 
     function attemptInvokeAction(id, notifIdentifier) {
@@ -219,12 +183,8 @@ Singleton {
         root.list = root.list.slice(0);
     }
 
-    function refresh() {
-        notifFileView.reload();
-    }
-
     Component.onCompleted: {
-        refresh();
+        notifFileView.reload();
     }
 
     FileView {
@@ -254,7 +214,6 @@ Singleton {
 
             Logger.info("Notification history loaded");
             root.idOffset = maxId;
-            root.initDone();
         }
         onLoadFailed: error => {
             if (error == FileViewError.FileNotFound) {

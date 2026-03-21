@@ -30,12 +30,6 @@ Singleton {
 
     // State
     property bool isFetchingWeather: false
-    property bool coordinatesReady: false
-
-    // Stable UI properties - only updated when location is fully resolved
-    property string stableLatitude: ""
-    property string stableLongitude: ""
-    property string stableName: ""
 
     // Data alias for external access: WeatherService.data.weather, etc.
     readonly property alias data: adapter
@@ -51,14 +45,6 @@ Singleton {
 
         onLoaded: {
             Logger.info("Loaded cached data");
-            // Initialize stable properties from cache
-            if (adapter.latitude !== "" && adapter.longitude !== "" && adapter.weatherLastFetch > 0) {
-                root.stableLatitude = adapter.latitude;
-                root.stableLongitude = adapter.longitude;
-                root.stableName = adapter.name;
-                root.coordinatesReady = true;
-                Logger.info("Coordinates ready from cache");
-            }
             updateWeather();
         }
 
@@ -122,26 +108,6 @@ Singleton {
         if (adapter.weatherLastFetch === 0 || adapter.weather === null || adapter.latitude === "" || adapter.longitude === "" || adapter.name !== currentLocation || now >= adapter.weatherLastFetch + weatherUpdateFrequency) {
             getFreshWeather();
         }
-    }
-
-    /**
-     * Reset weather data and fetch fresh
-     */
-    function resetWeather() {
-        Logger.info("Resetting weather data");
-
-        root.coordinatesReady = false;
-        root.stableLatitude = "";
-        root.stableLongitude = "";
-        root.stableName = "";
-
-        adapter.latitude = "";
-        adapter.longitude = "";
-        adapter.name = "";
-        adapter.weatherLastFetch = 0;
-        adapter.weather = null;
-
-        updateWeather();
     }
 
     /**
@@ -214,7 +180,6 @@ Singleton {
         const locationChanged = adapter.name !== currentLocation;
 
         if (locationChanged) {
-            root.coordinatesReady = false;
             Logger.info("Location changed to: " + currentLocation);
         }
 
@@ -226,7 +191,6 @@ Singleton {
                 adapter.name = currentLocation;
                 adapter.latitude = lat.toString();
                 adapter.longitude = lon.toString();
-                root.stableName = name + (country ? ", " + country : "");
 
                 fetchWeather(lat, lon);
             }, errorCallback);
@@ -280,10 +244,8 @@ Singleton {
                         adapter.weather = weatherData;
                         adapter.weatherLastFetch = Math.floor(Date.now() / 1000);
 
-                        // Update stable properties
-                        root.stableLatitude = adapter.latitude = weatherData.latitude.toString();
-                        root.stableLongitude = adapter.longitude = weatherData.longitude.toString();
-                        root.coordinatesReady = true;
+                        adapter.latitude = weatherData.latitude.toString();
+                        adapter.longitude = weatherData.longitude.toString();
 
                         isFetchingWeather = false;
                         Logger.info("Weather data updated successfully");

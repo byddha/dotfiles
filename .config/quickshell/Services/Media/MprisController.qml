@@ -54,7 +54,6 @@ Singleton {
     // UI components should bind to these for display to avoid flickering
     property string stableTrackTitle: ""
     property string stableTrackArtist: ""
-    property string stableTrackArtUrl: ""
     property real stableTrackLength: 0
     property bool stableCanGoPrevious: false
     property bool stableCanGoNext: false
@@ -64,7 +63,6 @@ Singleton {
         if (activePlayer && activePlayer.trackTitle) {
             stableTrackTitle = activePlayer.trackTitle;
             stableTrackArtist = activePlayer.trackArtist || "";
-            stableTrackArtUrl = activePlayer.trackArtUrl || "";
             stableTrackLength = activePlayer.length || 0;
             stableCanGoPrevious = activePlayer.canGoPrevious || false;
             stableCanGoNext = activePlayer.canGoNext || false;
@@ -83,7 +81,6 @@ Singleton {
                 root.stableHasPlayer = false;
                 root.stableTrackTitle = "";
                 root.stableTrackArtist = "";
-                root.stableTrackArtUrl = "";
                 root.stableTrackLength = 0;
                 root.stableCanGoPrevious = false;
                 root.stableCanGoNext = false;

@@ -15,10 +15,6 @@ Singleton {
     property var events: ({})
     property bool loaded: false
 
-    function init() {
-        Logger.info("Service initialized");
-    }
-
     /**
      * Get user event for a specific date
      * @returns Event description or null

@@ -553,47 +553,4 @@ QtObject {
         return lookup(className, title, xdgTag).name;
     }
 
-    /**
-     * Get icon file path for an app
-     * Tries to resolve actual icon files from XDG icon themes
-     * @param appName - Application name (for fallback lookup)
-     * @param appIcon - Icon name/path from notification
-     * @returns File path (with file:// prefix) or empty string
-     */
-    function getIconPath(appName, appIcon) {
-        if (!appIcon || appIcon.length === 0) {
-            return "";
-        }
-
-        // If already a file path, return it
-        if (appIcon.startsWith("/")) {
-            return "file://" + appIcon;
-        }
-        if (appIcon.startsWith("file://")) {
-            return appIcon;
-        }
-
-        // Normalize icon name (remove extension if present)
-        let iconName = appIcon;
-        if (iconName.endsWith(".png") || iconName.endsWith(".svg")) {
-            iconName = iconName.substring(0, iconName.lastIndexOf("."));
-        }
-
-        // Determine icon category based on name patterns
-        let category = "apps";
-        if (iconName.match(/^(video|audio|image|text|application|font|x-office|package)-/)) {
-            category = "mimetypes";
-        } else if (iconName.match(/^(edit|document|list|view|go|media|window|system|help|insert)-/)) {
-            category = "actions";
-        } else if (iconName.match(/^(dialog|emblem)-/)) {
-            category = "emblems";
-        } else if (iconName.match(/^(user|folder|network|drive|computer|phone)-/)) {
-            category = "places";
-        } else if (iconName.match(/^(battery|network|audio|display|input|printer|weather)-/)) {
-            category = "status";
-        }
-
-        // Try breeze theme first (common on KDE/Arch), uses category/size/ structure
-        return "file:///usr/share/icons/breeze/" + category + "/64/" + iconName + ".svg";
-    }
 }

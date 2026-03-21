@@ -12,7 +12,6 @@ Singleton {
     id: root
 
     // Connection state
-    property bool wifi: false
     property bool ethernet: false
     property bool wifiEnabled: false
     property bool wifiScanning: false
@@ -29,24 +28,6 @@ Singleton {
             return 1;
         return b.strength - a.strength;
     })
-
-    // Status
-    property string wifiStatus: "disconnected"
-    property string networkName: ""
-    property int networkStrength: 0
-
-    // Icon helper
-    readonly property string wifiIcon: {
-        if (!wifiEnabled)
-            return Icons.wifiOff;
-        if (networkStrength > 75)
-            return Icons.wifiOn;
-        if (networkStrength > 50)
-            return Icons.wifiOn;
-        if (networkStrength > 25)
-            return Icons.wifiOn;
-        return Icons.wifiOn;
-    }
 
     // ==================
     // Control Functions
@@ -175,8 +156,6 @@ Singleton {
     function update() {
         updateConnectionType.startCheck();
         wifiStatusProcess.running = true;
-        updateNetworkName.running = true;
-        updateNetworkStrength.running = true;
     }
 
     Process {
@@ -207,57 +186,8 @@ Singleton {
 
         onExited: (exitCode, exitStatus) => {
             const lines = buffer.trim().split('\n');
-            const connectivity = lines.pop();
-            let hasEthernet = false;
-            let hasWifi = false;
-            let status = "disconnected";
-
-            lines.forEach(line => {
-                if (line.includes("ethernet") && line.includes("connected")) {
-                    hasEthernet = true;
-                } else if (line.includes("wifi:")) {
-                    if (line.includes("disconnected")) {
-                        status = "disconnected";
-                    } else if (line.includes("connected")) {
-                        hasWifi = true;
-                        status = "connected";
-                        if (connectivity === "limited") {
-                            hasWifi = false;
-                            status = "limited";
-                        }
-                    } else if (line.includes("connecting")) {
-                        status = "connecting";
-                    } else if (line.includes("unavailable")) {
-                        status = "disabled";
-                    }
-                }
-            });
-
-            root.wifiStatus = status;
-            root.ethernet = hasEthernet;
-            root.wifi = hasWifi;
-        }
-    }
-
-    Process {
-        id: updateNetworkName
-        command: ["sh", "-c", "nmcli -t -f NAME c show --active | head -1"]
-        running: true
-        stdout: SplitParser {
-            onRead: data => {
-                root.networkName = data;
-            }
-        }
-    }
-
-    Process {
-        id: updateNetworkStrength
-        running: true
-        command: ["sh", "-c", "nmcli -f IN-USE,SIGNAL,SSID device wifi | awk '/^\\*/{if (NR!=1) {print $2}}'"]
-        stdout: SplitParser {
-            onRead: data => {
-                root.networkStrength = parseInt(data) || 0;
-            }
+            lines.pop(); // connectivity line
+            root.ethernet = lines.some(line => line.includes("ethernet") && line.includes("connected"));
         }
     }
 

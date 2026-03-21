@@ -43,7 +43,6 @@ Singleton {
 
     // Lists of nodes (auto-updating) - using list<var> because list<PwNode> breaks ScriptModel
     readonly property list<var> outputAppNodes: appNodes(true)
-    readonly property list<var> inputAppNodes: appNodes(false)
     readonly property list<var> outputDevices: devices(true)
     readonly property list<var> inputDevices: devices(false)
 

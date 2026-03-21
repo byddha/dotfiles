@@ -18,8 +18,6 @@ Singleton {
     // State properties
     property bool mullvadConnected: false
     property bool fortiConnected: false
-    property bool connecting: false
-    property string connectedVpn: ""  // "mullvad", "forti", or ""
     property bool fortiConnectionFailed: false
 
     // Mullvad location info (from JSON)
@@ -81,14 +79,12 @@ Singleton {
                 } catch (e) {
                     root.mullvadConnected = false;
                 }
-                root.updateConnectedVpn();
             }
         }
 
         onExited: (code, status) => {
             if (code !== 0) {
                 root.mullvadConnected = false;
-                root.updateConnectedVpn();
             }
         }
     }
@@ -96,7 +92,6 @@ Singleton {
     Process {
         id: mullvadConnectProc
         onExited: (code, status) => {
-            root.connecting = false;
             root.updateStatus();
         }
     }
@@ -110,7 +105,6 @@ Singleton {
         command: ["pgrep", "openfortivpn"]
         onExited: (code, status) => {
             root.fortiConnected = (code === 0);
-            root.updateConnectedVpn();
         }
     }
 
@@ -119,7 +113,6 @@ Singleton {
         id: fortiConnectDelay
         interval: 3000
         onTriggered: {
-            root.connecting = false;
             // Check if connection succeeded
             fortiCheckProc.running = true;
         }
@@ -150,7 +143,6 @@ Singleton {
         id: fortiDisconnectProc
         command: ["sudo", "killall", "openfortivpn"]
         onExited: (code, status) => {
-            root.connecting = false;
             root.updateStatus();
         }
     }
@@ -164,15 +156,6 @@ Singleton {
         fortiStatusProc.running = true;
     }
 
-    function updateConnectedVpn() {
-        if (mullvadConnected)
-            connectedVpn = "mullvad";
-        else if (fortiConnected)
-            connectedVpn = "forti";
-        else
-            connectedVpn = "";
-    }
-
     // ==================
     // Control Functions
     // ==================
@@ -180,28 +163,20 @@ Singleton {
     function connectMullvad() {
         if (fortiConnected)
             disconnectForti();
-        connecting = true;
         mullvadConnectProc.command = ["mullvad", "connect"];
         mullvadConnectProc.running = true;
         Logger.info("Connecting to Mullvad...");
     }
 
     function disconnectMullvad() {
-        connecting = true;
         mullvadConnectProc.command = ["mullvad", "disconnect"];
         mullvadConnectProc.running = true;
         Logger.info("Disconnecting Mullvad...");
     }
 
-    function connectForti() {
-        // Legacy function - should use connectFortiWithPassword instead
-        Logger.warn("connectForti called without password");
-    }
-
     function connectFortiWithPassword(password: string) {
         if (mullvadConnected)
             disconnectMullvad();
-        connecting = true;
         fortiConnectionFailed = false;  // Clear any previous error
         fortiUptimeSeconds = 0;  // Reset uptime counter
         // Use execDetached for long-running daemon process
@@ -212,7 +187,6 @@ Singleton {
     }
 
     function disconnectForti() {
-        connecting = true;
         fortiDisconnectProc.running = true;
         Logger.info("Disconnecting FortiVPN...");
     }
@@ -222,13 +196,6 @@ Singleton {
             disconnectMullvad();
         else
             connectMullvad();
-    }
-
-    function toggleForti() {
-        if (fortiConnected)
-            disconnectForti();
-        else
-            connectForti();
     }
 
     Component.onCompleted: {

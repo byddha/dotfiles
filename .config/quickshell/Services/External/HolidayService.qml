@@ -18,10 +18,6 @@ import ".."
 Singleton {
     id: root
 
-    function init() {
-        Logger.info("Service initialized");
-    }
-
     // Cache directory and file
     readonly property string cacheDir: StandardPaths.standardLocations(StandardPaths.CacheLocation)[0] + "/bidshell"
     readonly property string cacheFile: cacheDir + "/holidays.json"

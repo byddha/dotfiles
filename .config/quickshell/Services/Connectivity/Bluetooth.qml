@@ -13,14 +13,8 @@ Singleton {
     // Refresh trigger - increment to force list re-evaluation
     property int refreshTrigger: 0
 
-    // Adapter availability and state
-    readonly property bool available: Bluetooth.adapters.values.length > 0
+    // Adapter state
     readonly property bool enabled: Bluetooth.defaultAdapter?.enabled ?? false
-    readonly property bool connected: Bluetooth.devices.values.some(d => d.connected)
-
-    // Device counts
-    readonly property int connectedCount: Bluetooth.defaultAdapter?.devices.values.filter(d => d.connected).length ?? 0
-    readonly property BluetoothDevice firstConnectedDevice: Bluetooth.defaultAdapter?.devices.values.find(d => d.connected) ?? null
 
     // Sort function: named devices first, then by name alphabetically
     function sortDevices(a, b) {
@@ -93,21 +87,6 @@ Singleton {
         setEnabled(!enabled);
     }
 
-    // Connect/disconnect device (called directly on device objects)
-    function connectDevice(device) {
-        if (!device)
-            return;
-        device.connect();
-        Logger.info(`Connecting to: ${device.name}`);
-    }
-
-    function disconnectDevice(device) {
-        if (!device)
-            return;
-        device.disconnect();
-        Logger.info(`Disconnecting from: ${device.name}`);
-    }
-
     // Icon helper based on device type
     function getDeviceIcon(iconName: string): string {
         Logger.debug(`Icon name ${iconName}`);
@@ -130,16 +109,10 @@ Singleton {
 
     Component.onCompleted: {
         Logger.info("Service initialized");
-        Logger.info(`Adapter available: ${available}, enabled: ${enabled}`);
     }
 
     onEnabledChanged: {
         Logger.info(`Enabled state changed: ${enabled}`);
-        refresh();
-    }
-
-    onConnectedChanged: {
-        Logger.info(`Connected state changed: ${connected}`);
         refresh();
     }
 }

@@ -12,7 +12,6 @@ Singleton {
         Logger.info("Settings initialized");
     }
 
-    property bool launcherVisible: false
     property bool notificationsVisible: true
     property bool barVisible: true
     property bool hyprWhichKeyVisible: false

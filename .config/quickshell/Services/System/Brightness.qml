@@ -51,34 +51,6 @@ Singleton {
         setBrightnessProcess.running = true;
     }
 
-    // Set brightness by percentage (0-100)
-    function setBrightnessPercent(percent) {
-        setBrightness(percent / 100.0);
-    }
-
-    // Increase brightness by 5%
-    function increase() {
-        setBrightness(root.brightness + 0.05);
-    }
-
-    // Decrease brightness by 5%
-    function decrease() {
-        setBrightness(root.brightness - 0.05);
-    }
-
-    // Set to specific preset values
-    function setToMax() {
-        setBrightness(1.0);
-    }
-
-    function setToHalf() {
-        setBrightness(0.5);
-    }
-
-    function setToMin() {
-        setBrightness(0.05);  // Not 0 to avoid completely dark screen
-    }
-
     // Process to check if brightnessctl is available
     Process {
         id: checkAvailabilityProcess

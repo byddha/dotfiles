@@ -36,15 +36,6 @@ Singleton {
     property string base0E: "#ee5a6f"  // Keywords, Storage, Selector, Markup Italic
     property string base0F: "#c56cf0"  // Deprecated, Opening/Closing Embedded Tags
 
-    // Theme metadata
-    property string themeName: "default"
-    property string themeAuthor: ""
-    property string themeVariant: "dark"
-
-    // State
-    property bool isLoading: false
-    property string lastError: ""
-
     // Base16 directory path
     readonly property string base16Dir: "/home/bida/.config/base16"
 
@@ -59,12 +50,8 @@ Singleton {
                     const themeData = JSON.parse(text);
                     Logger.info(`Loaded theme: ${themeData.name || "unknown"}`);
                     applyTheme(themeData);
-                    root.isLoading = false;
-                    root.lastError = "";
                 } catch (e) {
                     Logger.error("Failed to parse theme JSON:", e);
-                    root.lastError = "Failed to parse theme data: " + e;
-                    root.isLoading = false;
                 }
             }
         }
@@ -80,8 +67,6 @@ Singleton {
         onExited: (code, status) => {
             if (code !== 0) {
                 Logger.error(`yq exited with code ${code}`);
-                root.lastError = "Failed to load theme file";
-                root.isLoading = false;
             }
         }
     }
@@ -112,9 +97,6 @@ Singleton {
     function loadTheme(name) {
         const themePath = `${base16Dir}/${name}.yaml`;
         Logger.info(`Loading theme: ${themePath}`);
-
-        root.isLoading = true;
-        root.themeName = name;
 
         yamlConverter.command = ["yq", ".", themePath];
         yamlConverter.running = true;
@@ -149,11 +131,7 @@ Singleton {
         root.base0E = p.base0E || root.base0E;
         root.base0F = p.base0F || root.base0F;
 
-        // Apply metadata
-        root.themeAuthor = themeData.author || "";
-        root.themeVariant = themeData.variant || "dark";
-
-        Logger.info(`Theme applied: ${themeData.name} by ${root.themeAuthor}`);
+        Logger.info(`Theme applied: ${themeData.name}`);
     }
 
     /**
