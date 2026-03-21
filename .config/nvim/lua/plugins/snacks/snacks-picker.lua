@@ -7,32 +7,11 @@ return {
     },
     keys = {
         {
-            "<leader>ff",
-            function()
-                Snacks.picker.smart()
-            end,
-            desc = "Smart Find Files",
-        },
-        {
-            "<leader>f<space>",
-            function()
-                Snacks.picker.files()
-            end,
-            desc = "Find files",
-        },
-        {
             "<leader>,",
             function()
                 Snacks.picker.buffers()
             end,
             desc = "Buffers",
-        },
-        {
-            "<leader>fw",
-            function()
-                Snacks.picker.grep()
-            end,
-            desc = "Grep",
         },
         {
             '<leader>f"',
