@@ -123,11 +123,11 @@ Singleton {
 
             // Centralized monitor configuration
             // Keys are monitor names (e.g., "DP-3", "HDMI-A-1")
-            // Each monitor can have: workspaces (array [start, end]), forceRotate (bool), hdrCapable (bool)
+            // Each monitor can have: workspaces (array [start, end]), hdrCapable (bool)
             property var monitors: (
                 // Example:
-                // "DP-3": { "workspaces": [1, 5], "forceRotate": false, "hdrCapable": true },
-                // "HDMI-A-1": { "workspaces": [6, 8], "forceRotate": true, "hdrCapable": false }
+                // "DP-3": { "workspaces": [1, 5], "hdrCapable": true },
+                // "HDMI-A-1": { "workspaces": [6, 8], "hdrCapable": false }
                 {})
 
             property var sidebar: JsonObject {

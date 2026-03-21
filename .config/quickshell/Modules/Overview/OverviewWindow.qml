@@ -68,24 +68,6 @@ Item { // Window
         captureSource: Settings.overviewVisible ? root.toplevel : null
         live: true
 
-        // Apply 180° rotation if monitor is configured for it
-        transform: Rotation {
-            origin.x: windowPreview.width / 2
-            origin.y: windowPreview.height / 2
-            angle: {
-                const wsId = windowData?.workspace?.id ?? 1;
-                const monitors = Config.options?.monitors ?? {};
-                // Find which monitor owns this workspace
-                for (const [monName, monConfig] of Object.entries(monitors)) {
-                    const range = monConfig?.workspaces;
-                    if (range && wsId >= range[0] && wsId <= range[1]) {
-                        return monConfig?.forceRotate ? 180 : 0;
-                    }
-                }
-                return 0;
-            }
-        }
-
         Rectangle {
             anchors.fill: parent
             radius: Theme.roundingWindow * root.scale

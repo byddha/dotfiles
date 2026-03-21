@@ -48,14 +48,6 @@ Scope {
         }
 
         Timer {
-            id: fadeInTimer
-            interval: 10
-            onTriggered: {
-                container.visible = true;
-            }
-        }
-
-        Timer {
             id: showTimer
             interval: 50
             onTriggered: {

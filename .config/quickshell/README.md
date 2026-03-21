@@ -16,20 +16,12 @@ Fill monitors in ~/.config/bidshell/config.json, for example:
 ```json
     "monitors": {
         "DP-3": {
-            "forceRotate": false,
             "hdrCapable": true,
-            "workspaces": [
-                1,
-                5
-            ]
+            "workspaces": [1, 5]
         },
         "HDMI-A-1": {
-            "forceRotate": true,
             "hdrCapable": false,
-            "workspaces": [
-                6,
-                8
-            ]
+            "workspaces": [6, 8]
         }
     },
 
