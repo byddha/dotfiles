@@ -22,15 +22,16 @@ Item {
         spacing: BarStyle.spacing
         height: parent.height
 
+        // UPower peripherals (filtered — excludes replaced devices)
         Repeater {
             model: UPower.devices
 
             delegate: Rectangle {
-                id: deviceButton
+                id: upowerButton
                 required property var modelData
 
                 visible: PeripheralBatteries.isPeripheral(modelData)
-                width: visible ? deviceRow.implicitWidth + BarStyle.spacing * 2 : 0
+                width: visible ? upowerRow.implicitWidth + BarStyle.spacing * 2 : 0
                 height: BarStyle.buttonSize
                 radius: BarStyle.buttonRadius
 
@@ -56,7 +57,7 @@ Item {
                 }
 
                 Row {
-                    id: deviceRow
+                    id: upowerRow
                     anchors.centerIn: parent
                     spacing: BarStyle.spacing / 2
 
@@ -65,39 +66,134 @@ Item {
                         text: PeripheralBatteries.getDeviceIcon(modelData)
                         font.family: BarStyle.iconFont
                         font.pixelSize: BarStyle.iconSize
-                        color: deviceButton.isCritical ? Theme.colLayer0 : (deviceButton.charging ? Theme.primary : (deviceButton.isLow ? Theme.accentOrange : Theme.primary))
+                        color: upowerButton.isCritical ? Theme.colLayer0 : (upowerButton.charging ? Theme.primary : (upowerButton.isLow ? Theme.accentOrange : Theme.primary))
                     }
 
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
-                        text: `${deviceButton.percentage}%`
+                        text: `${upowerButton.percentage}%`
                         font.family: BarStyle.textFont
                         font.pixelSize: BarStyle.textSize
                         font.weight: BarStyle.textWeight
-                        color: deviceButton.isCritical ? Theme.colLayer0 : BarStyle.textColor
+                        color: upowerButton.isCritical ? Theme.colLayer0 : BarStyle.textColor
                     }
                 }
 
                 MouseArea {
-                    id: mouseArea
+                    id: upowerMouse
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onEntered: tooltip.show()
-                    onExited: tooltip.hide()
+                    onEntered: upowerTooltip.show()
+                    onExited: upowerTooltip.hide()
                 }
 
                 Tooltip {
-                    id: tooltip
-                    target: deviceButton
+                    id: upowerTooltip
+                    target: upowerButton
                     text: PeripheralBatteries.getDeviceStatusText(modelData)
                 }
 
                 states: State {
                     name: "hovered"
-                    when: mouseArea.containsMouse && !deviceButton.isCritical
+                    when: upowerMouse.containsMouse && !upowerButton.isCritical
                     PropertyChanges {
-                        target: deviceButton
+                        target: upowerButton
+                        color: BarStyle.buttonBackgroundHover
+                    }
+                }
+
+                transitions: Transition {
+                    ColorAnimation {
+                        duration: 150
+                        easing.type: Easing.InOutQuad
+                    }
+                }
+            }
+        }
+
+        // Custom devices from config
+        Repeater {
+            model: PeripheralBatteries.customDevices
+
+            delegate: Rectangle {
+                id: customButton
+                required property var modelData
+
+                visible: modelData?.present ?? false
+                width: visible ? customRow.implicitWidth + BarStyle.spacing * 2 : 0
+                height: BarStyle.buttonSize
+                radius: BarStyle.buttonRadius
+
+                property int percentage: modelData?.percentage ?? 0
+                property bool charging: modelData?.charging ?? false
+                property bool isLow: !charging && percentage <= PeripheralBatteries.lowThreshold
+                property bool isCritical: !charging && percentage <= PeripheralBatteries.criticalThreshold
+
+                color: isCritical ? Theme.accentRed : BarStyle.buttonBackground
+
+                Behavior on width {
+                    NumberAnimation {
+                        duration: 150
+                        easing.type: Easing.InOutQuad
+                    }
+                }
+
+                Behavior on color {
+                    ColorAnimation {
+                        duration: 150
+                        easing.type: Easing.InOutQuad
+                    }
+                }
+
+                Row {
+                    id: customRow
+                    anchors.centerIn: parent
+                    spacing: BarStyle.spacing / 2
+
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: customButton.modelData?.icon ?? ""
+                        font.family: BarStyle.iconFont
+                        font.pixelSize: BarStyle.iconSize
+                        color: customButton.isCritical ? Theme.colLayer0 : (customButton.charging ? Theme.primary : (customButton.isLow ? Theme.accentOrange : Theme.primary))
+                    }
+
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: `${customButton.percentage}%`
+                        font.family: BarStyle.textFont
+                        font.pixelSize: BarStyle.textSize
+                        font.weight: BarStyle.textWeight
+                        color: customButton.isCritical ? Theme.colLayer0 : BarStyle.textColor
+                    }
+                }
+
+                MouseArea {
+                    id: customMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onEntered: customTooltip.show()
+                    onExited: customTooltip.hide()
+                }
+
+                Tooltip {
+                    id: customTooltip
+                    target: customButton
+                    text: {
+                        const name = modelData?.name ?? "Device";
+                        const pct = modelData?.percentage ?? 0;
+                        const ch = modelData?.charging ?? false;
+                        return `${name}: ${pct}%${ch ? " - Charging" : ""}`;
+                    }
+                }
+
+                states: State {
+                    name: "hovered"
+                    when: customMouse.containsMouse && !customButton.isCritical
+                    PropertyChanges {
+                        target: customButton
                         color: BarStyle.buttonBackgroundHover
                     }
                 }

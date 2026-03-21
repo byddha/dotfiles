@@ -153,6 +153,15 @@ Singleton {
                 property string position: "right"  // "left" or "right"
             }
 
+            // Custom peripheral battery sources
+            // devices: [{ name, type, command, interval, replaces? }]
+            // type: trackpad, mouse, keyboard, headset, headphones, speakers, gamepad, phone
+            // command: outputs JSON {"percentage": 0-100, "charging": true/false}
+            // replaces: UPower model name substring to suppress (optional)
+            property var peripheralBatteries: ({
+                devices: []
+            })
+
             property var calendar: JsonObject {
                 property bool enabled: true
 
