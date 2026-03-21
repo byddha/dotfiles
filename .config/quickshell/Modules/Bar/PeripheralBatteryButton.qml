@@ -30,7 +30,8 @@ Item {
                 id: upowerButton
                 required property var modelData
 
-                visible: PeripheralBatteries.isPeripheral(modelData)
+                property var _configDevices: Config.options.peripheralBatteries?.devices ?? []
+                visible: PeripheralBatteries.isPeripheral(modelData, _configDevices)
                 width: visible ? upowerRow.implicitWidth + BarStyle.spacing * 2 : 0
                 height: BarStyle.buttonSize
                 radius: BarStyle.buttonRadius

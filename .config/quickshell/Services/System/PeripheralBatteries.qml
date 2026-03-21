@@ -35,7 +35,9 @@ Singleton {
         return false;
     }
 
-    function isPeripheral(device): bool {
+    // _configHint is unused but forces QML to re-evaluate bindings when config changes,
+    // otherwise _isReplaced() calls read config imperatively and QML doesn't track the dependency
+    function isPeripheral(device, _configHint): bool {
         if (!device || !device.isPresent)
             return false;
         if (device.isLaptopBattery)
@@ -248,7 +250,8 @@ Singleton {
         delegate: QtObject {
             required property var modelData
 
-            property bool isPeripheral: root.isPeripheral(modelData)
+            property var _configDevices: Config.options.peripheralBatteries?.devices ?? []
+            property bool isPeripheral: root.isPeripheral(modelData, _configDevices)
             property int percentage: Math.round((modelData?.percentage ?? 0) * 100)
             property bool charging: modelData?.state === UPowerDeviceState.Charging
             property bool isLow: isPeripheral && !charging && percentage <= root.lowThreshold
