@@ -67,6 +67,13 @@ Item {
                         font.family: BarStyle.iconFont
                         font.pixelSize: BarStyle.iconSize
                         color: upowerButton.isCritical ? Theme.colLayer0 : (upowerButton.charging ? Theme.primary : (upowerButton.isLow ? Theme.accentOrange : Theme.primary))
+
+                        SequentialAnimation on opacity {
+                            running: upowerButton.charging
+                            loops: Animation.Infinite
+                            NumberAnimation { to: 0.4; duration: 1000; easing.type: Easing.InOutSine }
+                            NumberAnimation { to: 1.0; duration: 1000; easing.type: Easing.InOutSine }
+                        }
                     }
 
                     Text {
@@ -157,6 +164,13 @@ Item {
                         font.family: BarStyle.iconFont
                         font.pixelSize: BarStyle.iconSize
                         color: customButton.isCritical ? Theme.colLayer0 : (customButton.charging ? Theme.primary : (customButton.isLow ? Theme.accentOrange : Theme.primary))
+
+                        SequentialAnimation on opacity {
+                            running: customButton.charging
+                            loops: Animation.Infinite
+                            NumberAnimation { to: 0.4; duration: 1000; easing.type: Easing.InOutSine }
+                            NumberAnimation { to: 1.0; duration: 1000; easing.type: Easing.InOutSine }
+                        }
                     }
 
                     Text {
