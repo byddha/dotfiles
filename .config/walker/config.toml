@@ -16,6 +16,7 @@ installed_providers = [          # workaround: elephant listproviders race condi
   "todo",
   "menus:nerdfonts",
   "menus:colorschemes",
+  "archlinuxpkgs",
 ]
 disable_mouse = false           # disable mouse (on input and list only)
 debug = false                   # enables debug printing for some stuff, f.e. keybinds
@@ -98,6 +99,10 @@ provider = "calc"
 [[providers.prefixes]]
 prefix = ";"
 provider = "clipboard"
+
+[[providers.prefixes]]
+prefix = "*"
+provider = "archlinuxpkgs"
 
 [[providers.prefixes]]
 prefix = "$"
