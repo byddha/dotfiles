@@ -1,0 +1,107 @@
+#!/bin/bash
+
+WHISPER_BIN="/mnt/data/Dev/whisper.cpp/build/bin/whisper-cli"
+WHISPER_MODEL="/mnt/data/Dev/whisper.cpp/models/ggml-large-v3-turbo.bin"
+
+LANGUAGES=(
+    "ro:Romanian"
+    "en:English"
+    "es:Spanish"
+    "fr:French"
+    "de:German"
+    "it:Italian"
+    "pt:Portuguese"
+    "nl:Dutch"
+    "pl:Polish"
+    "uk:Ukrainian"
+    "ru:Russian"
+    "ja:Japanese"
+    "zh:Chinese"
+    "ko:Korean"
+    "ar:Arabic"
+    "hi:Hindi"
+    "tr:Turkish"
+    "hu:Hungarian"
+    "cs:Czech"
+    "bg:Bulgarian"
+    "auto:Auto-detect"
+)
+
+usage() {
+    echo "Usage: transcribe [options] <video/audio files...>"
+    echo ""
+    echo "Options:"
+    echo "  -l CODE   Language code (skip fzf selector)"
+    echo "  -f FMT    Output format: all, txt, srt (default: all)"
+    echo "  -h        Show this help"
+    exit 1
+}
+
+LANG_CODE=""
+FORMAT="all"
+
+while getopts "l:f:h" opt; do
+    case $opt in
+        l) LANG_CODE="$OPTARG" ;;
+        f) FORMAT="$OPTARG" ;;
+        h) usage ;;
+        *) usage ;;
+    esac
+done
+shift $((OPTIND - 1))
+
+[[ $# -eq 0 ]] && usage
+
+# Language selection via fzf if not provided
+if [[ -z "$LANG_CODE" ]]; then
+    selection=$(printf '%s\n' "${LANGUAGES[@]}" | awk -F: '{printf "%-6s %s\n", $1, $2}' \
+        | fzf --prompt="Language: " --height=~25 --reverse --no-info)
+    [[ -z "$selection" ]] && echo "No language selected." && exit 1
+    LANG_CODE=$(echo "$selection" | awk '{print $1}')
+fi
+
+LANG_FLAG=(-l "$LANG_CODE")
+[[ "$LANG_CODE" == "auto" ]] && LANG_FLAG=()
+
+for input in "$@"; do
+    if [[ ! -f "$input" ]]; then
+        echo "Skipping: $input (not found)"
+        continue
+    fi
+
+    dir=$(dirname "$(realpath "$input")")
+    base=$(basename "$input" | sed 's/\.[^.]*$//')
+    wav="/tmp/transcribe_${base}.wav"
+
+    echo "Extracting audio: $input"
+    ffmpeg -y -i "$input" -ar 16000 -ac 1 -f wav "$wav" -loglevel error || {
+        echo "Failed to extract audio from $input"
+        continue
+    }
+
+    # Build output format flags
+    fmt_flags=()
+    case "$FORMAT" in
+        txt) fmt_flags=(-otxt) ;;
+        srt) fmt_flags=(-osrt) ;;
+        all) fmt_flags=(-otxt -osrt) ;;
+        *)   echo "Unknown format: $FORMAT"; continue ;;
+    esac
+
+    echo "Transcribing ($LANG_CODE): $base"
+    "$WHISPER_BIN" -m "$WHISPER_MODEL" \
+        -f "$wav" \
+        -t "$(nproc)" \
+        "${LANG_FLAG[@]}" \
+        "${fmt_flags[@]}" \
+        -of "$dir/$base" \
+        2>/dev/null
+
+    if [[ $? -eq 0 ]]; then
+        echo "Done: $dir/$base.*"
+    else
+        echo "Whisper failed on: $input"
+    fi
+
+    rm -f "$wav"
+done
