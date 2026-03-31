@@ -1,5 +1,35 @@
 #!/bin/bash
-# Deps: yq, python, adw-gtk3, kvantum, themix-icons-papirus-git (AUR)
+#
+# theme-set - base16 colorscheme across the whole desktop
+#
+# basically pywal but with base16 yamls instead of generating from wallpaper.
+# reads ~/.config/base16/<name>.yaml, exports the 16 colors, then sources
+# every .sh in theme-set.d/ which each spit out app-specific configs.
+# generated stuff goes to ~/.cache/theme/ or app-specific dirs, not in git.
+#
+# kvantum templates came from pywal16-libadwaita, icons are papirus via oomox.
+# refs: catppuccin/zen-browser, omarchy/aetheria
+#
+# modules are independent, skip silently if app isnt installed.
+# they get: $base00-$base0F, $CACHE_DIR, $THEME_NAME
+#
+# colors you actually care about:
+#   00=bg  01=lighter bg  03=inactive  05=fg  07=bright white
+#   08=red  09=orange  0A=yellow  0B=green  0C=cyan  0D=blue  0E=magenta
+#
+# deps: yq, python3
+# optional: kvantum+qt6ct (qt), adw-gtk3 (gtk3), themix/oomox (icons)
+#
+# WHEN SHIT BREAKS:
+#
+#   qt apps lost their theme?
+#     the chain is: QT_QPA_PLATFORMTHEME=qt6ct (in hyprland.conf)
+#       -> qt6ct.conf style=kvantum -> kvantum.kvconfig theme=base16
+#     if ANY link breaks, qt apps silently fall back to ugly defaults.
+#     after a big Qt upgrade (like 6.10->6.11), AUR packages like qt6ct-kde
+#     need a rebuild or the plugin just fails to load. no error, nothing.
+#       paru -S qt6ct-kde --rebuild
+#
 set -e
 
 THEME_NAME="$1"
@@ -42,5 +72,5 @@ done
 
 echo "Theme set to: $THEME_NAME"
 
-# Notify user about apps that need restart
+# Most apps need a manual restart (Qt, GTK, Zen). Kitty/hyprland/btop auto-reload.
 notify-send "Theme: $THEME_NAME" "Restart Zen, GTK, and Qt apps to apply" -i preferences-desktop-theme 2>/dev/null || true
