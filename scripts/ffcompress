@@ -1,0 +1,110 @@
+#!/bin/bash
+set -e
+
+in=""
+mb=10
+no_audio=false
+min_bpp=50000
+min_fps=30
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -h|--help)
+      echo "Usage: ffcompress [-n] <file> [size_mb]"
+      echo ""
+      echo "Compress video to a target file size using SVT-AV1 two-pass encoding."
+      echo ""
+      echo "  -n          Strip audio"
+      echo "  size_mb     Target size in MB (default: 10)"
+      echo ""
+      echo "Automatically reduces fps/resolution if needed to maintain quality."
+      exit 0 ;;
+    -n) no_audio=true; shift ;;
+    -*) echo "Unknown option: $1"; exit 1 ;;
+    *)
+      if [[ -z "$in" ]]; then
+        in="$1"
+      else
+        mb="$1"
+      fi
+      shift ;;
+  esac
+done
+
+[[ -z "$in" ]] && echo "Usage: ffcompress [-n] <file> [size_mb]" && exit 1
+[[ ! -f "$in" ]] && echo "File not found: $in" && exit 1
+
+w=$(ffprobe -v error -select_streams v:0 -show_entries stream=width -of csv=p=0 "$in")
+h=$(ffprobe -v error -select_streams v:0 -show_entries stream=height -of csv=p=0 "$in")
+fps_frac=$(ffprobe -v error -select_streams v:0 -show_entries stream=r_frame_rate -of csv=p=0 "$in")
+dur=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$in")
+fps=$((${fps_frac%/*} / ${fps_frac#*/}))
+
+if $no_audio; then
+  audio_br=0
+  audio_opts="-an"
+else
+  has_audio=$(ffprobe -v error -select_streams a -show_entries stream=index -of csv=p=0 "$in" | head -1)
+  if [[ -n "$has_audio" ]]; then
+    audio_br=96
+    audio_opts="-c:a aac -b:a ${audio_br}k"
+  else
+    audio_br=0
+    audio_opts="-an"
+  fi
+fi
+
+target_bytes=$(( mb * 1024 * 1024 * 97 / 100 ))
+target_br=$(echo "scale=0; ($target_bytes * 8 / 1000) / $dur - $audio_br" | bc)
+
+bpp() { echo $(( $1 * 1000 * 1000000 / ($2 * $3 * $4) )); }
+
+cur_fps=$fps
+cur_w=$w
+cur_h=$h
+
+while (( cur_fps > min_fps && $(bpp $target_br $cur_w $cur_h $cur_fps) < min_bpp )); do
+  cur_fps=$((cur_fps / 2))
+  (( cur_fps < min_fps )) && cur_fps=$min_fps
+done
+
+if (( $(bpp $target_br $cur_w $cur_h $cur_fps) < min_bpp )); then
+  for s in 87 75 62; do
+    cur_w=$((w * s / 100 / 2 * 2))
+    cur_h=$((h * s / 100 / 2 * 2))
+    (( $(bpp $target_br $cur_w $cur_h $cur_fps) >= min_bpp )) && break
+  done
+fi
+
+echo "${w}x${h}@${fps}fps -> ${cur_w}x${cur_h}@${cur_fps}fps (${target_br}kbps)"
+
+vf=""
+(( cur_w != w || cur_h != h )) && vf="-vf scale=${cur_w}:${cur_h}"
+fps_cmd=""
+(( cur_fps != fps )) && fps_cmd="-r $cur_fps"
+
+out="${in%.*}.compressed.mp4"
+passlog=$(mktemp -u)
+
+ffmpeg -y -loglevel error -i "$in" \
+  -c:v libsvtav1 -preset 4 -pix_fmt yuv420p10le \
+  -b:v "${target_br}k" \
+  $vf $fps_cmd \
+  -pass 1 -passlogfile "$passlog" \
+  -an -f null /dev/null
+
+ffmpeg -y -loglevel error -i "$in" \
+  -c:v libsvtav1 -preset 4 -pix_fmt yuv420p10le \
+  -svtav1-params "tune=0:enable-qm=1:qm-min=4:qm-max=15:enable-variance-boost=1:variance-boost-strength=2:variance-octile=6:sharpness=1:keyint=10s" \
+  -b:v "${target_br}k" \
+  $vf $fps_cmd \
+  -pass 2 -passlogfile "$passlog" \
+  $audio_opts \
+  -movflags +faststart \
+  "$out"
+
+rm -f "${passlog}"*
+
+out_size=$(stat --printf="%s" "$out")
+out_mb=$(echo "scale=2; $out_size / 1024 / 1024" | bc)
+echo "${out_mb}MB -> $out"
