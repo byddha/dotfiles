@@ -27,16 +27,16 @@ ColumnLayout {
             width: parent.width
             spacing: Theme.spacingBase
 
-            // List of apps playing audio
+            // List of apps playing audio (grouped by application)
             Repeater {
                 model: ScriptModel {
-                    values: Audio.outputAppNodes
+                    values: Audio.groupedOutputAppNodes
                 }
 
-                VolumeMixerEntry {
+                VolumeMixerGroupEntry {
                     required property var modelData
                     Layout.fillWidth: true
-                    node: modelData
+                    group: modelData
                 }
             }
 
@@ -44,7 +44,7 @@ ColumnLayout {
             Item {
                 Layout.fillWidth: true
                 Layout.preferredHeight: emptyText.height
-                visible: Audio.outputAppNodes.length === 0
+                visible: Audio.groupedOutputAppNodes.length === 0
 
                 StyledText {
                     id: emptyText

@@ -46,6 +46,31 @@ Singleton {
     readonly property list<var> outputDevices: devices(true)
     readonly property list<var> inputDevices: devices(false)
 
+    // Grouped app nodes by application binary/name
+    readonly property list<var> groupedOutputAppNodes: {
+        const nodes = appNodes(true);
+        const groups = {};
+        const order = [];
+
+        for (const node of nodes) {
+            const key = node.properties["application.process.binary"]
+                || node.properties["application.name"]?.toLowerCase()
+                || "unknown";
+
+            if (!groups[key]) {
+                groups[key] = {
+                    appKey: key,
+                    appName: appNodeDisplayName(node),
+                    nodes: []
+                };
+                order.push(key);
+            }
+            groups[key].nodes.push(node);
+        }
+
+        return order.map(key => groups[key]);
+    }
+
     // Format app name for display
     function appNodeDisplayName(node) {
         if (!node)

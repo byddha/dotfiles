@@ -174,6 +174,12 @@ Singleton {
     readonly property string cancel: "󰅖"
 
     // ==================
+    // Link Icons
+    // ==================
+    readonly property string link: "󰌷"
+    readonly property string linkOff: "󰌹"
+
+    // ==================
     // Misc Icons
     // ==================
     readonly property string menu: "☰"

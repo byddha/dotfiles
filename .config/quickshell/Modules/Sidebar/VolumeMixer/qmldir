@@ -1,3 +1,4 @@
 VolumeMixerTab 1.0 VolumeMixerTab.qml
 VolumeMixerEntry 1.0 VolumeMixerEntry.qml
+VolumeMixerGroupEntry 1.0 VolumeMixerGroupEntry.qml
 DeviceListItem 1.0 DeviceListItem.qml
