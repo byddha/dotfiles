@@ -15,6 +15,9 @@ return {
 
             max_concurrent_installers = 10,
             ensure_installed = {
+                -- treesitter
+                "tree-sitter-cli",
+
                 -- lua
                 "lua-language-server",
                 "stylua",
