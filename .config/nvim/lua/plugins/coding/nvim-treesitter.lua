@@ -24,7 +24,6 @@ return {
             "typescript",
             "tsx",
             "json",
-            "jsonc",
             "yaml",
             "toml",
 

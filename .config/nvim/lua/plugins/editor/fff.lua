@@ -12,6 +12,10 @@ return {
         git = {
             status_text_color = true,
         },
+        keymaps = {
+            move_up = { "<Up>", "<C-p>", "<C-k>" },
+            move_down = { "<Down>", "<C-n>", "<C-j>" },
+        },
     },
     keys = {
         {
