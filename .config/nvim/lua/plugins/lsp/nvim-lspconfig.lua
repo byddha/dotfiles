@@ -27,6 +27,7 @@ return {
             "lua_ls",
             "qmlls",
             "gopls",
+            "clangd",
         }
 
         for _, lsp in ipairs(servers) do
