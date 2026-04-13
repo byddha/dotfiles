@@ -1,7 +1,6 @@
 pragma ComponentBehavior: Bound
 import QtQuick
 import Quickshell
-import Quickshell.Io
 import "../../../Config"
 import "../../../Utils"
 import "../../../Components"
@@ -47,21 +46,6 @@ PopupWindow {
         Logger.info("Panel hidden");
     }
 
-    function executeCommand(args: list<string>) {
-        Logger.info(`Executing: ${args.join(" ")}`);
-        commandProcess.command = args;
-        commandProcess.running = true;
-    }
-
-    Process {
-        id: commandProcess
-        onExited: exitCode => {
-            if (exitCode !== 0) {
-                Logger.error(`Command failed with exit code: ${exitCode}`);
-            }
-        }
-    }
-
     Item {
         anchors.fill: parent
 
@@ -78,29 +62,10 @@ PopupWindow {
                 anchors.centerIn: parent
                 spacing: Theme.spacingBase
 
-                PowerActionButton {
-                    icon: Icons.shutdown
-                    onClicked: powerPopup.executeCommand(["systemctl", "poweroff"])
-                }
-
-                PowerActionButton {
-                    icon: Icons.reboot
-                    onClicked: powerPopup.executeCommand(["systemctl", "reboot"])
-                }
-
-                PowerActionButton {
-                    icon: Icons.logout
-                    onClicked: {
-                        Logger.info("Logging out via compositor");
-                        Compositor.logout();
-                        powerPopup.hidePanel();
-                    }
-                }
-
-                PowerActionButton {
-                    icon: Icons.suspend
-                    onClicked: powerPopup.executeCommand(["systemctl", "suspend"])
-                }
+                PowerActionButton { icon: Icons.shutdown; onClicked: { PowerActions.poweroff(); powerPopup.hidePanel() } }
+                PowerActionButton { icon: Icons.reboot;   onClicked: { PowerActions.reboot();   powerPopup.hidePanel() } }
+                PowerActionButton { icon: Icons.logout;   onClicked: { PowerActions.logout();   powerPopup.hidePanel() } }
+                PowerActionButton { icon: Icons.suspend;  onClicked: { PowerActions.suspend();  powerPopup.hidePanel() } }
             }
         }
     }

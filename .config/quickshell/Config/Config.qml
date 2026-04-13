@@ -21,6 +21,11 @@ Singleton {
     property alias options: adapter
     property string lastLoadedTheme: ""
 
+    readonly property string primaryMonitor: {
+        const names = Object.keys(adapter.monitors || {});
+        return names.length > 0 ? names[0] : (Quickshell.screens[0]?.name ?? "");
+    }
+
     function loadConfig() {
         fileView.reload();
     }
@@ -156,8 +161,8 @@ Singleton {
             // command: outputs JSON {"percentage": 0-100, "charging": true/false}
             // replaces: UPower model name substring to suppress (optional)
             property var peripheralBatteries: ({
-                devices: []
-            })
+                    devices: []
+                })
 
             property var brandLogos: JsonObject {
                 property string apiKey: ""      // logo.dev publishable key (for logo images)

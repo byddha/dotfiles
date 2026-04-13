@@ -2,6 +2,8 @@ singleton Battery 1.0 System/Battery.qml
 singleton Brightness 1.0 System/Brightness.qml
 singleton KeyboardBrightness 1.0 System/KeyboardBrightness.qml
 singleton Idle 1.0 System/Idle.qml
+singleton SessionLock 1.0 System/SessionLock.qml
+singleton PowerActions 1.0 System/PowerActions.qml
 singleton AirplaneMode 1.0 System/AirplaneMode.qml
 singleton Hdr 1.0 System/Hdr.qml
 singleton PeripheralBatteries 1.0 System/PeripheralBatteries.qml
