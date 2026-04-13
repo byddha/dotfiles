@@ -53,6 +53,7 @@ Singleton {
     // Stable player data - only updates when we have valid, complete data
     // UI components should bind to these for display to avoid flickering
     property string stableTrackTitle: ""
+    property string stableTrackArtUrl: ""
     property string stableTrackArtist: ""
     property real stableTrackLength: 0
     property bool stableCanGoPrevious: false
@@ -61,7 +62,20 @@ Singleton {
 
     function updateStableData() {
         if (activePlayer && activePlayer.trackTitle) {
+            if (stableTrackTitle !== activePlayer.trackTitle) {
+                stableTrackArtUrl = "";
+            }
             stableTrackTitle = activePlayer.trackTitle;
+            // Firefox/Zen bounce trackArtUrl to "" whenever a page fires a
+            // MediaSession metadata update without an `artwork` field (YouTube
+            // does this on ad boundaries, quality changes, position pings...).
+            // Upstream explicitly truncates mArtUrl in that case — see
+            // MPRISServiceHandler::SetMediaMetadata in mozilla-central. We hold
+            // the last non-empty URL until the title actually changes so the
+            // art doesn't flicker to the fallback icon mid-track.
+            if (activePlayer.trackArtUrl) {
+                stableTrackArtUrl = activePlayer.trackArtUrl;
+            }
             stableTrackArtist = activePlayer.trackArtist || "";
             stableTrackLength = activePlayer.length || 0;
             stableCanGoPrevious = activePlayer.canGoPrevious || false;
@@ -80,6 +94,7 @@ Singleton {
             if (!root.activePlayer || !root.activePlayer.trackTitle) {
                 root.stableHasPlayer = false;
                 root.stableTrackTitle = "";
+                root.stableTrackArtUrl = "";
                 root.stableTrackArtist = "";
                 root.stableTrackLength = 0;
                 root.stableCanGoPrevious = false;

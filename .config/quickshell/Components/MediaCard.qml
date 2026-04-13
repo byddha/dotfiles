@@ -24,7 +24,7 @@ Rectangle {
     Image {
         id: blurredBg
         anchors.fill: parent
-        source: root.player?.trackArtUrl ?? ""
+        source: MprisController.stableTrackArtUrl
         fillMode: Image.PreserveAspectCrop
         asynchronous: true
 
@@ -58,7 +58,7 @@ Rectangle {
             Image {
                 id: albumArt
                 anchors.fill: parent
-                source: root.player?.trackArtUrl ?? ""
+                source: MprisController.stableTrackArtUrl
                 fillMode: Image.PreserveAspectCrop
                 asynchronous: true
                 cache: true
