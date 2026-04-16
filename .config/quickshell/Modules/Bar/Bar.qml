@@ -111,6 +111,8 @@ Scope {
                 anchors.verticalCenter: barBackground.verticalCenter
                 spacing: BarStyle.spacing
 
+                NotificationButton {}
+
                 Clock {
                     barWindow: bar
                 }
@@ -154,8 +156,6 @@ Scope {
                 PeripheralBatteryButton {}
                 MicButton {}
                 VolumeButton {}
-
-                NotificationButton {}
             }
         }
     }

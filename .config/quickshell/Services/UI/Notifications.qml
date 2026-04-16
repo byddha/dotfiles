@@ -113,6 +113,14 @@ Singleton {
         persistenceSupported: true
 
         onNotification: notification => {
+            const isTransient = notification.hints?.transient ?? false;
+
+            // Transient notifications must never persist. If we can't show the popup, drop the notification entirely.
+            if (isTransient && root.popupInhibited) {
+                Logger.info(`Dropped transient notification (popup inhibited): ${notification.summary}`);
+                return;
+            }
+
             notification.tracked = true;
             const newNotifObject = notifComponent.createObject(root, {
                 "notificationId": notification.id + root.idOffset,
@@ -124,10 +132,10 @@ Singleton {
             // Popup
             if (!root.popupInhibited) {
                 newNotifObject.popup = true;
-                if (notification.expireTimeout != 0) {
+                if (notification.expireTimeout != 0 || isTransient) {
                     newNotifObject.timer = notifTimerComponent.createObject(root, {
                         "notificationId": newNotifObject.notificationId,
-                        "interval": notification.expireTimeout < 0 ? 7000 : notification.expireTimeout
+                        "interval": notification.expireTimeout > 0 ? notification.expireTimeout : 7000
                     });
                 }
             }
