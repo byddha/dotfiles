@@ -213,7 +213,7 @@ Singleton {
             onIsLowChanged: {
                 if (isLow && !_notifiedLow) {
                     _notifiedLow = true;
-                    Quickshell.execDetached(["notify-send", `Low Battery: ${deviceName}`, `${deviceName} at ${percentage}%. Consider charging.`, "-u", "normal", "-a", "Battery"]);
+                    Quickshell.execDetached(["notify-send", "-e", `Low Battery: ${deviceName}`, `${deviceName} at ${percentage}%. Consider charging.`, "-u", "normal", "-a", "Battery"]);
                     Logger.warn(`Low peripheral battery: ${deviceName} at ${percentage}%`);
                 } else if (!isLow) {
                     _notifiedLow = false;
@@ -223,7 +223,7 @@ Singleton {
             onIsCriticalChanged: {
                 if (isCritical && !_notifiedCritical) {
                     _notifiedCritical = true;
-                    Quickshell.execDetached(["notify-send", `Critical Battery: ${deviceName}`, `${deviceName} at ${percentage}%! Charge now!`, "-u", "critical", "-a", "Battery"]);
+                    Quickshell.execDetached(["notify-send", "-e", `Critical Battery: ${deviceName}`, `${deviceName} at ${percentage}%! Charge now!`, "-u", "critical", "-a", "Battery"]);
                     Logger.error(`Critical peripheral battery: ${deviceName} at ${percentage}%`);
                 } else if (!isCritical) {
                     _notifiedCritical = false;
@@ -264,7 +264,7 @@ Singleton {
                 if (isLow && !_notifiedLow) {
                     _notifiedLow = true;
                     const label = root.getDeviceLabel(modelData);
-                    Quickshell.execDetached(["notify-send", `Low Battery: ${label}`, `${label} at ${percentage}%. Consider charging.`, "-u", "normal", "-a", "Battery"]);
+                    Quickshell.execDetached(["notify-send", "-e", `Low Battery: ${label}`, `${label} at ${percentage}%. Consider charging.`, "-u", "normal", "-a", "Battery"]);
                     Logger.warn(`Low peripheral battery: ${label} at ${percentage}%`);
                 } else if (!isLow) {
                     _notifiedLow = false;
@@ -275,7 +275,7 @@ Singleton {
                 if (isCritical && !_notifiedCritical) {
                     _notifiedCritical = true;
                     const label = root.getDeviceLabel(modelData);
-                    Quickshell.execDetached(["notify-send", `Critical Battery: ${label}`, `${label} at ${percentage}%! Charge now!`, "-u", "critical", "-a", "Battery"]);
+                    Quickshell.execDetached(["notify-send", "-e", `Critical Battery: ${label}`, `${label} at ${percentage}%! Charge now!`, "-u", "critical", "-a", "Battery"]);
                     Logger.error(`Critical peripheral battery: ${label} at ${percentage}%`);
                 } else if (!isCritical) {
                     _notifiedCritical = false;

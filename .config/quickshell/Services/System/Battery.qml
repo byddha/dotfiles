@@ -134,7 +134,7 @@ Singleton {
     onIsLowChanged: {
         if (isLow && !_notifiedLow) {
             _notifiedLow = true;
-            Quickshell.execDetached(["notify-send", "Low Battery", `Battery at ${percentage}%. Consider plugging in.`, "-u", "normal", "-a", "Battery"]);
+            Quickshell.execDetached(["notify-send", "-e", "Low Battery", `Battery at ${percentage}%. Consider plugging in.`, "-u", "normal", "-a", "Battery"]);
             Logger.warn(`Low battery: ${percentage}%`);
         } else if (!isLow) {
             _notifiedLow = false;
@@ -144,7 +144,7 @@ Singleton {
     onIsCriticalChanged: {
         if (isCritical && !_notifiedCritical) {
             _notifiedCritical = true;
-            Quickshell.execDetached(["notify-send", "Critical Battery", `Battery at ${percentage}%! Plug in now!`, "-u", "critical", "-a", "Battery"]);
+            Quickshell.execDetached(["notify-send", "-e", "Critical Battery", `Battery at ${percentage}%! Plug in now!`, "-u", "critical", "-a", "Battery"]);
             Logger.error(`Critical battery: ${percentage}%`);
         } else if (!isCritical) {
             _notifiedCritical = false;

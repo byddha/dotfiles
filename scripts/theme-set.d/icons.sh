@@ -34,4 +34,4 @@ fi
 
 echo "Icons generated: $ICON_THEME"
 
-notify-send "Icons Ready" "Generated: $ICON_THEME" -i preferences-desktop-icons 2>/dev/null || true
+notify-send -e "Icons Ready" "Generated: $ICON_THEME" -i preferences-desktop-icons 2>/dev/null || true

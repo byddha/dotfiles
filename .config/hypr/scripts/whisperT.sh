@@ -37,7 +37,7 @@ if pgrep -f "pw-record.*Whisper" > /dev/null 2>&1; then
 
     if [[ -z "$TRANSCRIPT" ]]; then
         log "Empty transcript, sending notification"
-        notify-send -u low -t 2000 "WhisperT" "No speech detected"
+        notify-send -e -u low -t 2000 "WhisperT" "No speech detected"
     else
         echo -n "$TRANSCRIPT" | wl-copy
         log "Copied to clipboard"
