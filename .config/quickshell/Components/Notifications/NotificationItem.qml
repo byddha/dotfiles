@@ -256,10 +256,10 @@ MouseArea {
                     id: actionRowLayout
                     Layout.fillWidth: true
                     spacing: Theme.spacingBase / 2
-                    visible: notificationObject.actions.length > 0
+                    visible: notificationObject.actions.filter(a => (a.text || "").trim() !== "").length > 0
 
                     Repeater {
-                        model: notificationObject.actions
+                        model: notificationObject.actions.filter(a => (a.text || "").trim() !== "")
                         Button {
                             Layout.fillWidth: true
                             text: modelData.text
