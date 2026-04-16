@@ -22,8 +22,12 @@ Singleton {
     property string lastLoadedTheme: ""
 
     readonly property string primaryMonitor: {
-        const names = Object.keys(adapter.monitors || {});
-        return names.length > 0 ? names[0] : (Quickshell.screens[0]?.name ?? "");
+        const monitors = adapter.monitors || {};
+        for (const model in monitors) {
+            if (monitors[model]?.primary) return model;
+        }
+        const models = Object.keys(monitors);
+        return models.length > 0 ? models[0] : (Quickshell.screens[0]?.model ?? "");
     }
 
     function loadConfig() {
@@ -127,12 +131,13 @@ Singleton {
             }
 
             // Centralized monitor configuration
-            // Keys are monitor names (e.g., "DP-3", "HDMI-A-1")
-            // Each monitor can have: workspaces (array [start, end]), hdrCapable (bool)
+            // Keys are monitor model strings from EDID (e.g., "MO34WQC2", "0x1920")
+            // Fields: workspaces ([start, end]), hdrCapable (bool), primary (bool)
+            // Exactly one monitor should set primary: true (lockscreen, notifications).
             property var monitors: (
                 // Example:
-                // "DP-3": { "workspaces": [1, 5], "hdrCapable": true },
-                // "HDMI-A-1": { "workspaces": [6, 8], "hdrCapable": false }
+                // "MO34WQC2": { "workspaces": [1, 5], "hdrCapable": true, "primary": true },
+                // "0x1920":   { "workspaces": [6, 8], "hdrCapable": false }
                 {})
 
             property var sidebar: JsonObject {

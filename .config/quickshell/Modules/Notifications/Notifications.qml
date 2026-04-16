@@ -7,7 +7,7 @@ import "../../Components/Notifications"
 import "../../Utils"
 
 Scope {
-    readonly property string primaryMonitorName: Object.keys(Config.options.monitors)[0] ?? ""
+    readonly property string primaryMonitorModel: Config.primaryMonitor
 
     Variants {
         model: Quickshell.screens
@@ -21,7 +21,7 @@ Scope {
             visible: (Notifications.popupList.length > 0) &&
                      Settings.notificationsVisible &&
                      Config?.options.notifications.enabled &&
-                     modelData.name === primaryMonitorName
+                     modelData.model === primaryMonitorModel
 
             WlrLayershell.namespace: "bidshell:notificationPopup"
             WlrLayershell.layer: WlrLayer.Overlay

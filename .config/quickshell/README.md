@@ -10,16 +10,17 @@ Compositor: `hyprland`
 
 Laptop screen / keyboard brightness: `brightnessctl`
 
-Fill monitors in ~/.config/bidshell/config.json, for example:
+Fill monitors in ~/.config/bidshell/config.json. Keys are the monitor `model` from EDID (check with `hyprctl monitors` → `model:` line), for example:
 
 
 ```json
     "monitors": {
-        "DP-3": {
+        "MO34WQC2": {
             "hdrCapable": true,
+            "primary": true,
             "workspaces": [1, 5]
         },
-        "HDMI-A-1": {
+        "0x1920": {
             "hdrCapable": false,
             "workspaces": [6, 8]
         }

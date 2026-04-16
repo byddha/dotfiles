@@ -14,10 +14,8 @@ Scope {
             required property ShellScreen modelData
             screen: modelData
 
-            // Monitor name for workspace configuration
-            readonly property string monitorName: bar.screen?.name ?? ""
+            readonly property string monitorModel: bar.screen?.model ?? ""
 
-            // Workspace range - computed fresh each time dependencies change
             property var workspaceRange: null
             property bool hasWorkspaceConfig: false
             property int startWorkspace: 1
@@ -25,15 +23,15 @@ Scope {
 
             function updateWorkspaceConfig() {
                 const monitors = Config.options?.monitors;
-                const name = monitorName;
+                const model = monitorModel;
 
-                if (!monitors || !name) {
+                if (!monitors || !model) {
                     workspaceRange = null;
                     hasWorkspaceConfig = false;
                     return;
                 }
 
-                const monitorConfig = monitors[name];
+                const monitorConfig = monitors[model];
                 const range = monitorConfig?.workspaces;
                 if (range && range[0] !== undefined && range[1] !== undefined) {
                     workspaceRange = range;
@@ -46,7 +44,7 @@ Scope {
                 }
             }
 
-            onMonitorNameChanged: updateWorkspaceConfig()
+            onMonitorModelChanged: updateWorkspaceConfig()
 
             Connections {
                 target: Config

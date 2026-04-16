@@ -149,6 +149,7 @@ QtObject {
         if (!mon) return null;
         return {
             name: mon.name,
+            model: screen?.model ?? "",
             id: mon.id,
             x: mon.x,
             y: mon.y,

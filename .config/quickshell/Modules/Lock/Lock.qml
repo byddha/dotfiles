@@ -17,7 +17,7 @@ Scope {
             id: surface
             color: "black"
 
-            readonly property bool isPrimary: surface.screen?.name === Config.primaryMonitor
+            readonly property bool isPrimary: surface.screen?.model === Config.primaryMonitor
 
             LockContent {
                 anchors.fill: parent

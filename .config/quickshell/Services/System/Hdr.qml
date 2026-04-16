@@ -29,9 +29,9 @@ Singleton {
         const configMonitors = Config.options?.monitors || {};
 
         root.hdrMonitors = [];
-        for (const monName in configMonitors) {
-            if (configMonitors[monName].hdrCapable) {
-                root.hdrMonitors.push(monName);
+        for (const mon of monitors) {
+            if (configMonitors[mon.model]?.hdrCapable) {
+                root.hdrMonitors.push(mon.name);
             }
         }
 

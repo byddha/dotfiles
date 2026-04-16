@@ -14,11 +14,12 @@ Item {
     // Monitor snapshot — refreshed via Compositor signals
     property var monitorInfo: Compositor.monitorForScreen(panelWindow.screen)
     readonly property string monitorName: monitorInfo?.name ?? ""
+    readonly property string monitorModel: monitorInfo?.model ?? ""
     readonly property int monitorId: monitorInfo?.id ?? -1
     readonly property var toplevels: ToplevelManager.toplevels
     // Get all workspaces assigned to this monitor from centralized config
     readonly property var currentMonitorWorkspaces: {
-        const monitorConfig = Config.options?.monitors?.[monitorName];
+        const monitorConfig = Config.options?.monitors?.[monitorModel];
         const range = monitorConfig?.workspaces;
         if (!range || range[0] === undefined || range[1] === undefined) {
             return [];
