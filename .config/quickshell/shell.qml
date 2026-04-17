@@ -24,6 +24,7 @@ ShellRoot {
         Settings.init();
         Icons.init();
         WeatherService.init();
+        RssFeedNotifier.init();
         Logger.info("Components initialized");
     }
 

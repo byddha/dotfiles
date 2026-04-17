@@ -181,6 +181,14 @@ Singleton {
 
     function attemptInvokeAction(id, notifIdentifier) {
         Logger.info(`Attempting to invoke action with identifier: ${notifIdentifier} for notification ID: ${id}`);
+        // Self-dispatched actions: "open:<url-encoded-url>" opens the URL directly, independent of
+        // the original sender. Works from popup, history, and after restart (see onLoaded below).
+        // URL is encoded so "=" in query strings doesn't collide with notify-send's -A parsing.
+        if (typeof notifIdentifier === "string" && notifIdentifier.startsWith("open:")) {
+            Qt.openUrlExternally(decodeURIComponent(notifIdentifier.slice(5)));
+            root.discardNotification(id);
+            return;
+        }
         const notifServerIndex = notifServer.trackedNotifications.values.findIndex(notif => notif.id + root.idOffset === id);
         if (notifServerIndex !== -1) {
             const notifServerNotif = notifServer.trackedNotifications.values[notifServerIndex];
@@ -304,8 +312,9 @@ Singleton {
             root.list = JSON.parse(fileContents).map(notif => {
                 return notifComponent.createObject(root, {
                     "notificationId": notif.notificationId,
-                    "actions": [] // Actions are meaningless if sender is dead
-                    ,
+                    // Most actions are meaningless after reload (sender is gone). Preserve only
+                    // self-dispatched "open:<url>" actions — those are handled by attemptInvokeAction.
+                    "actions": (notif.actions || []).filter(a => typeof a?.identifier === "string" && a.identifier.startsWith("open:")),
                     "appIcon": notif.appIcon,
                     "appName": notif.appName,
                     "body": notif.body,

@@ -187,6 +187,17 @@ Singleton {
                 property string secretKey: ""   // logo.dev secret key (for brand search)
             }
 
+            // RSS/Atom feed notifier
+            // feeds: [{ name, url, interval?, whitelist?, format? }]
+            // interval: seconds, default 900
+            // whitelist: string array of case-insensitive substrings matched against item title;
+            //            absent/empty passes everything through
+            // format: parser key, default "rss"
+            property var rssFeedNotifier: JsonObject {
+                property bool enabled: true
+                property var feeds: ([])
+            }
+
             property var calendar: JsonObject {
                 property bool enabled: true
 
