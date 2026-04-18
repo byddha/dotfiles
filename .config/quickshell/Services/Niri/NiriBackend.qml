@@ -19,9 +19,9 @@ QtObject {
     property var windowByAddress: ({})
     property var monitors: []
 
-    signal workspaceFocusChanged()
-    signal windowDataUpdated()
-    signal monitorDataUpdated()
+    signal workspaceFocusChanged
+    signal windowDataUpdated
+    signal monitorDataUpdated
 
     // --- Internal state ---
 
@@ -120,7 +120,9 @@ QtObject {
         }
         onExited: (exitCode, exitStatus) => {
             Logger.warn("Niri event stream exited, reconnecting...");
-            Qt.callLater(() => { _eventStream.running = true; });
+            Qt.callLater(() => {
+                _eventStream.running = true;
+            });
         }
     }
 
@@ -128,13 +130,13 @@ QtObject {
 
     function _processWorkspaces() {
         workspaces = _workspacesRaw.map(ws => ({
-            id: ws.id,
-            idx: ws.idx,
-            name: ws.name ?? "",
-            output: ws.output ?? "",
-            is_active: ws.is_active ?? false,
-            is_focused: ws.is_focused ?? false
-        }));
+                    id: ws.id,
+                    idx: ws.idx,
+                    name: ws.name ?? "",
+                    output: ws.output ?? "",
+                    is_active: ws.is_active ?? false,
+                    is_focused: ws.is_focused ?? false
+                }));
 
         const focused = _workspacesRaw.find(ws => ws.is_focused);
         if (focused) {
@@ -172,7 +174,9 @@ QtObject {
                 width: logical.width ?? 0,
                 height: logical.height ?? 0,
                 scale: logical.scale ?? 1.0,
-                activeWorkspace: { id: _getActiveWorkspaceForOutput(name) },
+                activeWorkspace: {
+                    id: _getActiveWorkspaceForOutput(name)
+                },
                 transform: _mapTransform(logical.transform),
                 reserved: [0, 0, 0, 0],
                 colorManagementPreset: ""
@@ -200,7 +204,9 @@ QtObject {
             title: win.title ?? "",
             xdgTag: "",
             xwayland: false,
-            workspace: { id: win.workspace_id },
+            workspace: {
+                id: win.workspace_id
+            },
             monitor: monitorId,
             at: [0, 0],
             size: win.layout?.window_size ?? [0, 0],
@@ -226,22 +232,30 @@ QtObject {
     }
 
     function _updateMonitorActiveWorkspaces() {
-        if (monitors.length === 0) return;
-        monitors = monitors.map(mon =>
-            Object.assign({}, mon, {
-                activeWorkspace: { id: _getActiveWorkspaceForOutput(mon.name) }
-            })
-        );
+        if (monitors.length === 0)
+            return;
+        monitors = monitors.map(mon => Object.assign({}, mon, {
+                activeWorkspace: {
+                    id: _getActiveWorkspaceForOutput(mon.name)
+                }
+            }));
         monitorDataUpdated();
     }
 
     readonly property var _transformMap: ({
-        "Normal": 0, "90": 1, "180": 2, "270": 3,
-        "Flipped": 4, "Flipped90": 5, "Flipped180": 6, "Flipped270": 7
-    })
+            "Normal": 0,
+            "90": 1,
+            "180": 2,
+            "270": 3,
+            "Flipped": 4,
+            "Flipped90": 5,
+            "Flipped180": 6,
+            "Flipped270": 7
+        })
 
     function _mapTransform(t) {
-        if (typeof t === "number") return t;
+        if (typeof t === "number")
+            return t;
         return _transformMap[t] ?? 0;
     }
 
@@ -272,7 +286,10 @@ QtObject {
             _rebuildWindowMaps();
             windowDataUpdated();
         } else if (event.WindowFocusTimestampChanged) {
-            const { id, focus_timestamp } = event.WindowFocusTimestampChanged;
+            const {
+                id,
+                focus_timestamp
+            } = event.WindowFocusTimestampChanged;
             const addr = "niri-" + id;
             const idx = windowList.findIndex(w => w.address === addr);
             if (idx >= 0) {
@@ -300,7 +317,8 @@ QtObject {
 
     function getWorkspaceApps(workspaceId) {
         const windows = windowList.filter(w => w.workspace.id == workspaceId);
-        if (windows.length === 0) return [];
+        if (windows.length === 0)
+            return [];
 
         const classMap = {};
         windows.forEach(win => {
@@ -324,7 +342,8 @@ QtObject {
     function monitorForScreen(screen) {
         const name = screen?.name ?? "";
         const mon = monitors.find(m => m.name === name);
-        if (!mon) return null;
+        if (!mon)
+            return null;
         return {
             name: mon.name,
             model: screen?.model ?? "",

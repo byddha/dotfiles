@@ -14,16 +14,16 @@ ColumnLayout {
 
     onVisibleChanged: {
         if (!visible) {
-            searchField.text = ""
-            searchField.focus = false
+            searchField.text = "";
+            searchField.focus = false;
         }
     }
 
     Connections {
         target: Settings
         function onSidebarVisibleChanged() {
-            searchField.text = ""
-            searchField.focus = false
+            searchField.text = "";
+            searchField.focus = false;
         }
     }
 
@@ -124,13 +124,13 @@ ColumnLayout {
             font.pixelSize: Theme.fontSizeSmall
             enabled: Notifications.list.length > 0
             onClicked: {
-                Notifications.discardAllNotifications()
-                Logger.info("All notifications cleared")
+                Notifications.discardAllNotifications();
+                Logger.info("All notifications cleared");
             }
         }
     }
 
     Component.onCompleted: {
-        Logger.info("Notification history tab loaded")
+        Logger.info("Notification history tab loaded");
     }
 }

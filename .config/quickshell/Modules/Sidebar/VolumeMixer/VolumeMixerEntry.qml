@@ -14,7 +14,7 @@ Item {
     property bool isGroupChild: false
 
     signal volumeChanged(real value)
-    signal muteToggled()
+    signal muteToggled
 
     implicitHeight: contentLayout.implicitHeight
 
@@ -25,15 +25,18 @@ Item {
 
     // Helper function to extract app class from PipeWire node
     function getAppClass(node) {
-        if (!node) return "unknown"
+        if (!node)
+            return "unknown";
 
-        const binary = node.properties["application.process.binary"]
-        if (binary) return binary
+        const binary = node.properties["application.process.binary"];
+        if (binary)
+            return binary;
 
-        const appName = node.properties["application.name"]
-        if (appName) return appName.toLowerCase()
+        const appName = node.properties["application.name"];
+        if (appName)
+            return appName.toLowerCase();
 
-        return "unknown"
+        return "unknown";
     }
 
     ColumnLayout {

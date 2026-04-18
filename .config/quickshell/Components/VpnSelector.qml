@@ -100,7 +100,8 @@ Rectangle {
                 hoverEnabled: true
                 cursorShape: parent.locked ? Qt.ForbiddenCursor : Qt.PointingHandCursor
                 onClicked: {
-                    if (parent.locked) return;
+                    if (parent.locked)
+                        return;
                     Vpn.toggleMullvad();
                     root.expanded = false;
                 }
@@ -159,7 +160,8 @@ Rectangle {
                 hoverEnabled: true
                 cursorShape: parent.locked ? Qt.ForbiddenCursor : Qt.PointingHandCursor
                 onClicked: {
-                    if (parent.locked) return;
+                    if (parent.locked)
+                        return;
                     if (Vpn.fortiConnected) {
                         Vpn.disconnectForti();
                         root.expanded = false;

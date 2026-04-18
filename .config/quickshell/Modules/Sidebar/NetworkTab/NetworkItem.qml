@@ -17,17 +17,24 @@ Rectangle {
     radius: Theme.radiusBase
     clip: true
     color: {
-        if (network?.active) return Theme.alpha(Theme.primary, 0.15)
-        if (mouseArea.containsMouse) return Theme.colLayer2
-        return "transparent"
+        if (network?.active)
+            return Theme.alpha(Theme.primary, 0.15);
+        if (mouseArea.containsMouse)
+            return Theme.colLayer2;
+        return "transparent";
     }
 
     Behavior on color {
-        ColorAnimation { duration: 150 }
+        ColorAnimation {
+            duration: 150
+        }
     }
 
     Behavior on implicitHeight {
-        NumberAnimation { duration: 150; easing.type: Easing.OutQuad }
+        NumberAnimation {
+            duration: 150
+            easing.type: Easing.OutQuad
+        }
     }
 
     ColumnLayout {
@@ -47,9 +54,12 @@ Rectangle {
             // Signal strength icon
             Text {
                 text: {
-                    if (root.network.strength > 75) return Icons.wifiOn;
-                    if (root.network.strength > 50) return Icons.wifiOn;
-                    if (root.network.strength > 25) return Icons.wifiOn;
+                    if (root.network.strength > 75)
+                        return Icons.wifiOn;
+                    if (root.network.strength > 50)
+                        return Icons.wifiOn;
+                    if (root.network.strength > 25)
+                        return Icons.wifiOn;
                     return Icons.wifiOn;
                 }
                 font.family: Theme.fontFamilyIcons
@@ -57,7 +67,9 @@ Rectangle {
                 color: root.network?.active ? Theme.primary : Theme.textColor
 
                 Behavior on color {
-                    ColorAnimation { duration: 150 }
+                    ColorAnimation {
+                        duration: 150
+                    }
                 }
             }
 
@@ -74,7 +86,9 @@ Rectangle {
                     elide: Text.ElideRight
 
                     Behavior on color {
-                        ColorAnimation { duration: 150 }
+                        ColorAnimation {
+                            duration: 150
+                        }
                     }
                 }
 
@@ -145,10 +159,14 @@ Rectangle {
             opacity: root.expanded ? 1 : 0
 
             Behavior on opacity {
-                NumberAnimation { duration: 100 }
+                NumberAnimation {
+                    duration: 100
+                }
             }
 
-            Item { Layout.fillWidth: true }
+            Item {
+                Layout.fillWidth: true
+            }
 
             // Connect/Disconnect button
             Button {

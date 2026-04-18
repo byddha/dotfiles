@@ -148,29 +148,39 @@ Item {
     // e.g., "The Last of Us: Part II" -> ["tloupii", "tloup2", "loup2", "tlou", ...]
     function generateAbbreviations(name) {
         const romanToArabic = {
-            'i': '1', 'ii': '2', 'iii': '3', 'iv': '4', 'v': '5',
-            'vi': '6', 'vii': '7', 'viii': '8', 'ix': '9', 'x': '10'
+            'i': '1',
+            'ii': '2',
+            'iii': '3',
+            'iv': '4',
+            'v': '5',
+            'vi': '6',
+            'vii': '7',
+            'viii': '8',
+            'ix': '9',
+            'x': '10'
         };
 
         // Clean and split into words
-        const cleaned = name.toLowerCase()
-            .replace(/[:\-–—]/g, ' ')  // Replace punctuation with space
-            .replace(/['']/g, '')       // Remove apostrophes
-            .replace(/[^a-z0-9\s]/g, '') // Remove other special chars
-            .trim();
+        const cleaned = name.toLowerCase().replace(/[:\-–—]/g, ' ')  // Replace punctuation with space
+        .replace(/['']/g, '')       // Remove apostrophes
+        .replace(/[^a-z0-9\s]/g, '') // Remove other special chars
+        .trim();
         const words = cleaned.split(/\s+/).filter(w => w.length > 0);
 
-        if (words.length === 0) return [];
+        if (words.length === 0)
+            return [];
 
         const abbreviations = new Set();
 
         // Build acronym from first letters
-        const buildAcronym = (wordList) => {
+        const buildAcronym = wordList => {
             return wordList.map(w => {
                 // Check if word is a roman numeral
-                if (romanToArabic[w]) return romanToArabic[w];
+                if (romanToArabic[w])
+                    return romanToArabic[w];
                 // Check if word is a number
-                if (/^\d+$/.test(w)) return w;
+                if (/^\d+$/.test(w))
+                    return w;
                 // Otherwise take first letter
                 return w[0];
             }).join('');
@@ -182,7 +192,8 @@ Item {
 
         // Version with roman numerals kept as letters
         const acronymRomanAsLetters = words.map(w => {
-            if (/^\d+$/.test(w)) return w;
+            if (/^\d+$/.test(w))
+                return w;
             return w[0];
         }).join('');
         abbreviations.add(acronymRomanAsLetters);

@@ -62,10 +62,34 @@ PopupWindow {
                 anchors.centerIn: parent
                 spacing: Theme.spacingBase
 
-                PowerActionButton { icon: Icons.shutdown; onClicked: { PowerActions.poweroff(); powerPopup.hidePanel() } }
-                PowerActionButton { icon: Icons.reboot;   onClicked: { PowerActions.reboot();   powerPopup.hidePanel() } }
-                PowerActionButton { icon: Icons.logout;   onClicked: { PowerActions.logout();   powerPopup.hidePanel() } }
-                PowerActionButton { icon: Icons.suspend;  onClicked: { PowerActions.suspend();  powerPopup.hidePanel() } }
+                PowerActionButton {
+                    icon: Icons.shutdown
+                    onClicked: {
+                        PowerActions.poweroff();
+                        powerPopup.hidePanel();
+                    }
+                }
+                PowerActionButton {
+                    icon: Icons.reboot
+                    onClicked: {
+                        PowerActions.reboot();
+                        powerPopup.hidePanel();
+                    }
+                }
+                PowerActionButton {
+                    icon: Icons.logout
+                    onClicked: {
+                        PowerActions.logout();
+                        powerPopup.hidePanel();
+                    }
+                }
+                PowerActionButton {
+                    icon: Icons.suspend
+                    onClicked: {
+                        PowerActions.suspend();
+                        powerPopup.hidePanel();
+                    }
+                }
             }
         }
     }

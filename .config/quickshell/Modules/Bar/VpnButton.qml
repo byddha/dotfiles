@@ -81,9 +81,7 @@ Rectangle {
     Tooltip {
         id: tooltip
         target: vpnButton
-        text: Vpn.mullvadConnected
-            ? `Mullvad VPN - ${Vpn.mullvadCity || ""}, ${Vpn.mullvadCountry || "Connected"}\nClick to disconnect`
-            : `FortiVPN - Uptime ${Vpn.fortiUptime}\nClick to disconnect`
+        text: Vpn.mullvadConnected ? `Mullvad VPN - ${Vpn.mullvadCity || ""}, ${Vpn.mullvadCountry || "Connected"}\nClick to disconnect` : `FortiVPN - Uptime ${Vpn.fortiUptime}\nClick to disconnect`
     }
 
     states: State {

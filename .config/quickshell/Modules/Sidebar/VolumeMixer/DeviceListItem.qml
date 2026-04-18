@@ -9,18 +9,22 @@ Rectangle {
 
     required property string deviceName
     required property bool isSelected
-    signal clicked()
+    signal clicked
 
     implicitHeight: 32
     radius: Theme.radiusBase
     color: {
-        if (isSelected) return Theme.alpha(Theme.primary, 0.15)
-        if (mouseArea.containsMouse) return Theme.colLayer2
-        return "transparent"
+        if (isSelected)
+            return Theme.alpha(Theme.primary, 0.15);
+        if (mouseArea.containsMouse)
+            return Theme.colLayer2;
+        return "transparent";
     }
 
     Behavior on color {
-        ColorAnimation { duration: 150 }
+        ColorAnimation {
+            duration: 150
+        }
     }
 
     RowLayout {
@@ -39,7 +43,9 @@ Rectangle {
             Layout.alignment: Qt.AlignVCenter
 
             Behavior on color {
-                ColorAnimation { duration: 150 }
+                ColorAnimation {
+                    duration: 150
+                }
             }
         }
 
@@ -52,7 +58,9 @@ Rectangle {
             elide: Text.ElideRight
 
             Behavior on color {
-                ColorAnimation { duration: 150 }
+                ColorAnimation {
+                    duration: 150
+                }
             }
         }
 
@@ -75,7 +83,7 @@ Rectangle {
         cursorShape: root.isSelected ? Qt.ArrowCursor : Qt.PointingHandCursor
         onClicked: {
             if (!root.isSelected) {
-                root.clicked()
+                root.clicked();
             }
         }
     }

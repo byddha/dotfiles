@@ -41,30 +41,30 @@ Rectangle {
         active: false  // NOT bound to visibility!
         windows: clock.activePopup ? [clock.activePopup] : []
         onCleared: {
-            Logger.info("Focus cleared (clicked outside or Escape pressed)")
+            Logger.info("Focus cleared (clicked outside or Escape pressed)");
             if (clock.activePopup) {
-                clock.activePopup.hidePanel()
-                clock.releaseFocus()
+                clock.activePopup.hidePanel();
+                clock.releaseFocus();
             }
         }
     }
 
     function setActivePopupAndGrabFocus(popupWindow) {
-        clock.activePopup = popupWindow
-        focusGrab.active = true
-        Logger.info("Focus grabbed for calendar popup")
+        clock.activePopup = popupWindow;
+        focusGrab.active = true;
+        Logger.info("Focus grabbed for calendar popup");
     }
 
     function releaseFocus() {
-        focusGrab.active = false
-        clock.activePopup = null
-        popupLoader.active = false
-        Settings.calendarPanelVisible = false
-        Logger.info("Focus released")
+        focusGrab.active = false;
+        clock.activePopup = null;
+        popupLoader.active = false;
+        Settings.calendarPanelVisible = false;
+        Logger.info("Focus released");
     }
 
     function showCalendarPopup() {
-        popupLoader.active = true  // Create fresh popup instance
+        popupLoader.active = true;  // Create fresh popup instance
     }
 
     // CalendarPopup Loader - Recreates popup on each open (same as Tray)
@@ -75,7 +75,7 @@ Rectangle {
         sourceComponent: CalendarPopup {
             Component.onCompleted: {
                 // Show popup immediately when created
-                showPanel(clock)
+                showPanel(clock);
             }
 
             onPanelOpened: window => clock.setActivePopupAndGrabFocus(window)
@@ -129,14 +129,14 @@ Rectangle {
             if (Settings.calendarPanelVisible) {
                 // Close
                 if (clock.activePopup) {
-                    clock.activePopup.hidePanel()
+                    clock.activePopup.hidePanel();
                 }
             } else {
                 // Open
-                Settings.calendarPanelVisible = true
-                clock.showCalendarPopup()
+                Settings.calendarPanelVisible = true;
+                clock.showCalendarPopup();
             }
-            Logger.info("Calendar panel toggled: " + Settings.calendarPanelVisible)
+            Logger.info("Calendar panel toggled: " + Settings.calendarPanelVisible);
         }
     }
 

@@ -99,8 +99,10 @@ FocusScope {
                 const h = Math.floor((total % 86400) / 3600);
                 const m = Math.floor((total % 3600) / 60);
                 let parts = [];
-                if (d > 0) parts.push(d + "d");
-                if (h > 0 || d > 0) parts.push(h + "h");
+                if (d > 0)
+                    parts.push(d + "d");
+                if (h > 0 || d > 0)
+                    parts.push(h + "h");
                 parts.push(m + "m");
                 return "Up " + parts.join(" ");
             }
@@ -136,10 +138,22 @@ FocusScope {
         spacing: Theme.spacingBase
         opacity: 0.92
 
-        PowerActionButton { icon: Icons.shutdown; onClicked: PowerActions.poweroff() }
-        PowerActionButton { icon: Icons.reboot;   onClicked: PowerActions.reboot() }
-        PowerActionButton { icon: Icons.logout;   onClicked: PowerActions.logout() }
-        PowerActionButton { icon: Icons.suspend;  onClicked: PowerActions.suspend() }
+        PowerActionButton {
+            icon: Icons.shutdown
+            onClicked: PowerActions.poweroff()
+        }
+        PowerActionButton {
+            icon: Icons.reboot
+            onClicked: PowerActions.reboot()
+        }
+        PowerActionButton {
+            icon: Icons.logout
+            onClicked: PowerActions.logout()
+        }
+        PowerActionButton {
+            icon: Icons.suspend
+            onClicked: PowerActions.suspend()
+        }
     }
 
     ColumnLayout {
@@ -251,8 +265,12 @@ FocusScope {
                 readonly property real pixelsPerSec: 140
 
                 function spike(strength) {
-                    pulses.push({ t: timeNow, s: strength });
-                    if (pulses.length > 32) pulses.shift();
+                    pulses.push({
+                        t: timeNow,
+                        s: strength
+                    });
+                    if (pulses.length > 32)
+                        pulses.shift();
                     requestPaint();
                 }
 
@@ -298,10 +316,12 @@ FocusScope {
                         for (let i = 0; i < pulses.length; i++) {
                             const p = pulses[i];
                             const age = timeNow - p.t;
-                            if (age > lifetimeMs) continue;
+                            if (age > lifetimeMs)
+                                continue;
                             // spike position: starts at right, scrolls left
                             const spikeX = w - (age / 1000) * pixelsPerSec;
-                            if (spikeX < -40 || spikeX > w + 40) continue;
+                            if (spikeX < -40 || spikeX > w + 40)
+                                continue;
                             const dx = x - spikeX;
                             // P-Q-R-S-T-like waveform
                             const fade = 1 - age / lifetimeMs;

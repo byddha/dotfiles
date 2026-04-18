@@ -126,12 +126,12 @@ ColumnLayout {
     // Refresh when tab becomes visible
     onVisibleChanged: {
         if (visible) {
-            Bluetooth.refresh()
+            Bluetooth.refresh();
         }
     }
 
     Component.onCompleted: {
-        Logger.info("Bluetooth tab loaded")
-        Bluetooth.refresh()
+        Logger.info("Bluetooth tab loaded");
+        Bluetooth.refresh();
     }
 }

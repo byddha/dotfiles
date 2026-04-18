@@ -72,8 +72,16 @@ Item {
                         SequentialAnimation on opacity {
                             running: upowerButton.charging
                             loops: Animation.Infinite
-                            NumberAnimation { to: 0.4; duration: 1000; easing.type: Easing.InOutSine }
-                            NumberAnimation { to: 1.0; duration: 1000; easing.type: Easing.InOutSine }
+                            NumberAnimation {
+                                to: 0.4
+                                duration: 1000
+                                easing.type: Easing.InOutSine
+                            }
+                            NumberAnimation {
+                                to: 1.0
+                                duration: 1000
+                                easing.type: Easing.InOutSine
+                            }
                         }
                     }
 
@@ -169,8 +177,16 @@ Item {
                         SequentialAnimation on opacity {
                             running: customButton.charging
                             loops: Animation.Infinite
-                            NumberAnimation { to: 0.4; duration: 1000; easing.type: Easing.InOutSine }
-                            NumberAnimation { to: 1.0; duration: 1000; easing.type: Easing.InOutSine }
+                            NumberAnimation {
+                                to: 0.4
+                                duration: 1000
+                                easing.type: Easing.InOutSine
+                            }
+                            NumberAnimation {
+                                to: 1.0
+                                duration: 1000
+                                easing.type: Easing.InOutSine
+                            }
                         }
                     }
 

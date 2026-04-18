@@ -138,7 +138,7 @@ Singleton {
     }
 
     // Emitted after hidraw changes settle — custom device delegates connect to this
-    signal repollRequested()
+    signal repollRequested
 
     // Watch for hidraw device changes (plug/unplug/connect/disconnect)
     Process {

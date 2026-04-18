@@ -15,7 +15,7 @@ Singleton {
     id: root
 
     function init() {
-    // Initialization hook for shell.qml
+        // Initialization hook for shell.qml
     }
 
     // ========================================================================

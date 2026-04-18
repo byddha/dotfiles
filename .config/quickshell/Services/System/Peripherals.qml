@@ -32,8 +32,12 @@ Singleton {
     // Watch UPower device changes
     Connections {
         target: UPower.devices
-        function onObjectInsertedPost() { root._requestRebuild() }
-        function onObjectRemovedPost() { root._requestRebuild() }
+        function onObjectInsertedPost() {
+            root._requestRebuild();
+        }
+        function onObjectRemovedPost() {
+            root._requestRebuild();
+        }
     }
 
     // Watch custom device changes
@@ -47,22 +51,25 @@ Singleton {
     // Watch brand/logo resolution
     Connections {
         target: BrandLogoService
-        function onBrandResolved() { root._requestRebuild() }
+        function onBrandResolved() {
+            root._requestRebuild();
+        }
     }
 
     readonly property var _upowerTypeMap: ({
-        [UPowerDeviceType.Touchpad]: "trackpad",
-        [UPowerDeviceType.Mouse]: "mouse",
-        [UPowerDeviceType.Keyboard]: "keyboard",
-        [UPowerDeviceType.Headphones]: "headphones",
-        [UPowerDeviceType.Headset]: "headset",
-        [UPowerDeviceType.Speakers]: "speakers",
-        [UPowerDeviceType.GamingInput]: "gamepad",
-        [UPowerDeviceType.Phone]: "phone"
-    })
+            [UPowerDeviceType.Touchpad]: "trackpad",
+            [UPowerDeviceType.Mouse]: "mouse",
+            [UPowerDeviceType.Keyboard]: "keyboard",
+            [UPowerDeviceType.Headphones]: "headphones",
+            [UPowerDeviceType.Headset]: "headset",
+            [UPowerDeviceType.Speakers]: "speakers",
+            [UPowerDeviceType.GamingInput]: "gamepad",
+            [UPowerDeviceType.Phone]: "phone"
+        })
 
     function _findBlueZMatch(name) {
-        if (!name) return null;
+        if (!name)
+            return null;
         const lower = name.toLowerCase();
         const btDevices = Bluetooth.connectedDevices;
         for (let i = 0; i < btDevices.length; i++) {
@@ -75,10 +82,11 @@ Singleton {
 
     function _resolveBrand(id, name, macSource) {
         const cached = BrandLogoService.getCachedDeviceBrand(id);
-        if (cached) return cached;
+        if (cached)
+            return cached;
 
         if (macSource) {
-            BrandLogoService.lookupBrandFromMac(macSource, function(vendor) {
+            BrandLogoService.lookupBrandFromMac(macSource, function (vendor) {
                 if (vendor && !BrandLogoService.getCachedDeviceBrand(id)) {
                     BrandLogoService.setCachedDeviceBrand(id, vendor);
                     root._requestRebuild();
@@ -117,9 +125,12 @@ Singleton {
             const brand = _resolveBrand(id, name, mac);
 
             let connectionType = "unknown";
-            if (btMatch) connectionType = "bluetooth";
-            else if (charging || full) connectionType = "wired";
-            else connectionType = "2.4ghz";
+            if (btMatch)
+                connectionType = "bluetooth";
+            else if (charging || full)
+                connectionType = "wired";
+            else
+                connectionType = "2.4ghz";
 
             seen.add(btMatch ? ("bt:" + btMatch.name) : "");
 
@@ -140,7 +151,8 @@ Singleton {
         const customs = PeripheralBatteries.customDevices;
         for (let i = 0; i < customs.length; i++) {
             const dev = customs[i];
-            if (!dev || !dev.present) continue;
+            if (!dev || !dev.present)
+                continue;
 
             const name = dev.name || "Device";
             const configEntry = configDevices[i] || {};
@@ -154,9 +166,12 @@ Singleton {
 
             const charging = dev.charging ?? false;
             let connectionType = "unknown";
-            if (btMatch) connectionType = "bluetooth";
-            else if (charging) connectionType = "wired";
-            else connectionType = "2.4ghz";
+            if (btMatch)
+                connectionType = "bluetooth";
+            else if (charging)
+                connectionType = "wired";
+            else
+                connectionType = "2.4ghz";
 
             seen.add(btMatch ? ("bt:" + btMatch.name) : "");
 
@@ -177,8 +192,10 @@ Singleton {
         const btDevices = Bluetooth.connectedDevices;
         for (let i = 0; i < btDevices.length; i++) {
             const dev = btDevices[i];
-            if (!dev.batteryAvailable) continue;
-            if (seen.has("bt:" + dev.name)) continue;
+            if (!dev.batteryAvailable)
+                continue;
+            if (seen.has("bt:" + dev.name))
+                continue;
 
             const name = dev.name || "Bluetooth Device";
             const id = "bluez:" + dev.name;
@@ -190,10 +207,14 @@ Singleton {
             const icon = (dev.icon || "").toLowerCase();
             if (icon.includes("headset") || icon.includes("headphones") || icon.includes("audio"))
                 type = "headphones";
-            else if (icon.includes("mouse")) type = "mouse";
-            else if (icon.includes("keyboard")) type = "keyboard";
-            else if (icon.includes("phone")) type = "phone";
-            else if (icon.includes("gaming")) type = "gamepad";
+            else if (icon.includes("mouse"))
+                type = "mouse";
+            else if (icon.includes("keyboard"))
+                type = "keyboard";
+            else if (icon.includes("phone"))
+                type = "phone";
+            else if (icon.includes("gaming"))
+                type = "gamepad";
 
             result.push({
                 id: id,

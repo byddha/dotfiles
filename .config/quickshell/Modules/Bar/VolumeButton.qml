@@ -13,13 +13,13 @@ Rectangle {
 
     property string volumeIcon: {
         if (Audio.isMuted || Audio.volume === 0)
-            return Icons.volumeMuted
+            return Icons.volumeMuted;
         else if (Audio.volume > 0.66)
-            return Icons.volumeHigh
+            return Icons.volumeHigh;
         else if (Audio.volume > 0.33)
-            return Icons.volumeMedium
+            return Icons.volumeMedium;
         else
-            return Icons.volumeLow
+            return Icons.volumeLow;
     }
 
     Row {
@@ -56,20 +56,20 @@ Rectangle {
         hoverEnabled: true
         acceptedButtons: Qt.LeftButton | Qt.RightButton
 
-        onClicked: (mouse) => {
+        onClicked: mouse => {
             if (mouse.button === Qt.LeftButton) {
-                Settings.sidebarSelectedTab = 0
-                Settings.sidebarVisible = true
+                Settings.sidebarSelectedTab = 0;
+                Settings.sidebarVisible = true;
             } else if (mouse.button === Qt.RightButton) {
-                Audio.toggleMute()
+                Audio.toggleMute();
             }
         }
 
-        onWheel: (wheel) => {
+        onWheel: wheel => {
             if (wheel.angleDelta.y > 0)
-                Audio.increaseVolume()
+                Audio.increaseVolume();
             else
-                Audio.decreaseVolume()
+                Audio.decreaseVolume();
         }
     }
 

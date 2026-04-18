@@ -45,15 +45,21 @@ Singleton {
 
     // --- Signals ---
 
-    signal workspaceFocusChanged()
-    signal windowDataUpdated()
-    signal monitorDataUpdated()
+    signal workspaceFocusChanged
+    signal windowDataUpdated
+    signal monitorDataUpdated
 
     Connections {
         target: backend
-        function onWorkspaceFocusChanged() { compositor.workspaceFocusChanged() }
-        function onWindowDataUpdated() { compositor.windowDataUpdated() }
-        function onMonitorDataUpdated() { compositor.monitorDataUpdated() }
+        function onWorkspaceFocusChanged() {
+            compositor.workspaceFocusChanged();
+        }
+        function onWindowDataUpdated() {
+            compositor.windowDataUpdated();
+        }
+        function onMonitorDataUpdated() {
+            compositor.monitorDataUpdated();
+        }
     }
 
     // --- Wayland toplevel tracking (compositor-generic) ---
@@ -70,14 +76,34 @@ Singleton {
 
     // --- Function forwarding ---
 
-    function getWorkspaceApps(workspaceId) { return backend ? backend.getWorkspaceApps(workspaceId) : [] }
-    function monitorForScreen(screen) { return backend ? backend.monitorForScreen(screen) : null }
-    function activeWorkspaceIdForScreen(screen) { return backend ? backend.activeWorkspaceIdForScreen(screen) : 1 }
-    function windowForToplevel(toplevel) { return backend ? backend.windowForToplevel(toplevel) : null }
+    function getWorkspaceApps(workspaceId) {
+        return backend ? backend.getWorkspaceApps(workspaceId) : [];
+    }
+    function monitorForScreen(screen) {
+        return backend ? backend.monitorForScreen(screen) : null;
+    }
+    function activeWorkspaceIdForScreen(screen) {
+        return backend ? backend.activeWorkspaceIdForScreen(screen) : 1;
+    }
+    function windowForToplevel(toplevel) {
+        return backend ? backend.windowForToplevel(toplevel) : null;
+    }
 
-    function getCursorPosition(callback) { if (backend) backend.getCursorPosition(callback) }
-    function setMonitorColorManagement(name, preset) { if (backend) backend.setMonitorColorManagement(name, preset) }
+    function getCursorPosition(callback) {
+        if (backend)
+            backend.getCursorPosition(callback);
+    }
+    function setMonitorColorManagement(name, preset) {
+        if (backend)
+            backend.setMonitorColorManagement(name, preset);
+    }
 
-    function switchWorkspace(id) { if (backend) backend.switchWorkspace(id) }
-    function logout() { if (backend) backend.logout() }
+    function switchWorkspace(id) {
+        if (backend)
+            backend.switchWorkspace(id);
+    }
+    function logout() {
+        if (backend)
+            backend.logout();
+    }
 }

@@ -14,11 +14,12 @@ ScrollView {
     property alias implicitHeight: columnLayout.implicitHeight
 
     function matchesSearch(notif, query) {
-        if (!query) return true
-        const lowerQuery = query.toLowerCase()
-        const summary = (notif.summary || "").toLowerCase()
-        const body = (notif.body || "").toLowerCase()
-        return summary.includes(lowerQuery) || body.includes(lowerQuery)
+        if (!query)
+            return true;
+        const lowerQuery = query.toLowerCase();
+        const summary = (notif.summary || "").toLowerCase();
+        const body = (notif.body || "").toLowerCase();
+        return summary.includes(lowerQuery) || body.includes(lowerQuery);
     }
 
     clip: true
@@ -47,9 +48,10 @@ ScrollView {
             model: ScriptModel {
                 // Show individual notifications sorted by time (most recent first)
                 values: {
-                    const list = root.popup ? Notifications.popupList : Notifications.list.slice().reverse()
-                    if (!root.searchText) return list
-                    return list.filter(notif => root.matchesSearch(notif, root.searchText))
+                    const list = root.popup ? Notifications.popupList : Notifications.list.slice().reverse();
+                    if (!root.searchText)
+                        return list;
+                    return list.filter(notif => root.matchesSearch(notif, root.searchText));
                 }
             }
 

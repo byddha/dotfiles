@@ -21,7 +21,9 @@ Rectangle {
     color: mouseArea.containsMouse ? Theme.colLayer2 : "transparent"
 
     Behavior on color {
-        ColorAnimation { duration: 150 }
+        ColorAnimation {
+            duration: 150
+        }
     }
 
     RowLayout {
@@ -79,17 +81,23 @@ Rectangle {
                 StyledText {
                     text: {
                         switch (root.device?.connectionType) {
-                        case "bluetooth": return "Bluetooth";
-                        case "2.4ghz": return "2.4 GHz";
-                        case "wired": return "Wired";
-                        default: return "";
+                        case "bluetooth":
+                            return "Bluetooth";
+                        case "2.4ghz":
+                            return "2.4 GHz";
+                        case "wired":
+                            return "Wired";
+                        default:
+                            return "";
                         }
                     }
                     font.pixelSize: Theme.fontSizeSmall
                     color: Theme.textSecondary
                 }
 
-                Item { Layout.fillWidth: true }
+                Item {
+                    Layout.fillWidth: true
+                }
 
                 // Charging icon
                 Text {
@@ -102,8 +110,16 @@ Rectangle {
                     SequentialAnimation on opacity {
                         running: root.charging
                         loops: Animation.Infinite
-                        NumberAnimation { to: 0.4; duration: 1000; easing.type: Easing.InOutSine }
-                        NumberAnimation { to: 1.0; duration: 1000; easing.type: Easing.InOutSine }
+                        NumberAnimation {
+                            to: 0.4
+                            duration: 1000
+                            easing.type: Easing.InOutSine
+                        }
+                        NumberAnimation {
+                            to: 1.0
+                            duration: 1000
+                            easing.type: Easing.InOutSine
+                        }
                     }
                 }
 
@@ -111,10 +127,7 @@ Rectangle {
                 StyledText {
                     text: root.percentage + "%"
                     font.pixelSize: Theme.fontSizeSmall
-                    color: root.isCritical ? Theme.accentRed
-                         : root.isLow ? Theme.accentOrange
-                         : root.charging ? Theme.primary
-                         : Theme.textColor
+                    color: root.isCritical ? Theme.accentRed : root.isLow ? Theme.accentOrange : root.charging ? Theme.primary : Theme.textColor
                 }
             }
 
@@ -129,10 +142,7 @@ Rectangle {
                     width: parent.width * (root.percentage / 100)
                     height: parent.height
                     radius: parent.radius
-                    color: root.isCritical ? Theme.accentRed
-                         : root.isLow ? Theme.accentOrange
-                         : root.charging ? Theme.primary
-                         : Theme.textColor
+                    color: root.isCritical ? Theme.accentRed : root.isLow ? Theme.accentOrange : root.charging ? Theme.primary : Theme.textColor
                 }
             }
         }

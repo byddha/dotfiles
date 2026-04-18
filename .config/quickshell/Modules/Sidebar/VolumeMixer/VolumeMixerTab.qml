@@ -85,8 +85,8 @@ ColumnLayout {
                     isSelected: modelData.id === Audio.sink?.id
 
                     onClicked: {
-                        Audio.setDefaultSink(modelData)
-                        Logger.info(`Switched to output device: ${deviceName}`)
+                        Audio.setDefaultSink(modelData);
+                        Logger.info(`Switched to output device: ${deviceName}`);
                     }
                 }
             }
@@ -121,8 +121,8 @@ ColumnLayout {
                     isSelected: modelData.id === Audio.source?.id
 
                     onClicked: {
-                        Audio.setDefaultSource(modelData)
-                        Logger.info(`Switched to input device: ${deviceName}`)
+                        Audio.setDefaultSource(modelData);
+                        Logger.info(`Switched to input device: ${deviceName}`);
                     }
                 }
             }
@@ -130,6 +130,6 @@ ColumnLayout {
     }
 
     Component.onCompleted: {
-        Logger.info("Volume mixer tab loaded")
+        Logger.info("Volume mixer tab loaded");
     }
 }

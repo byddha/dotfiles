@@ -79,7 +79,8 @@ Singleton {
     }
 
     function _fetch(feed) {
-        if (!feed?.url) return;
+        if (!feed?.url)
+            return;
         const p = _fetcherComponent.createObject(root, {
             "feed": feed
         });

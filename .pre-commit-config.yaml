@@ -1,0 +1,8 @@
+repos:
+  - repo: local
+    hooks:
+      - id: qmlformat-check
+        name: qmlformat-check
+        entry: bash -c 'for f in "$@"; do /usr/lib/qt6/bin/qmlformat "$f" | diff -u "$f" - || exit 1; done' --
+        language: system
+        files: \.qml$

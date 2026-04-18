@@ -19,9 +19,18 @@ Scope {
 
     // Available indicators
     property var indicators: [
-        { id: "volume", sourceUrl: "indicators/VolumeIndicator.qml" },
-        { id: "microphone", sourceUrl: "indicators/MicrophoneIndicator.qml" },
-        { id: "brightness", sourceUrl: "indicators/BrightnessIndicator.qml" }
+        {
+            id: "volume",
+            sourceUrl: "indicators/VolumeIndicator.qml"
+        },
+        {
+            id: "microphone",
+            sourceUrl: "indicators/MicrophoneIndicator.qml"
+        },
+        {
+            id: "brightness",
+            sourceUrl: "indicators/BrightnessIndicator.qml"
+        }
     ]
 
     // Show OSD and restart timeout
@@ -48,11 +57,13 @@ Scope {
     Connections {
         target: Audio.sink?.audio ?? null
         function onVolumeChanged() {
-            if (!Config.options.osd?.enabled) return;
+            if (!Config.options.osd?.enabled)
+                return;
             root.triggerOsd("volume");
         }
         function onMutedChanged() {
-            if (!Config.options.osd?.enabled) return;
+            if (!Config.options.osd?.enabled)
+                return;
             root.triggerOsd("volume");
         }
     }
@@ -61,11 +72,13 @@ Scope {
     Connections {
         target: Audio.source?.audio ?? null
         function onVolumeChanged() {
-            if (!Config.options.osd?.enabled) return;
+            if (!Config.options.osd?.enabled)
+                return;
             root.triggerOsd("microphone");
         }
         function onMutedChanged() {
-            if (!Config.options.osd?.enabled) return;
+            if (!Config.options.osd?.enabled)
+                return;
             root.triggerOsd("microphone");
         }
     }
@@ -74,8 +87,10 @@ Scope {
     Connections {
         target: Brightness
         function onBrightnessChanged() {
-            if (!Config.options.osd?.enabled) return;
-            if (!Brightness.available) return;
+            if (!Config.options.osd?.enabled)
+                return;
+            if (!Brightness.available)
+                return;
             root.triggerOsd("brightness");
         }
     }

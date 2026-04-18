@@ -24,7 +24,8 @@ Singleton {
     readonly property string primaryMonitor: {
         const monitors = adapter.monitors || {};
         for (const model in monitors) {
-            if (monitors[model]?.primary) return model;
+            if (monitors[model]?.primary)
+                return model;
         }
         const models = Object.keys(monitors);
         return models.length > 0 ? models[0] : (Quickshell.screens[0]?.model ?? "");

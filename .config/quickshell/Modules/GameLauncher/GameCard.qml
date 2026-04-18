@@ -66,8 +66,14 @@ Item {
             height: 80
 
             gradient: Gradient {
-                GradientStop { position: 0.0; color: "transparent" }
-                GradientStop { position: 1.0; color: Theme.alpha(Theme.colLayer0, 0.9) }
+                GradientStop {
+                    position: 0.0
+                    color: "transparent"
+                }
+                GradientStop {
+                    position: 1.0
+                    color: Theme.alpha(Theme.colLayer0, 0.9)
+                }
             }
         }
 

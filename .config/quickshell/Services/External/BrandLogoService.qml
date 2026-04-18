@@ -24,14 +24,15 @@ Singleton {
     property var _logoDownloaded: ({}) // domain → true (persisted)
     property var _pendingOui: ({})
 
-    signal brandResolved()
+    signal brandResolved
 
     // ==================
     // Public API
     // ==================
 
     function getLogoPath(brand) {
-        if (!brand) return "";
+        if (!brand)
+            return "";
         const domain = _domainCache[brand];
         if (!domain) {
             if (_domainCache[brand] === undefined && _secretKey) {
@@ -43,7 +44,8 @@ Singleton {
 
         const localPath = _logoDir + "/" + domain + ".png";
 
-        if (_logoDownloaded[domain]) return localPath;
+        if (_logoDownloaded[domain])
+            return localPath;
 
         // Trigger download — path returned after download completes via brandResolved → rebuild
         if (_logoDownloaded[domain] === undefined) {
@@ -67,7 +69,10 @@ Singleton {
 
     function lookupBrandFromMac(macSource, callback) {
         const mac = _extractMac(macSource);
-        if (!mac) { callback(""); return; }
+        if (!mac) {
+            callback("");
+            return;
+        }
 
         const oui = _macToOui(mac);
 
@@ -82,12 +87,15 @@ Singleton {
         }
 
         _pendingOui[oui] = [callback];
-        const proc = ouiLookupComponent.createObject(root, { oui: oui });
+        const proc = ouiLookupComponent.createObject(root, {
+            oui: oui
+        });
         proc.running = true;
     }
 
     function _extractMac(str) {
-        if (!str) return "";
+        if (!str)
+            return "";
         const match = str.match(/([0-9a-fA-F]{2}[:\-]){5}[0-9a-fA-F]{2}/);
         return match ? match[0] : "";
     }
@@ -100,23 +108,30 @@ Singleton {
         return mac.split(/[:\-]/).slice(0, 3).join("-").toUpperCase();
     }
 
-    function _saveCache() { saveTimer.restart() }
+    function _saveCache() {
+        saveTimer.restart();
+    }
 
     function _downloadLogo(domain) {
-        if (!_publishableKey) return;
+        if (!_publishableKey)
+            return;
         const url = `https://img.logo.dev/${domain}?token=${_publishableKey}&size=64&format=png`;
         const localPath = _logoDir + "/" + domain + ".png";
-        const proc = logoDownloadComponent.createObject(root, { domain: domain });
+        const proc = logoDownloadComponent.createObject(root, {
+            domain: domain
+        });
         proc.command = ["bash", "-c", `mkdir -p '${_logoDir}' && curl -sf -o '${localPath}' '${url}'`];
         proc.running = true;
     }
 
     function _searchDomain(brand) {
-        if (!_secretKey) return;
+        if (!_secretKey)
+            return;
         const cleaned = brand.split(/\s/)[0].replace(/,$/, "");
         const xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState !== XMLHttpRequest.DONE) return;
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState !== XMLHttpRequest.DONE)
+                return;
             if (xhr.status === 200) {
                 try {
                     const results = JSON.parse(xhr.responseText);
@@ -162,7 +177,7 @@ Singleton {
             }
         }
 
-        onLoadFailed: function(error) {
+        onLoadFailed: function (error) {
             Logger.info("No brand cache found, starting fresh");
         }
     }
@@ -202,7 +217,8 @@ Singleton {
 
                     const callbacks = root._pendingOui[ouiProc.oui] || [];
                     delete root._pendingOui[ouiProc.oui];
-                    for (const cb of callbacks) cb(vendor);
+                    for (const cb of callbacks)
+                        cb(vendor);
 
                     Logger.debug(`OUI ${ouiProc.oui} → "${vendor}"`);
                     ouiProc.destroy();
@@ -215,7 +231,8 @@ Singleton {
                     root._saveCache();
                     const callbacks = root._pendingOui[oui] || [];
                     delete root._pendingOui[oui];
-                    for (const cb of callbacks) cb("");
+                    for (const cb of callbacks)
+                        cb("");
                     destroy();
                 }
             }

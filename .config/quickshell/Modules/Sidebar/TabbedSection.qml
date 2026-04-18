@@ -21,11 +21,26 @@ Card {
 
     // Tab data model with icon and name
     property var tabModel: [
-        { icon: Icons.volumeHigh, name: "Volume" },
-        { icon: Icons.bell, name: "Notifications" },
-        { icon: Icons.bluetoothOn, name: "Bluetooth" },
-        { icon: Icons.wifiOn, name: "Network" },
-        { icon: Icons.device, name: "Peripherals" }
+        {
+            icon: Icons.volumeHigh,
+            name: "Volume"
+        },
+        {
+            icon: Icons.bell,
+            name: "Notifications"
+        },
+        {
+            icon: Icons.bluetoothOn,
+            name: "Bluetooth"
+        },
+        {
+            icon: Icons.wifiOn,
+            name: "Network"
+        },
+        {
+            icon: Icons.device,
+            name: "Peripherals"
+        }
     ]
 
     ColumnLayout {
@@ -52,11 +67,16 @@ Card {
                     color: isActive ? Theme.primary : (isHovered ? Theme.colLayer2 : "transparent")
 
                     Behavior on Layout.preferredWidth {
-                        NumberAnimation { duration: 150; easing.type: Easing.OutQuad }
+                        NumberAnimation {
+                            duration: 150
+                            easing.type: Easing.OutQuad
+                        }
                     }
 
                     Behavior on color {
-                        ColorAnimation { duration: 150 }
+                        ColorAnimation {
+                            duration: 150
+                        }
                     }
 
                     // Content row
@@ -74,7 +94,9 @@ Card {
                             anchors.verticalCenter: parent.verticalCenter
 
                             Behavior on color {
-                                ColorAnimation { duration: 150 }
+                                ColorAnimation {
+                                    duration: 150
+                                }
                             }
                         }
 
@@ -140,6 +162,6 @@ Card {
     }
 
     Component.onCompleted: {
-        Logger.info("Tabbed section loaded")
+        Logger.info("Tabbed section loaded");
     }
 }

@@ -5,7 +5,7 @@ Rectangle {
     id: button
 
     property string icon: ""
-    signal clicked()
+    signal clicked
 
     width: 48
     height: 48

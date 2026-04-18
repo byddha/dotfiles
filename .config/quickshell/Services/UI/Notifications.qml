@@ -207,7 +207,8 @@ Singleton {
     // --- Auto-clear on focus ---
 
     function _matchesPattern(value, pattern) {
-        if (pattern === undefined || pattern === null) return true;
+        if (pattern === undefined || pattern === null)
+            return true;
         if (Array.isArray(pattern))
             return pattern.some(p => _matchesPattern(value, p));
         const valueStr = (value === undefined || value === null) ? "" : String(value);
@@ -229,29 +230,34 @@ Singleton {
     }
 
     function _resolveField(obj, path) {
-        if (!obj) return undefined;
+        if (!obj)
+            return undefined;
         // hints.* digs into the raw hints dict stored on the wrapper
         if (path.indexOf("hints.") === 0) {
             const hints = obj.rawHints ?? {};
             return hints[path.slice(6)];
         }
         // Direct top-level key first (handles names containing dots like "desktop-entry")
-        if (obj[path] !== undefined) return obj[path];
+        if (obj[path] !== undefined)
+            return obj[path];
         // Dotted path traversal (e.g. "workspace.id")
         const parts = path.split(".");
         let cur = obj;
         for (const part of parts) {
-            if (cur === undefined || cur === null) return undefined;
+            if (cur === undefined || cur === null)
+                return undefined;
             cur = cur[part];
         }
         return cur;
     }
 
     function _blockMatches(obj, block) {
-        if (!block) return true;
+        if (!block)
+            return true;
         for (const key in block) {
             const value = _resolveField(obj, key);
-            if (!_matchesPattern(value, block[key])) return false;
+            if (!_matchesPattern(value, block[key]))
+                return false;
         }
         return true;
     }
@@ -259,7 +265,8 @@ Singleton {
     function _focusedWindow() {
         const list = Compositor.windowList ?? [];
         for (const w of list) {
-            if (w.focusHistoryID === 0) return w;
+            if (w.focusHistoryID === 0)
+                return w;
         }
         return {
             class: Compositor.activeWindowClass,
@@ -269,11 +276,14 @@ Singleton {
 
     function _runAutoClear() {
         const rules = Config.options?.notifications?.autoClearOnFocus ?? [];
-        if (!rules.length || !root.list.length) return;
+        if (!rules.length || !root.list.length)
+            return;
         const win = _focusedWindow();
-        if (!win) return;
+        if (!win)
+            return;
         for (const rule of rules) {
-            if (!_blockMatches(win, rule.focus)) continue;
+            if (!_blockMatches(win, rule.focus))
+                continue;
             const toDiscard = [];
             for (const notif of root.list) {
                 // Only touch entries whose popup has already ended — don't interrupt a showing popup.
@@ -296,8 +306,12 @@ Singleton {
 
     Connections {
         target: Compositor
-        function onActiveWindowClassChanged() { autoClearDebounce.restart() }
-        function onWindowDataUpdated() { autoClearDebounce.restart() }
+        function onActiveWindowClassChanged() {
+            autoClearDebounce.restart();
+        }
+        function onWindowDataUpdated() {
+            autoClearDebounce.restart();
+        }
     }
 
     Component.onCompleted: {

@@ -18,10 +18,7 @@ Scope {
             required property ShellScreen modelData
             screen: modelData
 
-            visible: (Notifications.popupList.length > 0) &&
-                     Settings.notificationsVisible &&
-                     Config?.options.notifications.enabled &&
-                     modelData.model === primaryMonitorModel
+            visible: (Notifications.popupList.length > 0) && Settings.notificationsVisible && Config?.options.notifications.enabled && modelData.model === primaryMonitorModel
 
             WlrLayershell.namespace: "bidshell:notificationPopup"
             WlrLayershell.layer: WlrLayer.Overlay
@@ -61,6 +58,6 @@ Scope {
     }
 
     Component.onCompleted: {
-        Logger.info("Notification popup module loaded")
+        Logger.info("Notification popup module loaded");
     }
 }

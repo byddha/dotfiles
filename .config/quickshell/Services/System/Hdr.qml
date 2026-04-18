@@ -19,7 +19,8 @@ Singleton {
     }
 
     function toggle() {
-        if (hdrMonitors.length === 0) return;
+        if (hdrMonitors.length === 0)
+            return;
         pendingToggle = true;
         checkState();
     }

@@ -53,9 +53,7 @@ Singleton {
         const order = [];
 
         for (const node of nodes) {
-            const key = node.properties["application.process.binary"]
-                || node.properties["application.name"]?.toLowerCase()
-                || "unknown";
+            const key = node.properties["application.process.binary"] || node.properties["application.name"]?.toLowerCase() || "unknown";
 
             if (!groups[key]) {
                 groups[key] = {

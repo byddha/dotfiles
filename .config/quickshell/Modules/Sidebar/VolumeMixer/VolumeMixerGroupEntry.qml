@@ -57,7 +57,9 @@ Item {
                     color: root.linked ? Theme.primary : Theme.textSecondary
 
                     Behavior on color {
-                        ColorAnimation { duration: 150 }
+                        ColorAnimation {
+                            duration: 150
+                        }
                     }
                 }
 
@@ -85,7 +87,9 @@ Item {
                 opacity: root.linked ? 1 : 0
 
                 Behavior on opacity {
-                    NumberAnimation { duration: 150 }
+                    NumberAnimation {
+                        duration: 150
+                    }
                 }
 
                 // Vertical trunk line (from top to last entry's midpoint)
@@ -100,9 +104,11 @@ Item {
                     // Extend to the vertical center of the last entry
                     height: {
                         const count = streamRepeater.count;
-                        if (count === 0) return 0;
+                        if (count === 0)
+                            return 0;
                         const lastItem = streamRepeater.itemAt(count - 1);
-                        if (!lastItem) return 0;
+                        if (!lastItem)
+                            return 0;
                         return lastItem.y + lastItem.height / 2;
                     }
                 }

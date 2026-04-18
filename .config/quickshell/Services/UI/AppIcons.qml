@@ -552,5 +552,4 @@ QtObject {
     function getDisplayName(className, title, xdgTag) {
         return lookup(className, title, xdgTag).name;
     }
-
 }

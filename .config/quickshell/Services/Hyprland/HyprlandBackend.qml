@@ -20,9 +20,9 @@ QtObject {
     property var windowByAddress: ({})
     property var monitors: []
 
-    signal workspaceFocusChanged()
-    signal windowDataUpdated()
-    signal monitorDataUpdated()
+    signal workspaceFocusChanged
+    signal windowDataUpdated
+    signal monitorDataUpdated
 
     Component.onCompleted: detectCompositor()
 
@@ -146,7 +146,8 @@ QtObject {
     function monitorForScreen(screen) {
         const name = screen?.name ?? "";
         const mon = backend.monitors.find(m => m.name === name);
-        if (!mon) return null;
+        if (!mon)
+            return null;
         return {
             name: mon.name,
             model: screen?.model ?? "",
@@ -173,7 +174,9 @@ QtObject {
     }
 
     function getCursorPosition(callback) {
-        const proc = cursorPosComponent.createObject(backend, { callback: callback });
+        const proc = cursorPosComponent.createObject(backend, {
+            callback: callback
+        });
         proc.running = true;
     }
 

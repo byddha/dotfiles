@@ -18,7 +18,9 @@ ColumnLayout {
         Layout.fillHeight: true
         spacing: Theme.spacingBase
 
-        Item { Layout.fillHeight: true }
+        Item {
+            Layout.fillHeight: true
+        }
 
         Text {
             Layout.alignment: Qt.AlignHCenter
@@ -36,7 +38,9 @@ ColumnLayout {
             color: Theme.textSecondary
         }
 
-        Item { Layout.fillHeight: true }
+        Item {
+            Layout.fillHeight: true
+        }
     }
 
     // Device list
@@ -51,7 +55,9 @@ ColumnLayout {
             spacing: 2
 
             Repeater {
-                model: ScriptModel { values: Peripherals.devices }
+                model: ScriptModel {
+                    values: Peripherals.devices
+                }
 
                 PeripheralDeviceItem {
                     required property var modelData

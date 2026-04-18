@@ -211,11 +211,11 @@ MouseArea {
                         color: Theme.textSecondary
                         opacity: 0.7
                         text: {
-                            const date = new Date(root.notificationObject.time)
-                            const hours = String(date.getHours()).padStart(2, '0')
-                            const minutes = String(date.getMinutes()).padStart(2, '0')
-                            const seconds = String(date.getSeconds()).padStart(2, '0')
-                            return `${hours}:${minutes}:${seconds}`
+                            const date = new Date(root.notificationObject.time);
+                            const hours = String(date.getHours()).padStart(2, '0');
+                            const minutes = String(date.getMinutes()).padStart(2, '0');
+                            const seconds = String(date.getSeconds()).padStart(2, '0');
+                            return `${hours}:${minutes}:${seconds}`;
                         }
                     }
                 }

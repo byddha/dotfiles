@@ -49,8 +49,8 @@ Rectangle {
 
         onClicked: mouse => {
             if (mouse.button === Qt.LeftButton) {
-                Settings.sidebarSelectedTab = 0
-                Settings.sidebarVisible = true
+                Settings.sidebarSelectedTab = 0;
+                Settings.sidebarVisible = true;
             } else if (mouse.button === Qt.RightButton) {
                 Audio.toggleMicMute();
             }

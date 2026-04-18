@@ -9,7 +9,10 @@ import "../../Utils"
 Scope {
     id: root
 
-    enum SnipAction { Copy, Record }
+    enum SnipAction {
+        Copy,
+        Record
+    }
 
     property int action: RegionSelector.SnipAction.Copy
 
@@ -53,7 +56,7 @@ Scope {
                 screen: windowLoader.modelData
                 action: root.action
                 onDismiss: root.dismiss()
-                onActionChangeRequested: (newAction) => root.setAction(newAction)
+                onActionChangeRequested: newAction => root.setAction(newAction)
             }
         }
     }

@@ -16,17 +16,24 @@ Rectangle {
     radius: Theme.radiusBase
     clip: true
     color: {
-        if (device?.connected) return Theme.alpha(Theme.primary, 0.15)
-        if (mouseArea.containsMouse) return Theme.colLayer2
-        return "transparent"
+        if (device?.connected)
+            return Theme.alpha(Theme.primary, 0.15);
+        if (mouseArea.containsMouse)
+            return Theme.colLayer2;
+        return "transparent";
     }
 
     Behavior on color {
-        ColorAnimation { duration: 150 }
+        ColorAnimation {
+            duration: 150
+        }
     }
 
     Behavior on implicitHeight {
-        NumberAnimation { duration: 150; easing.type: Easing.OutQuad }
+        NumberAnimation {
+            duration: 150
+            easing.type: Easing.OutQuad
+        }
     }
 
     ColumnLayout {
@@ -51,7 +58,9 @@ Rectangle {
                 color: root.device?.connected ? Theme.primary : Theme.textColor
 
                 Behavior on color {
-                    ColorAnimation { duration: 150 }
+                    ColorAnimation {
+                        duration: 150
+                    }
                 }
             }
 
@@ -69,7 +78,9 @@ Rectangle {
                     elide: Text.ElideRight
 
                     Behavior on color {
-                        ColorAnimation { duration: 150 }
+                        ColorAnimation {
+                            duration: 150
+                        }
                     }
                 }
 
@@ -81,12 +92,13 @@ Rectangle {
                     color: Theme.textSecondary
                     elide: Text.ElideRight
                     text: {
-                        if (!root.device?.paired) return ""
-                        let status = root.device?.connected ? "Connected" : "Paired"
+                        if (!root.device?.paired)
+                            return "";
+                        let status = root.device?.connected ? "Connected" : "Paired";
                         if (root.device?.batteryAvailable) {
-                            status += ` \u2022 ${Math.round(root.device.battery * 100)}%`
+                            status += ` \u2022 ${Math.round(root.device.battery * 100)}%`;
                         }
-                        return status
+                        return status;
                     }
                 }
             }
@@ -108,19 +120,23 @@ Rectangle {
             opacity: root.expanded ? 1 : 0
 
             Behavior on opacity {
-                NumberAnimation { duration: 100 }
+                NumberAnimation {
+                    duration: 100
+                }
             }
 
-            Item { Layout.fillWidth: true }
+            Item {
+                Layout.fillWidth: true
+            }
 
             // Connect/Disconnect button
             Button {
                 text: root.device?.connected ? "Disconnect" : "Connect"
                 onClicked: {
                     if (root.device?.connected) {
-                        root.device.disconnect()
+                        root.device.disconnect();
                     } else {
-                        root.device.connect()
+                        root.device.connect();
                     }
                 }
             }

@@ -72,8 +72,8 @@ Item { // Window
             anchors.fill: parent
             radius: Theme.roundingWindow * root.scale
             color: ColorUtils.transparentize(Theme.colLayer2)
-            border.color : ColorUtils.transparentize(ThemeService.base03, 0.7)
-            border.width : 1
+            border.color: ColorUtils.transparentize(ThemeService.base03, 0.7)
+            border.width: 1
         }
 
         ColumnLayout {

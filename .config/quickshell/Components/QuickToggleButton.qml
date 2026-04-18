@@ -11,7 +11,7 @@ Rectangle {
     property bool isActive: false
     property int iconSize: 24
 
-    signal clicked()
+    signal clicked
 
     width: 56
     height: 56
@@ -42,8 +42,8 @@ Rectangle {
         onExited: tooltip.hide()
 
         onClicked: {
-            tooltip.hide()
-            root.clicked()
+            tooltip.hide();
+            root.clicked();
         }
     }
 
@@ -57,6 +57,8 @@ Rectangle {
     }
 
     transitions: Transition {
-        ColorAnimation { duration: 150 }
+        ColorAnimation {
+            duration: 150
+        }
     }
 }

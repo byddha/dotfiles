@@ -427,21 +427,14 @@ PanelWindow {
         } else if (root.lensMode && effectiveAction === RegionSelector.SnipAction.Copy) {
             // Google Lens visual search - upload to temp host, then open Lens
             const cropPath = "/tmp/bidshell-lens.png";
-            const lensCmd = `magick '${root.screenshotPath}' -crop ${rw}x${rh}+${rx}+${ry} +repage '${cropPath}' && ` +
-                `imageLink=$(curl -sF files[]=@'${cropPath}' 'https://uguu.se/upload' | jq -r '.files[0].url') && ` +
-                `xdg-open "https://lens.google.com/uploadbyurl?url=\${imageLink}" && ` +
-                `rm '${cropPath}' '${root.screenshotPath}'`;
+            const lensCmd = `magick '${root.screenshotPath}' -crop ${rw}x${rh}+${rx}+${ry} +repage '${cropPath}' && ` + `imageLink=$(curl -sF files[]=@'${cropPath}' 'https://uguu.se/upload' | jq -r '.files[0].url') && ` + `xdg-open "https://lens.google.com/uploadbyurl?url=\${imageLink}" && ` + `rm '${cropPath}' '${root.screenshotPath}'`;
             snipProc.command = ["bash", "-c", lensCmd];
             Logger.info("RegionSelector: Sending region to Google Lens");
         } else if (root.ocrMode && effectiveAction === RegionSelector.SnipAction.Copy) {
             // Tesseract OCR - extract text and copy to clipboard (or translate)
-            const langFlag = root.ocrAllLangs
-                ? `$(tesseract --list-langs 2>/dev/null | tail -n +2 | paste -sd+)`
-                : "eng";
+            const langFlag = root.ocrAllLangs ? `$(tesseract --list-langs 2>/dev/null | tail -n +2 | paste -sd+)` : "eng";
             const ocrBase = `magick '${root.screenshotPath}' -crop ${rw}x${rh}+${rx}+${ry} +repage png:- | tesseract -l ${langFlag} stdin stdout`;
-            const ocrCmd = root.ocrTranslate
-                ? `text=$(${ocrBase}) && printf '%s' "$text" | wl-copy && xdg-open "https://translate.kagi.com/?from=auto&to=&text=$(printf '%s' "$text" | jq -sRr @uri)" && ${cleanup}`
-                : `${ocrBase} | wl-copy && ${cleanup}`;
+            const ocrCmd = root.ocrTranslate ? `text=$(${ocrBase}) && printf '%s' "$text" | wl-copy && xdg-open "https://translate.kagi.com/?from=auto&to=&text=$(printf '%s' "$text" | jq -sRr @uri)" && ${cleanup}` : `${ocrBase} | wl-copy && ${cleanup}`;
             snipProc.command = ["bash", "-c", ocrCmd];
             Logger.info(`RegionSelector: Extracting text via OCR (${root.ocrAllLangs ? "all langs" : "eng"}${root.ocrTranslate ? ", translate" : ""})`);
         } else if (root.editMode && effectiveAction === RegionSelector.SnipAction.Copy) {
