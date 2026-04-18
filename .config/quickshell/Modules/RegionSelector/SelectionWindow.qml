@@ -33,6 +33,8 @@ PanelWindow {
     readonly property real monitorOffsetX: monitorInfo?.x ?? 0
     readonly property real monitorOffsetY: monitorInfo?.y ?? 0
     property int activeWorkspaceId: monitorInfo?.activeWorkspaceId ?? 0
+    readonly property int specialWorkspaceId: (Compositor.monitors.find(m => m.name === screen?.name)?.specialWorkspace?.id) ?? 0
+    readonly property int effectiveWorkspaceId: specialWorkspaceId !== 0 ? specialWorkspaceId : activeWorkspaceId
 
     // Screenshot paths
     readonly property string screenshotDir: "/tmp/bidshell-screenshots"
@@ -69,7 +71,7 @@ PanelWindow {
 
     // Window regions from HyprlandData, sorted for proper z-order (floating above tiled)
     readonly property var windowRegions: {
-        const workspaceWindows = Compositor.windowList.filter(w => w.workspace.id === root.activeWorkspaceId);
+        const workspaceWindows = Compositor.windowList.filter(w => w.workspace.id === root.effectiveWorkspaceId);
 
         // If any window is fullscreen or maximized, only show that window (others are occluded)
         // fullscreen: 1 = real fullscreen, 2 = maximized
