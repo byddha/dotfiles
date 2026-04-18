@@ -149,14 +149,14 @@ QtObject {
 
         _updateMonitorActiveWorkspaces();
         workspaceFocusChanged();
-        Logger.debug("Workspaces updated:", workspaces.length);
+        Logger.trace("Workspaces updated:", workspaces.length);
     }
 
     function _processWindows(raw) {
         windowList = raw.map(w => _normalizeWindow(w));
         _rebuildWindowMaps();
         windowDataUpdated();
-        Logger.debug("Windows updated:", windowList.length);
+        Logger.trace("Windows updated:", windowList.length);
     }
 
     function _processMonitors() {
@@ -192,7 +192,7 @@ QtObject {
         }
 
         monitorDataUpdated();
-        Logger.debug("Monitors updated:", monitors.length, "displays");
+        Logger.trace("Monitors updated:", monitors.length, "displays");
     }
 
     function _normalizeWindow(win) {

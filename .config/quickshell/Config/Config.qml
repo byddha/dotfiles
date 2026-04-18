@@ -96,6 +96,7 @@ Singleton {
 
             config.configLoaded = true;
             Logger.debugEnabled = adapter.general.debugLogging;
+            Logger.traceEnabled = adapter.general.traceLogging;
             Logger.debug("Full config:", adapter);
         }
 
@@ -127,6 +128,7 @@ Singleton {
             property var general: JsonObject {
                 property string base16Theme: "tokyo-night-dark"
                 property bool debugLogging: false
+                property bool traceLogging: false
             }
 
             property var bar: JsonObject {

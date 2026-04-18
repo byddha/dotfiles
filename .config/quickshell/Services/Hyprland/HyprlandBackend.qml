@@ -80,7 +80,7 @@ QtObject {
                     backend.windowByAddress = tempWinByAddress;
                     backend.addresses = backend.windowList.map(win => win.address);
                     backend.windowDataUpdated();
-                    Logger.debug("Clients updated:", backend.windowList.length, "windows");
+                    Logger.trace("Clients updated:", backend.windowList.length, "windows");
                 } catch (e) {
                     Logger.error("Failed to parse clients data:", e);
                 }
@@ -97,7 +97,7 @@ QtObject {
                 try {
                     backend.monitors = JSON.parse(monitorsCollector.text);
                     backend.monitorDataUpdated();
-                    Logger.debug("Monitors updated:", backend.monitors.length, "displays");
+                    Logger.trace("Monitors updated:", backend.monitors.length, "displays");
                 } catch (e) {
                     Logger.error("Failed to parse monitors data:", e);
                 }

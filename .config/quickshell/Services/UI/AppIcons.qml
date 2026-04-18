@@ -531,7 +531,7 @@ QtObject {
             }
         }
 
-        Logger.warn("No icon mapping found for class '" + className + "' and title '" + title + "'; using default.");
+        Logger.trace("No icon mapping found for class '" + className + "' and title '" + title + "'; using default.");
         return iconMap["unknown"];
     }
 

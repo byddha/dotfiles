@@ -40,7 +40,7 @@ Singleton {
             if (root.hdrMonitors.includes(mon.name)) {
                 if (mon.colorManagementPreset === "hdr") {
                     root.enabled = true;
-                    Logger.info("HDR state: enabled");
+                    Logger.trace("HDR state: enabled");
                     if (root.pendingToggle) {
                         root.pendingToggle = false;
                         root.doToggle();
@@ -50,7 +50,7 @@ Singleton {
             }
         }
         root.enabled = false;
-        Logger.info("HDR state: disabled");
+        Logger.trace("HDR state: disabled");
 
         if (root.pendingToggle) {
             root.pendingToggle = false;

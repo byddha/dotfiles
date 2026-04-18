@@ -8,6 +8,7 @@ Singleton {
 
     // External debug toggle - set from Config after init
     property bool debugEnabled: false
+    property bool traceEnabled: false
 
     // ANSI color codes
     readonly property string _reset: "\x1b[0m"
@@ -70,6 +71,12 @@ Singleton {
     function debug(...args) {
         if (root.debugEnabled) {
             console.debug(_format(_gray, ...args));
+        }
+    }
+
+    function trace(...args) {
+        if (root.traceEnabled) {
+            console.debug(_format(_dim, ...args));
         }
     }
 
