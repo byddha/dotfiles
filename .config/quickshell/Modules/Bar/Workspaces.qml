@@ -43,6 +43,10 @@ Item {
     property real iconSize: 26
     property real iconSpacing: 4
 
+    readonly property var currentSpecial: (Compositor.monitors.find(m => m.name === root.QsWindow.window?.screen?.name)?.specialWorkspace) ?? null
+    readonly property bool specialVisible: (currentSpecial?.id ?? 0) !== 0
+    readonly property var specialApps: specialVisible ? Compositor.getWorkspaceApps(currentSpecial.id) : []
+
     // Update workspace occupation status
     function updateWorkspaceOccupied() {
         workspaceOccupied = Array.from({
@@ -109,7 +113,7 @@ Item {
 
     onWorkspaceIndexInGroupChanged: updateActiveWorkspacePosition()
 
-    implicitWidth: workspaceBackground.width
+    implicitWidth: workspaceBackground.width + (root.specialVisible ? specialPill.width + BarStyle.spacing : 0)
     implicitHeight: BarStyle.barHeight
 
     // Find next occupied workspace in a direction (1 = forward, -1 = backward)
@@ -319,6 +323,83 @@ Item {
                 duration: Theme.animation.elementMoveFast.duration
                 easing.type: Theme.animation.elementMoveFast.type
                 easing.bezierCurve: Theme.animation.elementMoveFast.bezierCurve
+            }
+        }
+    }
+
+    Rectangle {
+        id: specialPill
+        x: workspaceBackground.width + BarStyle.spacing
+        y: 0
+        height: BarStyle.barHeight
+        width: root.specialVisible ? (specialContent.implicitWidth + BarStyle.spacing * 2) : 0
+        color: Theme.primary
+        radius: BarStyle.buttonRadius
+        opacity: root.specialVisible ? 1.0 : 0.0
+        clip: true
+
+        Behavior on width {
+            NumberAnimation {
+                duration: Theme.animation.elementMoveFast.duration
+                easing.type: Theme.animation.elementMoveFast.type
+                easing.bezierCurve: Theme.animation.elementMoveFast.bezierCurve
+            }
+        }
+
+        Behavior on opacity {
+            NumberAnimation {
+                duration: Theme.animation.elementMoveFast.duration
+                easing.type: Theme.animation.elementMoveFast.type
+                easing.bezierCurve: Theme.animation.elementMoveFast.bezierCurve
+            }
+        }
+
+        Row {
+            id: specialContent
+            anchors.centerIn: parent
+            spacing: iconSpacing
+
+            Repeater {
+                model: root.specialApps
+
+                Item {
+                    width: iconSize
+                    height: iconSize
+                    property var appData: modelData
+
+                    Text {
+                        anchors.centerIn: parent
+                        font.family: BarStyle.iconFont
+                        font.pixelSize: iconSize
+                        text: AppIcons.getIcon(appData.class, appData.title, appData.xdgTag)
+                        color: Theme.primaryText
+                    }
+
+                    Rectangle {
+                        visible: appData.count > 1
+                        anchors {
+                            top: parent.top
+                            right: parent.right
+                            topMargin: -1
+                            rightMargin: -1
+                        }
+                        width: Math.max(14, specialCountText.width + 4)
+                        height: 14
+                        radius: 5
+                        color: Theme.colLayer0
+                        border.width: 1
+                        border.color: Theme.primary
+
+                        Text {
+                            id: specialCountText
+                            anchors.centerIn: parent
+                            font.pixelSize: 10
+                            font.weight: Font.Bold
+                            color: Theme.primary
+                            text: appData.count
+                        }
+                    }
+                }
             }
         }
     }
