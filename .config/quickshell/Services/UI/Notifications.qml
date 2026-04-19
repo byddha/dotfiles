@@ -22,7 +22,8 @@ Singleton {
                     "text": action.text
                 })) ?? []
         property bool popup: false
-        property bool isTransient: notification?.hints.transient ?? false
+        property var ruleSet: ({})
+        property bool isTransient: ruleSet && ruleSet.hasOwnProperty("transient") ? !!ruleSet.transient : (notification?.hints.transient ?? false)
         property string appIcon: notification?.appIcon ?? ""
         property string appName: notification?.appName ?? ""
         property string body: notification?.body ?? ""
@@ -117,7 +118,8 @@ Singleton {
         persistenceSupported: true
 
         onNotification: notification => {
-            const isTransient = notification.hints?.transient ?? false;
+            const ruleSet = root._computeRuleSet(notification);
+            const isTransient = ruleSet.hasOwnProperty("transient") ? !!ruleSet.transient : (notification.hints?.transient ?? false);
 
             // Transient notifications must never persist. If we can't show the popup, drop the notification entirely.
             if (isTransient && root.popupInhibited) {
@@ -129,6 +131,7 @@ Singleton {
             const newNotifObject = notifComponent.createObject(root, {
                 "notificationId": notification.id + root.idOffset,
                 "notification": notification,
+                "ruleSet": ruleSet,
                 "time": Date.now()
             });
             root.list = [...root.list, newNotifObject];
@@ -249,6 +252,30 @@ Singleton {
             cur = cur[part];
         }
         return cur;
+    }
+
+    function _notifView(notification) {
+        return {
+            "appName": notification.appName ?? "",
+            "desktopEntry": notification.hints?.["desktop-entry"] ?? "",
+            "summary": notification.summary ?? "",
+            "body": notification.body ?? "",
+            "urgency": notification.urgency?.toString() ?? "normal",
+            "rawHints": notification.hints ?? {}
+        };
+    }
+
+    function _computeRuleSet(notification) {
+        const rules = Config.options?.notifications?.rules ?? [];
+        if (!rules.length)
+            return {};
+        const view = _notifView(notification);
+        const merged = {};
+        for (const rule of rules) {
+            if (_blockMatches(view, rule.match))
+                Object.assign(merged, rule.set ?? {});
+        }
+        return merged;
     }
 
     function _blockMatches(obj, block) {

@@ -118,6 +118,19 @@ Singleton {
                 //   { "focus": { "class": "/(vesktop|slack|telegram)/" }, "match": { "hints.category": "im.received" } }
                 // ]
                 property var autoClearOnFocus: ([])
+
+                // Arrival-time rules. Each rule: { "match": { <notification fields> }, "set": { <overrides> } }
+                // Match uses the same field language as autoClearOnFocus (appName, desktopEntry, summary, body,
+                // urgency, hints.<name>; substring / "/regex/flags" / array-OR).
+                // All matching rules fire; their `set` dicts are merged in order (last wins).
+                // Supported `set` keys:
+                //   transient: bool  — auto-discard on popup timeout, never kept in history.
+                // Reserved for future use (not yet wired): ignore, popup, timeout, urgency.
+                // Example:
+                // [
+                //   { "match": { "appName": "OpenRazer" }, "set": { "transient": true } }
+                // ]
+                property var rules: ([])
             }
 
             property var hyprWhichKey: JsonObject {
