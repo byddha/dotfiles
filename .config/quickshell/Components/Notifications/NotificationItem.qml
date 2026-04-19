@@ -1,69 +1,69 @@
-import QtQuick
-import QtQuick.Layouts
-import Quickshell
+// End root
+
+import ".."
 import "../../Config"
 import "../../Services"
 import "../../Utils"
-import ".."
+import QtQuick
+import QtQuick.Layouts
+import Quickshell
 
 MouseArea {
     id: root
 
     required property var notificationObject
     property bool popup: false
-
+    property int nextItemBelowId: -1
     // Detect if this is a media player notification
     readonly property bool isMediaNotification: {
         const appName = (notificationObject.appName || "").toLowerCase();
         const mediaApps = ["spotify", "tidal", "tidal-hifi", "vlc", "rhythmbox", "lollypop", "elisa", "amberol", "g4music", "music", "clementine", "strawberry", "audacious", "deadbeef", "cmus", "mpd", "ncspot", "playerctl"];
-        return mediaApps.some(app => appName.includes(app));
+        return mediaApps.some(app => {
+            return appName.includes(app);
+        });
     }
-
     // Show MediaCard only for popup media notifications
     readonly property bool showMediaCard: popup && isMediaNotification
-
     // Find the MPRIS player that matches this notification's app
     readonly property var matchingPlayer: {
         if (!isMediaNotification)
             return null;
+
         const appName = (notificationObject.appName || "").toLowerCase();
-        return MprisController.availablePlayers.find(p => (p.identity || "").toLowerCase().includes(appName) || appName.includes((p.identity || "").toLowerCase())) || MprisController.activePlayer;
+        return MprisController.availablePlayers.find(p => {
+            return (p.identity || "").toLowerCase().includes(appName) || appName.includes((p.identity || "").toLowerCase());
+        }) || MprisController.activePlayer;
     }
-
-    hoverEnabled: true
-    acceptedButtons: Qt.RightButton
-
-    onClicked: mouse => {
-        if (mouse.button === Qt.RightButton) {
-            Quickshell.clipboardText = notificationObject.body || "";
-        }
-    }
-
-    implicitHeight: showMediaCard ? (mediaCard.implicitHeight + Theme.spacingBase) : background.implicitHeight
 
     function processNotificationBody(body, appName) {
         let processedBody = body;
-
         // Clean Chromium-based browsers notifications - remove first line
         if (appName) {
             const lowerApp = appName.toLowerCase();
             const chromiumBrowsers = ["brave", "chrome", "chromium", "vivaldi", "opera", "microsoft edge", "zen"];
-
-            if (chromiumBrowsers.some(name => lowerApp.includes(name))) {
+            if (chromiumBrowsers.some(name => {
+                return lowerApp.includes(name);
+            })) {
                 const lines = body.split('\n\n');
-
-                if (lines.length > 1 && lines[0].startsWith('<a')) {
+                if (lines.length > 1 && lines[0].startsWith('<a'))
                     processedBody = lines.slice(1).join('\n\n');
-                }
             }
         }
-
         return processedBody;
     }
+
+    hoverEnabled: true
+    acceptedButtons: Qt.RightButton
+    onClicked: mouse => {
+        if (mouse.button === Qt.RightButton)
+            Quickshell.clipboardText = notificationObject.body || "";
+    }
+    implicitHeight: showMediaCard ? (mediaCard.implicitHeight + Theme.spacingBase) : background.implicitHeight
 
     // MediaCard for popup media notifications (replaces entire notification)
     MediaCard {
         id: mediaCard
+
         anchors.top: parent.top
         anchors.topMargin: Theme.spacingBase
         width: parent.width
@@ -76,30 +76,73 @@ MouseArea {
 
     // Normal notification background (for non-media or sidebar)
     Rectangle {
+        // End mainRow
+
         id: background
+
         width: parent.width
         anchors.left: parent.left
         radius: Theme.radiusBase
         visible: !root.showMediaCard
         color: {
-            if (notificationObject.urgency === "critical") {
+            if (notificationObject.urgency === "critical")
                 return ColorUtils.mix(Theme.accentRed, Theme.colLayer1, 0.15);
-            }
+
             return Theme.colLayer1;
         }
         border.width: 2
         border.color: Theme.colLayer2
-
         implicitHeight: Math.max(contentColumn.implicitHeight + Theme.spacingBase * 4, 130)
 
-        Behavior on color {
-            ColorAnimation {
-                duration: 150
+        // HoverHandler re-evaluates on geometry changes (unlike MouseArea.containsMouse), so
+        // the action overlay appears when a list reflow brings a new item under a stationary cursor.
+        HoverHandler {
+            id: backgroundHover
+        }
+
+        // Hover-reveal action cluster (copy + dismiss). Absolute overlay so it doesn't
+        // perturb the summary row layout.
+        Row {
+            id: actionOverlay
+
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.topMargin: Theme.spacingBase / 2
+            anchors.leftMargin: Theme.spacingBase / 2
+            spacing: Theme.spacingBase / 2
+            z: 10
+            opacity: backgroundHover.hovered || copyBtn.hovered || dismissBtn.hovered || Notifications.stickyHoverTargetId === root.notificationObject.notificationId ? 1 : 0
+            visible: opacity > 0
+
+            ActionDot {
+                id: copyBtn
+
+                glyph: Icons.copy
+                onTriggered: Quickshell.clipboardText = root.notificationObject.body || ""
+            }
+
+            ActionDot {
+                id: dismissBtn
+
+                glyph: Icons.cancel
+                onTriggered: {
+                    Notifications.flashStickyHover(root.nextItemBelowId);
+                    Notifications.discardNotification(root.notificationObject.notificationId);
+                }
+            }
+
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: 120
+                }
             }
         }
 
         RowLayout {
+            // End contentColumn
+
             id: mainRow
+
             anchors.top: parent.top
             anchors.bottom: parent.bottom
             anchors.left: parent.left
@@ -118,6 +161,7 @@ MouseArea {
                 // Image/Icon container (no background)
                 Item {
                     id: iconContainer
+
                     Layout.preferredWidth: 48
                     Layout.preferredHeight: 48
 
@@ -125,13 +169,14 @@ MouseArea {
                     // Only load qsimage:// URLs for popups (they expire after popup closes)
                     Image {
                         id: notifImage
+
                         anchors.fill: parent
                         source: {
                             const img = root.notificationObject.image || "";
                             // qsimage:// URLs are temporary - only valid for popups
-                            if (!root.popup && img.startsWith("image://qsimage/")) {
+                            if (!root.popup && img.startsWith("image://qsimage/"))
                                 return "";
-                            }
+
                             return img;
                         }
                         fillMode: Image.PreserveAspectCrop
@@ -143,23 +188,24 @@ MouseArea {
                     // App icon (when no notification image)
                     Image {
                         id: appIconImage
+
+                        // Use app icon if provided, otherwise use dialog-information (freedesktop standard)
+                        property string iconName: root.notificationObject.appIcon || "dialog-information"
+                        property string resolvedIconPath: IconResolver.getIconPath(iconName)
+
                         anchors.fill: parent
                         source: resolvedIconPath
                         fillMode: Image.PreserveAspectFit
                         asynchronous: true
                         visible: notifImage.status !== Image.Ready && status === Image.Ready
 
-                        // Use app icon if provided, otherwise use dialog-information (freedesktop standard)
-                        property string iconName: root.notificationObject.appIcon || "dialog-information"
-                        property string resolvedIconPath: IconResolver.getIconPath(iconName)
-
                         Connections {
-                            target: IconResolver
                             function onIconResolved(name, path) {
-                                if (name === appIconImage.iconName) {
+                                if (name === appIconImage.iconName)
                                     appIconImage.resolvedIconPath = path;
-                                }
                             }
+
+                            target: IconResolver
                         }
                     }
 
@@ -184,6 +230,7 @@ MouseArea {
             // Content column
             ColumnLayout {
                 id: contentColumn
+
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 spacing: Theme.spacingBase / 2
@@ -191,6 +238,7 @@ MouseArea {
                 // Summary row
                 RowLayout {
                     id: summaryRow
+
                     Layout.fillWidth: true
                     Layout.topMargin: Theme.spacingBase / 2
                     implicitHeight: summaryText.implicitHeight
@@ -198,6 +246,7 @@ MouseArea {
 
                     StyledText {
                         id: summaryText
+
                         Layout.fillWidth: true
                         font.pixelSize: Theme.fontSizeBase
                         font.bold: true
@@ -223,8 +272,9 @@ MouseArea {
                 // Notification body
                 StyledText {
                     id: notificationBodyText
+
                     Layout.fillWidth: true
-                    Layout.preferredWidth: 0  // Force it to respect fillWidth
+                    Layout.preferredWidth: 0 // Force it to respect fillWidth
                     font.pixelSize: Theme.fontSizeBase
                     color: Theme.textSecondary
                     wrapMode: Text.Wrap
@@ -233,7 +283,6 @@ MouseArea {
                         const body = notificationObject.body || "";
                         return `<style>img{max-width:300px;}</style>` + `${processNotificationBody(body, notificationObject.appName || notificationObject.summary).replace(/\n/g, "<br/>")}`;
                     }
-
                     onLinkActivated: link => {
                         Qt.openUrlExternally(link);
                         Settings.sidebarVisible = false;
@@ -254,12 +303,18 @@ MouseArea {
                 // Action buttons
                 RowLayout {
                     id: actionRowLayout
+
                     Layout.fillWidth: true
                     spacing: Theme.spacingBase / 2
-                    visible: notificationObject.actions.filter(a => (a.text || "").trim() !== "").length > 0
+                    visible: notificationObject.actions.filter(a => {
+                        return (a.text || "").trim() !== "";
+                    }).length > 0
 
                     Repeater {
-                        model: notificationObject.actions.filter(a => (a.text || "").trim() !== "")
+                        model: notificationObject.actions.filter(a => {
+                            return (a.text || "").trim() !== "";
+                        })
+
                         Button {
                             Layout.fillWidth: true
                             text: modelData.text
@@ -270,7 +325,52 @@ MouseArea {
                         }
                     }
                 }
-            }  // End contentColumn
-        }  // End mainRow
-    }  // End background
-}  // End root
+            }
+        }
+        // End background
+
+        Behavior on color {
+            ColorAnimation {
+                duration: 150
+            }
+        }
+    }
+
+    component ActionDot: Rectangle {
+        property alias hovered: hh.hovered
+        property string glyph
+
+        signal triggered
+
+        width: 22
+        height: 22
+        radius: 11
+        color: hh.hovered ? Theme.colLayer2 : Theme.alpha(Theme.colLayer0, 0.85)
+        border.color: Theme.alpha(Theme.textColor, 0.15)
+        border.width: 1
+
+        Text {
+            anchors.centerIn: parent
+            text: parent.glyph
+            font.family: Theme.fontFamilyIcons
+            font.pixelSize: 12
+            color: Theme.textColor
+        }
+
+        HoverHandler {
+            id: hh
+
+            cursorShape: Qt.PointingHandCursor
+        }
+
+        TapHandler {
+            onTapped: triggered()
+        }
+
+        Behavior on color {
+            ColorAnimation {
+                duration: 120
+            }
+        }
+    }
+}

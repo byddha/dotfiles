@@ -46,6 +46,7 @@ ScrollView {
 
         Repeater {
             model: ScriptModel {
+                id: scriptModel
                 // Show individual notifications sorted by time (most recent first)
                 values: {
                     const list = root.popup ? Notifications.popupList : Notifications.list.slice().reverse();
@@ -57,9 +58,12 @@ ScrollView {
 
             NotificationItem {
                 required property var modelData
+                required property int index
                 Layout.fillWidth: true
                 notificationObject: modelData
                 popup: root.popup
+                // Item that will slide into this slot when dismissed (the one visually below).
+                nextItemBelowId: scriptModel.values[index + 1]?.notificationId ?? -1
             }
         }
     }

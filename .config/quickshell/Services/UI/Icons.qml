@@ -1,15 +1,10 @@
 pragma Singleton
-
+import "../../Utils"
 import QtQuick
 import Quickshell
-import "../../Utils"
 
 Singleton {
     id: root
-
-    function init() {
-        Logger.info("Service initialized");
-    }
 
     // ==================
     // Volume Icons
@@ -19,31 +14,26 @@ Singleton {
     readonly property string volumeLow: "󰕿"
     readonly property string volumeMedium: "󰖀"
     readonly property string volumeHigh: "󰕾"
-
     // ==================
     // Microphone Icons
     // ==================
     readonly property string micMuted: "󰍭"
     readonly property string micOn: "󰍬"
-
     // ==================
     // Brightness Icons
     // ==================
     readonly property string brightness: "󰃟"
-
     // ==================
     // Network Icons
     // ==================
     readonly property string wifiOn: "󰤨"
     readonly property string wifiOff: "󰤭"
     readonly property string network: "󰖩"
-
     // ==================
     // Bluetooth Icons
     // ==================
     readonly property string bluetoothOn: "󰂯"
     readonly property string bluetoothOff: "󰂲"
-
     // ==================
     // Device Icons
     // ==================
@@ -56,7 +46,6 @@ Singleton {
     readonly property string trackpad: "󰟸"
     readonly property string headset: "󰋎"
     readonly property string speaker: "󰓃"
-
     // ==================
     // Quick Toggle Icons
     // ==================
@@ -66,15 +55,14 @@ Singleton {
     readonly property string hdrOff: "󰵾"
     readonly property string dndOn: "󰂛"
     readonly property string dndOff: "󰂚"
-    readonly property string idleOn: "󰒲"   // sleep icon - idle mode is on, system can sleep
-    readonly property string idleOff: "󰒳"  // no-sleep icon - idle mode is off, system stays awake
+    readonly property string idleOn: "󰒲" // sleep icon - idle mode is on, system can sleep
+    readonly property string idleOff: "󰒳" // no-sleep icon - idle mode is off, system stays awake
     readonly property string screenSnip: "󰹑"
     readonly property string colorPicker: "󰈊"
     readonly property string recordOn: "󰑋"
     readonly property string recordOff: "󰑊"
     readonly property string airplaneOn: "󰀝"
     readonly property string airplaneOff: "󰀞"
-
     // ==================
     // Media Icons
     // ==================
@@ -84,7 +72,6 @@ Singleton {
     readonly property string skipNext: "󰒭"
     readonly property string music: "󰌳"
     readonly property string musicAlt: "󰎈"
-
     // ==================
     // Power/System Icons
     // ==================
@@ -116,7 +103,6 @@ Singleton {
     readonly property string reboot: "󰜉"
     readonly property string logout: "󰍃"
     readonly property string suspend: "󰒲"
-
     // ==================
     // Modifier Key Icons
     // ==================
@@ -125,20 +111,17 @@ Singleton {
     readonly property string keySuper: "󰣇"
     readonly property string keyCaps: "󰪛"
     readonly property string keyWorkspace: "󰆾"
-
     // ==================
     // Navigation Icons
     // ==================
     readonly property string chevronLeft: ""
     readonly property string chevronRight: ""
     readonly property string today: "󰃶"
-
     // ==================
     // Notification Icons
     // ==================
     readonly property string bell: "󰂚"
     readonly property string bellOff: "󰂛"
-
     // ==================
     // Weather Icons (Nerd Font md-weather_*)
     // ==================
@@ -152,14 +135,12 @@ Singleton {
     readonly property string weatherSnowy: "󰖘"
     readonly property string weatherThunderstorm: "󰖓"
     readonly property string weatherWindy: "󰖝"
-
     // Weather detail icons
     readonly property string thermometer: "󰔏"
     readonly property string humidity: "󰖌"
     readonly property string wind: "󰖝"
     readonly property string rain: "󰖗"
     readonly property string spinner: ""
-
     // ==================
     // Screenshot/Region Selector Icons
     // ==================
@@ -172,13 +153,12 @@ Singleton {
     readonly property string ocrAll: "󰗊"
     readonly property string translate: "󰗺"
     readonly property string cancel: "󰅖"
-
+    readonly property string copy: "󰆏"
     // ==================
     // Link Icons
     // ==================
     readonly property string link: "󰌷"
     readonly property string linkOff: "󰌹"
-
     // ==================
     // Misc Icons
     // ==================
@@ -191,4 +171,8 @@ Singleton {
     readonly property string star: "★"
     readonly property string flag: "⚑"
     readonly property string heart: "♡"
+
+    function init() {
+        Logger.info("Service initialized");
+    }
 }

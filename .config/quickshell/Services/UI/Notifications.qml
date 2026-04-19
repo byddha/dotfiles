@@ -91,6 +91,21 @@ Singleton {
     // ID offset to avoid collisions with saved notifications
     property int idOffset
 
+    // Qt's hover machinery only re-evaluates on pointer events, so after a user dismiss the
+    // newly-top item sitting under a stationary cursor doesn't register as hovered. The caller
+    // passes the id of the item expected to slide into the dismissed slot; that single item
+    // reveals its overlay for a short window until the cursor moves.
+    property int stickyHoverTargetId: -1
+    Timer {
+        id: stickyHoverTimer
+        interval: 250
+        onTriggered: root.stickyHoverTargetId = -1
+    }
+    function flashStickyHover(targetId) {
+        stickyHoverTargetId = targetId ?? -1;
+        stickyHoverTimer.restart();
+    }
+
     // Components
     Component {
         id: notifComponent
