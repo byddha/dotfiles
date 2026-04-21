@@ -304,98 +304,6 @@ PanelWindow {
         });
     }
 
-    // Copy feedback animation - shrink to corner
-    property real thumbMaxSize: 200
-    property real thumbTargetW: 0
-    property real thumbTargetH: 0
-
-    SequentialAnimation {
-        id: feedbackAnimation
-
-        // Store initial values and calculate aspect-ratio-correct thumbnail size
-        ScriptAction {
-            script: {
-                // Capture current region (break bindings by setting directly)
-                feedbackOverlay.x = root.regionX;
-                feedbackOverlay.y = root.regionY;
-                feedbackOverlay.width = root.regionWidth;
-                feedbackOverlay.height = root.regionHeight;
-                feedbackOverlay.startX = root.regionX;
-                feedbackOverlay.startY = root.regionY;
-                feedbackOverlay.startWidth = root.regionWidth;
-                feedbackOverlay.startHeight = root.regionHeight;
-                feedbackOverlay.opacity = 1;
-
-                // Calculate thumbnail size preserving aspect ratio
-                const aspect = root.regionWidth / root.regionHeight;
-                if (aspect > 1) {
-                    // Wider than tall
-                    root.thumbTargetW = root.thumbMaxSize;
-                    root.thumbTargetH = root.thumbMaxSize / aspect;
-                } else {
-                    // Taller than wide
-                    root.thumbTargetH = root.thumbMaxSize;
-                    root.thumbTargetW = root.thumbMaxSize * aspect;
-                }
-            }
-        }
-
-        // Brief pause to show the capture
-        PauseAnimation {
-            duration: 80
-        }
-
-        // Shrink and move to corner
-        ParallelAnimation {
-            NumberAnimation {
-                target: feedbackOverlay
-                property: "x"
-                to: 40
-                duration: 350
-                easing.type: Easing.OutCubic
-            }
-            NumberAnimation {
-                target: feedbackOverlay
-                property: "y"
-                to: 80
-                duration: 350
-                easing.type: Easing.OutCubic
-            }
-            NumberAnimation {
-                target: feedbackOverlay
-                property: "width"
-                to: root.thumbTargetW
-                duration: 350
-                easing.type: Easing.OutCubic
-            }
-            NumberAnimation {
-                target: feedbackOverlay
-                property: "height"
-                to: root.thumbTargetH
-                duration: 350
-                easing.type: Easing.OutCubic
-            }
-        }
-
-        // Pause at corner to let it settle
-        PauseAnimation {
-            duration: 150
-        }
-
-        // Fade out
-        NumberAnimation {
-            target: feedbackOverlay
-            property: "opacity"
-            to: 0
-            duration: 100
-            easing.type: Easing.InQuad
-        }
-
-        ScriptAction {
-            script: root.dismiss()
-        }
-    }
-
     function updateTargetedRegion(x, y) {
         const clickedWindow = root.windowRegions.find(region => {
             return region.at[0] <= x && x <= region.at[0] + region.size[0] && region.at[1] <= y && y <= region.at[1] + region.size[1];
@@ -534,19 +442,13 @@ PanelWindow {
             return;
         }
 
-        // Whether we show the shrink-to-corner feedback (plain Copy only)
-        const showFeedback = !root.editMode && !root.saveMode && !root.lensMode && !root.ocrMode;
-
-        // Start feedback animation immediately — it reads from screencopyView
-        // via its own ShaderEffectSource, independent of the file save.
-        if (showFeedback)
-            feedbackAnimation.start();
-
-        // Grab the cropped region to screenshotPath, then pipe to the target
+        // Hide all UI chrome immediately (uiLayer.visible is gated on
+        // !root.snipping). The PanelWindow + ScreencopyView stay alive briefly
+        // so grabToImage has a rendered scene to read from, then dismiss once
+        // the grab callback fires. User perceives the overlay as "gone now".
         root._grabRegionToFile(root.regionX, root.regionY, root.regionWidth, root.regionHeight, success => {
             if (!success) {
-                if (!showFeedback)
-                    root.dismiss();
+                root.dismiss();
                 return;
             }
             const f = root.screenshotPath;
@@ -572,10 +474,7 @@ PanelWindow {
             }
             snipProc.command = ["bash", "-c", cmd];
             snipProc.startDetached();
-
-            // Non-feedback modes dismiss now; feedback modes dismiss when animation ends.
-            if (!showFeedback)
-                root.dismiss();
+            root.dismiss();
         });
     }
 
@@ -592,12 +491,13 @@ PanelWindow {
     }
 
     // UI layer — sibling of screencopyView so grabToImage excludes it.
-    // Hidden until the screencopy frame is grabbed and saved to disk.
+    // Hidden until the screencopy buffer is ready, and hidden again the instant
+    // the user confirms a snip so the chrome disappears before the grab finishes.
     Item {
         id: uiLayer
         anchors.fill: parent
-        visible: root.preparationDone
-        focus: root.visible && root.preparationDone
+        visible: root.preparationDone && !root.snipping
+        focus: root.visible && root.preparationDone && !root.snipping
 
         Keys.onPressed: event => {
             switch (event.key) {
@@ -986,40 +886,6 @@ PanelWindow {
                     } else {
                         root.action = newAction;
                     }
-                }
-            }
-
-            // Shrink-to-corner feedback - captures actual content
-            Item {
-                id: feedbackOverlay
-                property real startX: 0
-                property real startY: 0
-                property real startWidth: 0
-                property real startHeight: 0
-
-                // Position set by animation, not bound to regionX/Y to avoid interference
-                x: 0
-                y: 0
-                width: 0
-                height: 0
-                opacity: 0
-                visible: opacity > 0
-
-                // Captured region content
-                ShaderEffectSource {
-                    anchors.fill: parent
-                    sourceItem: screencopyView
-                    sourceRect: Qt.rect(feedbackOverlay.startX, feedbackOverlay.startY, feedbackOverlay.startWidth, feedbackOverlay.startHeight)
-                    live: false
-                }
-
-                // Border frame
-                Rectangle {
-                    anchors.fill: parent
-                    color: "transparent"
-                    border.color: Theme.primary
-                    border.width: 2
-                    radius: 4
                 }
             }
         }
