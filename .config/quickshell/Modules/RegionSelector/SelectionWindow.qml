@@ -13,7 +13,7 @@ PanelWindow {
     signal dismiss
     signal actionChangeRequested(int newAction)
 
-    visible: false
+    visible: true
     color: "transparent"
     WlrLayershell.namespace: "bidshell:regionselector"
     WlrLayershell.layer: WlrLayer.Overlay
@@ -127,21 +127,123 @@ PanelWindow {
     property bool preparationDone: false
     property bool snipping: false
 
-    // Screenshot capture process
+    // Tracks whether the cursor is on THIS monitor. Seeded from a Compositor
+    // probe on show (containsMouse alone isn't reliable — Wayland doesn't send
+    // an enter event when a sibling MouseArea just becomes visible, so hover
+    // starts out false until the user wiggles the mouse). Key-press guards
+    // use this instead of root.cursorOnThisMonitor directly.
+    property bool cursorOnThisMonitor: false
+
+    function _probeCursorMonitor() {
+        if (!root.visible || !root.preparationDone)
+            return;
+        Compositor.getCursorPosition((globalX, globalY) => {
+            const localX = globalX - root.monitorOffsetX;
+            const localY = globalY - root.monitorOffsetY;
+            root.cursorOnThisMonitor = localX >= 0 && localX < root.width && localY >= 0 && localY < root.height;
+            root.updateTargetedRegion(localX, localY);
+        });
+    }
+
+    // Timing instrumentation
+    property double _t0: Date.now()
+    function _tlog(label) {
+        Logger.trace(`RegionSelector[${screen.name}] +${Date.now() - root._t0}ms ${label}`);
+    }
+
+    onVisibleChanged: root._tlog(`visible=${visible}`)
+
+    // Ensure screenshot temp directory exists (saveToFile won't mkdir)
     Process {
-        id: screenshotProc
+        id: mkdirProc
         running: true
-        command: ["bash", "-c", `mkdir -p '${root.screenshotDir}' && grim -o '${root.screen.name}' '${root.screenshotPath}'`]
-        onExited: (exitCode, exitStatus) => {
-            if (exitCode === 0) {
-                root.preparationDone = true;
-                root.visible = true;
-                Logger.debug("RegionSelector: Screenshot captured for", root.screen.name);
-            } else {
-                Logger.error("RegionSelector: Screenshot capture failed");
-                root.dismiss();
-            }
+        command: ["mkdir", "-p", root.screenshotDir]
+        onRunningChanged: root._tlog(`mkdir running=${running}`)
+    }
+
+    // UI is interactive as soon as the screencopy buffer arrives (~15ms).
+    // We do NOT save a full-screen PNG at startup — encoding a 3440x1440 PNG
+    // takes >1s and the user never needs the full file, only the crop they
+    // select. Instead, snip() and shrinkToContent() each grab a cropped region
+    // on demand via the `regionCrop` ShaderEffectSource below.
+    Connections {
+        target: screencopyView
+        function onHasContentChanged() {
+            root._tlog(`ScreencopyView hasContent=${screencopyView.hasContent}`);
+            if (!screencopyView.hasContent || root.preparationDone)
+                return;
+            root.preparationDone = true;
+            Logger.debug("RegionSelector: screencopy ready for", root.screen.name);
         }
+    }
+
+    // Hidden cropper used by snip() / shrinkToContent() to extract a cropped
+    // PNG on demand. Rendered behind everything (z: -100) so the user never
+    // sees it. Size/sourceRect are set per-grab in `_grabRegionToFile`.
+    ShaderEffectSource {
+        id: regionCrop
+        z: -100
+        x: 0
+        y: 0
+        visible: root.preparationDone
+        live: false
+        sourceItem: screencopyView
+
+        property real grabX: 0
+        property real grabY: 0
+        property real grabW: 1
+        property real grabH: 1
+        property real grabScale: 1
+
+        sourceRect: Qt.rect(grabX, grabY, grabW, grabH)
+        width: Math.max(1, Math.round(grabW * grabScale))
+        height: Math.max(1, Math.round(grabH * grabScale))
+        textureSize: Qt.size(width, height)
+    }
+
+    // Grab the given logical-coord region to `screenshotPath` at native
+    // resolution, then call onDone(true|false).
+    function _grabRegionToFile(rx, ry, rw, rh, onDone) {
+        if (mkdirProc.running) {
+            Qt.callLater(() => root._grabRegionToFile(rx, ry, rw, rh, onDone));
+            return;
+        }
+        if (rw <= 0 || rh <= 0) {
+            Logger.error("RegionSelector: invalid region", rx, ry, rw, rh);
+            onDone(false);
+            return;
+        }
+        regionCrop.grabScale = root.monitorScale;
+        regionCrop.grabX = rx;
+        regionCrop.grabY = ry;
+        regionCrop.grabW = rw;
+        regionCrop.grabH = rh;
+        regionCrop.scheduleUpdate();
+        const nativeW = regionCrop.width;
+        const nativeH = regionCrop.height;
+        // One tick so ShaderEffectSource re-captures with the new sourceRect
+        Qt.callLater(() => {
+            const t0 = Date.now();
+            const ok = regionCrop.grabToImage(result => {
+                if (!result) {
+                    Logger.error("RegionSelector: region grabToImage returned null");
+                    onDone(false);
+                    return;
+                }
+                const saved = result.saveToFile(root.screenshotPath);
+                if (!saved) {
+                    Logger.error("RegionSelector: region saveToFile failed", root.screenshotPath);
+                    onDone(false);
+                    return;
+                }
+                root._tlog(`region saved (${nativeW}x${nativeH}) in ${Date.now() - t0}ms`);
+                onDone(true);
+            }, Qt.size(nativeW, nativeH));
+            if (!ok) {
+                Logger.error("RegionSelector: region grabToImage returned false");
+                onDone(false);
+            }
+        });
     }
 
     // Snip process
@@ -149,10 +251,15 @@ PanelWindow {
         id: snipProc
     }
 
-    // Shrink-to-content process
+    // Shrink-to-content process. The file at screenshotPath is now the cropped
+    // region (not the full screen), so the python script receives (0, 0, w, h)
+    // and we add cropOffset{X,Y} back to its output to convert crop-local
+    // native coords → screen-native → logical.
     Process {
         id: shrinkProc
         property real scale: root.monitorScale
+        property real cropOffsetX: 0
+        property real cropOffsetY: 0
 
         stdout: SplitParser {
             onRead: data => {
@@ -162,9 +269,8 @@ PanelWindow {
                         Logger.error("Shrink-to-content error:", result.error);
                         return;
                     }
-                    // Apply new bounds (convert from scaled coordinates back to display)
-                    root.regionX = result.x / shrinkProc.scale;
-                    root.regionY = result.y / shrinkProc.scale;
+                    root.regionX = (result.x + shrinkProc.cropOffsetX) / shrinkProc.scale;
+                    root.regionY = (result.y + shrinkProc.cropOffsetY) / shrinkProc.scale;
                     root.regionWidth = result.width / shrinkProc.scale;
                     root.regionHeight = result.height / shrinkProc.scale;
                     Logger.debug("Shrink-to-content: new bounds", result);
@@ -179,14 +285,23 @@ PanelWindow {
         if (!root.adjusting || root.regionWidth <= 0 || root.regionHeight <= 0)
             return;
 
-        // Scale region for actual screenshot coordinates
-        const rx = Math.round(root.regionX * root.monitorScale);
-        const ry = Math.round(root.regionY * root.monitorScale);
-        const rw = Math.round(root.regionWidth * root.monitorScale);
-        const rh = Math.round(root.regionHeight * root.monitorScale);
+        const rx = root.regionX;
+        const ry = root.regionY;
+        const rw = root.regionWidth;
+        const rh = root.regionHeight;
+        const scale = root.monitorScale;
+        const nativeRw = Math.round(rw * scale);
+        const nativeRh = Math.round(rh * scale);
 
-        shrinkProc.command = ["python", `${Qt.resolvedUrl("../../scripts/images/shrink_to_content.py").toString().replace("file://", "")}`, root.screenshotPath, String(rx), String(ry), String(rw), String(rh)];
-        shrinkProc.running = true;
+        shrinkProc.cropOffsetX = Math.round(rx * scale);
+        shrinkProc.cropOffsetY = Math.round(ry * scale);
+
+        root._grabRegionToFile(rx, ry, rw, rh, success => {
+            if (!success)
+                return;
+            shrinkProc.command = ["python", `${Qt.resolvedUrl("../../scripts/images/shrink_to_content.py").toString().replace("file://", "")}`, root.screenshotPath, "0", "0", String(nativeRw), String(nativeRh)];
+            shrinkProc.running = true;
+        });
     }
 
     // Copy feedback animation - shrink to corner
@@ -399,7 +514,6 @@ PanelWindow {
             if (root.hasTargetedRegion) {
                 root.setRegionToTargeted();
             } else {
-                // No window found, dismiss
                 root.dismiss();
                 return;
             }
@@ -407,72 +521,84 @@ PanelWindow {
 
         const effectiveAction = root.action;
 
-        // Scale region for actual screenshot coordinates
-        const rx = Math.round(root.regionX * root.monitorScale);
-        const ry = Math.round(root.regionY * root.monitorScale);
-        const rw = Math.round(root.regionWidth * root.monitorScale);
-        const rh = Math.round(root.regionHeight * root.monitorScale);
+        const rwNative = Math.round(root.regionWidth * root.monitorScale);
+        const rhNative = Math.round(root.regionHeight * root.monitorScale);
 
-        const cropToStdout = `magick '${root.screenshotPath}' -crop ${rw}x${rh}+${rx}+${ry} +repage -`;
-        const cleanup = `rm '${root.screenshotPath}'`;
-
-        // Region in slurp format for wf-recorder
-        const slurpRegion = `${Math.round(root.regionX + root.monitorOffsetX)},${Math.round(root.regionY + root.monitorOffsetY)} ${rw}x${rh}`;
-
-        // Save mode saves directly to file
-        if (root.saveMode && effectiveAction === RegionSelector.SnipAction.Copy) {
-            const saveCmd = `mkdir -p ~/Pictures/Screenshots && ${cropToStdout} > ~/Pictures/Screenshots/screenshot_$(date +%Y-%m-%d_%H-%M-%S).png && ${cleanup}`;
-            snipProc.command = ["bash", "-c", saveCmd];
-            Logger.info("RegionSelector: Saving screenshot to ~/Pictures/Screenshots");
-        } else if (root.lensMode && effectiveAction === RegionSelector.SnipAction.Copy) {
-            // Google Lens visual search - upload to temp host, then open Lens
-            const cropPath = "/tmp/bidshell-lens.png";
-            const lensCmd = `magick '${root.screenshotPath}' -crop ${rw}x${rh}+${rx}+${ry} +repage '${cropPath}' && ` + `imageLink=$(curl -sF files[]=@'${cropPath}' 'https://uguu.se/upload' | jq -r '.files[0].url') && ` + `xdg-open "https://lens.google.com/uploadbyurl?url=\${imageLink}" && ` + `rm '${cropPath}' '${root.screenshotPath}'`;
-            snipProc.command = ["bash", "-c", lensCmd];
-            Logger.info("RegionSelector: Sending region to Google Lens");
-        } else if (root.ocrMode && effectiveAction === RegionSelector.SnipAction.Copy) {
-            // Tesseract OCR - extract text and copy to clipboard (or translate)
-            const langFlag = root.ocrAllLangs ? `$(tesseract --list-langs 2>/dev/null | tail -n +2 | paste -sd+)` : "eng";
-            const ocrBase = `magick '${root.screenshotPath}' -crop ${rw}x${rh}+${rx}+${ry} +repage png:- | tesseract -l ${langFlag} stdin stdout`;
-            const ocrCmd = root.ocrTranslate ? `text=$(${ocrBase}) && printf '%s' "$text" | wl-copy && xdg-open "https://translate.kagi.com/?from=auto&to=&text=$(printf '%s' "$text" | jq -sRr @uri)" && ${cleanup}` : `${ocrBase} | wl-copy && ${cleanup}`;
-            snipProc.command = ["bash", "-c", ocrCmd];
-            Logger.info(`RegionSelector: Extracting text via OCR (${root.ocrAllLangs ? "all langs" : "eng"}${root.ocrTranslate ? ", translate" : ""})`);
-        } else if (root.editMode && effectiveAction === RegionSelector.SnipAction.Copy) {
-            // Edit mode opens in swappy instead of copying
-            snipProc.command = ["bash", "-c", `${cropToStdout} | swappy -f - && ${cleanup}`];
-            Logger.info("RegionSelector: Opening region in swappy");
-        } else {
-            switch (effectiveAction) {
-            case RegionSelector.SnipAction.Copy:
-                snipProc.command = ["bash", "-c", `${cropToStdout} | wl-copy && ${cleanup}`];
-                Logger.info("RegionSelector: Copying region to clipboard");
-                break;
-            case RegionSelector.SnipAction.Record:
-                const recordCmd = `${cleanup} && mkdir -p ~/Videos/Screencasts && wf-recorder -g '${slurpRegion}' -c h264_vaapi -f ~/Videos/Screencasts/recording_$(date +%Y-%m-%d_%H-%M-%S).mp4`;
-                snipProc.command = ["bash", "-c", recordCmd];
-                Logger.info("RegionSelector: Starting recording:", recordCmd);
-                break;
-            }
-        }
-
-        snipProc.startDetached();
-
-        // Show feedback only for Copy mode (not edit mode)
-        if (effectiveAction === RegionSelector.SnipAction.Copy && !root.editMode) {
-            feedbackAnimation.start();
-        } else {
+        // Record mode: wf-recorder captures live, no file grab needed.
+        if (effectiveAction === RegionSelector.SnipAction.Record) {
+            const slurpRegion = `${Math.round(root.regionX + root.monitorOffsetX)},${Math.round(root.regionY + root.monitorOffsetY)} ${rwNative}x${rhNative}`;
+            snipProc.command = ["bash", "-c", `mkdir -p ~/Videos/Screencasts && wf-recorder -g '${slurpRegion}' -c h264_vaapi -f ~/Videos/Screencasts/recording_$(date +%Y-%m-%d_%H-%M-%S).mp4`];
+            Logger.info("RegionSelector: Starting recording");
+            snipProc.startDetached();
             root.dismiss();
+            return;
         }
+
+        // Whether we show the shrink-to-corner feedback (plain Copy only)
+        const showFeedback = !root.editMode && !root.saveMode && !root.lensMode && !root.ocrMode;
+
+        // Start feedback animation immediately — it reads from screencopyView
+        // via its own ShaderEffectSource, independent of the file save.
+        if (showFeedback)
+            feedbackAnimation.start();
+
+        // Grab the cropped region to screenshotPath, then pipe to the target
+        root._grabRegionToFile(root.regionX, root.regionY, root.regionWidth, root.regionHeight, success => {
+            if (!success) {
+                if (!showFeedback)
+                    root.dismiss();
+                return;
+            }
+            const f = root.screenshotPath;
+            const cleanup = `rm '${f}'`;
+            let cmd;
+            if (root.saveMode) {
+                cmd = `mkdir -p ~/Pictures/Screenshots && cp '${f}' ~/Pictures/Screenshots/screenshot_$(date +%Y-%m-%d_%H-%M-%S).png && ${cleanup}`;
+                Logger.info("RegionSelector: Saving screenshot to ~/Pictures/Screenshots");
+            } else if (root.lensMode) {
+                cmd = `imageLink=$(curl -sF files[]=@'${f}' 'https://uguu.se/upload' | jq -r '.files[0].url') && xdg-open "https://lens.google.com/uploadbyurl?url=\${imageLink}" && ${cleanup}`;
+                Logger.info("RegionSelector: Sending region to Google Lens");
+            } else if (root.ocrMode) {
+                const langFlag = root.ocrAllLangs ? `$(tesseract --list-langs 2>/dev/null | tail -n +2 | paste -sd+)` : "eng";
+                const base = `tesseract '${f}' stdout -l ${langFlag}`;
+                cmd = root.ocrTranslate ? `text=$(${base}) && printf '%s' "$text" | wl-copy && xdg-open "https://translate.kagi.com/?from=auto&to=&text=$(printf '%s' "$text" | jq -sRr @uri)" && ${cleanup}` : `${base} | wl-copy && ${cleanup}`;
+                Logger.info(`RegionSelector: OCR (${root.ocrAllLangs ? "all" : "eng"}${root.ocrTranslate ? ", translate" : ""})`);
+            } else if (root.editMode) {
+                cmd = `swappy -f '${f}' && ${cleanup}`;
+                Logger.info("RegionSelector: Opening region in swappy");
+            } else {
+                cmd = `wl-copy --type image/png < '${f}' && ${cleanup}`;
+                Logger.info("RegionSelector: Copying region to clipboard");
+            }
+            snipProc.command = ["bash", "-c", cmd];
+            snipProc.startDetached();
+
+            // Non-feedback modes dismiss now; feedback modes dismiss when animation ends.
+            if (!showFeedback)
+                root.dismiss();
+        });
     }
 
-    // Frozen screen capture
+    // Frozen screen capture — bare (no children) so grabToImage captures only
+    // screen pixels, not the overlay UI. hasContentChanged fires after the
+    // compositor delivers the first frame; the Connections block above flips
+    // preparationDone then. File writes happen on demand via regionCrop.
     ScreencopyView {
         id: screencopyView
         anchors.fill: parent
         live: false
+        paintCursor: false
         captureSource: root.screen
+    }
 
-        focus: root.visible
+    // UI layer — sibling of screencopyView so grabToImage excludes it.
+    // Hidden until the screencopy frame is grabbed and saved to disk.
+    Item {
+        id: uiLayer
+        anchors.fill: parent
+        visible: root.preparationDone
+        focus: root.visible && root.preparationDone
+
         Keys.onPressed: event => {
             switch (event.key) {
             case Qt.Key_Escape:
@@ -482,7 +608,7 @@ PanelWindow {
             case Qt.Key_Return:
             case Qt.Key_Enter:
                 // Confirm and copy to clipboard
-                if (root.adjusting && root.regionWidth > 0 && root.regionHeight > 0 && mouseArea.containsMouse) {
+                if (root.adjusting && root.regionWidth > 0 && root.regionHeight > 0 && root.cursorOnThisMonitor) {
                     root.snipping = true;
                     root.editMode = false;
                     root.lensMode = false;
@@ -493,7 +619,7 @@ PanelWindow {
                 break;
             case Qt.Key_E:
                 // Confirm and open in Swappy for editing
-                if (root.adjusting && root.regionWidth > 0 && root.regionHeight > 0 && mouseArea.containsMouse) {
+                if (root.adjusting && root.regionWidth > 0 && root.regionHeight > 0 && root.cursorOnThisMonitor) {
                     root.snipping = true;
                     root.editMode = true;
                     root.lensMode = false;
@@ -505,7 +631,7 @@ PanelWindow {
             case Qt.Key_S:
                 if (event.modifiers & Qt.ControlModifier) {
                     // Ctrl+S: Save directly to file
-                    if (root.adjusting && root.regionWidth > 0 && root.regionHeight > 0 && mouseArea.containsMouse) {
+                    if (root.adjusting && root.regionWidth > 0 && root.regionHeight > 0 && root.cursorOnThisMonitor) {
                         root.snipping = true;
                         root.saveMode = true;
                         root.editMode = false;
@@ -525,7 +651,7 @@ PanelWindow {
             case Qt.Key_F:
                 // Select fullscreen (Shift+F = edit in swappy)
                 // Only capture if mouse is on this monitor
-                if (!mouseArea.containsMouse)
+                if (!root.cursorOnThisMonitor)
                     break;
                 root.snipping = true;
                 root.regionX = 0;
@@ -540,13 +666,13 @@ PanelWindow {
                 break;
             case Qt.Key_C:
                 // Shrink selection to content bounds
-                if (root.adjusting && mouseArea.containsMouse) {
+                if (root.adjusting && root.cursorOnThisMonitor) {
                     root.shrinkToContent();
                 }
                 break;
             case Qt.Key_L:
                 // Send to Google Lens for visual search
-                if (root.adjusting && root.regionWidth > 0 && root.regionHeight > 0 && mouseArea.containsMouse) {
+                if (root.adjusting && root.regionWidth > 0 && root.regionHeight > 0 && root.cursorOnThisMonitor) {
                     root.snipping = true;
                     root.editMode = false;
                     root.lensMode = true;
@@ -555,10 +681,10 @@ PanelWindow {
                     root.snip();
                 }
                 break;
-            case Qt.Key_T:
+            case Qt.Key_O:
                 // Extract text via Tesseract OCR
-                // T = English, Shift+T = all languages, Ctrl+T = all languages + Kagi Translate
-                if (root.adjusting && root.regionWidth > 0 && root.regionHeight > 0 && mouseArea.containsMouse) {
+                // O = English, Shift+O = all languages, Ctrl+O = all languages + Kagi Translate
+                if (root.adjusting && root.regionWidth > 0 && root.regionHeight > 0 && root.cursorOnThisMonitor) {
                     root.snipping = true;
                     root.editMode = false;
                     root.lensMode = false;
@@ -577,26 +703,15 @@ PanelWindow {
             acceptedButtons: Qt.LeftButton
             hoverEnabled: true
 
-            // Get initial cursor position (Qt's mouseX/Y is stale on Wayland)
-            Component.onCompleted: {
-                if (root.visible && root.preparationDone) {
-                    Compositor.getCursorPosition((globalX, globalY) => {
-                        const localX = globalX - root.monitorOffsetX;
-                        const localY = globalY - root.monitorOffsetY;
-                        root.updateTargetedRegion(localX, localY);
-                    });
-                }
-            }
+            // Once Wayland starts delivering hover events, keep the shared
+            // flag in sync with the real hover state.
+            onContainsMouseChanged: root.cursorOnThisMonitor = containsMouse
+
+            Component.onCompleted: root._probeCursorMonitor()
             Connections {
                 target: root
                 function onPreparationDoneChanged() {
-                    if (root.preparationDone && root.visible) {
-                        Compositor.getCursorPosition((globalX, globalY) => {
-                            const localX = globalX - root.monitorOffsetX;
-                            const localY = globalY - root.monitorOffsetY;
-                            root.updateTargetedRegion(localX, localY);
-                        });
-                    }
+                    root._probeCursorMonitor();
                 }
             }
 
@@ -911,6 +1026,7 @@ PanelWindow {
     }
 
     Component.onCompleted: {
+        root._tlog("Component.onCompleted");
         Logger.debug(`RegionSelector: Window initialized on ${screen.name}`);
     }
 }
