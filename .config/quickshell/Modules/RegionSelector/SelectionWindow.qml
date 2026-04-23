@@ -490,6 +490,24 @@ PanelWindow {
         captureSource: root.screen
     }
 
+    // Loading spinner shown between snip confirm and actual window dismiss.
+    Text {
+        anchors.centerIn: parent
+        visible: root.snipping
+        text: Icons.spinner
+        font.family: Theme.fontFamilyIcons
+        font.pixelSize: 160
+        color: Theme.primary
+        z: 10
+        RotationAnimation on rotation {
+            from: 0
+            to: 360
+            duration: 900
+            loops: Animation.Infinite
+            running: root.snipping
+        }
+    }
+
     // UI layer — sibling of screencopyView so grabToImage excludes it.
     // Hidden until the screencopy buffer is ready, and hidden again the instant
     // the user confirms a snip so the chrome disappears before the grab finishes.

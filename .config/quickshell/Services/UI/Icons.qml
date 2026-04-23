@@ -140,7 +140,7 @@ Singleton {
     readonly property string humidity: "󰖌"
     readonly property string wind: "󰖝"
     readonly property string rain: "󰖗"
-    readonly property string spinner: ""
+    readonly property string spinner: ""
     // ==================
     // Screenshot/Region Selector Icons
     // ==================
