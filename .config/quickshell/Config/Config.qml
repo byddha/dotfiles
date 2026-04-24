@@ -195,7 +195,8 @@ Singleton {
             // command: outputs JSON {"percentage": 0-100, "charging": true/false}
             // replaces: UPower model name substring to suppress (optional)
             property var peripheralBatteries: ({
-                    devices: []
+                    devices: [],
+                    shutdownReminderThreshold: 40
                 })
 
             property var brandLogos: JsonObject {

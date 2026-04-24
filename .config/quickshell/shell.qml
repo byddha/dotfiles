@@ -11,6 +11,7 @@ import "Modules/Overview"
 import "Modules/Bar"
 import "Modules/Sidebar"
 import "Modules/OSD"
+import "Modules/ShutdownReminder"
 import "Modules/GameLauncher"
 import "Modules/RegionSelector"
 import "Modules/Lock"
@@ -55,6 +56,10 @@ ShellRoot {
 
     OSD {
         id: osd
+    }
+
+    ShutdownReminder {
+        id: shutdownReminder
     }
 
     GameLauncher {

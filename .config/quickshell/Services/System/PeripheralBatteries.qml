@@ -104,6 +104,38 @@ Singleton {
         return device.model || UPowerDeviceType.toString(device.type) || "Device";
     }
 
+    function getLowBatteryDevices(threshold: int): var {
+        const results = [];
+        const configDevices = Config.options.peripheralBatteries?.devices ?? [];
+
+        for (const d of UPower.devices.values) {
+            if (!isPeripheral(d, configDevices))
+                continue;
+            if (d.state === UPowerDeviceState.Charging)
+                continue;
+            const pct = Math.round((d.percentage ?? 0) * 100);
+            if (pct <= threshold)
+                results.push({
+                    label: getDeviceLabel(d),
+                    icon: getDeviceIcon(d),
+                    percentage: pct
+                });
+        }
+
+        for (const c of customDevices) {
+            if (!c?.present || c.charging)
+                continue;
+            if ((c.percentage ?? 0) <= threshold)
+                results.push({
+                    label: c.name,
+                    icon: c.icon,
+                    percentage: c.percentage
+                });
+        }
+
+        return results;
+    }
+
     function getDeviceStatusText(device): string {
         if (!device)
             return "Unknown device";

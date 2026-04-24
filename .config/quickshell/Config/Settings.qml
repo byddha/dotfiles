@@ -22,6 +22,7 @@ Singleton {
     property bool calendarPanelVisible: false
     property bool gameLauncherVisible: false
     property bool regionSelectorVisible: false
+    property bool shutdownReminderVisible: false
 
     onSidebarVisibleChanged: Logger.debug("sidebarVisible →", sidebarVisible)
     onGameLauncherVisibleChanged: Logger.debug("gameLauncherVisible →", gameLauncherVisible)
@@ -29,4 +30,5 @@ Singleton {
     onCalendarPanelVisibleChanged: Logger.debug("calendarPanelVisible →", calendarPanelVisible)
     onHyprWhichKeyVisibleChanged: Logger.debug("hyprWhichKeyVisible →", hyprWhichKeyVisible)
     onOsdVisibleChanged: Logger.debug("osdVisible →", osdVisible)
+    onShutdownReminderVisibleChanged: Logger.debug("shutdownReminderVisible →", shutdownReminderVisible)
 }

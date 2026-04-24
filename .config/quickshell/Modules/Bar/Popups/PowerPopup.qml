@@ -65,7 +65,13 @@ PopupWindow {
                 PowerActionButton {
                     icon: Icons.shutdown
                     onClicked: {
-                        PowerActions.poweroff();
+                        const threshold = Config.options.peripheralBatteries?.shutdownReminderThreshold ?? 40;
+                        const lowDevices = PeripheralBatteries.getLowBatteryDevices(threshold);
+                        if (lowDevices.length === 0) {
+                            PowerActions.poweroff();
+                        } else {
+                            Settings.shutdownReminderVisible = true;
+                        }
                         powerPopup.hidePanel();
                     }
                 }
