@@ -1,13 +1,9 @@
 [
     {
-        "alang": ["eng?", "und"],
-        "slang": ["en%-us", "eng?", "und"],
-        "condition": "sub.forced"
-    },
-    {
         "alang": ["jpn", "ja"],
         "slang": "eng?",
-        "blacklist": [ "sign" ]
+        "blacklist": [ "sdh", "cc", "hearing", "sign", "song", "forced" ],
+        "condition": "not sub['hearing-impaired'] and not sub.forced"
     },
     {
         "inherit": "^",
@@ -16,11 +12,23 @@
     {
         "alang": "eng?",
         "slang": [ "en%-us", "eng?", "und" ],
-        "whitelist": [ "sign", "song" ]
+        "blacklist": [ "sdh", "cc", "hearing", "sign", "song", "forced" ],
+        "condition": "not sub['hearing-impaired'] and not sub.forced"
+    },
+    {
+        "alang": ["eng?", "und"],
+        "slang": [ "en%-us", "eng?", "und" ],
+        "condition": "sub.forced"
     },
     {
         "alang": "eng?",
-        "slang": "no"
+        "slang": [ "en%-us", "eng?", "und" ]
+    },
+    {
+        "alang": "*",
+        "slang": [ "en%-us", "eng?", "und" ],
+        "blacklist": [ "sdh", "cc", "hearing", "sign", "song", "forced" ],
+        "condition": "not sub['hearing-impaired'] and not sub.forced"
     },
     {
         "alang": "*",
