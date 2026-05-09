@@ -42,7 +42,7 @@ if pgrep -f "pw-record.*Whisper" > /dev/null 2>&1; then
         echo -n "$TRANSCRIPT" | wl-copy
         log "Copied to clipboard"
 
-        hyprctl dispatch sendshortcut "CTRL SHIFT, V, activewindow"
+        hyprctl dispatch 'hl.dsp.send_shortcut({ mods = "CTRL SHIFT", key = "V", window = "activewindow" })'
         log "Sent paste shortcut to active window"
     fi
 

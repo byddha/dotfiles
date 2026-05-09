@@ -19,7 +19,7 @@ query=".[]"
 window=$(hyprctl clients -j | jq -r "$query | .address" | head -1)
 
 if [[ "$window" != "null" && -n "$window" ]]; then
-    hyprctl dispatch focuswindow "address:$window"
+    hyprctl dispatch "hl.dsp.focus({ window = \"address:$window\" })"
 else
     eval "$command" &
 fi

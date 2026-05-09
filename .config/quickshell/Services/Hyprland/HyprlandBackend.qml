@@ -237,15 +237,15 @@ QtObject {
 
     function switchWorkspace(id) {
         Logger.debug("Switching to workspace", id);
-        Hyprland.dispatch(`workspace ${id}`);
+        Hyprland.dispatch(`hl.dsp.focus({ workspace = ${id} })`);
     }
 
     function moveWindowToWorkspace(id) {
         Logger.debug("Moving window to workspace", id);
-        Hyprland.dispatch(`movetoworkspace ${id}`);
+        Hyprland.dispatch(`hl.dsp.window.move({ workspace = ${id} })`);
     }
 
     function logout() {
-        Hyprland.dispatch("exit");
+        Hyprland.dispatch("hl.dsp.exit()");
     }
 }
