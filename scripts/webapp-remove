@@ -1,0 +1,64 @@
+#!/bin/bash
+# webapp-remove [--purge] <name-or-slug> ...
+# webapp-remove [--purge] --all
+
+set -euo pipefail
+
+readonly APP_DIR="$HOME/.local/share/applications"
+readonly ICON_DIR="$HOME/.local/share/applications/icons"
+readonly PROFILE_DIR="$HOME/.local/share/webapps/profiles"
+
+PURGE=0
+ALL=0
+args=()
+for a in "$@"; do
+  case "$a" in
+    --purge) PURGE=1 ;;
+    --all)   ALL=1 ;;
+    *)       args+=("$a") ;;
+  esac
+done
+set -- "${args[@]:-}"
+
+list_installed() {
+  find "$APP_DIR" -maxdepth 1 -name 'webapp-*.desktop' -print0 2>/dev/null \
+    | while IFS= read -r -d '' f; do
+        grep -q '^Exec=.* --app=' "$f" && basename "${f%.desktop}" | sed 's/^webapp-//'
+      done | sort -u
+}
+
+if (( ALL )); then
+  mapfile -t targets < <(list_installed)
+elif (( $# == 0 )); then
+  printf 'usage: webapp-remove [--purge] <name-or-slug> ...\n       webapp-remove [--purge] --all\n' >&2
+  exit 1
+else
+  targets=("$@")
+fi
+
+(( ${#targets[@]} )) || { echo "nothing to remove"; exit 0; }
+
+for name in "${targets[@]}"; do
+  [[ -z "$name" ]] && continue
+  slug=$(printf '%s' "$name" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]\+/-/g; s/^-\+//; s/-\+$//')
+
+  desktop="$APP_DIR/webapp-$slug.desktop"
+  icon="$ICON_DIR/$slug.png"
+  profile="$PROFILE_DIR/$slug"
+
+  if [[ ! -f "$desktop" ]]; then
+    printf '\e[33mskip:\e[0m %s (not installed)\n' "$name" >&2
+    continue
+  fi
+
+  rm -f "$desktop" "$icon"
+  if (( PURGE )) && [[ -d "$profile" ]]; then
+    rm -rf "$profile"
+    printf '\e[32m✓\e[0m removed %s (including profile)\n' "$slug"
+  else
+    printf '\e[32m✓\e[0m removed %s\n' "$slug"
+  fi
+done
+
+command -v update-desktop-database >/dev/null && \
+  update-desktop-database "$APP_DIR" >/dev/null 2>&1 || true
