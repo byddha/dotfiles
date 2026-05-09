@@ -10,7 +10,7 @@ import "../../Utils"
 Scope {
     id: root
 
-    readonly property int totalSeconds: 5
+    readonly property int totalSeconds: 10
     property var lowDevices: []
     property int remaining: totalSeconds
 

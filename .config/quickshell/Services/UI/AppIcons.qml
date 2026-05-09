@@ -284,7 +284,7 @@ QtObject {
 
             // Media Players
             "mpv": {
-                icon: "",
+                icon: "󰿎",
                 name: "mpv"
             },
             "plex": {
