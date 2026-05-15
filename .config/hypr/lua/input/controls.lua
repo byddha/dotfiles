@@ -29,6 +29,6 @@ hl.device({
     sensitivity = -0.5,
 })
 
-hl.gesture({ fingers = 3, direction = "swipe", action = "resize" })
+hl.gesture({ fingers = 3, direction = "swipe", action = "scroll_move" })
 hl.gesture({ fingers = 3, direction = "swipe", mods = "ALT", action = "move" })
 hl.gesture({ fingers = 4, direction = "horizontal", action = "workspace" })

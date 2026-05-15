@@ -17,11 +17,6 @@ local rules = {
         no_focus = true,
     },
     {
-        name  = "teams-edge-pwa-tiled",
-        match = { class = "^(Microsoft-edge)$", title = "^(Microsoft Teams).*$" },
-        tile  = true,
-    },
-    {
         name       = "satty-fullscreen",
         match      = { class = "com.gabm.satty" },
         fullscreen = true,
@@ -83,20 +78,33 @@ local rules = {
         name        = "smart-gaps-one-tiled",
         match       = { float = false, workspace = "w[tv1]" },
         border_size = 0,
-        rounding    = 0,
     },
     {
         name        = "smart-gaps-one-fullscreen",
         match       = { float = false, workspace = "f[1]" },
         border_size = 0,
-        rounding    = 0,
     },
+    -- {
+    --     name            = "zen-scrolling-width",
+    --     match           = { initial_class = "^(zen)$" },
+    --     scrolling_width = 1,
+    -- },
     {
         name      = "special-chatapps",
         match     = {
             class = "^(vesktop|chrome-web\\.whatsapp\\.com__-Default|chrome-teams\\.cloud\\.microsoft__-Default)$",
         },
         workspace = "special:chatapps silent",
+    },
+    {
+        name      = "special-gaming",
+        match     = { class = "^(steam_app).*" },
+        workspace = "special:gaming silent",
+    },
+    {
+        name      = "special-gaming-gamescope",
+        match     = { class = "^(gamescope).*" },
+        workspace = "special:gaming silent",
     },
 }
 

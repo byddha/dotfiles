@@ -5,6 +5,7 @@ local programs = settings.programs
 hl.config({
     binds = {
         hide_special_on_workspace_change = true,
+        scroll_event_delay = 50,
     },
 })
 
@@ -13,22 +14,27 @@ local exec      = helpers.exec
 
 local app_binds = {
     { "<D-F8>",     exec("hyprctl dispatch cursorlock:toggle") },
-    { "<D-x>",      hl.dsp.window.close(),                           "Kill active window" },
-    { "<D-f>",      exec("nc -U /run/user/1000/walker/walker.sock"), "Launcher" },
-    { "<D-g>",      exec("qs ipc call games toggle"),                "Games" },
+    { "<D-x>",      hl.dsp.window.close(),                             "Kill active window" },
+    { "<D-S-f>",    hl.dsp.window.fullscreen({ mode = "maximized" }),  "Maximize" },
+    { "<D-C-f>",    hl.dsp.window.fullscreen({ mode = "fullscreen" }), "Fullscreen" },
+    { "<D-f>",      exec("nc -U /run/user/1000/walker/walker.sock"),   "Launcher" },
+    { "<D-g>",      exec("qs ipc call games toggle"),                  "Games" },
     { "<D-1>",      hl.dsp.workspace.toggle_special("chatapps") },
-    { "<D-z>",      exec("qs ipc call screenshot region"),           "Screenshot" },
-    { "<D-Return>", exec(programs.terminal),                         "Launch terminal" },
+    { "<D-2>",      hl.dsp.workspace.toggle_special("gaming") },
+    { "<D-z>",      exec("qs ipc call screenshot region"),             "Screenshot" },
+    { "<D-Return>", exec(programs.terminal),                           "Launch terminal" },
 }
 
 
 local focus_binds     = {
-    { "<D-h>",           hl.dsp.focus({ direction = "l" }),  "Move focus left" },
-    { "<D-l>",           hl.dsp.focus({ direction = "r" }),  "Move focus right" },
+    -- { "<D-h>",           hl.dsp.layout("focus l"),            "Move focus left" },
+    -- { "<D-l>",           hl.dsp.layout("focus r"),            "Move focus right" },
+    { "<D-h>",           hl.dsp.focus({ direction = "l" }),  "Move focus up" },
+    { "<D-l>",           hl.dsp.focus({ direction = "r" }),  "Move focus down" },
     { "<D-k>",           hl.dsp.focus({ direction = "u" }),  "Move focus up" },
     { "<D-j>",           hl.dsp.focus({ direction = "d" }),  "Move focus down" },
-    { "<D-mouse_up>",    hl.dsp.focus({ direction = "l" }) },
-    { "<D-mouse_down>",  hl.dsp.focus({ direction = "r" }) },
+    { "<D-mouse_up>",    hl.dsp.layout("focus l") },
+    { "<D-mouse_down>",  hl.dsp.layout("focus r") },
     { "<D-mouse_left>",  hl.dsp.focus({ workspace = "e-1" }) },
     { "<D-mouse_right>", hl.dsp.focus({ workspace = "e+1" }) },
 }
@@ -79,11 +85,16 @@ for key, workspace in pairs(workspace_keys) do
     table.insert(workspace_binds, { "<D-S-" .. key .. ">", hl.dsp.window.move({ workspace = workspace }) })
 end
 
+local layout_binds = {
+    { "<D-bracketleft>",  hl.dsp.layout("consume_or_expel prev"), "Consume or expel prev" },
+    { "<D-bracketright>", hl.dsp.layout("consume_or_expel next"), "Consume or expel next" },
+    { "<D-comma>",        hl.dsp.layout("consume"),               "Consume" },
+    { "<D-period>",       hl.dsp.layout("expel"),                 "Expel" },
+    { "<D-S-g>",          hl.dsp.layout("colresize +conf"),       "Cycle column width" },
+}
+
 local workspace_navigation_binds = {
-    { "<D-period>",       hl.dsp.focus({ workspace = "e+1" }),      "Next workspace" },
-    { "<D-comma>",        hl.dsp.focus({ workspace = "e-1" }),      "Previous workspace" },
-    { "<D-semicolon>",    hl.dsp.focus({ workspace = "previous" }), "Back" },
-    { "<D-bracketright>", hl.dsp.focus({ workspace = "previous" }), "Back" },
+    { "<D-semicolon>", hl.dsp.focus({ workspace = "previous" }), "Back" },
 }
 
 local mouse_binds = {
@@ -120,6 +131,7 @@ local bind_groups = {
     resize_binds,
     move_binds,
     swap_binds,
+    layout_binds,
     workspace_binds,
     workspace_navigation_binds,
     mouse_binds,

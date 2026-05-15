@@ -8,6 +8,9 @@ hl.config({
         new_status = "master",
     },
     scrolling = {
-        focus_fit_method = 0,
+        fullscreen_on_one_column = false,
+        column_width             = 0.5,
+        focus_fit_method         = 1, -- 0 = center, 1 = fit
+        wrap_focus               = false,
     },
 })

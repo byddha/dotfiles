@@ -29,3 +29,4 @@ for _, workspace in ipairs(workspaces) do
 end
 
 hl.workspace_rule({ workspace = "special:chatapps", layout = "scrolling" })
+hl.workspace_rule({ workspace = "special:gaming", layout = "dwindle" })
