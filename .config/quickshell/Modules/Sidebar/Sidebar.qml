@@ -20,6 +20,7 @@ Scope {
             visible: Settings.sidebarVisible && Config.options.sidebar.enabled && modelData.name === Compositor.focusedMonitorName
 
             anchors {
+                left: true
                 right: true
                 top: true
                 bottom: true
@@ -27,6 +28,7 @@ Scope {
 
             WlrLayershell.layer: WlrLayer.Overlay
             WlrLayershell.namespace: "bidshell:sidebar"
+            WlrLayershell.keyboardFocus: sidebarWindow.visible ? (Compositor.useHyprlandFocusGrab ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.Exclusive) : WlrKeyboardFocus.None
             WlrLayershell.margins {
                 top: Config.options.sidebar.marginTop
                 right: Config.options.sidebar.marginRight
@@ -36,9 +38,8 @@ Scope {
             exclusiveZone: 0  // Float over windows
 
             color: "transparent"
-            implicitWidth: Config.options.sidebar.width
 
-            // Click-outside-to-close using HyprlandFocusGrab
+            // Click-outside-to-close using HyprlandFocusGrab on Hyprland
             // NOTE: active must NOT be bound to visibility - must be manually controlled
             FocusGrab {
                 id: focusGrab
@@ -58,7 +59,7 @@ Scope {
                     Hdr.refresh();
                     // Delay slightly to ensure window is ready
                     Qt.callLater(() => {
-                        focusGrab.active = true;
+                        focusGrab.active = Compositor.useHyprlandFocusGrab;
                         Logger.info("Focus grab activated");
                     });
                 } else {
@@ -79,10 +80,31 @@ Scope {
                 }
             }
 
+            MouseArea {
+                anchors.fill: parent
+                enabled: sidebarWindow.visible
+                onClicked: Settings.sidebarVisible = false
+            }
+
             // Content wrapper for animations
             Item {
                 id: contentWrapper
-                anchors.fill: parent
+                width: Config.options.sidebar.width
+                height: parent.height
+                anchors.right: parent.right
+                anchors.top: parent.top
+
+                MouseArea {
+                    anchors.fill: parent
+                    acceptedButtons: Qt.AllButtons
+                    onPressed: mouse => {
+                        mouse.accepted = true;
+                    }
+                    onClicked: mouse => {
+                        mouse.accepted = true;
+                    }
+                    z: -1
+                }
 
                 // Slide in animation
                 transform: Translate {

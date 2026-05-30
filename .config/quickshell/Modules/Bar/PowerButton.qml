@@ -29,7 +29,7 @@ Rectangle {
 
     function setActivePopupAndGrabFocus(popupWindow) {
         powerButton.activePopup = popupWindow;
-        focusGrab.active = true;
+        focusGrab.active = Compositor.useHyprlandFocusGrab;
         Logger.info("Focus grabbed for power popup");
     }
 

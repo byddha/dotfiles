@@ -4,36 +4,53 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Widgets
+import Quickshell.Wayland
 import "../../../Config"
 import "../../../Utils"
 import "../../../Components"
+import "../../../Services"
 import ".."
 
-PopupWindow {
+PanelWindow {
     id: trayMenu
 
     property var menu: null
     property var anchorItem: null
+    property var targetScreen: null
     property real anchorX: 0
     property real anchorY: 0
+    property real popupX: 0
+    property real popupY: 0
 
     // Signals for parent focus management (ii pattern)
     signal menuOpened(window: var)
     signal menuClosed
 
-    implicitWidth: stackView.implicitWidth + Theme.spacingBase * 2
-    implicitHeight: stackView.implicitHeight + Theme.spacingBase * 2
+    screen: targetScreen
+    implicitWidth: 0
+    implicitHeight: 0
     visible: false
     color: "transparent"
 
-    anchor.item: anchorItem ? anchorItem : null
-    anchor.rect.x: anchorX
-    anchor.rect.y: anchorY
+    anchors {
+        left: true
+        right: true
+        top: true
+        bottom: true
+    }
+
+    WlrLayershell.namespace: "bidshell:tray-menu"
+    WlrLayershell.layer: WlrLayer.Top
+    WlrLayershell.keyboardFocus: visible ? (Compositor.useHyprlandFocusGrab ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.Exclusive) : WlrKeyboardFocus.None
+    WlrLayershell.exclusionMode: ExclusionMode.Ignore
+    exclusiveZone: 0
 
     // Emit menuClosed only when menu actually closes
     onVisibleChanged: {
         if (!visible) {
             menuClosed();
+        } else {
+            Qt.callLater(updatePosition);
         }
     }
 
@@ -49,18 +66,31 @@ PopupWindow {
         }
     }
 
-    function showAt(item, x, y) {
+    function updatePosition() {
+        if (!anchorItem || !targetScreen)
+            return;
+        const pos = anchorItem.mapToGlobal(0, 0);
+        const screenX = targetScreen.x || 0;
+        const screenY = targetScreen.y || 0;
+        const w = menuBg.implicitWidth;
+        const h = menuBg.implicitHeight;
+        popupX = Math.max(8, Math.min((targetScreen.width || width) - w - 8, pos.x - screenX + anchorX));
+        popupY = Math.max(8, Math.min((targetScreen.height || height) - h - 8, pos.y - screenY + anchorY));
+    }
+
+    function showAt(item, x, y, panelScreen) {
         if (!item) {
             Logger.warn("anchorItem is undefined, won't show menu.");
             return;
         }
         menu = item.item.menu;
         anchorItem = item;
+        targetScreen = panelScreen ?? item.QsWindow?.window?.screen ?? null;
         anchorX = x;
         anchorY = y;
         visible = true;
-        menuOpened(trayMenu);  // Emit signal with PopupWindow instance
-        Qt.callLater(() => trayMenu.anchor.updateAnchor());
+        menuOpened(trayMenu);  // Emit signal with window instance
+        Qt.callLater(updatePosition);
         Logger.info(`Menu opened at anchor offset ${x}, ${y}`);
     }
 
@@ -73,17 +103,43 @@ PopupWindow {
         Logger.info("Menu hidden");
     }
 
+    MouseArea {
+        anchors.fill: parent
+        enabled: trayMenu.visible
+        onClicked: trayMenu.hideMenu()
+    }
+
     // Background with shadow
     Item {
-        anchors.fill: parent
+        x: trayMenu.popupX
+        y: trayMenu.popupY
+        width: menuBg.implicitWidth
+        height: menuBg.implicitHeight
+
+        MouseArea {
+            anchors.fill: parent
+            acceptedButtons: Qt.AllButtons
+            onPressed: mouse => {
+                mouse.accepted = true;
+            }
+            onClicked: mouse => {
+                mouse.accepted = true;
+            }
+        }
 
         Rectangle {
             id: menuBg
-            anchors.fill: parent
+            width: stackView.implicitWidth + Theme.spacingBase * 2
+            height: stackView.implicitHeight + Theme.spacingBase * 2
+            implicitWidth: width
+            implicitHeight: height
             color: Theme.surface
             border.color: Theme.colLayer0Border
             border.width: 1
             radius: Theme.radiusBase
+
+            onImplicitWidthChanged: Qt.callLater(trayMenu.updatePosition)
+            onImplicitHeightChanged: Qt.callLater(trayMenu.updatePosition)
 
             StackView {
                 id: stackView

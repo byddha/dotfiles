@@ -45,7 +45,7 @@ Item {
 
     function setActiveMenuAndGrabFocus(menuWindow) {
         root.activeMenu = menuWindow;
-        focusGrab.active = true;
+        focusGrab.active = Compositor.useHyprlandFocusGrab;
         Logger.info("Focus grabbed for menu");
     }
 
@@ -71,7 +71,7 @@ Item {
         sourceComponent: TrayMenu {
             Component.onCompleted: {
                 // Show menu immediately when created
-                showAt(root.pendingMenuItem, root.pendingMenuX, root.pendingMenuY);
+                showAt(root.pendingMenuItem, root.pendingMenuX, root.pendingMenuY, root.barWindow?.screen);
             }
 
             onMenuOpened: window => root.setActiveMenuAndGrabFocus(window)

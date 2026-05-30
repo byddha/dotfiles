@@ -9,8 +9,8 @@ import "Popups"
 /**
  * Clock - Clock button with calendar popup (follows Tray pattern)
  *
- * Uses PopupWindow with HyprlandFocusGrab for click-outside-to-close.
- * Signal chain ensures focus grab is activated AFTER popup is shown.
+ * Uses a compositor-aware panel popup for click-outside-to-close.
+ * Signal chain ensures focus handling is activated AFTER popup is shown.
  */
 Rectangle {
     id: clock
@@ -51,7 +51,7 @@ Rectangle {
 
     function setActivePopupAndGrabFocus(popupWindow) {
         clock.activePopup = popupWindow;
-        focusGrab.active = true;
+        focusGrab.active = Compositor.useHyprlandFocusGrab;
         Logger.info("Focus grabbed for calendar popup");
     }
 
@@ -75,7 +75,7 @@ Rectangle {
         sourceComponent: CalendarPopup {
             Component.onCompleted: {
                 // Show popup immediately when created
-                showPanel(clock);
+                showPanel(clock, clock.barWindow?.screen);
             }
 
             onPanelOpened: window => clock.setActivePopupAndGrabFocus(window)

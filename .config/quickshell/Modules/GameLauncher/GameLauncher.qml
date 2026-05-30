@@ -49,7 +49,7 @@ Scope {
             onVisibleChanged: {
                 if (visible) {
                     Qt.callLater(() => {
-                        focusGrab.active = true;
+                        focusGrab.active = Compositor.useHyprlandFocusGrab;
                         Logger.info("GameLauncher: Focus grab activated");
                     });
                     GameService.refresh();

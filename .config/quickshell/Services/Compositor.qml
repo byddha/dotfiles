@@ -10,6 +10,9 @@ Singleton {
 
     // --- Backend loaded by URL (swap this path for a different compositor) ---
     property var backend: null
+    property bool isHyprland: backend?.isHyprland ?? false
+    property bool isNiri: backend?.type === "niri"
+    property bool useHyprlandFocusGrab: isHyprland
 
     Component.onCompleted: {
         var backendPath;
