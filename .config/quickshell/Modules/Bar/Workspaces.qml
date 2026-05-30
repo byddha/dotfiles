@@ -20,21 +20,22 @@ Item {
     property int endWorkspace: 5
 
     // Configuration
-    readonly property int workspacesShown: endWorkspace - startWorkspace + 1
     readonly property Toplevel activeWindow: ToplevelManager.activeToplevel
+    readonly property string screenName: root.QsWindow.window && root.QsWindow.window.screen ? root.QsWindow.window.screen.name : ""
+    readonly property var workspaceItems: buildWorkspaceItems()
+    readonly property int workspacesShown: workspaceItems.length
 
     // Active workspace for this monitor (updated via signal)
     property int currentActiveWorkspaceId: Compositor.activeWorkspaceIdForScreen(root.QsWindow.window?.screen)
 
-    // Workspace state (initialized with false values to avoid undefined access before updateWorkspaceOccupied runs)
-    property list<bool> workspaceOccupied: Array(workspacesShown).fill(false)
     // Index within this group (-1 if active workspace is outside our range)
     property int workspaceIndexInGroup: {
         const activeId = currentActiveWorkspaceId;
-        if (activeId >= startWorkspace && activeId <= endWorkspace) {
-            return activeId - startWorkspace;
+        for (let i = 0; i < workspaceItems.length; i++) {
+            if (workspaceId(workspaceItems[i]) === activeId)
+                return i;
         }
-        return -1;  // Active workspace is outside our range
+        return -1;  // Active workspace is outside this visible group
     }
 
     // Sizing
@@ -43,18 +44,41 @@ Item {
     property real iconSize: 26
     property real iconSpacing: 4
 
-    readonly property var currentSpecial: (Compositor.monitors.find(m => m.name === root.QsWindow.window?.screen?.name)?.specialWorkspace) ?? null
+    readonly property var currentSpecial: Compositor.isHyprland ? ((Compositor.monitors.find(m => m.name === root.screenName)?.specialWorkspace) ?? null) : null
     readonly property bool specialVisible: (currentSpecial?.id ?? 0) !== 0
     readonly property var specialApps: specialVisible ? Compositor.getWorkspaceApps(currentSpecial.id) : []
 
-    // Update workspace occupation status
-    function updateWorkspaceOccupied() {
-        workspaceOccupied = Array.from({
-            length: root.workspacesShown
-        }, (_, i) => {
-            const wsId = root.startWorkspace + i;
-            return Compositor.workspaces.some(ws => ws.id === wsId);
-        });
+    function buildWorkspaceItems() {
+        if (Compositor.isNiri) {
+            const items = Compositor.workspaces.filter(ws => ws.output === root.screenName);
+            return items.sort((a, b) => {
+                const aIdx = a.idx !== undefined ? a.idx : 0;
+                const bIdx = b.idx !== undefined ? b.idx : 0;
+                return aIdx - bIdx;
+            });
+        }
+
+        const items = [];
+        for (let i = root.startWorkspace; i <= root.endWorkspace; i++) {
+            items.push({
+                id: i
+            });
+        }
+        return items;
+    }
+
+    function workspaceId(workspace) {
+        return workspace && workspace.id !== undefined ? workspace.id : workspace;
+    }
+
+    function workspaceApps(workspace) {
+        return Compositor.getWorkspaceApps(workspaceId(workspace));
+    }
+
+    function workspaceIsOccupied(workspace) {
+        if (Compositor.isNiri)
+            return workspaceApps(workspace).length > 0;
+        return Compositor.workspaces.some(ws => ws.id === workspaceId(workspace));
     }
 
     // Calculate workspace positions for animated border
@@ -64,32 +88,31 @@ Item {
 
     function updateActiveWorkspacePosition() {
         const activeId = currentActiveWorkspaceId;
-        // If active workspace is outside our range, hide the indicator
-        if (activeId < startWorkspace || activeId > endWorkspace) {
+        const activeIndex = workspaceIndexInGroup;
+        // If active workspace is outside our visible items, hide the indicator
+        if (activeIndex < 0) {
             activeWorkspaceWidth = 0;
             return;
         }
 
         let xPos = 0;
-        for (let i = 0; i < workspacesShown; i++) {
-            const wsId = startWorkspace + i;
-            if (wsId === activeId) {
-                activeWorkspaceX = xPos;
-                const apps = Compositor.getWorkspaceApps(wsId);
-                const appCount = apps.length;
-                activeWorkspaceWidth = (iconSize * Math.max(1, appCount)) + (iconSpacing * Math.max(0, appCount - 1)) + 8;
-                break;
-            }
-            const apps = Compositor.getWorkspaceApps(wsId);
+        for (let i = 0; i < workspaceItems.length; i++) {
+            const workspace = workspaceItems[i];
+            const wsId = workspaceId(workspace);
+            const apps = workspaceApps(workspace);
             const appCount = apps.length;
             const width = (iconSize * Math.max(1, appCount)) + (iconSpacing * Math.max(0, appCount - 1)) + 8;
+            if (wsId === activeId) {
+                activeWorkspaceX = xPos;
+                activeWorkspaceWidth = width;
+                break;
+            }
             xPos += width;
         }
     }
 
     // Initialize and track workspace changes
     Component.onCompleted: {
-        updateWorkspaceOccupied();
         updateActiveWorkspacePosition();
     }
 
@@ -98,44 +121,61 @@ Item {
 
         function onWorkspaceFocusChanged() {
             currentActiveWorkspaceId = Compositor.activeWorkspaceIdForScreen(root.QsWindow.window?.screen);
-            updateWorkspaceOccupied();
-        }
-
-        function onWorkspacesChanged() {
-            updateWorkspaceOccupied();
+            updateActiveWorkspacePosition();
         }
 
         function onWindowDataUpdated() {
             currentActiveWorkspaceId = Compositor.activeWorkspaceIdForScreen(root.QsWindow.window?.screen);
             updateActiveWorkspacePosition();
         }
+
+        function onMonitorDataUpdated() {
+            currentActiveWorkspaceId = Compositor.activeWorkspaceIdForScreen(root.QsWindow.window?.screen);
+            updateActiveWorkspacePosition();
+        }
     }
 
     onWorkspaceIndexInGroupChanged: updateActiveWorkspacePosition()
+    onWorkspaceItemsChanged: updateActiveWorkspacePosition()
 
     implicitWidth: workspaceBackground.width + (root.specialVisible ? specialPill.width + BarStyle.spacing : 0)
     implicitHeight: BarStyle.barHeight
 
     // Find next occupied workspace in a direction (1 = forward, -1 = backward)
     function findNextOccupied(currentId, direction) {
-        for (let i = 1; i <= workspacesShown; i++) {
-            let nextId = currentId + (direction * i);
-            if (nextId > endWorkspace)
-                nextId = startWorkspace + (nextId - endWorkspace - 1);
-            else if (nextId < startWorkspace)
-                nextId = endWorkspace - (startWorkspace - nextId - 1);
+        if (workspaceItems.length === 0)
+            return currentId;
 
-            const index = nextId - startWorkspace;
-            if (workspaceOccupied[index])
-                return nextId;
+        const currentIndex = workspaceItems.findIndex(ws => workspaceId(ws) === currentId);
+        const startIndex = currentIndex >= 0 ? currentIndex : 0;
+
+        if (Compositor.isNiri) {
+            let nextIndex = startIndex + direction;
+            if (nextIndex >= workspaceItems.length)
+                nextIndex = 0;
+            else if (nextIndex < 0)
+                nextIndex = workspaceItems.length - 1;
+            return workspaceId(workspaceItems[nextIndex]);
         }
-        // No occupied workspace found, return next in sequence
-        let fallback = currentId + direction;
-        if (fallback > endWorkspace)
-            fallback = startWorkspace;
-        else if (fallback < startWorkspace)
-            fallback = endWorkspace;
-        return fallback;
+
+        for (let i = 1; i <= workspaceItems.length; i++) {
+            let nextIndex = startIndex + (direction * i);
+            while (nextIndex >= workspaceItems.length)
+                nextIndex -= workspaceItems.length;
+            while (nextIndex < 0)
+                nextIndex += workspaceItems.length;
+
+            const nextWorkspace = workspaceItems[nextIndex];
+            if (workspaceIsOccupied(nextWorkspace))
+                return workspaceId(nextWorkspace);
+        }
+
+        let fallbackIndex = startIndex + direction;
+        if (fallbackIndex >= workspaceItems.length)
+            fallbackIndex = 0;
+        else if (fallbackIndex < 0)
+            fallbackIndex = workspaceItems.length - 1;
+        return workspaceId(workspaceItems[fallbackIndex]);
     }
 
     // Scroll to switch workspaces (cycles within configured range, skipping empty)
@@ -185,15 +225,18 @@ Item {
         height: BarStyle.barHeight
 
         Repeater {
-            model: root.workspacesShown
+            model: ScriptModel {
+                values: root.workspaceItems
+            }
 
             Item {
                 id: workspaceContainer
-                property int workspaceValue: root.startWorkspace + index
-                property var workspaceApps: Compositor.getWorkspaceApps(workspaceValue)
+                property var workspaceData: modelData
+                property int workspaceValue: root.workspaceId(workspaceData)
+                property var workspaceApps: root.workspaceApps(workspaceData)
                 property int appCount: workspaceApps.length
                 property bool isActive: root.currentActiveWorkspaceId === workspaceValue
-                property bool isOccupied: workspaceOccupied[index] ?? false
+                property bool isOccupied: root.workspaceIsOccupied(workspaceData)
 
                 // Dynamic width calculation (treat empty as 1 icon for consistent spacing)
                 property real contentWidth: (iconSize * Math.max(1, appCount)) + (iconSpacing * Math.max(0, appCount - 1)) + 8
@@ -288,7 +331,7 @@ Item {
 
                 // Subtle separator
                 Rectangle {
-                    visible: index < root.workspacesShown - 1
+                    visible: index < root.workspaceItems.length - 1
                     anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
                     width: 1

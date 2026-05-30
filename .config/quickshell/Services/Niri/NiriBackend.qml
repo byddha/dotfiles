@@ -33,7 +33,7 @@ QtObject {
     Component.onCompleted: {
         Logger.info("Running on Niri");
         updateAllData();
-        _eventStream.running = true;
+        eventStream.running = true;
     }
 
     // --- Data fetching ---
@@ -41,25 +41,25 @@ QtObject {
     function updateAllData() {
         // Chain: workspaces first, then windows + outputs (they need workspace data)
         _pendingFullUpdate = true;
-        _getWorkspaces.running = true;
+        getWorkspaces.running = true;
     }
 
     function updateWindowList() {
-        _getWindows.running = true;
+        getWindows.running = true;
     }
 
     function updateMonitorData() {
-        _getOutputs.running = true;
+        getOutputs.running = true;
     }
 
     property var _wsProc: Process {
-        id: _getWorkspaces
+        id: getWorkspaces
         command: ["niri", "msg", "--json", "workspaces"]
         stdout: StdioCollector {
-            id: _wsCollector
+            id: wsCollector
             onStreamFinished: {
                 try {
-                    backend._workspacesRaw = JSON.parse(_wsCollector.text);
+                    backend._workspacesRaw = JSON.parse(wsCollector.text);
                     backend._processWorkspaces();
                 } catch (e) {
                     Logger.error("Failed to parse niri workspaces:", e);
@@ -67,21 +67,21 @@ QtObject {
 
                 if (backend._pendingFullUpdate) {
                     backend._pendingFullUpdate = false;
-                    _getWindows.running = true;
-                    _getOutputs.running = true;
+                    getWindows.running = true;
+                    getOutputs.running = true;
                 }
             }
         }
     }
 
     property var _winProc: Process {
-        id: _getWindows
+        id: getWindows
         command: ["niri", "msg", "--json", "windows"]
         stdout: StdioCollector {
-            id: _winCollector
+            id: winCollector
             onStreamFinished: {
                 try {
-                    const raw = JSON.parse(_winCollector.text);
+                    const raw = JSON.parse(winCollector.text);
                     backend._processWindows(raw);
                 } catch (e) {
                     Logger.error("Failed to parse niri windows:", e);
@@ -91,13 +91,13 @@ QtObject {
     }
 
     property var _outProc: Process {
-        id: _getOutputs
+        id: getOutputs
         command: ["niri", "msg", "--json", "outputs"]
         stdout: StdioCollector {
-            id: _outCollector
+            id: outCollector
             onStreamFinished: {
                 try {
-                    backend._monitorsRaw = JSON.parse(_outCollector.text);
+                    backend._monitorsRaw = JSON.parse(outCollector.text);
                     backend._processMonitors();
                 } catch (e) {
                     Logger.error("Failed to parse niri outputs:", e);
@@ -109,7 +109,7 @@ QtObject {
     // --- Event stream ---
 
     property var _evProc: Process {
-        id: _eventStream
+        id: eventStream
         command: ["niri", "msg", "--json", "event-stream"]
         stdout: SplitParser {
             onRead: data => {
@@ -121,7 +121,7 @@ QtObject {
         onExited: (exitCode, exitStatus) => {
             Logger.warn("Niri event stream exited, reconnecting...");
             Qt.callLater(() => {
-                _eventStream.running = true;
+                eventStream.running = true;
             });
         }
     }
@@ -265,6 +265,8 @@ QtObject {
         if (event.WorkspacesChanged) {
             _workspacesRaw = event.WorkspacesChanged.workspaces;
             _processWorkspaces();
+        } else if (event.WorkspaceActivated) {
+            _handleWorkspaceActivated(event.WorkspaceActivated);
         } else if (event.WindowsChanged) {
             _processWindows(event.WindowsChanged.windows);
         } else if (event.WindowOpenedOrChanged) {
@@ -302,6 +304,19 @@ QtObject {
                 windowDataUpdated();
             }
         }
+    }
+
+    function _handleWorkspaceActivated(data) {
+        const activated = _workspacesRaw.find(w => w.id === data.id);
+        if (!activated)
+            return;
+
+        const outputName = activated.output ?? "";
+        _workspacesRaw = _workspacesRaw.map(ws => Object.assign({}, ws, {
+                is_active: outputName && ws.output === outputName ? ws.id === data.id : ws.is_active,
+                is_focused: data.focused ? ws.id === data.id : ws.is_focused
+            }));
+        _processWorkspaces();
     }
 
     // --- Data query functions ---
@@ -387,7 +402,7 @@ QtObject {
             return;
         }
         Logger.debug("Switching to workspace", id, "(idx:", ws.idx + ")");
-        _actionComponent.createObject(backend, {
+        actionComponent.createObject(backend, {
             command: ["niri", "msg", "action", "focus-workspace", String(ws.idx)]
         }).running = true;
     }
@@ -399,19 +414,19 @@ QtObject {
             return;
         }
         Logger.debug("Moving window to workspace", id, "(idx:", ws.idx + ")");
-        _actionComponent.createObject(backend, {
+        actionComponent.createObject(backend, {
             command: ["niri", "msg", "action", "move-window-to-workspace", String(ws.idx)]
         }).running = true;
     }
 
     function logout() {
-        _actionComponent.createObject(backend, {
+        actionComponent.createObject(backend, {
             command: ["niri", "msg", "action", "quit"]
         }).running = true;
     }
 
     property var _actionComp: Component {
-        id: _actionComponent
+        id: actionComponent
         Process {
             onExited: destroy()
         }

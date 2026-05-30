@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
 import "../../Config"
+import "../../Services"
 
 Scope {
     Variants {
@@ -121,7 +122,7 @@ Scope {
             // Workspaces - always centered
             Workspaces {
                 id: workspaces
-                visible: bar.hasWorkspaceConfig
+                visible: Compositor.isNiri || bar.hasWorkspaceConfig
                 startWorkspace: bar.startWorkspace
                 endWorkspace: bar.endWorkspace
                 anchors.horizontalCenter: barBackground.horizontalCenter
