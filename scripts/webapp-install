@@ -109,7 +109,7 @@ Version=1.0
 Type=Application
 Name=$APP_NAME
 Comment=$APP_NAME (web app)
-Exec=/usr/bin/chromium --app=$APP_URL --user-data-dir=$APP_PROFILE --ozone-platform-hint=auto --no-first-run --no-default-browser-check
+Exec=/usr/bin/chromium --app=$APP_URL --user-data-dir=$APP_PROFILE --ozone-platform=x11 --no-first-run --no-default-browser-check
 Icon=$ICON_PATH
 Terminal=false
 StartupNotify=true

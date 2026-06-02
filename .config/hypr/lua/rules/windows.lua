@@ -97,6 +97,15 @@ local rules = {
         workspace = "special:chatapps silent",
     },
     {
+        name      = "special-chatapps-chromium-xwayland",
+        match     = {
+            class         = "^Chromium$",
+            initial_title = "^(web\\.whatsapp\\.com_/|teams\\.cloud\\.microsoft_/)$",
+        },
+        workspace = "special:chatapps silent",
+        float     = false
+    },
+    {
         name      = "special-gaming",
         match     = { class = "^(steam_app).*" },
         workspace = "special:gaming silent",
