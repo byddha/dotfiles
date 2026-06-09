@@ -199,7 +199,7 @@ QtObject {
 
     function setMonitorColorManagement(name, preset) {
         const proc = cmComponent.createObject(backend, {
-            command: ["hyprctl", "keyword", `monitorv2[${name}]:cm`, preset]
+            command: ["hyprctl", "eval", `cmd.run("monitor cm ${name} ${preset}")`]
         });
         proc.running = true;
     }

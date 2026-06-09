@@ -1,5 +1,6 @@
 local settings = require("lua.core.settings")
 local monitors = settings.monitors
+local commands = require("lua.commands")
 
 local profiles = {}
 
@@ -44,3 +45,5 @@ local profile = settings.profile_from(profiles)
 for _, monitor in ipairs(profile.monitors) do
     hl.monitor(monitor)
 end
+
+commands.monitor(profile)
