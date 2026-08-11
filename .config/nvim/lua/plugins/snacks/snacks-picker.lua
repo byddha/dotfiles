@@ -3,6 +3,37 @@ return {
     opts = {
         picker = {
             enabled = true,
+            -- every layout preset ships `backdrop = false`; turn it back on for
+            -- all pickers so they dim the editor like the lazygit window does
+            -- lower blend = darker; 60 is the snacks default and too weak here
+            layout = { layout = { backdrop = 40 } },
+            sources = {
+                explorer = {
+                    -- inlined `ivy`, only to give the file list more room than
+                    -- the preset's 40%. Supplying the box skips preset resolution.
+                    layout = {
+                        preview = true,
+                        layout = {
+                            box = "vertical",
+                            backdrop = 40,
+                            row = -1,
+                            width = 0,
+                            height = 0.4,
+                            border = "top",
+                            title = " {title} {live} {flags}",
+                            title_pos = "left",
+                            { win = "input", height = 1, border = "bottom" },
+                            {
+                                box = "horizontal",
+                                { win = "list", border = "none" },
+                                { win = "preview", title = "{preview}", width = 0.5, border = "left" },
+                            },
+                        },
+                    },
+                    auto_close = true,
+                    jump = { close = true },
+                },
+            },
         },
     },
     keys = {

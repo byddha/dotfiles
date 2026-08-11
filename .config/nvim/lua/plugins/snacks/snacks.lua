@@ -8,6 +8,9 @@ return {
         quickfile = { enabled = true },
         lazygit = { enabled = true },
         words = { enabled = true },
+        styles = {
+            lazygit = { backdrop = 40 }, -- match the pickers; lower = darker
+        },
     },
     keys = {
         {
