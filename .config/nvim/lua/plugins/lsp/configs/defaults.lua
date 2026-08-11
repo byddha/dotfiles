@@ -1,7 +1,6 @@
 local M = {}
 
-M.on_attach = function(client, bufnr)
-    require("nvim-navic").attach(client, bufnr)
+M.on_attach = function(_, _)
 end
 
 M.on_init = function(client, _)
