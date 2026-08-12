@@ -25,6 +25,17 @@ return {
             }
         end
 
+        -- The bar's two accent zones. Kept as named groups rather than palette
+        -- entries so anything else can link to them.
+        local function setup_zones()
+            local folded = utils.get_highlight "Folded"
+            local base = utils.get_highlight "StatusLine"
+            vim.api.nvim_set_hl(0, "StatusLineBg1", { fg = folded.bg, bg = utils.get_highlight("Statement").fg })
+            vim.api.nvim_set_hl(0, "StatusLineBg2", { fg = folded.fg, bg = folded.bg })
+            vim.api.nvim_set_hl(0, "StatusLineBg3", { fg = base.fg, bg = base.bg })
+        end
+        setup_zones()
+
         require("heirline").setup {
             statusline = require "plugins.ui.heirline.statusline",
             opts = {
@@ -41,6 +52,7 @@ return {
         vim.api.nvim_create_autocmd("ColorScheme", {
             group = vim.api.nvim_create_augroup("Heirline", { clear = true }),
             callback = function()
+                setup_zones()
                 utils.on_colorscheme(setup_colors)
             end,
         })

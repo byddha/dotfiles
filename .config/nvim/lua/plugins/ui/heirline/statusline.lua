@@ -1,125 +1,102 @@
 local conditions = require "heirline.conditions"
-local utils = require "heirline.utils"
 local shared = require "plugins.ui.heirline.shared"
+local repo = require "plugins.ui.heirline.git"
 
-local Space, Align = shared.Space, shared.Align
+local ViMode = {
+    static = {
+        mode_names = {
+            n = "NORMAL",
+            no = "NORMAL",
+            nov = "NORMAL",
+            noV = "NORMAL",
+            ["no\22"] = "NORMAL",
+            niI = "NORMAL",
+            niR = "NORMAL",
+            niV = "NORMAL",
+            nt = "NTERMINAL",
+            ntT = "NTERMINAL",
 
-local ViMode = utils.surround(
-    { "", shared.SLOPE_RIGHT },
-    "bright_fg",
-    utils.surround({ "", shared.SLOPE_RIGHT }, "purple", {
-        static = {
-            mode_names = {
-                n = "NORMAL",
-                no = "NORMAL",
-                nov = "NORMAL",
-                noV = "NORMAL",
-                ["no\22"] = "NORMAL",
-                niI = "NORMAL",
-                niR = "NORMAL",
-                niV = "NORMAL",
-                nt = "NTERMINAL",
-                ntT = "NTERMINAL",
+            v = "VISUAL",
+            vs = "VISUAL",
+            V = "VISUAL",
+            Vs = "VISUAL",
+            ["\22"] = "VISUAL",
+            ["\22s"] = "VISUAL",
 
-                v = "VISUAL",
-                vs = "VISUAL",
-                V = "VISUAL",
-                Vs = "VISUAL",
-                ["\22"] = "VISUAL",
-                ["\22s"] = "VISUAL",
+            s = "SELECT",
+            S = "SELECT",
+            ["\19"] = "SELECT",
 
-                s = "SELECT",
-                S = "SELECT",
-                ["\19"] = "SELECT",
+            i = "INSERT",
+            ic = "INSERT",
+            ix = "INSERT",
 
-                i = "INSERT",
-                ic = "INSERT",
-                ix = "INSERT",
+            R = "REPLACE",
+            Rc = "REPLACE",
+            Rx = "REPLACE",
+            Rv = "REPLACE",
+            Rvc = "REPLACE",
+            Rvx = "REPLACE",
 
-                R = "REPLACE",
-                Rc = "REPLACE",
-                Rx = "REPLACE",
-                Rv = "REPLACE",
-                Rvc = "REPLACE",
-                Rvx = "REPLACE",
+            c = "COMMAND",
+            cv = "COMMAND",
+            ce = "COMMAND",
+            cr = "COMMAND",
 
-                c = "COMMAND",
-                cv = "COMMAND",
-                ce = "COMMAND",
-                cr = "COMMAND",
+            r = "PROMPT",
+            rm = "PROMPT",
 
-                r = "PROMPT",
-                rm = "PROMPT",
-
-                ["r?"] = "CONFIRM",
-                ["!"] = "SHELL",
-                t = "TERMINAL",
-            },
+            ["r?"] = "CONFIRM",
+            ["!"] = "SHELL",
+            t = "TERMINAL",
         },
-        provider = function(self)
-            return "  " .. self.mode_names[vim.fn.mode(1)] .. " "
-        end,
-        hl = { fg = "bright_bg", bold = true },
-        update = {
-            "ModeChanged",
-            pattern = "*:*",
-            callback = vim.schedule_wrap(function()
-                vim.cmd "redrawstatus"
-            end),
-        },
-    })
-)
+    },
+    provider = function(self)
+        return " " .. self.mode_names[vim.fn.mode(1)]
+    end,
+    update = {
+        "ModeChanged",
+        pattern = "*:*",
+        callback = vim.schedule_wrap(function()
+            vim.cmd "redrawstatus"
+        end),
+    },
+}
 
 local Git = {
-    condition = conditions.is_git_repo,
-
-    init = function(self)
-        self.status_dict = vim.b.gitsigns_status_dict
-        self.has_changes = self.status_dict.added and self.status_dict.added ~= 0
-            or self.status_dict.removed and self.status_dict.removed ~= 0
-            or self.status_dict.changed and self.status_dict.changed ~= 0
+    condition = function()
+        return repo.head ~= nil
     end,
 
-    hl = { fg = "orange" },
+    on_click = {
+        name = "heirline_git",
+        callback = function()
+            vim.cmd "CodeDiff"
+        end,
+    },
 
     {
-        provider = function(self)
-            return " " .. self.status_dict.head
+        provider = function()
+            return " " .. shared.literal(repo.head)
         end,
-        hl = { bold = true },
     },
     {
-        condition = function(self)
-            return self.has_changes
-        end,
-        provider = " (",
-    },
-    {
-        provider = function(self)
-            local count = self.status_dict.added or 0
-            return count > 0 and ("  " .. count)
+        provider = function()
+            return repo.insertions > 0 and ("  " .. repo.insertions)
         end,
         hl = { fg = "git_add" },
     },
     {
-        provider = function(self)
-            local count = self.status_dict.removed or 0
-            return count > 0 and ("  " .. count)
+        provider = function()
+            return repo.deletions > 0 and ("  " .. repo.deletions)
         end,
         hl = { fg = "git_del" },
     },
     {
-        provider = function(self)
-            local count = self.status_dict.changed or 0
-            return count > 0 and ("  " .. count)
+        provider = function()
+            return repo.untracked > 0 and ("  " .. repo.untracked)
         end,
         hl = { fg = "git_change" },
-    },
-    {
-        condition = function(self)
-            return self.has_changes
-        end,
-        provider = " ) ",
     },
 }
 
@@ -144,8 +121,8 @@ local PythonEnv = {
             return ""
         end
 
-        local source = venv_selector.source()
-        local python = venv_selector.python()
+        local source = shared.literal(venv_selector.source() or "")
+        local python = shared.literal(venv_selector.python() or "")
 
         if python and python ~= "" then
             if source and source ~= "" then
@@ -154,15 +131,13 @@ local PythonEnv = {
             return " " .. python
         end
 
-        local venv_path = vim.env.VIRTUAL_ENV
+        local venv_path = shared.literal(vim.env.VIRTUAL_ENV or "")
         if venv_path and venv_path ~= "" then
             return " " .. venv_path .. "/bin/python"
         end
 
         return " System"
     end,
-
-    hl = { fg = "green", bold = true },
 }
 
 local CsharpEnv = {
@@ -177,15 +152,16 @@ local CsharpEnv = {
     provider = function()
         local solution = vim.g.roslyn_nvim_selected_solution
         if solution and solution ~= "" then
-            return "󰌛 " .. vim.fn.fnamemodify(solution, ":t:r")
+            return "󰌛 " .. shared.literal(vim.fn.fnamemodify(solution, ":t:r"))
         end
         return ""
     end,
-
-    hl = { fg = "purple", bold = true },
 }
 
 local LanguageEnv = {
+    condition = function()
+        return PythonEnv.condition() or CsharpEnv.condition()
+    end,
     fallthrough = false,
     PythonEnv,
     CsharpEnv,
@@ -196,14 +172,10 @@ local MacroRec = {
         return vim.fn.reg_recording() ~= "" and vim.o.cmdheight == 0
     end,
     update = { "RecordingEnter", "RecordingLeave" },
-    provider = " Rec => ",
-    hl = { fg = "orange", bold = true },
-    utils.surround({ "[", "]" }, nil, {
-        provider = function()
-            return vim.fn.reg_recording()
-        end,
-        hl = { fg = "green", bold = true },
-    }),
+    provider = function()
+        return " REC " .. vim.fn.reg_recording()
+    end,
+    hl = { fg = "orange" },
 }
 
 local DapMessages = {
@@ -223,50 +195,6 @@ local FileEncoding = {
     end,
 }
 
-local Diagnostics = {
-    condition = conditions.has_diagnostics,
-    update = { "DiagnosticChanged", "BufEnter" },
-
-    static = {
-        error_icon = " ",
-        warn_icon = " ",
-        info_icon = "󰋼 ",
-        hint_icon = "󰛩 ",
-    },
-
-    init = function(self)
-        self.errors = #vim.diagnostic.get(0, { severity = vim.diagnostic.severity.ERROR })
-        self.warnings = #vim.diagnostic.get(0, { severity = vim.diagnostic.severity.WARN })
-        self.hints = #vim.diagnostic.get(0, { severity = vim.diagnostic.severity.HINT })
-        self.info = #vim.diagnostic.get(0, { severity = vim.diagnostic.severity.INFO })
-    end,
-
-    {
-        provider = function(self)
-            return self.errors > 0 and (self.error_icon .. self.errors .. " ")
-        end,
-        hl = { fg = "diag_error" },
-    },
-    {
-        provider = function(self)
-            return self.warnings > 0 and (self.warn_icon .. self.warnings .. " ")
-        end,
-        hl = { fg = "diag_warn" },
-    },
-    {
-        provider = function(self)
-            return self.info > 0 and (self.info_icon .. self.info .. " ")
-        end,
-        hl = { fg = "diag_info" },
-    },
-    {
-        provider = function(self)
-            return self.hints > 0 and (self.hint_icon .. self.hints)
-        end,
-        hl = { fg = "diag_hint" },
-    },
-}
-
 local LspActive = {
     condition = conditions.lsp_attached,
     update = { "LspAttach", "LspDetach" },
@@ -276,134 +204,133 @@ local LspActive = {
         for _, server in pairs(vim.lsp.get_clients { bufnr = 0 }) do
             table.insert(names, server.name)
         end
-        return " [" .. table.concat(names, " ") .. "]"
+        return " " .. shared.literal(table.concat(names, " "))
     end,
-    hl = { fg = "green", bold = true },
 }
 
-local WorkDir = utils.surround({ shared.LEFT_CAP, "" }, "blue", {
-    {
-        flexible = 2,
-        hl = { bg = "blue", fg = "bright_bg", bold = true },
-        { provider = " " },
-        { provider = "" },
-    },
-    utils.surround({ shared.LEFT_CAP, "" }, "bright_bg", {
-        init = function(self)
-            self.cwd = vim.fn.fnamemodify(vim.fn.getcwd(0), ":~"):gsub("\\", "/")
-        end,
-        flexible = 1,
-        hl = { bg = "bright_bg", fg = "blue" },
-        {
-            provider = function(self)
-                return self.cwd
-            end,
-        },
-        {
-            provider = function(self)
-                return vim.fn.fnamemodify(self.cwd, ":t")
-            end,
-        },
-        { provider = "" },
-    }),
-})
+local WorkDir = {
+    init = function(self)
+        self.cwd = vim.fn.fnamemodify(vim.fn.getcwd(0), ":~"):gsub("\\", "/")
+    end,
 
-local ScrollBar = utils.surround({ shared.LEFT_CAP, "" }, "diag_warn", {
-    { provider = " ", hl = { fg = "bright_bg" } },
-    utils.surround({ shared.LEFT_CAP, "" }, "bright_bg", {
-        provider = function()
-            local curr_line = vim.api.nvim_win_get_cursor(0)[1]
-            local total_lines = vim.api.nvim_buf_line_count(0)
-            local percentage = total_lines <= 1 and 100
-                or math.floor(((curr_line - 1) / (total_lines - 1)) * 100)
-            return string.format("%3d%%%%", percentage)
+    on_click = {
+        name = "heirline_cwd",
+        callback = function(_, _, _, button)
+            if button == "r" then
+                Snacks.picker.zoxide()
+            else
+                Snacks.picker.projects()
+            end
         end,
-        hl = { fg = "diag_warn", bg = "bright_bg" },
-    }),
-})
+    },
+
+    {
+        provider = function(self)
+            return " " .. shared.literal(vim.fn.fnamemodify(self.cwd, ":t"))
+        end,
+    },
+
+    hl = { fg = "git_add" },
+}
+
+local function selection()
+    local kind = vim.fn.mode(true):sub(1, 1)
+    if kind ~= "v" and kind ~= "V" and kind ~= "\22" then
+        return nil
+    end
+
+    local lines = math.abs(vim.fn.line "v" - vim.fn.line ".") + 1
+    local cols = math.abs(vim.fn.virtcol "v" - vim.fn.virtcol ".") + 1
+
+    if kind == "\22" then
+        return lines .. "x" .. cols .. " selected"
+    elseif kind == "V" or lines > 1 then
+        return lines .. " lines selected"
+    end
+    return cols .. " selected"
+end
+
+
+local Position = {
+    init = function(self)
+        self.selection = selection()
+    end,
+    provider = function(self)
+        if self.selection then
+            return "Ln %l, Col %c (" .. self.selection .. ")"
+        end
+        return "Ln %l, Col %c"
+    end,
+    hl = function(self)
+        return self.selection and { fg = "purple", bold = true } or {}
+    end,
+}
 
 local FileType = {
     provider = function()
         return vim.bo.filetype:upper()
     end,
-    hl = function()
-        return { fg = utils.get_highlight("Type").fg, bold = true }
+}
+
+local HelpFile = {
+    condition = function()
+        return vim.bo.filetype == "help"
+    end,
+    provider = function()
+        return shared.literal(vim.fn.fnamemodify(vim.api.nvim_buf_get_name(0), ":t"))
     end,
 }
 
-local SpecialStatusline = {
+local TerminalName = {
+    provider = function()
+        return "  " .. shared.literal(vim.api.nvim_buf_get_name(0):gsub(".*:", ""))
+    end,
+}
+
+local Special = shared.bar {
     condition = function()
         return conditions.buffer_matches {
             buftype = { "nofile", "prompt", "help", "quickfix" },
             filetype = { "^git.*", "fugitive" },
         }
     end,
-
-    FileType,
-    Space,
-    {
-        condition = function()
-            return vim.bo.filetype == "help"
-        end,
-        provider = function()
-            return vim.fn.fnamemodify(vim.api.nvim_buf_get_name(0), ":t")
-        end,
-        hl = { fg = "blue" },
-    },
-    Align,
+    { FileType },
+    { HelpFile },
+    shared.Align,
 }
 
-local TerminalStatusline = {
+local Terminal = shared.bar {
     condition = function()
         return conditions.buffer_matches { buftype = { "terminal" } }
     end,
-
-    ViMode,
-    Space,
-    FileType,
-    Space,
-    {
-        provider = function()
-            local name = vim.api.nvim_buf_get_name(0):gsub(".*:", "")
-            return " " .. name
-        end,
-        hl = { fg = "blue", bold = true },
-    },
-    Align,
+    { ViMode,      bg = 1, cap_right = shared.cap.slope_right },
+    { FileType },
+    { TerminalName },
+    shared.Align,
 }
 
-local DefaultStatusline = {
-    ViMode,
-    Space,
-    Git,
-    Space,
-    LanguageEnv,
-    Align,
-    --
-    MacroRec,
-    Space,
-    DapMessages,
-    Align,
-    --
-    FileEncoding,
-    Space,
-    Diagnostics,
-    Space,
-    LspActive,
-    Space,
-    WorkDir,
-    Space,
-    ScrollBar,
+local Default = shared.bar {
+    { ViMode,     bg = 1 },
+    { WorkDir,    bg = 3, cap_right = shared.cap.arrow_right },
+    { Git,        bg = 2, cap_right = shared.cap.arrow_right },
+    { LanguageEnv },
+    shared.Align,
+    { MacroRec },
+    { DapMessages },
+    shared.Align,
+    { Position },
+    { FileEncoding, },
+    { LspActive, },
 }
 
 return {
     hl = function()
-        return conditions.is_active() and "StatusLine" or "StatusLineNC"
+        return conditions.is_active() and shared.bg[3] or "StatusLineNC"
     end,
 
     fallthrough = false,
 
-    SpecialStatusline,
-    TerminalStatusline,
-    DefaultStatusline,
+    Special,
+    Terminal,
+    Default,
 }
