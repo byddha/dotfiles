@@ -1,6 +1,10 @@
 return {
     "rebelot/heirline.nvim",
     event = "UIEnter",
+    -- registered during startup so it is in place before command-line files are read
+    init = function()
+        require "plugins.ui.heirline.activity"
+    end,
     config = function()
         local conditions = require "heirline.conditions"
         local utils = require "heirline.utils"

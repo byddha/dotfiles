@@ -1,6 +1,7 @@
 local conditions = require "heirline.conditions"
 local shared = require "plugins.ui.heirline.shared"
 local repo = require "plugins.ui.heirline.git"
+local activity = require "plugins.ui.heirline.activity"
 
 local ViMode = {
     static = {
@@ -70,8 +71,12 @@ local Git = {
 
     on_click = {
         name = "heirline_git",
-        callback = function()
-            vim.cmd "CodeDiff"
+        callback = function(_, _, _, button)
+            if button == "r" then
+                Snacks.lazygit()
+            else
+                vim.cmd "CodeDiff"
+            end
         end,
     },
 
@@ -171,7 +176,13 @@ local MacroRec = {
     condition = function()
         return vim.fn.reg_recording() ~= "" and vim.o.cmdheight == 0
     end,
-    update = { "RecordingEnter", "RecordingLeave" },
+    update = {
+        "RecordingEnter",
+        "RecordingLeave",
+        callback = vim.schedule_wrap(function()
+            vim.cmd "redrawstatus"
+        end),
+    },
     provider = function()
         return " REC " .. vim.fn.reg_recording()
     end,
@@ -179,13 +190,40 @@ local MacroRec = {
 }
 
 local DapMessages = {
+    -- a require here would load nvim-dap on every redraw and defeat its lazy
+    -- spec; no loaded module means no session
     condition = function()
-        return require("dap").session() ~= nil
+        local dap = package.loaded.dap
+        return dap ~= nil and dap.session() ~= nil
     end,
     provider = function()
         return " " .. require("dap").status()
     end,
     hl = "Debug",
+}
+
+local LspProgress = {
+    condition = function()
+        return activity.lsp() ~= nil
+    end,
+    init = function(self)
+        self.text = activity.lsp()
+    end,
+    provider = function(self)
+        return shared.literal(self.text)
+    end,
+    hl = { fg = "gray" },
+}
+
+-- one slot, and what you are doing outranks what a machine is doing for you
+local Activity = {
+    condition = function()
+        return MacroRec.condition() or DapMessages.condition() or LspProgress.condition()
+    end,
+    fallthrough = false,
+    MacroRec,
+    DapMessages,
+    LspProgress,
 }
 
 local FileEncoding = {
@@ -195,16 +233,124 @@ local FileEncoding = {
     end,
 }
 
+local function lsp_start(buf)
+    if not vim.api.nvim_buf_is_valid(buf) then
+        return
+    end
+    vim.notify("Starting LSP for " .. vim.bo[buf].filetype, vim.log.levels.INFO)
+    vim.api.nvim_buf_call(buf, function()
+        vim.cmd "doautocmd FileType"
+    end)
+end
+
+local function lsp_clients_picker(clients)
+    local items = {}
+    for _, client in ipairs(clients) do
+        items[#items + 1] = {
+            text = client.name,
+            name = client.name,
+            root = client.root_dir,
+        }
+    end
+
+    Snacks.picker.pick {
+        title = "LSP Clients",
+        items = items,
+        layout = { preset = "select", layout = { max_width = 60 } },
+
+        format = function(item)
+            return {
+                { item.text,       "SnacksPickerLabel" },
+                { "  " },
+                { item.root or "", "SnacksPickerComment" },
+            }
+        end,
+
+        confirm = function(picker)
+            picker:close()
+        end,
+
+        win = {
+            input = {
+                footer_keys = { "<c-r>", "<c-x>", "<c-l>" },
+                keys = {
+                    ["<c-r>"] = { "lsp_restart", desc = "Restart", mode = { "n", "i" } },
+                    ["<c-x>"] = { "lsp_stop", desc = "Stop", mode = { "n", "i" } },
+                    ["<c-l>"] = { "lsp_log", desc = "Log", mode = { "n", "i" } },
+                },
+            },
+            list = {
+                keys = {
+                    ["r"] = "lsp_restart",
+                    ["x"] = "lsp_stop",
+                    ["l"] = "lsp_log",
+                },
+            },
+        },
+
+        actions = {
+            lsp_restart = {
+                desc = "Restart",
+                action = function(picker)
+                    local item = picker:current()
+                    picker:close()
+                    if item then
+                        vim.cmd("lsp restart " .. item.name)
+                    end
+                end,
+            },
+
+            lsp_stop = {
+                desc = "Stop",
+                action = function(picker)
+                    local item = picker:current()
+                    picker:close()
+                    if item then
+                        vim.cmd("lsp stop " .. item.name)
+                    end
+                end,
+            },
+
+            lsp_log = {
+                desc = "Log",
+                action = function(picker)
+                    picker:close()
+                    vim.cmd("tabnew " .. vim.fn.fnameescape(vim.lsp.log.get_filename()))
+                end,
+            },
+        },
+    }
+end
+
 local LspActive = {
-    condition = conditions.lsp_attached,
     update = { "LspAttach", "LspDetach" },
+
+    on_click = {
+        name = "heirline_lsp_clients",
+        callback = function()
+            local buf = vim.api.nvim_get_current_buf()
+            local clients = vim.lsp.get_clients { bufnr = buf }
+            if #clients > 0 then
+                lsp_clients_picker(clients)
+            else
+                lsp_start(buf)
+            end
+        end,
+    },
 
     provider = function()
         local names = {}
         for _, server in pairs(vim.lsp.get_clients { bufnr = 0 }) do
             table.insert(names, server.name)
         end
-        return " " .. shared.literal(table.concat(names, " "))
+        if #names == 0 then
+            return " No LSP"
+        end
+        return " " .. shared.literal(table.concat(names, ", "))
+    end,
+
+    hl = function()
+        return #vim.lsp.get_clients { bufnr = 0 } == 0 and { fg = "gray" } or nil
     end,
 }
 
@@ -315,12 +461,12 @@ local Default = shared.bar {
     { Git,        bg = 2, cap_right = shared.cap.arrow_right },
     { LanguageEnv },
     shared.Align,
-    { MacroRec },
-    { DapMessages },
+    { Activity },
     shared.Align,
-    { Position },
     { FileEncoding, },
-    { LspActive, },
+    { Position },
+    { provider = " " },
+    { LspActive,     bg = 2 },
 }
 
 return {

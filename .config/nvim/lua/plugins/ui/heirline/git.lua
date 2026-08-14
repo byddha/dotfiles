@@ -140,7 +140,7 @@ local function close_watcher()
 end
 
 local function attach()
-    local found = vim.fs.root(0, ".git")
+    local found = vim.fs.root(vim.fn.getcwd(0), ".git")
     if found == root then
         return
     end

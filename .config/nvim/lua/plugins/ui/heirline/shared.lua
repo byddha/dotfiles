@@ -98,7 +98,6 @@ function M.bar(spec)
         end
     end
 
-    bar[#bar + 1] = Sep
     return bar
 end
 
