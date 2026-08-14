@@ -25,6 +25,29 @@ return {
             callback = setup_colors,
         })
 
+        local severities = {
+            { name = "Error", icon = " " },
+            { name = "Warn", icon = " " },
+            { name = "Info", icon = "󰋼 " },
+            { name = "Hint", icon = "󰛩 " },
+        }
+
+        local function diagnostics(buf, focused)
+            local out = {}
+            for _, sev in ipairs(severities) do
+                local n = #vim.diagnostic.get(buf, { severity = vim.diagnostic.severity[sev.name:upper()] })
+                if n > 0 then
+                    table.insert(out, {
+                        sev.icon,
+                        n,
+                        " ",
+                        guifg = focused and hex("Diagnostic" .. sev.name, "fg") or chip.inactive.fg,
+                    })
+                end
+            end
+            return out
+        end
+
         require("incline").setup {
             window = {
                 padding = 0,
@@ -38,11 +61,14 @@ return {
                 local ft_icon, ft_color = devicons.get_icon_color(filename)
                 local modified = vim.bo[props.buf].modified
                 local c = props.focused and chip.active or chip.inactive
+                local diags = diagnostics(props.buf, props.focused)
                 return {
                     ft_icon and { " ", ft_icon, " ", guibg = ft_color, guifg = helpers.contrast_color(ft_color) } or "",
                     " ",
                     { filename, gui = modified and "bold,italic" or "bold", guifg = c.fg },
                     " ",
+                    #diags > 0 and { "│ ", guifg = chip.inactive.fg } or "",
+                    diags,
                     guibg = c.bg,
                 }
             end,
