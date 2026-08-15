@@ -1,5 +1,5 @@
 # Appearance
-font-family = CaskaydiaCove Nerd Font
+font-family = CaskaydiaCove Nerd Font Mono
 font-size = 14
 config-file = ?/home/bida/.cache/theme/ghostty.conf
 window-padding-x = 6

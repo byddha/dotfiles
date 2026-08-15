@@ -1,10 +1,10 @@
 return {
     "williamboman/mason.nvim",
-    cmd = { "Mason", "MasonInstall", "MasonUpdate" },
+    -- must load before nvim-lspconfig so mason's bin dir is on PATH when servers spawn
+    lazy = false,
+    priority = 100,
     opts = function()
         return {
-            PATH = "skip",
-
             ui = {
                 icons = {
                     package_pending = " ",
@@ -14,40 +14,6 @@ return {
             },
 
             max_concurrent_installers = 10,
-            ensure_installed = {
-                -- treesitter
-                "tree-sitter-cli",
-
-                -- lua
-                "lua-language-server",
-                "stylua",
-
-                -- webdev
-                "html-lsp",
-                "css-lsp",
-                "prettier",
-                "typescript-language-server",
-                "eslint_d",
-                "angular-language-server",
-                "js-debug-adapter",
-
-                -- python
-                "basedpyright",
-                "debugpy",
-                "ruff",
-
-                -- scripting
-                "bash-language-server",
-
-                -- godot
-                -- "gdscript",
-                -- "godot_resource",
-                -- "gdshader",
-
-                -- .net
-                "roslyn",
-                -- "netcoredbg",
-            },
 
             registries = {
                 "github:mason-org/mason-registry",
