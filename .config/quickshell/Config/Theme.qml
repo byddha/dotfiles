@@ -19,29 +19,29 @@ Singleton {
     }
 
     // ========================================================================
-    // BASE16 SEMANTIC COLOR MAPPING
+    // SEMANTIC COLOR MAPPING
     // ========================================================================
 
     // Background layers (darkest to lightest)
-    property color colLayer0: ThemeService.base00        // Default background
-    property color colLayer1: ThemeService.base01        // Lighter background (surfaces)
-    property color colLayer2: ThemeService.base02        // Selection/hover background
+    property color colLayer0: ThemeService.background            // Default background
+    property color colLayer1: ThemeService.surfaceContainer      // Lighter background (surfaces)
+    property color colLayer2: ThemeService.surfaceContainerHigh  // Selection/hover background
 
     // Foreground colors
-    property color textColor: ThemeService.base05        // Default text
-    property color textSecondary: ThemeService.base04    // Muted text
-    property color colOnLayer1: ThemeService.base04      // Text on layer1 surfaces
+    property color textColor: ThemeService.surfaceText             // Default text
+    property color textSecondary: ThemeService.surfaceVariantText  // Muted text
+    property color colOnLayer1: ThemeService.surfaceVariantText    // Text on layer1 surfaces
 
-    // Accent colors (using base16 accent range: base08-0F)
-    property color primary: ThemeService.base0D          // Primary accent (blue)
-    property color primaryText: ThemeService.base00      // Text on primary (dark)
-    property color colSecondary: ThemeService.base0E     // Secondary accent (purple/magenta)
-    property color accentRed: ThemeService.base08        // Red accent (warnings/danger)
-    property color accentOrange: ThemeService.base09     // Orange accent (boost/high values)
+    // Accent colors
+    property color primary: ThemeService.primary                 // Primary accent
+    property color primaryText: ThemeService.primaryTextColor           // Text on primary
+    property color colSecondary: ThemeService.secondary          // Secondary accent
+    property color accentRed: ThemeService.error                 // Red accent (warnings/danger)
+    property color accentOrange: ThemeService.base09             // Orange accent (no material role for it)
 
     // Surface and border colors
-    property color surface: ThemeService.base01          // Surface background
-    property color colLayer0Border: ColorUtils.mix(ThemeService.base02, ThemeService.base00, 0.4)
+    property color surface: ThemeService.surfaceContainer        // Surface background
+    property color colLayer0Border: ColorUtils.mix(ThemeService.surfaceContainerHigh, ThemeService.background, 0.4)
 
     // ========================================================================
     // TYPOGRAPHY

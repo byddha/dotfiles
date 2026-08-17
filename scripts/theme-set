@@ -1,76 +1,269 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
-# theme-set - base16 colorscheme across the whole desktop
+# theme-set - material colorscheme across the whole desktop
 #
-# basically pywal but with base16 yamls instead of generating from wallpaper.
-# reads ~/.config/base16/<name>.yaml, exports the 16 colors, then sources
-# every .sh in theme-set.d/ which each spit out app-specific configs.
-# generated stuff goes to ~/.cache/theme/ or app-specific dirs, not in git.
+# themes come from the DMS registry (theme.json, 19 material roles). dms-resolve
+# expands those to ~50 roles, `dms matugen generate` runs them through the DMS
+# templates, and gtk.sh injects the result into adw-gtk3.
 #
-# kvantum templates came from pywal16-libadwaita, icons are papirus via oomox.
-# refs: catppuccin/zen-browser, omarchy/aetheria
+# generated stuff goes to ~/.cache/theme/ or app config dirs, not in git.
+# first run bootstraps ~/.local/share/theme-set/ from the dms-shell package.
 #
-# modules are independent, skip silently if app isnt installed.
-# they get: $base00-$base0F, $CACHE_DIR, $THEME_NAME
+# modules in theme-set.d/ still get $base00-$base0F, derived from the generated
+# palette, so they keep working unchanged.
 #
-# colors you actually care about:
-#   00=bg  01=lighter bg  03=inactive  05=fg  07=bright white
-#   08=red  09=orange  0A=yellow  0B=green  0C=cyan  0D=blue  0E=magenta
-#
-# deps: yq, python3
-# optional: kvantum+qt6ct (qt), adw-gtk3 (gtk3), themix/oomox (icons)
+# deps: dms (dms-shell), matugen, git
+# optional: adw-gtk3 (gtk3), qt6ct-kde + breeze (qt), papirus-icon-theme
 #
 # WHEN SHIT BREAKS:
 #
 #   qt apps lost their theme?
-#     the chain is: QT_QPA_PLATFORMTHEME=qt6ct (in hyprland.conf)
-#       -> qt6ct.conf style=kvantum -> kvantum.kvconfig theme=base16
-#     if ANY link breaks, qt apps silently fall back to ugly defaults.
-#     after a big Qt upgrade (like 6.10->6.11), AUR packages like qt6ct-kde
-#     need a rebuild or the plugin just fails to load. no error, nothing.
-#       paru -S qt6ct-kde --rebuild
+#     the chain is: QT_QPA_PLATFORMTHEME=qt6ct (hypr/lua/env.lua)
+#       -> qt6ct.conf custom_palette=true + color_scheme_path=DankMatugen.colors
+#       -> style=Breeze (Kvantum ignores the palette, don't use it)
 #
-set -e
+#   gtk3 apps look half-recolored?
+#     colors live inside ~/.local/share/themes/adw-gtk3*/gtk-3.0/*.css, between
+#     the DMS OVERRIDE markers. a @define-color in ~/.config/gtk-3.0 is not
+#     enough, adw-gtk3 has literal hex values baked in.
+#
+set -uo pipefail
 
-THEME_NAME="$1"
-BASE16_DIR="$HOME/.config/base16"
-THEME_FILE="$BASE16_DIR/$THEME_NAME.yaml"
-CACHE_DIR="$HOME/.cache/theme"
+DATA_DIR="$HOME/.local/share/theme-set"
+STATE_DIR="$HOME/.cache/theme"
+CONFIG_DIR="$HOME/.config"
+DMS_SHARE="/usr/share/quickshell/dms"
+REGISTRY_URL="https://github.com/AvengeMedia/dms-plugin-registry.git"
+ICON_THEME_DARK="Papirus-Dark"
+ICON_THEME_LIGHT="Papirus-Light"
+QT_STYLE="Breeze"
+GTK_FONT="Sans 10"
+CURSOR_THEME="Adwaita"
+CURSOR_SIZE="24"
+
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
+RESOLVE="$SCRIPT_DIR/theme-set.d/dms-resolve"
 
-[[ -z "$THEME_NAME" ]] && echo "Usage: theme-set <theme-name>" && exit 1
-[[ ! -f "$THEME_FILE" ]] && echo "Theme not found: $THEME_NAME" && exit 1
+# apps still themed by our own modules in theme-set.d/ - DMS must not touch them.
+# moving one over to DMS means deleting it from here and from theme-set.d/.
+SKIP_TEMPLATES="niri,hyprland,mangowc,fcitx5,firefox,pywalfox,zenbrowser,vencord,equibop,foot,alacritty,wezterm,nvim,dgop,vscode,emacs,zed,qtengine"
 
-mkdir -p "$CACHE_DIR"
+die() { echo "theme-set: $*" >&2; exit 1; }
 
-get_color() { yq ".palette.$1" "$THEME_FILE" | tr -d '"'; }
+usage() {
+	cat <<'EOF'
+Usage:
+  theme-set <theme> [--flavor X] [--accent Y] [--variant Z] [--light]
+  theme-set --list             show available themes and their variants
+  theme-set --menu             'args<TAB>label<TAB>icon' rows for the launcher
+  theme-set --update           git pull the theme registry
+  theme-set --current          print the active theme
 
-export base00=$(get_color base00)
-export base01=$(get_color base01)
-export base02=$(get_color base02)
-export base03=$(get_color base03)
-export base04=$(get_color base04)
-export base05=$(get_color base05)
-export base06=$(get_color base06)
-export base07=$(get_color base07)
-export base08=$(get_color base08)
-export base09=$(get_color base09)
-export base0A=$(get_color base0A)
-export base0B=$(get_color base0B)
-export base0C=$(get_color base0C)
-export base0D=$(get_color base0D)
-export base0E=$(get_color base0E)
-export base0F=$(get_color base0F)
+Examples:
+  theme-set catppuccin
+  theme-set catppuccin --flavor macchiato --accent blue
+  theme-set gruvbox-material --variant hard
+  theme-set tokyonight-storm --light
+EOF
+}
 
-export CACHE_DIR THEME_NAME
+# copies what the dms-shell package ships into a dir we own, so an upgrade
+# cannot silently change our templates mid-flight.
+bootstrap() {
+	command -v dms >/dev/null || die "dms not found - install dms-shell"
+	command -v matugen >/dev/null || die "matugen not found - pacman -S matugen"
 
-echo "$THEME_NAME" > "$CACHE_DIR/current"
+	if [[ ! -d "$DATA_DIR/matugen" ]]; then
+		[[ -d "$DMS_SHARE/matugen" ]] || die "$DMS_SHARE/matugen missing - is dms-shell installed?"
+		echo "bootstrap: copying DMS templates"
+		mkdir -p "$DATA_DIR"
+		cp -r "$DMS_SHARE/matugen" "$DATA_DIR/matugen"
+		cp -r "$DMS_SHARE/scripts" "$DATA_DIR/scripts"
+		rm -rf "$DATA_DIR/matugen/vsix-build" "$DATA_DIR/matugen/dms-theme.vsix"
+	fi
 
-for module in "$SCRIPT_DIR/theme-set.d"/*.sh; do
-    [[ -f "$module" ]] && source "$module"
+	if [[ ! -d "$DATA_DIR/registry" ]]; then
+		command -v git >/dev/null || die "git not found"
+		echo "bootstrap: cloning theme registry"
+		git clone --depth 1 -q "$REGISTRY_URL" "$DATA_DIR/registry" || die "registry clone failed"
+	fi
+
+	# gtk.sh only patches a theme it can write to; the system copy is root-owned.
+	if [[ ! -d "$HOME/.local/share/themes/adw-gtk3" && -d /usr/share/themes/adw-gtk3 ]]; then
+		echo "bootstrap: copying adw-gtk3 into ~/.local/share/themes"
+		mkdir -p "$HOME/.local/share/themes"
+		cp -r /usr/share/themes/adw-gtk3 /usr/share/themes/adw-gtk3-dark "$HOME/.local/share/themes/"
+	fi
+}
+
+# base16 names the modules in theme-set.d/ expect. surfaces come from the
+# material roles, the 16 ansi slots from dank16 (contrast-checked against bg).
+export_base16() {
+	local mode="$1"
+	local vars
+	vars=$(python3 -c "
+import json
+d = json.load(open('$STATE_DIR/dms-colors.json'))
+c, k = d['colors']['$mode'], d['dank16']
+m = {
+    'base00': c['background'],            'base01': c['surface_container'],
+    'base02': c['surface_container_high'], 'base03': c['outline'],
+    'base04': c['on_surface_variant'],    'base05': c['on_surface'],
+    'base06': k['color7']['$mode'],       'base07': k['color15']['$mode'],
+    'base08': k['color1']['$mode'],       'base09': k['color9']['$mode'],
+    'base0A': k['color3']['$mode'],       'base0B': k['color2']['$mode'],
+    'base0C': k['color6']['$mode'],       'base0D': k['color4']['$mode'],
+    'base0E': k['color5']['$mode'],       'base0F': k['color13']['$mode'],
+}
+for name, value in m.items():
+    print(f'{name}={value}')
+") || die "failed to read $STATE_DIR/dms-colors.json"
+
+	local line
+	while IFS= read -r line; do
+		export "${line?}"
+	done <<<"$vars"
+}
+
+# sets key=value inside [section], creating the file or the section if needed.
+# every key we touch is unique across sections in these files, so a global
+# match is safe here.
+ini_set() {
+	local file="$1" section="$2" key="$3" value="$4"
+	mkdir -p "$(dirname "$file")"
+	if [[ ! -f "$file" ]]; then
+		printf '[%s]\n%s=%s\n' "$section" "$key" "$value" >"$file"
+	elif ! grep -q "^\[$section\]" "$file"; then
+		printf '\n[%s]\n%s=%s\n' "$section" "$key" "$value" >>"$file"
+	elif grep -q "^$key=" "$file"; then
+		sed -i "s|^$key=.*|$key=$value|" "$file"
+	else
+		sed -i "/^\[$section\]/a $key=$value" "$file"
+	fi
+}
+
+# neither file is created by a fresh install - gtk settings.ini only appears if
+# you run nwg-look, qt6ct.conf only after you open the qt6ct gui once.
+ensure_gtk_settings() {
+	local ini prefer_dark
+	prefer_dark=$([[ "$MODE" == light ]] && echo 0 || echo 1)
+	for ini in "$CONFIG_DIR/gtk-3.0/settings.ini" "$CONFIG_DIR/gtk-4.0/settings.ini"; do
+		ini_set "$ini" Settings gtk-theme-name "$GTK_THEME_NAME"
+		ini_set "$ini" Settings gtk-icon-theme-name "$ICON_THEME"
+		ini_set "$ini" Settings gtk-application-prefer-dark-theme "$prefer_dark"
+		grep -q "^gtk-font-name=" "$ini" || ini_set "$ini" Settings gtk-font-name "$GTK_FONT"
+		grep -q "^gtk-cursor-theme-name=" "$ini" || ini_set "$ini" Settings gtk-cursor-theme-name "$CURSOR_THEME"
+		grep -q "^gtk-cursor-theme-size=" "$ini" || ini_set "$ini" Settings gtk-cursor-theme-size "$CURSOR_SIZE"
+	done
+}
+
+ensure_qt_settings() {
+	local conf="$CONFIG_DIR/qt6ct/qt6ct.conf"
+	local scheme="$HOME/.local/share/color-schemes/DankMatugen.colors"
+	[[ -f "$scheme" ]] || return 0
+	ini_set "$conf" Appearance style "$QT_STYLE"
+	ini_set "$conf" Appearance custom_palette true
+	ini_set "$conf" Appearance color_scheme_path "$scheme"
+	ini_set "$conf" Appearance icon_theme "$ICON_THEME"
+	touch "$conf"   # qt6ct watches its own mtime to repaint running apps
+}
+
+THEME="" FLAVOR="" ACCENT="" VARIANT="" MODE="dark"
+
+while [[ $# -gt 0 ]]; do
+	case "$1" in
+		--list)    bootstrap; exec "$RESOLVE" --emit list ;;
+		--menu)    bootstrap; exec "$RESOLVE" --emit menu ;;
+		--current) cat "$STATE_DIR/current" 2>/dev/null || echo "(none)"; exit 0 ;;
+		--update)
+			bootstrap
+			git -C "$DATA_DIR/registry" pull --ff-only || die "registry update failed"
+			exit 0
+			;;
+		--light)   MODE="light"; shift ;;
+		--flavor)  FLAVOR="${2:-}"; shift 2 ;;
+		--accent)  ACCENT="${2:-}"; shift 2 ;;
+		--variant) VARIANT="${2:-}"; shift 2 ;;
+		-h|--help) usage; exit 0 ;;
+		-*)        die "unknown option: $1" ;;
+		*)         THEME="$1"; shift ;;
+	esac
 done
 
-echo "Theme set to: $THEME_NAME"
+[[ -n "$THEME" ]] || { usage; exit 1; }
 
-# Most apps need a manual restart (Qt, GTK, Zen). Kitty/hyprland/btop auto-reload.
-notify-send -e "Theme: $THEME_NAME" "Restart Zen, GTK, and Qt apps to apply" -i preferences-desktop-theme 2>/dev/null || true
+bootstrap
+mkdir -p "$STATE_DIR"
+
+RESOLVE_ARGS=("$THEME" --mode "$MODE")
+[[ -n "$FLAVOR"  ]] && RESOLVE_ARGS+=(--flavor "$FLAVOR")
+[[ -n "$ACCENT"  ]] && RESOLVE_ARGS+=(--accent "$ACCENT")
+[[ -n "$VARIANT" ]] && RESOLVE_ARGS+=(--variant "$VARIANT")
+
+STOCK=$("$RESOLVE" "${RESOLVE_ARGS[@]}" --emit stock) || exit 1
+META=$("$RESOLVE" "${RESOLVE_ARGS[@]}" --emit meta) || exit 1
+primary=""; matugen_type=""
+eval "$(grep -E '^(primary|matugen_type)=' <<<"$META")"
+
+# exit 2 is "colors identical to last run", not a failure
+dms matugen generate \
+	--state-dir "$STATE_DIR" \
+	--shell-dir "$DATA_DIR" \
+	--config-dir "$CONFIG_DIR" \
+	--kind hex --value "$primary" \
+	--mode "$MODE" \
+	--matugen-type "$matugen_type" \
+	--stock-colors "$STOCK" \
+	--skip-templates "$SKIP_TEMPLATES"
+rc=$?
+[[ $rc -eq 0 || $rc -eq 2 ]] || die "matugen generate failed (exit $rc)"
+
+IS_LIGHT=$([[ "$MODE" == "light" ]] && echo true || echo false)
+bash "$DATA_DIR/scripts/gtk.sh" "$CONFIG_DIR" apply "$IS_LIGHT" "$DATA_DIR" >/dev/null
+bash "$DATA_DIR/scripts/gtk.sh" "$CONFIG_DIR" patch "$IS_LIGHT" "$DATA_DIR" >/dev/null
+
+if [[ "$MODE" == "light" ]]; then
+	GTK_THEME_NAME="adw-gtk3"; ICON_THEME="$ICON_THEME_LIGHT"; SCHEME="default"
+else
+	GTK_THEME_NAME="adw-gtk3-dark"; ICON_THEME="$ICON_THEME_DARK"; SCHEME="prefer-dark"
+fi
+
+ensure_gtk_settings
+
+if command -v gsettings >/dev/null; then
+	gsettings set org.gnome.desktop.interface color-scheme "$SCHEME"
+	gsettings set org.gnome.desktop.interface icon-theme "$ICON_THEME"
+	# gtk3 apps only reload the theme when the name actually changes
+	gsettings set org.gnome.desktop.interface gtk-theme ''
+	gsettings set org.gnome.desktop.interface gtk-theme "$GTK_THEME_NAME"
+fi
+
+ensure_qt_settings
+
+export CACHE_DIR="$STATE_DIR"
+export THEME_NAME="$THEME"
+export_base16 "$MODE"
+echo "$THEME" >"$STATE_DIR/current"
+
+# the shell watches this next to dms-colors.json - that file carries both modes,
+# so the mode has to come from somewhere for it to know which half is live.
+# written via rename so the shell's watcher cannot catch a half-written file
+cat >"$STATE_DIR/state.json.tmp" <<EOF
+{
+  "theme": "$THEME",
+  "mode": "$MODE",
+  "flavor": "$FLAVOR",
+  "accent": "$ACCENT",
+  "variant": "$VARIANT"
+}
+EOF
+mv "$STATE_DIR/state.json.tmp" "$STATE_DIR/state.json"
+
+for module in "$SCRIPT_DIR/theme-set.d"/*.sh; do
+	[[ -f "$module" ]] || continue
+	# subshell so one broken module cannot take down the rest
+	(source "$module") || echo "theme-set: module $(basename "$module") failed" >&2
+done
+
+echo "Theme set to: $THEME ($MODE)"
+notify-send -e "Theme: $THEME" "Restart Qt and GTK4 apps to apply" -i preferences-desktop-theme 2>/dev/null || true
