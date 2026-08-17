@@ -44,6 +44,39 @@ Templates are inert until step 3 — the file just sits there.
 | `zen.sh` | ours covers 56 CSS variables vs their 13, including `about:preferences` and newtab |
 | `btop.sh` `konsole.sh` `walker.sh` | DMS has no template for these |
 
+## If base46 does not stick
+
+The nvim template replaces the whole colorscheme with a base46 theme tinted
+towards the accent. If those themes are worse than plain `rebelot/kanagawa.nvim`,
+the lighter alternative is to keep real kanagawa and override only the surfaces
+and the accent, leaving its syntax palette alone.
+
+Kanagawa exposes a semantic map — `ui.bg`, `ui.bg_dim`, `ui.bg_m{1,2,3}`,
+`ui.bg_p{1,2}`, `ui.bg_gutter`, `ui.fg`, `ui.fg_dim`, `ui.bg_visual`,
+`ui.bg_search`, `ui.pmenu.*`, `ui.float.*`, 18 `syn.*` slots, `diag.*`, `vcs.*`,
+`diff.*` — settable via `colors.theme.all = { ... }`, which covers wave, dragon
+and lotus at once. Worth mapping:
+
+```
+ui.bg    <- background            syn.fun      <- primary
+ui.bg_p1 <- surface_container     ui.bg_visual <- primary_container
+ui.bg_p2 <- surface_container_high
+ui.fg    <- on_surface
+```
+
+Read them from `~/.cache/theme/dms-colors.json` (`colors.<mode>`), mode from
+`state.json`. Three things found in the plugin source that are not in its README:
+
+- `setup()` deep-extends into the live config, so it can be called again at
+  runtime; `load()` then re-applies. No restart needed.
+- `load()` does **not** fire the `ColorScheme` autocmd — kanagawa's own reload
+  command emits it separately. Without that, heirline will not pick up the new
+  colors. Emit `nvim_exec_autocmds("ColorScheme", { modeline = false })`.
+- `compile` must stay `false`. With compilation on, changes need
+  `:KanagawaCompile`, which kills any hot reload.
+
+Watch `dms-colors.json` with `uv.new_fs_event` to re-apply on theme switch.
+
 ## Gotchas
 
 - `dms matugen generate` exits **2** when the palette is unchanged. Not an error.
