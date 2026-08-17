@@ -55,6 +55,7 @@ usage() {
 Usage:
   theme-set <theme> [--flavor X] [--accent Y] [--variant Z] [--light]
   theme-set --list             show available themes and their variants
+  theme-set --menu             'args<TAB>label<TAB>icon' rows for the launcher
   theme-set --update           git pull the theme registry
   theme-set --current          print the active theme
 
@@ -172,6 +173,7 @@ THEME="" FLAVOR="" ACCENT="" VARIANT="" MODE="dark"
 while [[ $# -gt 0 ]]; do
 	case "$1" in
 		--list)    bootstrap; exec "$RESOLVE" --emit list ;;
+		--menu)    bootstrap; exec "$RESOLVE" --emit menu ;;
 		--current) cat "$STATE_DIR/current" 2>/dev/null || echo "(none)"; exit 0 ;;
 		--update)
 			bootstrap

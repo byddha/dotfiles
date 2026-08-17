@@ -9,7 +9,7 @@ Temele au 19 culori; matugen vrea ~50. Portul e dupa Theme.qml:
 
 Utilizare:
     dms-resolve <theme-id> [--flavor X] [--accent Y] [--variant Z]
-                           [--mode dark|light] [--emit stock|meta|list]
+                           [--mode dark|light] [--emit stock|meta|list|menu]
 """
 
 import argparse
@@ -212,6 +212,58 @@ def build_stock_colors(dark, light, is_light):
     return colors
 
 
+def iter_themes():
+    """(id, theme.json, dir) for every theme, first search dir wins."""
+    seen = set()
+    for d in SEARCH_DIRS:
+        if not os.path.isdir(d):
+            continue
+        for tid in sorted(os.listdir(d)):
+            path = os.path.join(d, tid, "theme.json")
+            if tid in seen or not os.path.exists(path):
+                continue
+            seen.add(tid)
+            with open(path) as f:
+                yield tid, json.load(f), os.path.join(d, tid)
+
+
+def label_for(entry, fallback_id):
+    """Manifests are inconsistent: some give a display name, some just repeat
+    the lowercase id ("nord", "black", "white")."""
+    name = (entry.get("name") if isinstance(entry, dict) else entry) or fallback_id
+    if name.lower() == fallback_id.lower():
+        name = fallback_id.replace("-", " ").replace("_", " ")
+    return " ".join(w[:1].upper() + w[1:] for w in name.split())
+
+
+def cmd_menu():
+    """Tab separated 'args<TAB>label<TAB>icon' for the walker/elephant picker.
+    One row per selectable combination, since each has its own preview."""
+    for tid, theme, tdir in iter_themes():
+        name = label_for(theme, tid)
+
+        def icon(*parts):
+            for candidate in ("preview-" + "-".join(parts) + ".svg" if parts else None,
+                              "preview-dark.svg", "preview.svg"):
+                if candidate and os.path.exists(os.path.join(tdir, candidate)):
+                    return os.path.join(tdir, candidate)
+            return ""
+
+        print(f"{tid}\t{name}\t{icon()}")
+
+        variants = theme.get("variants") or {}
+        flavors, accents = variants.get("flavors"), variants.get("accents")
+        if variants.get("type") == "multi" and flavors and accents:
+            for f in flavors:
+                for a in accents:
+                    label = f"{name} {label_for(f, f['id'])} {label_for(a, a['id'])}"
+                    print(f"{tid} --flavor {f['id']} --accent {a['id']}\t{label}\t{icon(f['id'], a['id'])}")
+        else:
+            for o in variants.get("options") or []:
+                label = f"{name} {label_for(o, o['id'])}"
+                print(f"{tid} --variant {o['id']}\t{label}\t{icon(o['id'])}")
+
+
 def cmd_list():
     seen = set()
     for d in SEARCH_DIRS:
@@ -242,9 +294,12 @@ def main():
     ap.add_argument("--accent")
     ap.add_argument("--variant")
     ap.add_argument("--mode", default="dark", choices=["dark", "light"])
-    ap.add_argument("--emit", default="stock", choices=["stock", "meta", "list"])
+    ap.add_argument("--emit", default="stock", choices=["stock", "meta", "list", "menu"])
     args = ap.parse_args()
 
+    if args.emit == "menu":
+        cmd_menu()
+        return
     if args.emit == "list" or not args.theme:
         cmd_list()
         return

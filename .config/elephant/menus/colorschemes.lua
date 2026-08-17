@@ -6,52 +6,30 @@ HideFromProviderlist = false
 Description = "Desktop Color Schemes"
 SearchName = true
 
--- Themes come from the DMS registry that theme-set bootstraps, plus anything
--- dropped in the local overrides dir. Each theme ships its own preview svg.
-local theme_dirs = {
-	os.getenv("HOME") .. "/.local/share/theme-set/registry/themes",
-	os.getenv("HOME") .. "/dotfiles/.config/dms-themes",
-}
-
-local function formatName(name)
-	return name:gsub("-", " "):gsub("(%a)([%w]*)", function(first, rest)
-		return first:upper() .. rest
-	end)
-end
-
-local function fileExists(path)
-	local f = io.open(path, "r")
-	if f then
-		f:close()
-		return true
-	end
-	return false
-end
+-- theme-set --menu prints one 'args<TAB>label<TAB>icon' row per selectable
+-- combination, previews included. Values carry their own flags, so
+-- "catppuccin --flavor mocha --accent blue" runs as-is through Action.
+local menu_cmd = os.getenv("HOME") .. "/dotfiles/scripts/theme-set --menu 2>/dev/null"
 
 function GetEntries()
 	local entries = {}
-	local seen = {}
 
-	for _, dir in ipairs(theme_dirs) do
-		local handle = io.popen('ls "' .. dir .. '" 2>/dev/null')
-		if handle then
-			for name in handle:lines() do
-				if not seen[name] and fileExists(dir .. "/" .. name .. "/theme.json") then
-					seen[name] = true
-					local icon = dir .. "/" .. name .. "/preview-dark.svg"
-					if not fileExists(icon) then
-						icon = dir .. "/" .. name .. "/preview.svg"
-					end
-					table.insert(entries, {
-						Text = formatName(name),
-						Value = name,
-						Icon = icon,
-					})
-				end
-			end
-			handle:close()
+	local handle = io.popen(menu_cmd)
+	if not handle then
+		return entries
+	end
+
+	for line in handle:lines() do
+		local value, text, icon = line:match("^([^\t]*)\t([^\t]*)\t(.*)$")
+		if value and value ~= "" then
+			table.insert(entries, {
+				Text = text,
+				Value = value,
+				Icon = icon,
+			})
 		end
 	end
+	handle:close()
 
 	return entries
 end
