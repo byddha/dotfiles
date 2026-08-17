@@ -1,0 +1,270 @@
+#!/usr/bin/env python3
+"""
+Rezolva o tema DMS (theme.json) intr-un set complet de roluri Material 3
+pe care `dms matugen generate --stock-colors` il poate consuma.
+
+Temele au 19 culori; matugen vrea ~50. Portul e dupa Theme.qml:
+  - _executeThemeGeneration()      -> rezolvarea flavor/accent/variant
+  - buildMatugenColorsFromTheme()  -> expandarea la ~50 de roluri
+
+Utilizare:
+    dms-resolve <theme-id> [--flavor X] [--accent Y] [--variant Z]
+                           [--mode dark|light] [--emit stock|meta|list]
+"""
+
+import argparse
+import json
+import os
+import sys
+
+SEARCH_DIRS = [
+    os.path.expanduser("~/dotfiles/.config/dms-themes"),
+    os.path.expanduser("~/.local/share/theme-set/registry/themes"),
+]
+
+
+def truthy(v):
+    """Adevarul din JS: {} si [] sunt truthy, "" si 0 si None nu."""
+    if v is None or v is False:
+        return False
+    if isinstance(v, (dict, list)):
+        return True
+    if isinstance(v, str):
+        return v != ""
+    if isinstance(v, (int, float)):
+        return v != 0
+    return True
+
+
+def first(*vals):
+    for v in vals:
+        if truthy(v):
+            return v
+    return vals[-1] if vals else None
+
+
+def merge(base, overlay):
+    out = dict(base or {})
+    for k, v in (overlay or {}).items():
+        if truthy(v):
+            out[k] = v
+    return out
+
+
+def find_variant(options, vid):
+    if not truthy(vid) or not options:
+        return None
+    for o in options:
+        if o.get("id") == vid:
+            return o
+    return options[0] if options else None
+
+
+def load_theme(theme_id):
+    for d in SEARCH_DIRS:
+        p = os.path.join(d, theme_id, "theme.json")
+        if os.path.exists(p):
+            with open(p) as f:
+                return json.load(f), p
+    sys.exit(f"tema '{theme_id}' negasita in: {', '.join(SEARCH_DIRS)}")
+
+
+def resolve(raw, flavor_id=None, accent_id=None, variant_id=None):
+    """Intoarce (darkTheme, lightTheme) cu flavor/accent/variant aplicate."""
+    dark = raw["dark"] if truthy(raw.get("dark")) else (raw.get("light") or {})
+    light = raw["light"] if truthy(raw.get("light")) else (raw.get("dark") or {})
+
+    variants = raw.get("variants")
+    if not variants:
+        return dark, light
+
+    flavors, accents = variants.get("flavors"), variants.get("accents")
+    if variants.get("type") == "multi" and flavors and accents:
+        defaults = variants.get("defaults") or {}
+        dark_def = defaults.get("dark") or {}
+        light_def = first(defaults.get("light"), dark_def)
+
+        # Un --flavor/--accent explicit se aplica ambelor moduri; altfel
+        # fiecare mod isi ia default-ul lui (ex. catppuccin: mocha / latte).
+        df = find_variant(flavors, first(flavor_id, dark_def.get("flavor"), ""))
+        lf = find_variant(flavors, first(flavor_id, light_def.get("flavor"), ""))
+        da = find_variant(accents, first(accent_id, dark_def.get("accent"), ""))
+        la = find_variant(accents, first(accent_id, light_def.get("accent"), ""))
+
+        if df:
+            dark = merge(dark, df.get("dark") or {})
+            if da:
+                dark = merge(dark, da.get(df["id"]) or {})
+        if lf:
+            light = merge(light, lf.get("light") or {})
+            if la:
+                light = merge(light, la.get(lf["id"]) or {})
+        return dark, light
+
+    options = variants.get("options")
+    if options:
+        v = find_variant(options, first(variant_id, variants.get("default"), ""))
+        if v:
+            dark = merge(dark, v.get("dark") or {})
+            light = merge(light, v.get("light") or {})
+    return dark, light
+
+
+def build_stock_colors(dark, light, is_light):
+    """Port 1:1 al Theme.qml buildMatugenColorsFromTheme()."""
+    colors = {}
+
+    def add(key, dark_val, light_val):
+        if not truthy(dark_val) and not truthy(light_val):
+            return
+        d = str(first(dark_val, light_val))
+        l = str(first(light_val, dark_val))
+        colors[key] = {
+            "dark": {"color": d},
+            "light": {"color": l},
+            "default": {"color": l if (is_light and truthy(light_val)) else d},
+        }
+
+    def g(t, *keys):
+        return first(*[t.get(k) for k in keys], "")
+
+    add("primary", dark.get("primary"), light.get("primary"))
+    add("on_primary", dark.get("primaryText"), light.get("primaryText"))
+    add("primary_container", dark.get("primaryContainer"), light.get("primaryContainer"))
+    add("on_primary_container", g(dark, "primaryContainerText", "surfaceText"),
+        g(light, "primaryContainerText", "surfaceText"))
+    add("secondary", dark.get("secondary"), light.get("secondary"))
+    add("on_secondary", g(dark, "secondaryText", "primaryText"),
+        g(light, "secondaryText", "primaryText"))
+    add("secondary_container", g(dark, "secondaryContainer", "surfaceContainerHigh"),
+        g(light, "secondaryContainer", "surfaceContainerHigh"))
+    add("on_secondary_container", g(dark, "secondaryContainerText", "surfaceText"),
+        g(light, "secondaryContainerText", "surfaceText"))
+    add("tertiary", g(dark, "tertiary", "secondary"), g(light, "tertiary", "secondary"))
+    add("on_tertiary", g(dark, "tertiaryText", "secondaryText", "primaryText"),
+        g(light, "tertiaryText", "secondaryText", "primaryText"))
+    add("tertiary_container", g(dark, "tertiaryContainer", "secondaryContainer", "surfaceContainerHigh"),
+        g(light, "tertiaryContainer", "secondaryContainer", "surfaceContainerHigh"))
+    add("on_tertiary_container", g(dark, "tertiaryContainerText", "surfaceText"),
+        g(light, "tertiaryContainerText", "surfaceText"))
+    add("error", first(dark.get("error"), "#F2B8B5"), first(light.get("error"), "#B3261E"))
+    add("on_error", first(dark.get("errorText"), "#601410"), first(light.get("errorText"), "#FFFFFF"))
+    add("error_container", first(dark.get("errorContainer"), "#8C1D18"),
+        first(light.get("errorContainer"), "#F9DEDC"))
+    add("on_error_container", first(dark.get("errorContainerText"), "#F9DEDC"),
+        first(light.get("errorContainerText"), "#410E0B"))
+    add("surface", dark.get("surface"), light.get("surface"))
+    add("on_surface", dark.get("surfaceText"), light.get("surfaceText"))
+    add("surface_variant", dark.get("surfaceVariant"), light.get("surfaceVariant"))
+    add("on_surface_variant", dark.get("surfaceVariantText"), light.get("surfaceVariantText"))
+    add("surface_tint", dark.get("surfaceTint"), light.get("surfaceTint"))
+    add("background", dark.get("background"), light.get("background"))
+    add("on_background", dark.get("backgroundText"), light.get("backgroundText"))
+    add("outline", dark.get("outline"), light.get("outline"))
+    add("outline_variant", g(dark, "outlineVariant", "surfaceVariant"),
+        g(light, "outlineVariant", "surfaceVariant"))
+    add("surface_container", dark.get("surfaceContainer"), light.get("surfaceContainer"))
+    add("surface_container_high", dark.get("surfaceContainerHigh"), light.get("surfaceContainerHigh"))
+    add("surface_container_highest", g(dark, "surfaceContainerHighest", "surfaceContainerHigh"),
+        g(light, "surfaceContainerHighest", "surfaceContainerHigh"))
+    add("surface_container_low", g(dark, "surfaceContainerLow", "surface"),
+        g(light, "surfaceContainerLow", "surface"))
+    add("surface_container_lowest", g(dark, "surfaceContainerLowest", "background"),
+        g(light, "surfaceContainerLowest", "background"))
+    add("surface_bright", g(dark, "surfaceBright", "surfaceContainerHighest", "surfaceContainerHigh"),
+        g(light, "surfaceBright", "surface"))
+    add("surface_dim", g(dark, "surfaceDim", "background"),
+        g(light, "surfaceDim", "surfaceContainer"))
+    add("inverse_surface", first(dark.get("inverseSurface"), light.get("surface")),
+        first(light.get("inverseSurface"), dark.get("surface")))
+    add("inverse_on_surface", first(dark.get("inverseOnSurface"), light.get("surfaceText")),
+        first(light.get("inverseOnSurface"), dark.get("surfaceText")))
+    add("inverse_primary", first(dark.get("inversePrimary"), light.get("primary")),
+        first(light.get("inversePrimary"), dark.get("primary")))
+    add("scrim", first(dark.get("scrim"), "#000000"), first(light.get("scrim"), "#000000"))
+    add("shadow", first(dark.get("shadow"), "#000000"), first(light.get("shadow"), "#000000"))
+    add("source_color", dark.get("primary"), light.get("primary"))
+    add("primary_fixed", g(dark, "primaryFixed", "primaryContainer"),
+        g(light, "primaryFixed", "primaryContainer"))
+    add("primary_fixed_dim", g(dark, "primaryFixedDim", "primary"),
+        g(light, "primaryFixedDim", "primary"))
+    add("on_primary_fixed", g(dark, "onPrimaryFixed", "primaryText"),
+        g(light, "onPrimaryFixed", "primaryText"))
+    add("on_primary_fixed_variant", g(dark, "onPrimaryFixedVariant", "primaryText"),
+        g(light, "onPrimaryFixedVariant", "primaryText"))
+    add("secondary_fixed", g(dark, "secondaryFixed", "secondary"),
+        g(light, "secondaryFixed", "secondary"))
+    add("secondary_fixed_dim", g(dark, "secondaryFixedDim", "secondary"),
+        g(light, "secondaryFixedDim", "secondary"))
+    add("on_secondary_fixed", g(dark, "onSecondaryFixed", "primaryText"),
+        g(light, "onSecondaryFixed", "primaryText"))
+    add("on_secondary_fixed_variant", g(dark, "onSecondaryFixedVariant", "primaryText"),
+        g(light, "onSecondaryFixedVariant", "primaryText"))
+    add("tertiary_fixed", g(dark, "tertiaryFixed", "tertiary", "secondary"),
+        g(light, "tertiaryFixed", "tertiary", "secondary"))
+    add("tertiary_fixed_dim", g(dark, "tertiaryFixedDim", "tertiary", "secondary"),
+        g(light, "tertiaryFixedDim", "tertiary", "secondary"))
+    add("on_tertiary_fixed", g(dark, "onTertiaryFixed", "primaryText"),
+        g(light, "onTertiaryFixed", "primaryText"))
+    add("on_tertiary_fixed_variant", g(dark, "onTertiaryFixedVariant", "primaryText"),
+        g(light, "onTertiaryFixedVariant", "primaryText"))
+
+    return colors
+
+
+def cmd_list():
+    seen = set()
+    for d in SEARCH_DIRS:
+        if not os.path.isdir(d):
+            continue
+        for tid in sorted(os.listdir(d)):
+            if tid in seen or not os.path.exists(os.path.join(d, tid, "theme.json")):
+                continue
+            seen.add(tid)
+            with open(os.path.join(d, tid, "theme.json")) as f:
+                t = json.load(f)
+            v = t.get("variants") or {}
+            fl, ac = v.get("flavors") or [], v.get("accents") or []
+            op = v.get("options") or []
+            extra = ""
+            if fl and ac:
+                extra = (f"  flavors: {','.join(x['id'] for x in fl)}"
+                         f"  accents: {','.join(x['id'] for x in ac)}")
+            elif op:
+                extra = f"  variants: {','.join(x['id'] for x in op)}"
+            print(f"{tid:28s} {t.get('name', ''):24s}{extra}")
+
+
+def main():
+    ap = argparse.ArgumentParser(add_help=True)
+    ap.add_argument("theme", nargs="?")
+    ap.add_argument("--flavor")
+    ap.add_argument("--accent")
+    ap.add_argument("--variant")
+    ap.add_argument("--mode", default="dark", choices=["dark", "light"])
+    ap.add_argument("--emit", default="stock", choices=["stock", "meta", "list"])
+    args = ap.parse_args()
+
+    if args.emit == "list" or not args.theme:
+        cmd_list()
+        return
+
+    raw, path = load_theme(args.theme)
+    dark, light = resolve(raw, args.flavor, args.accent, args.variant)
+    is_light = args.mode == "light"
+    active = light if is_light else dark
+
+    if not truthy(active.get("primary")):
+        sys.exit(f"{path}: lipseste 'primary' pentru modul {args.mode}")
+
+    if args.emit == "meta":
+        print(f"primary={active['primary']}")
+        print(f"matugen_type={first(active.get('matugen_type'), 'scheme-tonal-spot')}")
+        print(f"source={path}")
+    else:
+        json.dump(build_stock_colors(dark, light, is_light), sys.stdout,
+                  separators=(",", ":"))
+
+
+if __name__ == "__main__":
+    main()
