@@ -1,7 +1,7 @@
 # Appearance
 font-family = CaskaydiaCove Nerd Font Mono
 font-size = 14
-config-file = ?/home/bida/.cache/theme/ghostty.conf
+theme = dankcolors
 window-padding-x = 6
 window-padding-y = 3
 cursor-style-blink = true
