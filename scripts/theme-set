@@ -243,6 +243,20 @@ export THEME_NAME="$THEME"
 export_base16 "$MODE"
 echo "$THEME" >"$STATE_DIR/current"
 
+# the shell watches this next to dms-colors.json - that file carries both modes,
+# so the mode has to come from somewhere for it to know which half is live.
+# written via rename so the shell's watcher cannot catch a half-written file
+cat >"$STATE_DIR/state.json.tmp" <<EOF
+{
+  "theme": "$THEME",
+  "mode": "$MODE",
+  "flavor": "$FLAVOR",
+  "accent": "$ACCENT",
+  "variant": "$VARIANT"
+}
+EOF
+mv "$STATE_DIR/state.json.tmp" "$STATE_DIR/state.json"
+
 for module in "$SCRIPT_DIR/theme-set.d"/*.sh; do
 	[[ -f "$module" ]] || continue
 	# subshell so one broken module cannot take down the rest

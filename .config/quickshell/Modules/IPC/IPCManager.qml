@@ -13,13 +13,26 @@ Item {
 
         function setTheme(themeName: string): string {
             Logger.info("IPC: theme.setTheme called with:", themeName);
+            // theme-set recolors the whole desktop and rewrites the palette
+            // files; ThemeService is watching those and repaints the shell.
+            ThemeService.setTheme(themeName, false);
             Config.options.general.base16Theme = themeName;
             Config.saveConfig();
             return `Theme switched to: ${themeName}`;
         }
 
+        function setLightTheme(themeName: string): string {
+            Logger.info("IPC: theme.setLightTheme called with:", themeName);
+            ThemeService.setTheme(themeName, true);
+            Config.options.general.base16Theme = themeName;
+            Config.saveConfig();
+            return `Theme switched to: ${themeName} (light)`;
+        }
+
         function getTheme(): string {
-            const theme = Config.options.general.base16Theme;
+            // ThemeService follows the files, so it is right even when the theme
+            // was changed by running theme-set directly.
+            const theme = ThemeService.currentTheme;
             Logger.info("IPC: theme.getTheme →", theme);
             return theme;
         }
