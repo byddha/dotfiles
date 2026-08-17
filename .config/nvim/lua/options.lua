@@ -64,7 +64,7 @@ vim.o.shell = "zsh"
 if is_windows then
     vim.o.shell = vim.fn.executable "pwsh" == 1 and "pwsh" or "powershell"
     vim.o.shellcmdflag =
-        "-NoLogo -ExecutionPolicy RemoteSigned -Command [Console]::InputEncoding=[Console]::OutputEncoding=[System.Text.UTF8Encoding]::new();$PSDefaultParameterValues['Out-File:Encoding']='utf8';"
+    "-NoLogo -ExecutionPolicy RemoteSigned -Command [Console]::InputEncoding=[Console]::OutputEncoding=[System.Text.UTF8Encoding]::new();$PSDefaultParameterValues['Out-File:Encoding']='utf8';"
     vim.o.shellredir = '2>&1 | %{ "$_" } | Out-File %s; exit $LastExitCode'
     vim.o.shellpipe = '2>&1 | %{ "$_" } | Tee-Object %s; exit $LastExitCode'
     vim.o.shellquote = ""
@@ -100,16 +100,9 @@ vim.cmd [[
     autocmd FileType * setlocal formatoptions-=cro
 ]]
 
--- For neovim 0.11; Allegedly remove this and uncomment from kitty when new nvim
-vim.api.nvim_create_user_command('TermHl', function()
-          local b = vim.api.nvim_create_buf(false, true)
-          local chan = vim.api.nvim_open_term(b, {})
-          vim.api.nvim_chan_send(chan, table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), '\n'))
-          vim.api.nvim_win_set_buf(0, b)
-        end, { desc = 'Highlights ANSI termcodes in curbuf' })
--- }}}
-
 -- Hypr
 vim.filetype.add {
     pattern = { [".*/hypr/.*%.conf"] = "hyprlang" },
 }
+
+vim.opt.shada:append "r/mnt/nas"
