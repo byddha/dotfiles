@@ -8,3 +8,7 @@ dank-theme.conf
 dank-tabs.conf
 dank-colors.css
 dank-discord.css
+
+# app-managed, not authored by hand
+kdeglobals
+dolphinrc
