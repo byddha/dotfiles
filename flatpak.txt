@@ -4,6 +4,8 @@ com.github.wwmm.easyeffects
 com.mastermindzh.tidal-hifi
 com.rustdesk.RustDesk
 dev.vencord.Vesktop
+io.github.jonmagon.kdiskmark
 io.missioncenter.MissionCenter
+org.openscad.OpenSCAD
 org.prismlauncher.PrismLauncher
 org.remmina.Remmina
