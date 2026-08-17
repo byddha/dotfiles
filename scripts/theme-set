@@ -46,7 +46,7 @@ RESOLVE="$SCRIPT_DIR/theme-set.d/dms-resolve"
 
 # apps still themed by our own modules in theme-set.d/ - DMS must not touch them.
 # moving one over to DMS means deleting it from here and from theme-set.d/.
-SKIP_TEMPLATES="niri,hyprland,mangowc,fcitx5,firefox,pywalfox,zenbrowser,vesktop,vencord,equibop,kitty,foot,alacritty,wezterm,nvim,dgop,vscode,emacs,zed,qtengine"
+SKIP_TEMPLATES="niri,hyprland,mangowc,fcitx5,firefox,pywalfox,zenbrowser,vencord,equibop,foot,alacritty,wezterm,nvim,dgop,vscode,emacs,zed,qtengine"
 
 die() { echo "theme-set: $*" >&2; exit 1; }
 
