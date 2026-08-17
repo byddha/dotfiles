@@ -103,7 +103,7 @@ local mouse_binds = {
 }
 
 local utility_binds = {
-    { "<D-A-SPACE>", exec(settings.script("whisperT.sh")), "Transcribe speech" },
+    { "<D-A-SPACE>", exec(settings.bin("whisper")), "Transcribe speech" },
     { "<D-SPACE>",   exec("qs ipc call sidebar toggle"),   "Open sidebar" },
 }
 

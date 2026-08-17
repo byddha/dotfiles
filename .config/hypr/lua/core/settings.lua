@@ -26,6 +26,11 @@ function M.script(name)
     return M.hypr_dir .. "/scripts/" .. name
 end
 
+-- dotfiles/scripts is only on PATH for interactive shells, binds need the path
+function M.bin(name)
+    return M.home .. "/dotfiles/scripts/" .. name
+end
+
 function M.cmd(parts)
     return table.concat(parts, " ")
 end
