@@ -29,11 +29,6 @@ local rules = {
         center = true,
     },
     {
-        name  = "godot-tiled",
-        match = { class = "^(Godot)$", initial_class = "^(Godot)$", initial_title = "^(Godot)$" },
-        tile  = true,
-    },
-    {
         name   = "kitty-file-picker-files",
         match  = { class = "^(kitty)$", title = "^(Select Files:)$", initial_title = "^(Select Files:)$" },
         float  = true,
@@ -108,6 +103,11 @@ local rules = {
     {
         name      = "special-gaming",
         match     = { class = "^(steam_app).*" },
+        workspace = "special:gaming silent",
+    },
+    {
+        name      = "special-gaming-individual",
+        match     = { class = "cstrike_linux64" },
         workspace = "special:gaming silent",
     },
     {
