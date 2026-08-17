@@ -9,6 +9,17 @@ return {
         local conditions = require "heirline.conditions"
         local utils = require "heirline.utils"
 
+        -- themes disagree on which diff groups they define: the legacy vim
+        -- syntax ones, the modern nvim ones, or only the full DiffAdd family
+        local function first_fg(...)
+            for _, group in ipairs { ... } do
+                local fg = utils.get_highlight(group).fg
+                if fg then
+                    return fg
+                end
+            end
+        end
+
         local function setup_colors()
             return {
                 bright_bg = utils.get_highlight("Folded").bg,
@@ -23,9 +34,9 @@ return {
                 diag_error = utils.get_highlight("DiagnosticError").fg,
                 diag_hint = utils.get_highlight("DiagnosticHint").fg,
                 diag_info = utils.get_highlight("DiagnosticInfo").fg,
-                git_del = utils.get_highlight("diffDeleted").fg,
-                git_add = utils.get_highlight("diffAdded").fg,
-                git_change = utils.get_highlight("diffChanged").fg,
+                git_del = first_fg("diffDeleted", "Removed", "DiffDelete"),
+                git_add = first_fg("diffAdded", "Added", "DiffAdd"),
+                git_change = first_fg("diffChanged", "Changed", "DiffChange"),
             }
         end
 
