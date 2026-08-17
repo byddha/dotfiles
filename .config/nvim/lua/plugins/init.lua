@@ -27,7 +27,11 @@ return {
                 end,
             })
 
-            vim.cmd.colorscheme "dms"
+            -- colors/dms.lua is written by theme-set, so it only exists on the
+            -- linux box; elsewhere fall back to the base46 theme it is built on
+            if not pcall(vim.cmd.colorscheme, "dms") then
+                vim.cmd.colorscheme "base46-kanagawa"
+            end
         end,
     },
     { import = "plugins.ai" },
