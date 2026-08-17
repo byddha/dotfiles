@@ -7,6 +7,7 @@ return {
             -- all pickers so they dim the editor like the lazygit window does
             -- lower blend = darker; 60 is the snacks default and too weak here
             layout = { layout = { backdrop = 40 } },
+            formatters = { file = { git_status_hl = false } },
             sources = {
                 explorer = {
                     -- inlined `ivy`, only to give the file list more room than

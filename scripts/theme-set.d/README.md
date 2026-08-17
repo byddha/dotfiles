@@ -22,9 +22,9 @@ theme-set --update    # git pull the registry
 
 ## Enabling another DMS template
 
-DMS ships templates for nvim, zed, firefox, foot, alacritty, emacs and more.
-They are all blocked by `SKIP_TEMPLATES` in `theme-set` so they cannot fight the
-modules in this directory. To adopt one, e.g. nvim:
+DMS ships templates for zed, firefox, foot, alacritty, emacs and more. They are
+blocked by `SKIP_TEMPLATES` in `theme-set` so they cannot fight the modules in
+this directory. To adopt one:
 
 1. Delete `nvim` from `SKIP_TEMPLATES`.
 2. Run `theme-set <current>`; it writes the file the template declares. Check
@@ -58,3 +58,10 @@ Templates are inert until step 3 — the file just sits there.
 - Qt needs `style=Breeze` (or Fusion). Kvantum draws with colors baked into its
   own SVGs and ignores the palette entirely.
 - `qt6ct.conf` and `gtk-*/settings.ini` are not in git — `theme-set` creates them.
+- The nvim template is the odd one out: it does not generate a palette. It needs
+  the `AvengeMedia/base46` plugin, takes one of its builtin themes (`kanagawa`
+  here) and tints it towards the DMS accent. Which base theme and how strongly is
+  in `~/.config/DankMaterialShell/settings.json` under
+  `matugenTemplateNeovimSettings`. It also shells out to `dms ipc call theme
+  getMode`, which fails silently without the DMS shell running — light/dark comes
+  from `vim.o.background` instead.

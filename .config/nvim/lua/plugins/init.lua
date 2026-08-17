@@ -1,18 +1,33 @@
 return {
     {
-        "rebelot/kanagawa.nvim",
+        -- "dms" is colors/dms.lua, written by theme-set from the DMS palette:
+        -- base46's kanagawa tinted towards the current desktop accent.
+        -- Not a base46-* name, so it cannot be lazy loaded on colorscheme.
+        "AvengeMedia/base46",
         lazy = false,
         priority = 1500,
-        config = function()
-            require("kanagawa").setup {
-                overrides = function(_)
-                    return {
-                        DapStopped = { bg = "#2a2a37" }, -- LineNr
-                        SnacksPickerTree = { bg = "#16161D", fg = "#727169" }, -- NormalFloat, Comment
-                    }
+        opts = {},
+        config = function(_, opts)
+            require("base46").setup(opts)
+
+            -- kanagawa hardcoded these; derive them so they follow the theme
+            vim.api.nvim_create_autocmd("ColorScheme", {
+                callback = function()
+                    local function hl(name)
+                        return vim.api.nvim_get_hl(0, { name = name, link = false })
+                    end
+                    -- not every theme gives LineNr a background
+                    vim.api.nvim_set_hl(0, "DapStopped", {
+                        bg = hl("LineNr").bg or hl("CursorLine").bg or hl("NormalFloat").bg,
+                    })
+                    vim.api.nvim_set_hl(0, "SnacksPickerTree", {
+                        bg = hl("NormalFloat").bg,
+                        fg = hl("Comment").fg,
+                    })
                 end,
-            }
-            vim.cmd.colorscheme "kanagawa"
+            })
+
+            vim.cmd.colorscheme "dms"
         end,
     },
     { import = "plugins.ai" },

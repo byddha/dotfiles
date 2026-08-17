@@ -15,7 +15,7 @@ require("lazy").setup({
     { import = "plugins" },
 }, {
     defaults = { lazy = true },
-    install = { colorscheme = { "kanagawa" } },
+    install = { colorscheme = { "dms", "habamax" } },
 
     ui = {
         icons = {
