@@ -7,13 +7,13 @@ local dar               = helpers.dispatch_and_reset
 local ear               = helpers.exec_and_reset
 
 local app_binds         = {
-    { "z",      ear("zen-browser"),                                                                                                    "Browser" },
-    { "<S-w>",  ear("thunar"),                                                                                                         "Thunar" },
-    { "w",      ear('kitty --title "Yazi" yazi'),                                                                                      "Yazi" },
-    { "d",      ear(programs.launch .. ' -ic "vesktop" dev.vencord.Vesktop'),                                                          "Discord" },
-    { "s",      ear(programs.launch .. ' -ic "steam" steam'),                                                                          "Steam" },
-    { "t",      ear(programs.launch .. ' -it "teams.cloud.microsoft_/" gio launch ~/.local/share/applications/webapp-teams.desktop'),  "Teams", },
-    { "TAB",    dar(hl.dsp.focus({ workspace = "previous" })),                                                                         "Back" },
+    { "z",      ear("zen-browser"),                                                                                                   "Browser" },
+    { "<S-w>",  ear("dolphin"),                                                                                                       "Dolphin" },
+    { "w",      ear('kitty --title "Yazi" yazi'),                                                                                     "Yazi" },
+    { "d",      ear(programs.launch .. ' -ic "vesktop" dev.vencord.Vesktop'),                                                         "Discord" },
+    { "s",      ear(programs.launch .. ' -ic "steam" steam'),                                                                         "Steam" },
+    { "t",      ear(programs.launch .. ' -it "teams.cloud.microsoft_/" gio launch ~/.local/share/applications/webapp-teams.desktop'), "Teams", },
+    { "TAB",    dar(hl.dsp.focus({ workspace = "previous" })),                                                                        "Back" },
     { "escape", hl.dsp.submap("reset") },
 }
 
