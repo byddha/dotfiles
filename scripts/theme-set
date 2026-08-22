@@ -157,6 +157,16 @@ ensure_gtk_settings() {
 	done
 }
 
+# Qt apps inside Flatpak cannot reach qt6ct - the KDE runtimes ship only
+# KDEPlasmaPlatformTheme, which reads kdeglobals. Native Qt apps ignore this and
+# take their palette from qt6ct.
+ensure_kdeglobals() {
+	local scheme="$HOME/.local/share/color-schemes/DankMatugen.colors"
+	[[ -f "$scheme" ]] || return 0
+	"$SCRIPT_DIR/theme-set.d/dms-kdeglobals" "$scheme" >/dev/null \
+		|| echo "theme-set: failed to apply kdeglobals colors" >&2
+}
+
 ensure_qt_settings() {
 	local conf="$CONFIG_DIR/qt6ct/qt6ct.conf"
 	local scheme="$HOME/.local/share/color-schemes/DankMatugen.colors"
@@ -239,6 +249,7 @@ if command -v gsettings >/dev/null; then
 fi
 
 ensure_qt_settings
+ensure_kdeglobals
 
 export CACHE_DIR="$STATE_DIR"
 export THEME_NAME="$THEME"
@@ -259,10 +270,16 @@ cat >"$STATE_DIR/state.json.tmp" <<EOF
 EOF
 mv "$STATE_DIR/state.json.tmp" "$STATE_DIR/state.json"
 
-for module in "$SCRIPT_DIR/theme-set.d"/*.sh; do
+# .sh modules are sourced, .py ones run as executables - they pick the same
+# variables up from the environment. The dms-* helpers have no extension, so
+# they are not modules.
+for module in "$SCRIPT_DIR/theme-set.d"/*.sh "$SCRIPT_DIR/theme-set.d"/*.py; do
 	[[ -f "$module" ]] || continue
 	# subshell so one broken module cannot take down the rest
-	(source "$module") || echo "theme-set: module $(basename "$module") failed" >&2
+	case "$module" in
+		*.sh) (source "$module") ;;
+		*.py) "$module" ;;
+	esac || echo "theme-set: module $(basename "$module") failed" >&2
 done
 
 echo "Theme set to: $THEME ($MODE)"

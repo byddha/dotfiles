@@ -1,0 +1,123 @@
+#!/usr/bin/env python3
+"""
+Copy a KDE colour scheme into ~/.config/kdeglobals.
+
+This is what `plasma-apply-colorscheme` does, minus the parts that need Plasma.
+We need it because Qt apps inside Flatpak cannot see qt6ct - the KDE runtimes
+ship only KDEPlasmaPlatformTheme + breeze, and that reads kdeglobals. Native Qt
+apps here get their palette from qt6ct and do not care about this file.
+
+Deliberately NOT replicated from colorsapplicator.cpp:
+  - accent substitution over Foreground{Active,Link} and Decoration{Focus,Hover};
+    it only fires when Plasma has written [General] AccentColor, and the DMS
+    template already puts primary in those keys
+  - runRdb KRdbExportQtColors, an X resource export for live repaints; Flatpak
+    apps read kdeglobals at startup
+  - runRdb KRdbExportGtkTheme, which writes GTK config from KDE's side and would
+    land on top of what theme-set manages
+
+Usage:  dms-kdeglobals <path/to/scheme.colors>
+"""
+
+import os
+import shutil
+import sys
+
+# Sections the scheme owns. Everything else in kdeglobals - Icons, KDE,
+# KFileDialog Settings, shortcuts - is left alone.
+OWNED_PREFIXES = ("Colors:", "ColorEffects:")
+OWNED_EXACT = ("WM",)
+
+KDEGLOBALS = os.path.join(
+    os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config"), "kdeglobals"
+)
+
+
+def parse_ini(text):
+    """[(section, [lines]), ...] in order. Lines before the first section land
+    under None. Section names are kept verbatim so the '[Colors:Header][Inactive]'
+    form round trips."""
+    sections, current, lines = [], None, []
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("[") and stripped.endswith("]"):
+            sections.append((current, lines))
+            current, lines = stripped[1:-1], []
+        else:
+            lines.append(line)
+    sections.append((current, lines))
+    return sections
+
+
+def owned(name):
+    return name is not None and (name.startswith(OWNED_PREFIXES) or name in OWNED_EXACT)
+
+
+def render(sections):
+    out = []
+    for name, lines in sections:
+        body = "\n".join(lines).strip("\n")
+        if name is None:
+            if body:
+                out.append(body)
+        else:
+            out.append(f"[{name}]\n{body}" if body else f"[{name}]")
+    return "\n\n".join(out).rstrip("\n") + "\n"
+
+
+def main():
+    if len(sys.argv) != 2:
+        sys.exit(__doc__.strip())
+    scheme_path = sys.argv[1]
+    if not os.path.exists(scheme_path):
+        sys.exit(f"scheme not found: {scheme_path}")
+
+    with open(scheme_path) as f:
+        scheme = parse_ini(f.read())
+
+    existing = ""
+    if os.path.exists(KDEGLOBALS):
+        with open(KDEGLOBALS) as f:
+            existing = f.read()
+
+    # The name goes into [General] ColorScheme=, which is also the flag DMS reads
+    # to decide whether it may touch the scheme at all. With Plasma installed
+    # that gate opening means DMS starts calling plasma-apply-colorscheme, whose
+    # GTK export lands on top of the files theme-set manages - so in that case
+    # leave the key out. KDEPlasmaPlatformTheme reads the [Colors:*] sections
+    # directly; the name is only a label.
+    scheme_name = ""
+    if shutil.which("plasma-apply-colorscheme") is None:
+        for name, lines in scheme:
+            if name != "General":
+                continue
+            for line in lines:
+                if line.startswith("ColorScheme="):
+                    scheme_name = line.split("=", 1)[1].strip()
+
+    out = []
+    seen_general = False
+    for name, lines in parse_ini(existing):
+        if owned(name):
+            continue
+        if name == "General":
+            seen_general = True
+            lines = [l for l in lines if not l.startswith("ColorScheme=")]
+            if scheme_name:
+                lines = [f"ColorScheme={scheme_name}"] + lines
+        out.append((name, lines))
+
+    if not seen_general and scheme_name:
+        out.append(("General", [f"ColorScheme={scheme_name}"]))
+
+    out.extend((name, lines) for name, lines in scheme if owned(name))
+
+    tmp = KDEGLOBALS + ".tmp"
+    with open(tmp, "w") as f:
+        f.write(render(out))
+    os.replace(tmp, KDEGLOBALS)
+    print(f"kdeglobals: applied '{scheme_name or '?'}'")
+
+
+if __name__ == "__main__":
+    main()

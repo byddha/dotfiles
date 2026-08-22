@@ -44,6 +44,42 @@ Templates are inert until step 3 — the file just sits there.
 | `zen.sh` | ours covers 56 CSS variables vs their 13, including `about:preferences` and newtab |
 | `btop.sh` `konsole.sh` `walker.sh` | DMS has no template for these |
 
+## Flatpak
+
+Sandboxed apps see none of the generated files by default. One-time:
+
+```bash
+flatpak override --user \
+  --filesystem=xdg-config/gtk-4.0:ro \
+  --filesystem=xdg-data/themes:ro \
+  --filesystem=xdg-config/kdeglobals:ro \
+  --env=QT_QPA_PLATFORMTHEME=kde
+```
+
+- GTK4/libadwaita reads `gtk-4.0/gtk.css`, GTK3 picks the patched theme out of
+  `xdg-data/themes`.
+- The env var is the part that is easy to miss: the session exports
+  `QT_QPA_PLATFORMTHEME=qt6ct`, which is **inherited into the sandbox** where
+  qt6ct does not exist, leaving Qt with no platform theme at all. The KDE
+  runtimes ship `KDEPlasmaPlatformTheme` (plugin key `kde`), which reads
+  kdeglobals - hence `ensure_kdeglobals` in theme-set.
+- Icons cannot be shared from `/usr/share/icons`; Flatpak refuses any bind under
+  `/usr`. Would need Papirus copied into `~/.local/share/icons` plus
+  `--filesystem=xdg-data/icons:ro`. Not done.
+- Apps that paint their own UI never follow along: BambuStudio (wxWidgets),
+  anything Electron.
+
+## If you switch to KDE Plasma
+
+`dms-kdeglobals` writes `[General] ColorScheme=` only when
+`plasma-apply-colorscheme` is absent. That key is the flag DMS checks before
+calling that command itself, and its `KRdbExportGtkTheme` step writes GTK config
+from KDE's side - straight over the `settings.ini` and `gtk-4.0/gtk.css` that
+theme-set owns. With the key withheld the gate stays shut and nothing changes.
+
+To hand theming over to Plasma instead, add `ColorScheme=DankMatugen` back under
+`[General]` in `~/.config/kdeglobals`.
+
 ## If base46 does not stick
 
 The nvim template replaces the whole colorscheme with a base46 theme tinted
