@@ -1,0 +1,53 @@
+/* Sidebar-ul nu-si controleaza latimea: e item intr-un grid (base_) care
+   defineste coloanele [servere][canale][chat]. Le colapsam pe primele doua,
+   lasand o fasie de 12px ca zona de hover. */
+div[class^="base_"] {
+  grid-template-columns: [start] 0px [guildsEnd] 12px [channelsEnd] 1fr [end] !important;
+  transition: grid-template-columns 150ms ease;
+}
+
+div[class^="base_"]:has([class^="sidebar_"]:hover) {
+  grid-template-columns: [start] 72px [guildsEnd] 192px [channelsEnd] 1fr [end] !important;
+}
+
+div[class^="sidebar_"] {
+  overflow: hidden !important;
+}
+
+/* Butoanele back/forward, nefolosite, devin indicator de mic/casti.
+   aria-label ramane "Mute"/"Deafen"; aria-checked e cel care comuta. */
+div[class^="backForwardButtons_"] {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+div[class^="backForwardButtons_"] > div[class*="button_"] {
+  display: none !important;
+}
+
+div[class^="backForwardButtons_"]::before,
+div[class^="backForwardButtons_"]::after {
+  content: "";
+  width: 15px;
+  height: 15px;
+  background: #43a25a;
+  transition: background 120ms ease;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+}
+
+div[class^="backForwardButtons_"]::before { mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z'/%3E%3C/svg%3E"); }
+div[class^="backForwardButtons_"]::after  { mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3a9 9 0 0 0-9 9v7a2 2 0 0 0 2 2h3v-8H5v-1a7 7 0 0 1 14 0v1h-3v8h3a2 2 0 0 0 2-2v-7a9 9 0 0 0-9-9z'/%3E%3C/svg%3E"); }
+
+div[class^="base_"]:has(button[aria-label="Mute"][aria-checked="true"])
+  div[class^="backForwardButtons_"]::before {
+  background: #f23f43;
+}
+
+div[class^="base_"]:has(button[aria-label="Deafen"][aria-checked="true"])
+  div[class^="backForwardButtons_"]::after {
+  background: #f23f43;
+}
