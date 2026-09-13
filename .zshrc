@@ -57,7 +57,10 @@ export SYSTEMD_EDITOR=vim
 export PATH="$PATH:$HOME/dotfiles/scripts"
 ## Rocm
 export ROCM_PATH=/opt/rocm
-export HIP_VISIBLE_DEVICES=0 
+export HIP_VISIBLE_DEVICES=0
+## Bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
 ##
 . "$HOME/.local/bin/env"
 
@@ -90,6 +93,8 @@ fi
 
 
 autoload -Uz compinit && compinit
+# _bun calls compdef, and runs compinit itself if it isn't loaded yet
+[ -s "$BUN_INSTALL/_bun" ] && source "$BUN_INSTALL/_bun"
 zinit cdreplay -q
 
 # To customize prompt, run `p10k configure` or edit ~/dotfiles/.p10k.zsh.
