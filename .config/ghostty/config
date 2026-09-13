@@ -7,6 +7,7 @@ window-padding-y = 3
 cursor-style-blink = true
 link-url = true
 link-previews = osc8
+shell-integration-features = ssh-terminfo
 
 # Keybinds
 keybind = ctrl+enter=new_window
