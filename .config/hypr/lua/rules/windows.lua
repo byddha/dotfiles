@@ -29,6 +29,12 @@ local rules = {
         center = true,
     },
     {
+        name   = "hyprland-share-picker",
+        match  = { class = "^(hyprland-share-picker)$" },
+        float  = true,
+        center = true,
+    },
+    {
         name   = "kitty-file-picker-files",
         match  = { class = "^(kitty)$", title = "^(Select Files:)$", initial_title = "^(Select Files:)$" },
         float  = true,
@@ -69,16 +75,16 @@ local rules = {
     { match = { class = "^(zen|Firefox)$" },                                    idle_inhibit = "fullscreen" },
     { match = { title = ".*(YouTube|Twitch|Netflix).*" },                       idle_inhibit = "focus" },
     { match = { class = "^(mpv|vlc|.+exe)$" },                                  idle_inhibit = "focus" },
-    {
-        name        = "smart-gaps-one-tiled",
-        match       = { float = false, workspace = "w[tv1]" },
-        border_size = 0,
-    },
-    {
-        name        = "smart-gaps-one-fullscreen",
-        match       = { float = false, workspace = "f[1]" },
-        border_size = 0,
-    },
+    -- {
+    --     name        = "smart-gaps-one-tiled",
+    --     match       = { float = false, workspace = "w[tv1]" },
+    --     border_size = 0,
+    -- },
+    -- {
+    --     name        = "smart-gaps-one-fullscreen",
+    --     match       = { float = false, workspace = "f[1]" },
+    --     border_size = 0,
+    -- },
     -- {
     --     name            = "zen-scrolling-width",
     --     match           = { initial_class = "^(zen)$" },
@@ -114,6 +120,16 @@ local rules = {
         name      = "special-gaming-gamescope",
         match     = { class = "^(gamescope).*" },
         workspace = "special:gaming silent",
+    },
+    {
+        name            = "steam-app-12210-confine-pointer",
+        match           = { class = "steam_app_12210" },
+        confine_pointer = true,
+    },
+    {
+        name            = "steam-app-confine",
+        match           = { class = "^(steam_app).*" },
+        confine_pointer = true,
     },
 }
 
