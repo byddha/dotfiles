@@ -27,10 +27,10 @@ local app_binds = {
 
 
 local focus_binds     = {
-    -- { "<D-h>",           hl.dsp.layout("focus l"),            "Move focus left" },
-    -- { "<D-l>",           hl.dsp.layout("focus r"),            "Move focus right" },
-    { "<D-h>",           hl.dsp.focus({ direction = "l" }),  "Move focus up" },
-    { "<D-l>",           hl.dsp.focus({ direction = "r" }),  "Move focus down" },
+    { "<D-h>",           hl.dsp.layout("focus l"),           "Move focus left" },
+    { "<D-l>",           hl.dsp.layout("focus r"),           "Move focus right" },
+    -- { "<D-h>",           hl.dsp.focus({ direction = "l" }),  "Move focus up" },
+    -- { "<D-l>",           hl.dsp.focus({ direction = "r" }),  "Move focus down" },
     { "<D-k>",           hl.dsp.focus({ direction = "u" }),  "Move focus up" },
     { "<D-j>",           hl.dsp.focus({ direction = "d" }),  "Move focus down" },
     { "<D-mouse_up>",    hl.dsp.layout("focus l") },
@@ -85,6 +85,13 @@ for key, workspace in pairs(workspace_keys) do
     table.insert(workspace_binds, { "<D-S-" .. key .. ">", hl.dsp.window.move({ workspace = workspace }) })
 end
 
+local scroll_binds = {
+    { "<D-S-mouse_up>",   hl.dsp.layout("move -150"), "Scroll tape left" },
+    { "<D-S-mouse_down>", hl.dsp.layout("move +150"), "Scroll tape right" },
+    { "<D-C-S-h>",        hl.dsp.layout("move -150"), "Scroll tape left",  { repeating = true } },
+    { "<D-C-S-l>",        hl.dsp.layout("move +150"), "Scroll tape right", { repeating = true } },
+}
+
 local layout_binds = {
     { "<D-bracketleft>",  hl.dsp.layout("consume_or_expel prev"), "Consume or expel prev" },
     { "<D-bracketright>", hl.dsp.layout("consume_or_expel next"), "Consume or expel next" },
@@ -103,8 +110,8 @@ local mouse_binds = {
 }
 
 local utility_binds = {
-    { "<D-A-SPACE>", exec(settings.bin("whisper")), "Transcribe speech" },
-    { "<D-SPACE>",   exec("qs ipc call sidebar toggle"),   "Open sidebar" },
+    { "<D-A-SPACE>", exec(settings.bin("whisper")),      "Transcribe speech" },
+    { "<D-SPACE>",   exec("qs ipc call sidebar toggle"), "Open sidebar" },
 }
 
 local locked_repeating = { locked = true, repeating = true }
@@ -131,6 +138,7 @@ local bind_groups = {
     resize_binds,
     move_binds,
     swap_binds,
+    scroll_binds,
     layout_binds,
     workspace_binds,
     workspace_navigation_binds,
