@@ -1,20 +1,35 @@
-Import-Module PSReadLine
+# The prompt is compiled C# (windows\prompt) because a script prompt costs ~40 ms more per new tab.
+# Loaded from bytes so the DLL can be rebuilt while tabs are open.
+[void][Reflection.Assembly]::Load([IO.File]::ReadAllBytes("$HOME\dots\windows\prompt\out\DotsPrompt.dll"))
+[DotsPrompt.Prompt]::SetInitialDirectory($PWD.ProviderPath)
 
-oh-my-posh init pwsh --config "$env:USERPROFILE/.oh-my-posh.json" | Invoke-Expression
-Invoke-Expression (& { (zoxide init powershell | Out-String) })
+function prompt {
+    $ok = $?
+    $last = Get-History -Count 1
+    [DotsPrompt.Prompt]::Render($ok, $LASTEXITCODE, $(if ($last) { $last.Duration.TotalSeconds } else { 0 }),
+        $PWD.ProviderPath, $PWD.Provider.Name -eq 'FileSystem', $HOME, $Host.UI.RawUI.WindowSize.Width, $env:VIRTUAL_ENV)
+}
+
+# zoxide's init costs ~60 ms, so it loads on first use; the prompt records visited dirs itself.
+function Import-Zoxide {
+    Remove-Item function:z, function:zi
+    . ([ScriptBlock]::Create((zoxide init powershell --hook none | Out-String)))
+}
+function global:z { Import-Zoxide; z @args }
+function global:zi { Import-Zoxide; zi @args }
 
 function OnViModeChange {
     if ($args[0] -eq 'Command') {
-        Write-Host -NoNewLine "`e[1 q"
+        [Console]::Write("`e[1 q")
     } else {
-        Write-Host -NoNewLine "`e[5 q"
+        [Console]::Write("`e[5 q")
     }
 }
-Set-PSReadLineOption -EditMode Vi
-Set-PSReadLineOption -ViModeIndicator Script -ViModeChangeHandler $Function:OnViModeChange
-Set-PSReadLineOption -BellStyle Visual
+Set-PSReadLineOption -EditMode Vi -ViModeIndicator Script -ViModeChangeHandler $Function:OnViModeChange -BellStyle Visual `
+    -ContinuationPrompt "`e[38;5;76m$([char]0x276F)$([char]0x276F)`e[0m "
 
-Set-Alias lg lazygit
+# Set-Alias would auto-load Microsoft.PowerShell.Utility at startup.
+function lg { lazygit @args }
 
 function y {
     $tmp = [System.IO.Path]::GetTempFileName()
@@ -25,3 +40,4 @@ function y {
     }
     Remove-Item -Path $tmp
 }
+
