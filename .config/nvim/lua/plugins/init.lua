@@ -28,8 +28,10 @@ return {
             })
 
             -- colors/dms.lua is written by theme-set, so it only exists on the
-            -- linux box; elsewhere fall back to the base46 theme it is built on
-            if not pcall(vim.cmd.colorscheme, "dms") then
+            -- linux box; elsewhere use the base46 theme it is built on
+            if vim.uv.fs_stat(vim.fn.stdpath "config" .. "/colors/dms.lua") then
+                vim.cmd.colorscheme "dms"
+            else
                 vim.cmd.colorscheme "base46-kanagawa"
             end
         end,

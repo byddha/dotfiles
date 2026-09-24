@@ -1,8 +1,6 @@
 return {
     "williamboman/mason.nvim",
-    -- must load before nvim-lspconfig so mason's bin dir is on PATH when servers spawn
-    lazy = false,
-    priority = 100,
+    cmd = { "Mason", "MasonInstall", "MasonUninstall", "MasonUninstallAll", "MasonUpdate", "MasonLog" },
     opts = function()
         return {
             ui = {

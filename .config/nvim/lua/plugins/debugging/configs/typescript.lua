@@ -1,6 +1,6 @@
 local dap = require "dap"
 
-local mason_root = vim.fn.expand "$MASON"
+local mason_root = vim.fn.stdpath "data" .. "/mason"
 local js_dbg_pkg = mason_root .. "/packages/js-debug-adapter"
 local js_dap_executable = js_dbg_pkg .. "/js-debug/src/dapDebugServer.js"
 
