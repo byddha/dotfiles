@@ -5,6 +5,7 @@
 command = direct:pwsh.exe -NoLogo -NoProfileLoadTime -ExecutionPolicy RemoteSigned
 working-directory = home
 auto-update = off
+window-save-state = never
 
 # Appearance
 font-family = CaskaydiaCove Nerd Font Mono
