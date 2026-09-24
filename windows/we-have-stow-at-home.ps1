@@ -8,7 +8,6 @@ dotnet publish "$WindowsDir\prompt" -c Release -o "$WindowsDir\prompt\out"
 if ($LASTEXITCODE -ne 0) { throw "Building the pwsh prompt failed" }
 
 $Links = @{
-    "$WindowsDir\wezterm" = "$env:USERPROFILE\.config\wezterm"
     "$WindowsDir\noctty\config.ghostty" = "$env:LOCALAPPDATA\noctty\config.ghostty"
     "$WindowsDir\Microsoft.PowerShell_profile.ps1" = "$env:USERPROFILE\Documents\PowerShell\Microsoft.PowerShell_profile.ps1"
     "$WindowsDir\vicinae" = "$env:LOCALAPPDATA\vicinae\config"
