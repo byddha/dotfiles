@@ -1,7 +1,5 @@
 import QtQuick
-import QtQuick.Controls
 import Quickshell
-import Quickshell.Wayland
 import "../../Config"
 import "../../Services"
 import "../../Utils"
@@ -20,10 +18,8 @@ Item {
     property int endWorkspace: 5
 
     // Configuration
-    readonly property Toplevel activeWindow: ToplevelManager.activeToplevel
     readonly property string screenName: root.QsWindow.window && root.QsWindow.window.screen ? root.QsWindow.window.screen.name : ""
     readonly property var workspaceItems: buildWorkspaceItems()
-    readonly property int workspacesShown: workspaceItems.length
 
     // Active workspace for this monitor (updated via signal)
     property int currentActiveWorkspaceId: Compositor.activeWorkspaceIdForScreen(root.QsWindow.window?.screen)
@@ -39,8 +35,6 @@ Item {
     }
 
     // Sizing
-    property int baseWorkspaceWidth: BarStyle.buttonSize
-    property real activeWorkspaceMargin: 2
     property real iconSize: 26
     property real iconSpacing: 4
 
@@ -82,7 +76,6 @@ Item {
     }
 
     // Calculate workspace positions for animated border
-    property var workspacePositions: []
     property real activeWorkspaceX: 0
     property real activeWorkspaceWidth: 0
 
@@ -138,44 +131,82 @@ Item {
     onWorkspaceIndexInGroupChanged: updateActiveWorkspacePosition()
     onWorkspaceItemsChanged: updateActiveWorkspacePosition()
 
+    component FastAnim: NumberAnimation {
+        duration: Theme.animation.elementMoveFast.duration
+        easing.type: Theme.animation.elementMoveFast.type
+        easing.bezierCurve: Theme.animation.elementMoveFast.bezierCurve
+    }
+
+    component AppIcon: Item {
+        id: appIcon
+
+        property var appData
+        property real size
+        property color iconColor
+        property color badgeColor
+        property color badgeBorderColor
+        property color badgeTextColor
+
+        width: size
+        height: size
+
+        Text {
+            anchors.centerIn: parent
+            font.family: BarStyle.iconFont
+            font.pixelSize: appIcon.size
+            text: AppIcons.getIcon(appIcon.appData.class, appIcon.appData.title, appIcon.appData.xdgTag)
+            color: appIcon.iconColor
+        }
+
+        // Count badge (only if count > 1)
+        Rectangle {
+            visible: appIcon.appData.count > 1
+            anchors {
+                top: parent.top
+                right: parent.right
+                topMargin: -1
+                rightMargin: -1
+            }
+            width: Math.max(14, countText.width + 4)
+            height: 14
+            radius: 5
+            color: appIcon.badgeColor
+            border.width: 1
+            border.color: appIcon.badgeBorderColor
+
+            Text {
+                id: countText
+                anchors.centerIn: parent
+                font.pixelSize: 10
+                font.weight: Font.Bold
+                color: appIcon.badgeTextColor
+                text: appIcon.appData.count
+            }
+        }
+    }
+
     implicitWidth: workspaceBackground.width + (root.specialVisible ? specialPill.width + BarStyle.spacing : 0)
     implicitHeight: BarStyle.barHeight
 
     // Find next occupied workspace in a direction (1 = forward, -1 = backward)
     function findNextOccupied(currentId, direction) {
-        if (workspaceItems.length === 0)
+        const count = workspaceItems.length;
+        if (count === 0)
             return currentId;
 
         const currentIndex = workspaceItems.findIndex(ws => workspaceId(ws) === currentId);
         const startIndex = currentIndex >= 0 ? currentIndex : 0;
+        const wrap = index => ((index % count) + count) % count;
 
-        if (Compositor.isNiri) {
-            let nextIndex = startIndex + direction;
-            if (nextIndex >= workspaceItems.length)
-                nextIndex = 0;
-            else if (nextIndex < 0)
-                nextIndex = workspaceItems.length - 1;
-            return workspaceId(workspaceItems[nextIndex]);
+        if (!Compositor.isNiri) {
+            for (let i = 1; i <= count; i++) {
+                const nextWorkspace = workspaceItems[wrap(startIndex + direction * i)];
+                if (workspaceIsOccupied(nextWorkspace))
+                    return workspaceId(nextWorkspace);
+            }
         }
 
-        for (let i = 1; i <= workspaceItems.length; i++) {
-            let nextIndex = startIndex + (direction * i);
-            while (nextIndex >= workspaceItems.length)
-                nextIndex -= workspaceItems.length;
-            while (nextIndex < 0)
-                nextIndex += workspaceItems.length;
-
-            const nextWorkspace = workspaceItems[nextIndex];
-            if (workspaceIsOccupied(nextWorkspace))
-                return workspaceId(nextWorkspace);
-        }
-
-        let fallbackIndex = startIndex + direction;
-        if (fallbackIndex >= workspaceItems.length)
-            fallbackIndex = 0;
-        else if (fallbackIndex < 0)
-            fallbackIndex = workspaceItems.length - 1;
-        return workspaceId(workspaceItems[fallbackIndex]);
+        return workspaceId(workspaceItems[wrap(startIndex + direction)]);
     }
 
     // Scroll to switch workspaces (cycles within configured range, skipping empty)
@@ -210,11 +241,7 @@ Item {
         radius: BarStyle.buttonRadius
 
         Behavior on width {
-            NumberAnimation {
-                duration: Theme.animation.elementMoveFast.duration
-                easing.type: Theme.animation.elementMoveFast.type
-                easing.bezierCurve: Theme.animation.elementMoveFast.bezierCurve
-            }
+            FastAnim {}
         }
     }
 
@@ -276,45 +303,13 @@ Item {
                         Repeater {
                             model: workspaceContainer.workspaceApps
 
-                            Item {
-                                width: iconSize
-                                height: iconSize
-                                property var appData: modelData
-
-                                Text {
-                                    id: appIcon
-                                    anchors.centerIn: parent
-                                    font.family: BarStyle.iconFont
-                                    font.pixelSize: iconSize
-                                    text: AppIcons.getIcon(appData.class, appData.title, appData.xdgTag)
-                                    color: workspaceContainer.isActive ? Theme.primary : BarStyle.iconColor
-                                }
-
-                                // Count badge (only if count > 1)
-                                Rectangle {
-                                    visible: appData.count > 1
-                                    anchors {
-                                        top: parent.top
-                                        right: parent.right
-                                        topMargin: -1
-                                        rightMargin: -1
-                                    }
-                                    width: Math.max(14, countText.width + 4)
-                                    height: 14
-                                    radius: 5
-                                    color: workspaceContainer.isActive ? Theme.primary : BarStyle.iconColor
-                                    border.width: 1
-                                    border.color: Theme.colLayer0
-
-                                    Text {
-                                        id: countText
-                                        anchors.centerIn: parent
-                                        font.pixelSize: 10
-                                        font.weight: Font.Bold
-                                        color: Theme.primaryText
-                                        text: appData.count
-                                    }
-                                }
+                            AppIcon {
+                                appData: modelData
+                                size: root.iconSize
+                                iconColor: workspaceContainer.isActive ? Theme.primary : BarStyle.iconColor
+                                badgeColor: iconColor
+                                badgeBorderColor: Theme.colLayer0
+                                badgeTextColor: Theme.primaryText
                             }
                         }
                     }
@@ -322,11 +317,7 @@ Item {
 
                 // Width animation
                 Behavior on contentWidth {
-                    NumberAnimation {
-                        duration: Theme.animation.elementMoveFast.duration
-                        easing.type: Theme.animation.elementMoveFast.type
-                        easing.bezierCurve: Theme.animation.elementMoveFast.bezierCurve
-                    }
+                    FastAnim {}
                 }
 
                 // Subtle separator
@@ -354,19 +345,11 @@ Item {
         radius: 1.5
 
         Behavior on x {
-            NumberAnimation {
-                duration: Theme.animation.elementMoveFast.duration
-                easing.type: Theme.animation.elementMoveFast.type
-                easing.bezierCurve: Theme.animation.elementMoveFast.bezierCurve
-            }
+            FastAnim {}
         }
 
         Behavior on width {
-            NumberAnimation {
-                duration: Theme.animation.elementMoveFast.duration
-                easing.type: Theme.animation.elementMoveFast.type
-                easing.bezierCurve: Theme.animation.elementMoveFast.bezierCurve
-            }
+            FastAnim {}
         }
     }
 
@@ -382,19 +365,11 @@ Item {
         clip: true
 
         Behavior on width {
-            NumberAnimation {
-                duration: Theme.animation.elementMoveFast.duration
-                easing.type: Theme.animation.elementMoveFast.type
-                easing.bezierCurve: Theme.animation.elementMoveFast.bezierCurve
-            }
+            FastAnim {}
         }
 
         Behavior on opacity {
-            NumberAnimation {
-                duration: Theme.animation.elementMoveFast.duration
-                easing.type: Theme.animation.elementMoveFast.type
-                easing.bezierCurve: Theme.animation.elementMoveFast.bezierCurve
-            }
+            FastAnim {}
         }
 
         Row {
@@ -405,43 +380,13 @@ Item {
             Repeater {
                 model: root.specialApps
 
-                Item {
-                    width: iconSize
-                    height: iconSize
-                    property var appData: modelData
-
-                    Text {
-                        anchors.centerIn: parent
-                        font.family: BarStyle.iconFont
-                        font.pixelSize: iconSize
-                        text: AppIcons.getIcon(appData.class, appData.title, appData.xdgTag)
-                        color: Theme.primaryText
-                    }
-
-                    Rectangle {
-                        visible: appData.count > 1
-                        anchors {
-                            top: parent.top
-                            right: parent.right
-                            topMargin: -1
-                            rightMargin: -1
-                        }
-                        width: Math.max(14, specialCountText.width + 4)
-                        height: 14
-                        radius: 5
-                        color: Theme.colLayer0
-                        border.width: 1
-                        border.color: Theme.primary
-
-                        Text {
-                            id: specialCountText
-                            anchors.centerIn: parent
-                            font.pixelSize: 10
-                            font.weight: Font.Bold
-                            color: Theme.primary
-                            text: appData.count
-                        }
-                    }
+                AppIcon {
+                    appData: modelData
+                    size: root.iconSize
+                    iconColor: Theme.primaryText
+                    badgeColor: Theme.colLayer0
+                    badgeBorderColor: Theme.primary
+                    badgeTextColor: Theme.primary
                 }
             }
         }
