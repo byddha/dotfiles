@@ -5,7 +5,6 @@ import Quickshell
 import "../../../Config"
 import "../../../Components"
 import "../../../Services"
-import "../../../Utils"
 
 ColumnLayout {
     id: root
@@ -134,9 +133,5 @@ ColumnLayout {
         text: "Scan"
         enabled: Network.wifiEnabled && !Network.wifiScanning
         onClicked: Network.rescanWifi()
-    }
-
-    Component.onCompleted: {
-        Logger.info("Network tab loaded");
     }
 }

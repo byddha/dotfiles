@@ -5,7 +5,6 @@ import Quickshell
 import "../../../Config"
 import "../../../Components"
 import "../../../Services"
-import "../../../Utils"
 
 ColumnLayout {
     id: root
@@ -110,8 +109,5 @@ ColumnLayout {
         }
     }
 
-    Component.onCompleted: {
-        Logger.info("Bluetooth tab loaded");
-        Bluetooth.refresh();
-    }
+    Component.onCompleted: Bluetooth.refresh()
 }
