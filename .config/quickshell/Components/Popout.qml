@@ -66,6 +66,7 @@ PanelWindow {
 
     onVisibleChanged: {
         presented = false;
+        wrapper.escapePressed = false;
         if (visible) {
             contentWarm = true;
             Qt.callLater(updatePosition);
@@ -141,12 +142,22 @@ PanelWindow {
 
     Item {
         id: wrapper
-        // Ancestor of all content, so Esc from a focused field inside (that did not use it) still closes
+        // Ancestor of all content, so Esc from a focused field inside (that did not use it) still closes.
+        // Closes on release: closing on press unmaps the window with Esc still held, keyboard focus goes back
+        // to the app below together with the held key, and that app gets the Esc too (a video leaves fullscreen).
         focus: root.visible
+        property bool escapePressed: false
         Keys.onPressed: event => {
             if (event.key === Qt.Key_Escape) {
-                root.dismiss();
+                escapePressed = true;
                 event.accepted = true;
+            }
+        }
+        Keys.onReleased: event => {
+            if (event.key === Qt.Key_Escape && escapePressed && !event.isAutoRepeat) {
+                escapePressed = false;
+                event.accepted = true;
+                root.dismiss();
             }
         }
         x: root.popupX
