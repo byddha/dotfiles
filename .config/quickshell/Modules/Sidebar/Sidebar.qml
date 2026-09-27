@@ -51,9 +51,26 @@ Scope {
                 }
             }
 
+            // As DankMaterialShell's popouts (DankPopoutHost _contentWarm / _surfaceFrameReady): the content
+            // stays loaded after the first open so it is never rebuilt (and never visibly re-lays out) while
+            // sliding in, and the slide starts only after the window has drawn its first frame.
+            property bool contentWarm: false
+            property bool presented: false
+
+            Connections {
+                target: contentWrapper.Window.window
+                enabled: sidebarWindow.visible && !sidebarWindow.presented
+
+                function onFrameSwapped() {
+                    sidebarWindow.presented = true;
+                }
+            }
+
             // Activate focus grab when sidebar becomes visible
             onVisibleChanged: {
+                presented = false;
                 if (visible) {
+                    contentWarm = true;
                     Hdr.refresh();
                     // Delay slightly to ensure window is ready
                     Qt.callLater(() => {
@@ -101,7 +118,7 @@ Scope {
 
                 // Slide in animation
                 transform: Translate {
-                    x: Settings.sidebarVisible ? 0 : sidebarWindow.width
+                    x: sidebarWindow.presented ? 0 : contentWrapper.width + 10
 
                     Behavior on x {
                         NumberAnimation {
@@ -112,16 +129,14 @@ Scope {
                     }
                 }
 
-                // Lazy load content
                 Loader {
                     id: contentLoader
                     anchors.fill: parent
-                    active: Settings.sidebarVisible
+                    active: sidebarWindow.contentWarm
 
                     sourceComponent: SidebarContent {}
 
-                    // Fade in animation
-                    opacity: Settings.sidebarVisible ? 1 : 0
+                    opacity: sidebarWindow.presented ? 1 : 0
 
                     Behavior on opacity {
                         NumberAnimation {
