@@ -9,6 +9,17 @@ Rectangle {
     property int forecastDays: 5
 
     readonly property bool weatherReady: WeatherService.weatherReady
+    // First hourly slot today at or after the current hour; -1 when there is none
+    readonly property int currentHourIndex: {
+        const hourly = weatherReady ? WeatherService.data.weather?.hourly : undefined;
+        if (!hourly)
+            return -1;
+        const now = new Date();
+        return hourly.time.findIndex(t => {
+            const date = new Date(t);
+            return date.getDate() === now.getDate() && date.getHours() >= now.getHours();
+        });
+    }
 
     color: Theme.colLayer1
     radius: Theme.radiusBase
@@ -101,92 +112,37 @@ Rectangle {
                         visible: weatherReady
                         spacing: Theme.spacingBase
 
-                        // Feels like
-                        Row {
-                            spacing: 3
-                            Text {
-                                text: Icons.thermometer
-                                font.family: Theme.fontFamilyIcons
-                                font.pixelSize: Theme.fontSizeSmall
-                                color: Theme.textSecondary
-                            }
-                            Text {
-                                text: {
-                                    if (!weatherReady)
-                                        return "";
-                                    const feelsLike = WeatherService.data.weather.current?.apparent_temperature ?? WeatherService.data.weather.current.temperature_2m;
-                                    return "Feels " + Math.round(feelsLike) + "°";
-                                }
-                                font.family: Theme.fontFamily
-                                font.pixelSize: Theme.fontSizeSmall
-                                color: Theme.textSecondary
+                        WeatherDetail {
+                            icon: Icons.thermometer
+                            label: {
+                                if (!weatherReady)
+                                    return "";
+                                const feelsLike = WeatherService.data.weather.current?.apparent_temperature ?? WeatherService.data.weather.current.temperature_2m;
+                                return "Feels " + Math.round(feelsLike) + "°";
                             }
                         }
 
-                        // Humidity
-                        Row {
-                            spacing: 3
-                            Text {
-                                text: Icons.humidity
-                                font.family: Theme.fontFamilyIcons
-                                font.pixelSize: Theme.fontSizeSmall
-                                color: Theme.textSecondary
-                            }
-                            Text {
-                                text: weatherReady ? (WeatherService.data.weather.current?.relative_humidity_2m ?? 0) + "%" : ""
-                                font.family: Theme.fontFamily
-                                font.pixelSize: Theme.fontSizeSmall
-                                color: Theme.textSecondary
-                            }
+                        WeatherDetail {
+                            icon: Icons.humidity
+                            label: weatherReady ? (WeatherService.data.weather.current?.relative_humidity_2m ?? 0) + "%" : ""
                         }
 
-                        // Wind
-                        Row {
-                            spacing: 3
-                            Text {
-                                text: Icons.wind
-                                font.family: Theme.fontFamilyIcons
-                                font.pixelSize: Theme.fontSizeSmall
-                                color: Theme.textSecondary
-                            }
-                            Text {
-                                text: weatherReady ? Math.round(WeatherService.data.weather.current.wind_speed_10m) + "km/h" : ""
-                                font.family: Theme.fontFamily
-                                font.pixelSize: Theme.fontSizeSmall
-                                color: Theme.textSecondary
-                            }
+                        WeatherDetail {
+                            icon: Icons.wind
+                            label: weatherReady ? Math.round(WeatherService.data.weather.current.wind_speed_10m) + "km/h" : ""
                         }
 
-                        // Precipitation
-                        Row {
-                            spacing: 3
-                            Text {
-                                text: Icons.rain
-                                font.family: Theme.fontFamilyIcons
-                                font.pixelSize: Theme.fontSizeSmall
-                                color: Theme.textSecondary
-                            }
-                            Text {
-                                text: {
-                                    if (!weatherReady)
-                                        return "";
-                                    const hourly = WeatherService.data.weather.hourly;
-                                    if (hourly?.precipitation_probability) {
-                                        const now = new Date();
-                                        const currentHour = now.getHours();
-                                        const today = now.getDate();
-                                        for (let i = 0; i < hourly.time.length; i++) {
-                                            const t = new Date(hourly.time[i]);
-                                            if (t.getDate() === today && t.getHours() === currentHour) {
-                                                return hourly.precipitation_probability[i] + "%";
-                                            }
-                                        }
-                                    }
-                                    return "0%";
-                                }
-                                font.family: Theme.fontFamily
-                                font.pixelSize: Theme.fontSizeSmall
-                                color: Theme.textSecondary
+                        WeatherDetail {
+                            icon: Icons.rain
+                            label: {
+                                if (!weatherReady)
+                                    return "";
+                                const hourly = WeatherService.data.weather.hourly;
+                                const i = root.currentHourIndex;
+                                // currentHourIndex may land on a later hour; only the current hour's value is shown
+                                if (hourly?.precipitation_probability && i >= 0 && new Date(hourly.time[i]).getHours() === new Date().getHours())
+                                    return hourly.precipitation_probability[i] + "%";
+                                return "0%";
                             }
                         }
                     }
@@ -212,46 +168,14 @@ Rectangle {
             temperatures: {
                 if (!weatherReady || !WeatherService.data.weather?.hourly)
                     return [];
-                const hourly = WeatherService.data.weather.hourly;
-                const currentHour = new Date().getHours();
-
-                // Find current hour index in the hourly data
-                const times = hourly.time;
-                let startIdx = 0;
-                for (let i = 0; i < times.length; i++) {
-                    const hour = new Date(times[i]).getHours();
-                    const day = new Date(times[i]).getDate();
-                    const today = new Date().getDate();
-                    if (day === today && hour >= currentHour) {
-                        startIdx = i;
-                        break;
-                    }
-                }
-
-                // Get next 12 hours
-                return hourly.temperature_2m.slice(startIdx, startIdx + 12);
+                const startIdx = Math.max(0, root.currentHourIndex);
+                return WeatherService.data.weather.hourly.temperature_2m.slice(startIdx, startIdx + 12);
             }
             times: {
                 if (!weatherReady || !WeatherService.data.weather?.hourly)
                     return [];
-                const hourly = WeatherService.data.weather.hourly;
-                const currentHour = new Date().getHours();
-
-                // Find current hour index
-                const times = hourly.time;
-                let startIdx = 0;
-                for (let i = 0; i < times.length; i++) {
-                    const hour = new Date(times[i]).getHours();
-                    const day = new Date(times[i]).getDate();
-                    const today = new Date().getDate();
-                    if (day === today && hour >= currentHour) {
-                        startIdx = i;
-                        break;
-                    }
-                }
-
-                // Format next 12 hours as time strings
-                return hourly.time.slice(startIdx, startIdx + 12).map((t, i) => {
+                const startIdx = Math.max(0, root.currentHourIndex);
+                return WeatherService.data.weather.hourly.time.slice(startIdx, startIdx + 12).map((t, i) => {
                     if (i === 0)
                         return "Now";
                     const date = new Date(t);
@@ -366,6 +290,29 @@ Rectangle {
                     color: Theme.textSecondary
                 }
             }
+        }
+    }
+
+    component WeatherDetail: Row {
+        id: detail
+
+        property string icon
+        property string label
+
+        spacing: 3
+
+        Text {
+            text: detail.icon
+            font.family: Theme.fontFamilyIcons
+            font.pixelSize: Theme.fontSizeSmall
+            color: Theme.textSecondary
+        }
+
+        Text {
+            text: detail.label
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSizeSmall
+            color: Theme.textSecondary
         }
     }
 }
