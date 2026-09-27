@@ -46,7 +46,6 @@ ColumnLayout {
         NotificationListView {
             id: notificationList
             anchors.fill: parent
-            popup: false
             searchText: searchField.text
             visible: Notifications.list.length > 0
         }
