@@ -179,7 +179,7 @@ Singleton {
 
         onExited: (exitCode, exitStatus) => {
             const lines = buffer.trim().split('\n');
-            root.ethernet = lines.some(line => line.includes("ethernet") && line.includes("connected"));
+            root.ethernet = lines.some(line => line.startsWith("ethernet:connected"));
         }
     }
 
