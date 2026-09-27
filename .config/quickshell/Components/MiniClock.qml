@@ -4,11 +4,9 @@ import "../Config"
 Item {
     id: root
 
-    // Current time (bind to external source or use internal)
+    // Overwritten every second by the internal timer, so an external binding only seeds it
     property var now: new Date()
 
-    // Color properties for theming
-    property color backgroundColor: Theme.primary
     property color clockColor: Theme.colLayer0
     property color secondHandColor: Theme.accentRed
 
@@ -16,9 +14,7 @@ Item {
     width: 64
     height: 64
 
-    // Update timer for internal clock
     Timer {
-        id: clockTimer
         interval: 1000
         running: true
         repeat: true
@@ -28,6 +24,19 @@ Item {
     Canvas {
         id: clockCanvas
         anchors.fill: parent
+
+        function drawHand(ctx, angle, color, lineWidth, length) {
+            ctx.save();
+            ctx.rotate(angle);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = lineWidth;
+            ctx.lineCap = "round";
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(0, -length);
+            ctx.stroke();
+            ctx.restore();
+        }
 
         onPaint: {
             const hours = root.now.getHours();
@@ -55,44 +64,9 @@ Item {
                 ctx.restore();
             }
 
-            // Hour hand
-            ctx.save();
-            const hourAngle = (hours % 12 + minutes / 60) * Math.PI / 6;
-            ctx.rotate(hourAngle);
-            ctx.strokeStyle = root.clockColor;
-            ctx.lineWidth = 3;
-            ctx.lineCap = "round";
-            ctx.beginPath();
-            ctx.moveTo(0, 0);
-            ctx.lineTo(0, -radius * 0.5);
-            ctx.stroke();
-            ctx.restore();
-
-            // Minute hand
-            ctx.save();
-            const minuteAngle = (minutes + seconds / 60) * Math.PI / 30;
-            ctx.rotate(minuteAngle);
-            ctx.strokeStyle = root.clockColor;
-            ctx.lineWidth = 2;
-            ctx.lineCap = "round";
-            ctx.beginPath();
-            ctx.moveTo(0, 0);
-            ctx.lineTo(0, -radius * 0.75);
-            ctx.stroke();
-            ctx.restore();
-
-            // Second hand
-            ctx.save();
-            const secondAngle = seconds * Math.PI / 30;
-            ctx.rotate(secondAngle);
-            ctx.strokeStyle = root.secondHandColor;
-            ctx.lineWidth = 1.5;
-            ctx.lineCap = "round";
-            ctx.beginPath();
-            ctx.moveTo(0, 0);
-            ctx.lineTo(0, -radius * 0.85);
-            ctx.stroke();
-            ctx.restore();
+            drawHand(ctx, (hours % 12 + minutes / 60) * Math.PI / 6, root.clockColor, 3, radius * 0.5);
+            drawHand(ctx, (minutes + seconds / 60) * Math.PI / 30, root.clockColor, 2, radius * 0.75);
+            drawHand(ctx, seconds * Math.PI / 30, root.secondHandColor, 1.5, radius * 0.85);
 
             // Center dot
             ctx.beginPath();
