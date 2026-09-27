@@ -42,7 +42,6 @@ Singleton {
     }
 
     // Lists of nodes (auto-updating) - using list<var> because list<PwNode> breaks ScriptModel
-    readonly property list<var> outputAppNodes: appNodes(true)
     readonly property list<var> outputDevices: devices(true)
     readonly property list<var> inputDevices: devices(false)
 
@@ -86,19 +85,11 @@ Singleton {
     // Set default output device
     function setDefaultSink(node) {
         Pipewire.preferredDefaultAudioSink = node;
-        Logger.info(`Default sink set to: ${friendlyDeviceName(node)}`);
     }
 
     // Set default input device
     function setDefaultSource(node) {
         Pipewire.preferredDefaultAudioSource = node;
-        Logger.info(`Default source set to: ${friendlyDeviceName(node)}`);
-    }
-
-    Component.onCompleted: {
-        Logger.info("PipeWire service initialized");
-        Logger.info(`Sink: ${sink?.description ?? "none"}`);
-        Logger.info(`Source: ${source?.description ?? "none"}`);
     }
 
     // Set volume (0.0 to 1.0)
@@ -110,7 +101,6 @@ Singleton {
 
         const clampedValue = Math.max(0, Math.min(1, value));
         sink.audio.volume = clampedValue;
-        Logger.info(`Volume set to ${(clampedValue * 100).toFixed(0)}%`);
     }
 
     // Set microphone volume (0.0 to 1.0)
@@ -122,7 +112,6 @@ Singleton {
 
         const clampedValue = Math.max(0, Math.min(1, value));
         source.audio.volume = clampedValue;
-        Logger.info(`Mic volume set to ${(clampedValue * 100).toFixed(0)}%`);
     }
 
     // Toggle mute
@@ -133,7 +122,6 @@ Singleton {
         }
 
         sink.audio.muted = !sink.audio.muted;
-        Logger.info(`Audio ${sink.audio.muted ? 'muted' : 'unmuted'}`);
     }
 
     // Toggle microphone mute
@@ -144,7 +132,6 @@ Singleton {
         }
 
         source.audio.muted = !source.audio.muted;
-        Logger.info(`Microphone ${source.audio.muted ? 'muted' : 'unmuted'}`);
     }
 
     // Increase volume by 5%
@@ -165,22 +152,5 @@ Singleton {
     // Decrease mic volume by 5%
     function decreaseMicVolume() {
         setMicVolume(micVolume - 0.05);
-    }
-
-    // Monitor for changes (for logging/debugging)
-    onVolumeChanged: {
-        Logger.info(`Volume changed to ${(volume * 100).toFixed(0)}%`);
-    }
-
-    onMicVolumeChanged: {
-        Logger.info(`Mic volume changed to ${(micVolume * 100).toFixed(0)}%`);
-    }
-
-    onIsMutedChanged: {
-        Logger.info(`Mute state changed to ${isMuted}`);
-    }
-
-    onIsMicMutedChanged: {
-        Logger.info(`Mic mute state changed to ${isMicMuted}`);
     }
 }
