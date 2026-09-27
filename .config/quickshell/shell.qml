@@ -20,9 +20,6 @@ ShellRoot {
 
     Component.onCompleted: {
         Config.init();
-        Theme.init();
-        Settings.init();
-        Icons.init();
         WeatherService.init();
         RssFeedNotifier.init();
         Logger.info("Components initialized");

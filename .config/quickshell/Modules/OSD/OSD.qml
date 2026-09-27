@@ -10,19 +10,20 @@ Scope {
     id: root
 
     property string currentIndicator: "volume"
+    property bool shown: false
 
     function triggerOsd(indicatorType) {
         if (!Config.options.osd?.enabled)
             return;
         root.currentIndicator = indicatorType;
-        Settings.osdVisible = true;
+        root.shown = true;
         osdTimeout.restart();
     }
 
     Timer {
         id: osdTimeout
         interval: Config.options.osd?.timeout ?? 1000
-        onTriggered: Settings.osdVisible = false
+        onTriggered: root.shown = false
     }
 
     Connections {
@@ -63,7 +64,7 @@ Scope {
             property bool monitorIsFocused: Compositor.focusedMonitorName === modelData.name
 
             screen: modelData
-            visible: Settings.osdVisible && Config.options.osd?.enabled && monitorIsFocused
+            visible: root.shown && Config.options.osd?.enabled && monitorIsFocused
             color: "transparent"
 
             WlrLayershell.namespace: "bidshell:osd"

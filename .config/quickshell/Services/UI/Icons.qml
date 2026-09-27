@@ -158,8 +158,4 @@ Singleton {
     readonly property string device: "󰒔"
     readonly property string checkmark: ""
     readonly property string cross: "✝"
-
-    // Called by shell.qml to instantiate the singleton eagerly.
-    function init() {
-    }
 }

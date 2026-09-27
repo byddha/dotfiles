@@ -58,7 +58,7 @@ Scope {
 
             Component.onCompleted: Qt.callLater(updateWorkspaceConfig)
 
-            visible: Settings.barVisible && Config.options.bar.enabled
+            visible: Config.options.bar.enabled
 
             anchors {
                 top: Config.options.bar.position === "top"

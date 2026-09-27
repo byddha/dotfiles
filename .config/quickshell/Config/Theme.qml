@@ -14,10 +14,6 @@ import "../Services"
 Singleton {
     id: root
 
-    function init() {
-        // Initialization hook for shell.qml
-    }
-
     // ========================================================================
     // SEMANTIC COLOR MAPPING
     // ========================================================================

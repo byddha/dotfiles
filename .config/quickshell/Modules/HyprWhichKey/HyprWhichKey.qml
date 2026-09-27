@@ -8,6 +8,10 @@ import "../../Config"
 import "../../Services"
 
 Scope {
+    id: root
+
+    property bool shown: false
+
     Variants {
         model: Quickshell.screens
 
@@ -16,7 +20,7 @@ Scope {
 
             required property ShellScreen modelData
             screen: modelData
-            visible: Config?.options.hyprWhichKey.enabled && Settings.hyprWhichKeyVisible && modelData.name === Compositor.focusedMonitorName
+            visible: Config?.options.hyprWhichKey.enabled && root.shown && modelData.name === Compositor.focusedMonitorName
 
             anchors {
                 bottom: true
@@ -41,7 +45,7 @@ Scope {
                     if (HyprWhichKeyService.visible)
                         showTimer.restart();
                     else
-                        Settings.hyprWhichKeyVisible = false;
+                        root.shown = false;
                 }
             }
 
@@ -49,7 +53,7 @@ Scope {
                 id: showTimer
                 interval: 50
                 onTriggered: {
-                    Settings.hyprWhichKeyVisible = true;
+                    root.shown = true;
                 }
             }
 
@@ -96,7 +100,7 @@ Scope {
                         target: HyprWhichKeyService
                         function onKeybindListChanged() {
                             // Hide entire window immediately to avoid resize artifacts
-                            Settings.hyprWhichKeyVisible = false;
+                            root.shown = false;
                             showTimer.restart();
                         }
                     }

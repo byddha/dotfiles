@@ -16,17 +16,18 @@ BarPill {
     required property var barWindow  // Need screen reference from bar
 
     property var now: new Date()
+    property bool calendarOpen: false
 
     width: clockRow.implicitWidth + BarStyle.spacing * 2
     onClicked: {
-        if (Settings.calendarPanelVisible) {
+        if (clock.calendarOpen) {
             // Close
             if (clock.activePopup) {
                 clock.activePopup.hidePanel();
             }
         } else {
             // Open
-            Settings.calendarPanelVisible = true;
+            clock.calendarOpen = true;
             clock.showCalendarPopup();
         }
     }
@@ -64,7 +65,7 @@ BarPill {
         focusGrab.active = false;
         clock.activePopup = null;
         popupLoader.active = false;
-        Settings.calendarPanelVisible = false;
+        clock.calendarOpen = false;
     }
 
     function showCalendarPopup() {
