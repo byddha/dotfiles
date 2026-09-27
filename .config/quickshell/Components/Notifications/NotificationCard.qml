@@ -203,7 +203,7 @@ Item {
                     text: (root.notificationObject.appName || "?").charAt(0).toUpperCase()
                     font.pixelSize: Math.round(parent.width * 0.45)
                     font.weight: Font.Medium
-                    color: Theme.onSecondaryContainer
+                    color: Theme.secondaryContainerText
                 }
             }
         }

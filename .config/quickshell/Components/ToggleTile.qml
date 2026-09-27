@@ -31,7 +31,7 @@ Rectangle {
     }
 
     StateLayer {
-        onPrimary: root.active
+        primaryFill: root.active
         hovered: mouseArea.containsMouse
         pressed: mouseArea.pressed
     }

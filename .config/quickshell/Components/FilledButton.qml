@@ -18,7 +18,7 @@ Rectangle {
     color: Theme.primary
 
     StateLayer {
-        onPrimary: true
+        primaryFill: true
         hovered: mouseArea.containsMouse
         pressed: mouseArea.pressed
     }

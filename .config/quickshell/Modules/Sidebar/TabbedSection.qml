@@ -77,7 +77,7 @@ Card {
                         text: tab.modelData.icon
                         font.family: Theme.fontFamilyGlyphs
                         font.pixelSize: 20
-                        color: tab.active ? Theme.onSecondaryContainer : Theme.textSecondary
+                        color: tab.active ? Theme.secondaryContainerText : Theme.textSecondary
                     }
 
                     StyledText {
@@ -85,7 +85,7 @@ Card {
                         text: tab.modelData.name
                         font.pixelSize: Theme.fontSizeSmall
                         font.weight: Font.Medium
-                        color: Theme.onSecondaryContainer
+                        color: Theme.secondaryContainerText
                     }
                 }
 

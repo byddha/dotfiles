@@ -7,12 +7,13 @@ Rectangle {
 
     property bool hovered: false
     property bool pressed: false
-    property bool onPrimary: false
+    // Sits on a primary fill (overlay in on_primary). Not "onPrimary": QML reads on + Capital as a signal handler
+    property bool primaryFill: false
     property real hoverOpacity: Theme.stateHover
 
     anchors.fill: parent
     radius: parent.radius ?? 0
-    color: onPrimary ? Theme.primaryText : Theme.textColor
+    color: primaryFill ? Theme.primaryText : Theme.textColor
     opacity: pressed ? Theme.statePressed : hovered ? hoverOpacity : 0
 
     Behavior on opacity {
