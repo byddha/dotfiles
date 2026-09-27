@@ -62,6 +62,10 @@ ShellRoot {
         id: regionSelector
     }
 
+    RecordingOutline {
+        id: recordingOutline
+    }
+
     Lock {
         id: lock
     }

@@ -18,13 +18,16 @@ Singleton {
     property bool recording: false
     property bool starting: false
     property bool stopping: false
+    // Recorded area in global logical coordinates, read from the recorder's command line
+    // (so it survives shell reloads); width 0 when unknown
+    property rect region: Qt.rect(0, 0, 0, 0)
 
     // Logical global region "WxH+X+Y"; gpu-screen-recorder records the native pixels of scaled monitors
     function start(region: string) {
         if (recording || starting)
             return;
         starting = true;
-        Quickshell.execDetached(["bash", "-c", `mkdir -p ~/Videos/Screencasts && exec gpu-screen-recorder -w region -region ${region} -f 30 -k av1 -o ~/Videos/Screencasts/recording_$(date +%Y-%m-%d_%H-%M-%S).mp4`]);
+        Quickshell.execDetached(["bash", "-c", `mkdir -p ~/Videos/Screencasts && exec gpu-screen-recorder -w ${region} -f 30 -k h264 -o ~/Videos/Screencasts/recording_$(date +%Y-%m-%d_%H-%M-%S).mp4`]);
         waitTimeout.restart();
     }
 
@@ -46,7 +49,13 @@ Singleton {
 
     Process {
         id: statusProc
-        command: ["pgrep", "-f", "^gpu-screen-recorder"]
+        command: ["pgrep", "-af", "^gpu-screen-recorder"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const m = text.match(/-w (\d+)x(\d+)\+(-?\d+)\+(-?\d+)/);
+                root.region = m ? Qt.rect(Number(m[3]), Number(m[4]), Number(m[1]), Number(m[2])) : Qt.rect(0, 0, 0, 0);
+            }
+        }
         onExited: code => {
             root.recording = code === 0;
             if (root.recording)
