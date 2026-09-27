@@ -4,7 +4,6 @@ import Quickshell.Wayland
 import "../../Config"
 import "../../Services"
 import "../../Components/Notifications"
-import "../../Utils"
 
 Scope {
     readonly property string primaryMonitorModel: Config.primaryMonitor
@@ -18,7 +17,7 @@ Scope {
             required property ShellScreen modelData
             screen: modelData
 
-            visible: (Notifications.popupList.length > 0) && Settings.notificationsVisible && Config?.options.notifications.enabled && modelData.model === primaryMonitorModel
+            visible: (Notifications.popupList.length > 0) && Settings.notificationsVisible && Config.options.notifications.enabled && modelData.model === primaryMonitorModel
 
             WlrLayershell.namespace: "bidshell:notificationPopup"
             WlrLayershell.layer: WlrLayer.Overlay
@@ -55,9 +54,5 @@ Scope {
                 popup: true
             }
         }
-    }
-
-    Component.onCompleted: {
-        Logger.info("Notification popup module loaded");
     }
 }
