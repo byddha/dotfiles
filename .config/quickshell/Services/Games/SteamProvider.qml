@@ -16,7 +16,6 @@ Item {
 
     property var games: []
     property bool isLoading: false
-    property string lastError: ""
 
     property string activeSteamPath: ""
     property var libraryPaths: []
@@ -35,10 +34,8 @@ Item {
 
     function refresh() {
         if (root.isLoading) {
-            Logger.debug("SteamProvider: Already loading, skipping refresh");
             return;
         }
-        Logger.info("SteamProvider: Refreshing game library");
         root.isLoading = true;
         root.loadedGames = [];
         root.libraryPaths = [];
@@ -53,7 +50,6 @@ Item {
     function tryNextSteamPath() {
         const paths = getSteamPaths();
         if (root.currentPathIndex >= paths.length) {
-            root.lastError = "Steam installation not found";
             root.isLoading = false;
             Logger.error("SteamProvider: Steam not found");
             return;
@@ -74,7 +70,6 @@ Item {
         onExited: (code, status) => {
             if (code === 0) {
                 root.activeSteamPath = steamPath;
-                Logger.info(`SteamProvider: Found Steam at ${root.activeSteamPath}`);
                 loadLibraryFolders();
             } else {
                 root.currentPathIndex++;
@@ -102,7 +97,6 @@ Item {
 
         onLoadFailed: error => {
             Logger.error(`SteamProvider: Failed to load libraryfolders.vdf: ${error}`);
-            root.lastError = "Failed to load Steam library";
             root.isLoading = false;
         }
     }
@@ -121,8 +115,6 @@ Item {
                 paths.push(pathMatch[1]);
             }
         }
-
-        Logger.info(`SteamProvider: Found ${paths.length} library paths`);
         root.libraryPaths = paths;
 
         // Now find all appmanifest files
@@ -252,8 +244,6 @@ Item {
         stdout: StdioCollector {
             onStreamFinished: {
                 const lines = text.trim().split('\n').filter(l => l.length > 0);
-                Logger.info(`SteamProvider: Parsed ${lines.length} app manifests`);
-
                 for (let line of lines) {
                     const parts = line.split('|');
                     if (parts.length >= 2) {
@@ -315,8 +305,6 @@ Item {
         stdout: StdioCollector {
             onStreamFinished: {
                 const paths = text.trim().split('\n').filter(p => p.length > 0);
-                Logger.info(`SteamProvider: Found ${paths.length} art images`);
-
                 // Build maps: appid -> art path
                 const coverMap = {};
                 const heroMap = {};
@@ -344,7 +332,6 @@ Item {
                     game.coverArt = coverMap[game.appid] ?? "";
                     game.heroArt = heroMap[game.appid] ?? "";
                 }
-                Logger.info(`SteamProvider: ${Object.keys(coverMap).length} covers, ${Object.keys(heroMap).length} heroes`);
 
                 finishLoading();
             }
@@ -356,15 +343,8 @@ Item {
     // ========================================================================
 
     function finishLoading() {
-        // Sort alphabetically (sorting by lastPlayed is done in GameService)
-        root.loadedGames.sort((a, b) => a.name.localeCompare(b.name));
+        // GameService does the sorting
         root.games = root.loadedGames;
         root.isLoading = false;
-        root.lastError = "";
-        Logger.info(`SteamProvider: Loaded ${root.games.length} games`);
-    }
-
-    Component.onCompleted: {
-        Logger.info("SteamProvider initialized");
     }
 }
