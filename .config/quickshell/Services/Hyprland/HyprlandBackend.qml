@@ -8,12 +8,9 @@ QtObject {
     id: backend
 
     property string type: "hyprland"
-    property bool isHyprland: true
 
     property var workspaces: []
-    property int activeWorkspace: 1
     property string focusedMonitorName: Hyprland.focusedMonitor?.name ?? ""
-    property int focusedMonitorId: Hyprland.focusedMonitor?.id ?? -1
 
     // lastIpcObject holds the same JSON as `hyprctl clients/monitors -j`. Quickshell fills it
     // shortly after startup and on refreshToplevels()/refreshMonitors(); each update
@@ -31,48 +28,16 @@ QtObject {
 
     function _emitWindowData() {
         windowDataUpdated();
-        Logger.trace("Clients updated:", windowList.length, "windows");
     }
 
     function _emitMonitorData() {
         monitorDataUpdated();
-        Logger.trace("Monitors updated:", monitors.length, "displays");
     }
 
-    Component.onCompleted: detectCompositor()
-
-    function detectCompositor() {
-        try {
-            if (Hyprland.eventSocketPath) {
-                initHyprland();
-                Logger.info("Running on Hyprland");
-                return;
-            }
-        } catch (e) {}
-
-        Logger.error("This shell only supports Hyprland. Exiting...");
-        Qt.callLater(Qt.quit);
-    }
-
-    function initHyprland() {
-        updateWorkspaces();
-    }
-
-    function updateWorkspaces() {
-        workspaces = Hyprland.workspaces.values;
-        activeWorkspace = Hyprland.focusedWorkspace?.id ?? 1;
-    }
+    // Compositor.qml only loads this backend when HYPRLAND_INSTANCE_SIGNATURE is set.
+    Component.onCompleted: workspaces = Hyprland.workspaces.values
 
     // --- Data query functions ---
-
-    function biggestWindowForWorkspace(workspaceId) {
-        const windowsInThisWorkspace = backend.windowList.filter(w => w.workspace.id == workspaceId);
-        return windowsInThisWorkspace.reduce((maxWin, win) => {
-            const maxArea = (maxWin?.size?.[0] ?? 0) * (maxWin?.size?.[1] ?? 0);
-            const winArea = (win?.size?.[0] ?? 0) * (win?.size?.[1] ?? 0);
-            return winArea > maxArea ? win : maxWin;
-        }, null);
-    }
 
     function getWorkspaceApps(workspaceId) {
         const windowsInWorkspace = backend.windowList.filter(w => w.workspace.id == workspaceId);
@@ -190,14 +155,11 @@ QtObject {
         target: Hyprland
 
         function onFocusedWorkspaceChanged() {
-            backend.activeWorkspace = Hyprland.focusedWorkspace?.id ?? 1;
             backend.workspaceFocusChanged();
-            Logger.debug("Workspace →", backend.activeWorkspace);
         }
 
         function onFocusedMonitorChanged() {
             backend.focusedMonitorName = Hyprland.focusedMonitor?.name ?? "";
-            backend.focusedMonitorId = Hyprland.focusedMonitor?.id ?? -1;
             backend.workspaceFocusChanged();
         }
 
@@ -216,13 +178,7 @@ QtObject {
     // --- Dispatch functions ---
 
     function switchWorkspace(id) {
-        Logger.debug("Switching to workspace", id);
         Hyprland.dispatch(`hl.dsp.focus({ workspace = ${id} })`);
-    }
-
-    function moveWindowToWorkspace(id) {
-        Logger.debug("Moving window to workspace", id);
-        Hyprland.dispatch(`hl.dsp.window.move({ workspace = ${id} })`);
     }
 
     function logout() {

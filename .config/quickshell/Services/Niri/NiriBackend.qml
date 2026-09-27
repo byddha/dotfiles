@@ -7,12 +7,9 @@ QtObject {
     id: backend
 
     property string type: "niri"
-    property bool isHyprland: false
 
     property var workspaces: []
-    property int activeWorkspace: 1
     property string focusedMonitorName: ""
-    property int focusedMonitorId: -1
 
     property var windowList: []
     property var monitors: []
@@ -29,7 +26,6 @@ QtObject {
     property bool _pendingFullUpdate: false
 
     Component.onCompleted: {
-        Logger.info("Running on Niri");
         updateAllData();
         eventStream.running = true;
     }
@@ -137,23 +133,16 @@ QtObject {
                 }));
 
         const focused = _workspacesRaw.find(ws => ws.is_focused);
-        if (focused) {
-            activeWorkspace = focused.id;
-            if (focused.output && _monitorNameToId[focused.output] !== undefined) {
-                focusedMonitorName = focused.output;
-                focusedMonitorId = _monitorNameToId[focused.output];
-            }
-        }
+        if (focused?.output && _monitorNameToId[focused.output] !== undefined)
+            focusedMonitorName = focused.output;
 
         _updateMonitorActiveWorkspaces();
         workspaceFocusChanged();
-        Logger.trace("Workspaces updated:", workspaces.length);
     }
 
     function _processWindows(raw) {
         windowList = raw.map(w => _normalizeWindow(w));
         windowDataUpdated();
-        Logger.trace("Windows updated:", windowList.length);
     }
 
     function _processMonitors() {
@@ -183,13 +172,10 @@ QtObject {
         _monitorNameToId = nameToId;
 
         const focused = _workspacesRaw.find(ws => ws.is_focused);
-        if (focused?.output && nameToId[focused.output] !== undefined) {
+        if (focused?.output && nameToId[focused.output] !== undefined)
             focusedMonitorName = focused.output;
-            focusedMonitorId = nameToId[focused.output];
-        }
 
         monitorDataUpdated();
-        Logger.trace("Monitors updated:", monitors.length, "displays");
     }
 
     function _normalizeWindow(win) {
@@ -307,15 +293,6 @@ QtObject {
 
     // --- Data query functions ---
 
-    function biggestWindowForWorkspace(workspaceId) {
-        const windows = windowList.filter(w => w.workspace.id == workspaceId);
-        return windows.reduce((maxWin, win) => {
-            const maxArea = (maxWin?.size?.[0] ?? 0) * (maxWin?.size?.[1] ?? 0);
-            const winArea = (win?.size?.[0] ?? 0) * (win?.size?.[1] ?? 0);
-            return winArea > maxArea ? win : maxWin;
-        }, null);
-    }
-
     function getWorkspaceApps(workspaceId) {
         const windows = windowList.filter(w => w.workspace.id == workspaceId);
         if (windows.length === 0)
@@ -381,21 +358,8 @@ QtObject {
             Logger.error("switchWorkspace: unknown workspace id", id);
             return;
         }
-        Logger.debug("Switching to workspace", id, "(idx:", ws.idx + ")");
         actionComponent.createObject(backend, {
             command: ["niri", "msg", "action", "focus-workspace", String(ws.idx)]
-        }).running = true;
-    }
-
-    function moveWindowToWorkspace(id) {
-        const ws = _workspacesRaw.find(w => w.id === id);
-        if (!ws) {
-            Logger.error("moveWindowToWorkspace: unknown workspace id", id);
-            return;
-        }
-        Logger.debug("Moving window to workspace", id, "(idx:", ws.idx + ")");
-        actionComponent.createObject(backend, {
-            command: ["niri", "msg", "action", "move-window-to-workspace", String(ws.idx)]
         }).running = true;
     }
 

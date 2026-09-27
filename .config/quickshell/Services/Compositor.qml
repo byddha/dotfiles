@@ -10,7 +10,7 @@ Singleton {
 
     // --- Backend loaded by URL (swap this path for a different compositor) ---
     property var backend: null
-    property bool isHyprland: backend?.isHyprland ?? false
+    property bool isHyprland: backend?.type === "hyprland"
     property bool isNiri: backend?.type === "niri"
     property bool useHyprlandFocusGrab: isHyprland
 
@@ -62,8 +62,6 @@ Singleton {
             compositor.monitorDataUpdated();
         }
     }
-
-    onActiveWindowClassChanged: Logger.debug("Focus →", activeWindowClass || "none")
 
     // --- Function forwarding ---
 
