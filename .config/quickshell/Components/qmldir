@@ -15,3 +15,4 @@ MediaCard 1.0 MediaCard.qml
 VpnSelector 1.0 VpnSelector.qml
 FocusGrab 1.0 FocusGrab.qml
 EmptyState 1.0 EmptyState.qml
+ExpandableListItem 1.0 ExpandableListItem.qml
