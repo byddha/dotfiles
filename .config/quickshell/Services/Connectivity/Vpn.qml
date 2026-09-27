@@ -15,10 +15,22 @@ import "../../Utils"
 Singleton {
     id: root
 
-    // State properties
-    property bool mullvadConnected: false
+    // State properties. mullvadState comes from `mullvad status listen`: connecting, connected,
+    // disconnecting, disconnected or error.
+    property string mullvadState: "disconnected"
+    readonly property bool mullvadConnected: mullvadState === "connected"
     property bool fortiConnected: false
     property bool fortiConnectionFailed: false
+
+    // Busy = a connect / disconnect was requested and has not finished yet. Pending covers the
+    // gap between the command and the first state change it causes.
+    property bool mullvadPending: false
+    readonly property bool mullvadBusy: mullvadPending || mullvadState === "connecting" || mullvadState === "disconnecting"
+    property bool fortiDisconnecting: false
+    readonly property bool fortiConnecting: fortiConnectDelay.running
+    readonly property bool fortiBusy: fortiConnecting || fortiDisconnecting
+    readonly property bool busy: mullvadBusy || fortiBusy
+    readonly property bool disconnecting: fortiDisconnecting || mullvadState === "disconnecting" || (mullvadPending && mullvadConnected)
 
     // Mullvad location info (from JSON)
     property string mullvadCity: ""
@@ -32,9 +44,9 @@ Singleton {
 
     readonly property bool anyConnected: mullvadConnected || fortiConnected
 
-    // Poll status every 5 seconds
+    // Forti has no event stream: poll, fast while a disconnect is pending
     Timer {
-        interval: 5000
+        interval: root.fortiDisconnecting ? 300 : 5000
         running: true
         repeat: true
         onTriggered: root.updateStatus()
@@ -63,36 +75,50 @@ Singleton {
     // Mullvad Processes
     // ==================
 
+    // Prints the current state at start, then one JSON line per change
     Process {
-        id: mullvadStatusProc
-        command: ["mullvad", "status", "-j"]
+        id: mullvadListenProc
+        command: ["mullvad", "status", "-j", "listen"]
+        running: true
 
-        stdout: StdioCollector {
-            onStreamFinished: {
+        stdout: SplitParser {
+            onRead: line => {
                 try {
-                    const data = JSON.parse(text);
-                    root.mullvadConnected = data.state === "connected";
+                    const data = JSON.parse(line);
+                    root.mullvadState = data.state ?? "disconnected";
+                    root.mullvadPending = false;
                     if (data.details?.location) {
                         root.mullvadCity = data.details.location.city || "";
                         root.mullvadCountry = data.details.location.country || "";
                     }
                 } catch (e) {
-                    root.mullvadConnected = false;
+                    Logger.warn("Unreadable mullvad status line");
                 }
             }
         }
 
-        onExited: (code, status) => {
-            if (code !== 0) {
-                root.mullvadConnected = false;
-            }
-        }
+        // Daemon restarted or mullvad missing: retry later
+        onExited: mullvadListenRestart.start()
+    }
+
+    Timer {
+        id: mullvadListenRestart
+        interval: 10000
+        onTriggered: mullvadListenProc.running = true
+    }
+
+    Timer {
+        id: mullvadPendingTimeout
+        interval: 15000
+        onTriggered: root.mullvadPending = false
     }
 
     Process {
         id: mullvadConnectProc
-        onExited: (code, status) => {
-            root.updateStatus();
+        // A failed command causes no state change to clear the pending state
+        onExited: code => {
+            if (code !== 0)
+                root.mullvadPending = false;
         }
     }
 
@@ -103,8 +129,10 @@ Singleton {
     Process {
         id: fortiStatusProc
         command: ["pgrep", "openfortivpn"]
-        onExited: (code, status) => {
-            root.fortiConnected = (code === 0);
+        onExited: code => {
+            root.fortiConnected = code === 0;
+            if (!root.fortiConnected)
+                root.fortiDisconnecting = false;
         }
     }
 
@@ -134,6 +162,16 @@ Singleton {
     }
 
     Timer {
+        id: fortiDisconnectTimeout
+        interval: 10000
+        onTriggered: {
+            if (root.fortiDisconnecting)
+                Logger.warn("FortiVPN did not stop");
+            root.fortiDisconnecting = false;
+        }
+    }
+
+    Timer {
         id: fortiErrorClearTimer
         interval: 3000
         onTriggered: root.fortiConnectionFailed = false
@@ -152,7 +190,6 @@ Singleton {
     // ==================
 
     function updateStatus() {
-        mullvadStatusProc.running = true;
         fortiStatusProc.running = true;
     }
 
@@ -163,11 +200,15 @@ Singleton {
     function connectMullvad() {
         if (fortiConnected)
             disconnectForti();
+        mullvadPending = true;
+        mullvadPendingTimeout.restart();
         mullvadConnectProc.command = ["mullvad", "connect"];
         mullvadConnectProc.running = true;
     }
 
     function disconnectMullvad() {
+        mullvadPending = true;
+        mullvadPendingTimeout.restart();
         mullvadConnectProc.command = ["mullvad", "disconnect"];
         mullvadConnectProc.running = true;
     }
@@ -190,10 +231,14 @@ Singleton {
     }
 
     function disconnectForti() {
+        fortiDisconnecting = true;
+        fortiDisconnectTimeout.restart();
         fortiDisconnectProc.running = true;
     }
 
     function toggleMullvad() {
+        if (mullvadBusy)
+            return;
         if (mullvadConnected)
             disconnectMullvad();
         else

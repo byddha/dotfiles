@@ -1,21 +1,20 @@
 import QtQuick
-import Quickshell
 import "../../Config"
 import "../../Services"
 
 ActivityPill {
-    visible: Recording.recording
-    color: mouseArea.containsMouse ? BarStyle.buttonBackgroundHover : BarStyle.buttonBackground
+    visible: Recording.recording || Recording.starting
+    busy: Recording.starting || Recording.stopping
+    color: mouseArea.containsMouse && !busy ? BarStyle.buttonBackgroundHover : BarStyle.buttonBackground
     icon: Icons.recordOn
     iconColor: Theme.accentRed
-    label: "Recording"
+    label: Recording.stopping ? "Saving…" : Recording.starting ? "Starting…" : "Recording"
 
     MouseArea {
         id: mouseArea
         anchors.fill: parent
         hoverEnabled: true
-        cursorShape: Qt.PointingHandCursor
-        // SIGINT lets gpu-screen-recorder finalize the file
-        onClicked: Quickshell.execDetached(["pkill", "-INT", "-f", "^gpu-screen-recorder"])
+        cursorShape: parent.busy ? Qt.BusyCursor : Qt.PointingHandCursor
+        onClicked: Recording.stop()
     }
 }

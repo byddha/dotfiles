@@ -192,4 +192,5 @@ Singleton {
     readonly property string microphone: "󰍬"
     readonly property string linkVariant: "󰌹"
     readonly property string linkVariantOff: "󰌺"
+    readonly property string loading: "󰝲"
 }

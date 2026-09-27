@@ -6,10 +6,16 @@ import "../../Components"
 BarPill {
     id: vpnButton
 
-    visible: Vpn.anyConnected
+    readonly property bool isMullvad: Vpn.mullvadConnected || Vpn.mullvadBusy
+
+    visible: Vpn.anyConnected || Vpn.busy
     width: visible ? vpnRow.implicitWidth + BarStyle.spacing * 2 : 0
     tooltip: vpnTooltip
+    highlightOnHover: !Vpn.busy
+    cursorShape: Vpn.busy ? Qt.BusyCursor : Qt.PointingHandCursor
     onClicked: {
+        if (Vpn.busy)
+            return;
         if (Vpn.mullvadConnected) {
             Vpn.disconnectMullvad();
         } else if (Vpn.fortiConnected) {
@@ -30,6 +36,7 @@ BarPill {
         spacing: BarStyle.spacing / 2
 
         Text {
+            visible: !Vpn.busy
             anchors.verticalCenter: parent.verticalCenter
             text: Icons.vpnOn
             font.family: BarStyle.iconFont
@@ -37,9 +44,16 @@ BarPill {
             color: Theme.primary
         }
 
+        Spinner {
+            visible: Vpn.busy
+            anchors.verticalCenter: parent.verticalCenter
+            font.pixelSize: BarStyle.iconSize
+            color: Theme.primary
+        }
+
         Text {
             anchors.verticalCenter: parent.verticalCenter
-            text: Vpn.mullvadConnected ? "Mullvad" : "FortiVPN"
+            text: vpnButton.isMullvad ? "Mullvad" : "FortiVPN"
             font.family: BarStyle.textFont
             font.pixelSize: BarStyle.textSize
             font.weight: BarStyle.textWeight
@@ -47,7 +61,16 @@ BarPill {
         }
 
         Text {
-            visible: Vpn.mullvadConnected && Vpn.mullvadCity
+            visible: Vpn.busy
+            anchors.verticalCenter: parent.verticalCenter
+            text: Vpn.disconnecting ? "Disconnecting…" : "Connecting…"
+            font.family: BarStyle.textFont
+            font.pixelSize: BarStyle.textSize
+            color: BarStyle.textSecondaryColor
+        }
+
+        Text {
+            visible: !Vpn.busy && Vpn.mullvadConnected && Vpn.mullvadCity
             anchors.verticalCenter: parent.verticalCenter
             text: `(${Vpn.mullvadCity})`
             font.family: BarStyle.textFont
@@ -56,7 +79,7 @@ BarPill {
         }
 
         Text {
-            visible: Vpn.fortiConnected
+            visible: !Vpn.busy && Vpn.fortiConnected
             anchors.verticalCenter: parent.verticalCenter
             text: `(${Vpn.fortiUptime})`
             font.family: BarStyle.textFont

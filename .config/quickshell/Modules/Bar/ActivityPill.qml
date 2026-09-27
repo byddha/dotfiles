@@ -1,13 +1,17 @@
 import QtQuick
+import "../../Components"
 
 // Icon + label + elapsed mm:ss pill for running activities (recording, transcribing).
 // The timer restarts from zero each time the pill becomes visible.
+// `busy`: the activity was told to stop (or is finishing) but has not ended yet; a spinner
+// replaces the icon so a click never looks ignored.
 Rectangle {
     id: root
 
     property string icon
     property color iconColor
     property string label
+    property bool busy: false
     property int elapsedSeconds: 0
 
     function formatTime(totalSeconds) {
@@ -51,9 +55,17 @@ Rectangle {
         spacing: BarStyle.spacing / 2
 
         Text {
+            visible: !root.busy
             anchors.verticalCenter: parent.verticalCenter
             text: root.icon
             font.family: BarStyle.iconFont
+            font.pixelSize: BarStyle.iconSize
+            color: root.iconColor
+        }
+
+        Spinner {
+            visible: root.busy
+            anchors.verticalCenter: parent.verticalCenter
             font.pixelSize: BarStyle.iconSize
             color: root.iconColor
         }

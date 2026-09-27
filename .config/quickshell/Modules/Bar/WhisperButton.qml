@@ -3,8 +3,9 @@ import "../../Config"
 import "../../Services"
 
 ActivityPill {
-    visible: Whisper.recording
+    visible: Whisper.active
+    busy: Whisper.transcribing
     icon: Icons.micOn
     iconColor: Theme.accentOrange
-    label: "Transcribing"
+    label: Whisper.transcribing ? "Transcribing…" : "Listening"
 }

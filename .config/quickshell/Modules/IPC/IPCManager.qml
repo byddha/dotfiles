@@ -111,6 +111,16 @@ Item {
         }
     }
 
+    // Called by scripts/whisper on every state change
+    IpcHandler {
+        target: "whisper"
+
+        function refresh(): string {
+            Whisper.refresh();
+            return "ok";
+        }
+    }
+
     IpcHandler {
         target: "screenshot"
 

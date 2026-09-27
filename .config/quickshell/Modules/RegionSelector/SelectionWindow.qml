@@ -426,14 +426,10 @@ PanelWindow {
             }
         }
 
-        // Record mode: gpu-screen-recorder captures live, no file grab needed. Lens, OCR, Edit and Save
-        // still take a screenshot of the region. Not wf-recorder: it only sees SIGINT when a new frame
-        // arrives, and Hyprland sends none for a static region, so Stop never worked there.
+        // Record mode: the recorder captures live, no file grab needed. Lens, OCR, Edit and Save
+        // still take a screenshot of the region.
         if (root.action === RegionSelector.SnipAction.Record && root.snipMode === "copy") {
-            // Logical global coordinates; gsr records the native pixels of scaled monitors itself
-            const region = `${Math.round(root.regionWidth)}x${Math.round(root.regionHeight)}+${Math.round(root.regionX + root.monitorOffsetX)}+${Math.round(root.regionY + root.monitorOffsetY)}`;
-            snipProc.command = ["bash", "-c", `mkdir -p ~/Videos/Screencasts && gpu-screen-recorder -w region -region ${region} -f 30 -k av1 -o ~/Videos/Screencasts/recording_$(date +%Y-%m-%d_%H-%M-%S).mp4`];
-            snipProc.startDetached();
+            Recording.start(`${Math.round(root.regionWidth)}x${Math.round(root.regionHeight)}+${Math.round(root.regionX + root.monitorOffsetX)}+${Math.round(root.regionY + root.monitorOffsetY)}`);
             root.dismiss();
             return;
         }

@@ -52,14 +52,16 @@ ColumnLayout {
         subtitle: {
             if (Vpn.fortiConnected)
                 return "Disconnect FortiVPN first";
+            if (Vpn.mullvadBusy)
+                return Vpn.disconnecting ? "Disconnecting…" : "Connecting…";
             if (!Vpn.mullvadConnected)
                 return "Disconnected";
             return [Vpn.mullvadCity, Vpn.mullvadCountry].filter(s => s).join(", ") || "Connected";
         }
-        trailText: Vpn.mullvadConnected ? "Connected" : ""
+        trailText: Vpn.mullvadConnected && !Vpn.mullvadBusy ? "Connected" : ""
         trailColor: Theme.primary
         selected: Vpn.mullvadConnected
-        disabled: Vpn.fortiConnected
+        disabled: Vpn.fortiConnected || Vpn.fortiBusy
         onClicked: {
             Vpn.toggleMullvad();
             root.expanded = false;
@@ -81,13 +83,15 @@ ColumnLayout {
         subtitle: {
             if (Vpn.mullvadConnected)
                 return "Disconnect Mullvad first";
+            if (Vpn.fortiBusy)
+                return Vpn.fortiDisconnecting ? "Disconnecting…" : "Connecting…";
             if (Vpn.fortiConnectionFailed)
                 return "Failed";
             return Vpn.fortiConnected ? Vpn.fortiUptime : "Disconnected";
         }
         subtitleColor: Vpn.fortiConnectionFailed && !Vpn.mullvadConnected ? Theme.accentRed : Theme.textSecondary
         selected: Vpn.fortiConnected
-        disabled: Vpn.mullvadConnected
+        disabled: Vpn.mullvadConnected || Vpn.mullvadBusy || Vpn.fortiBusy
         expandable: true
         body: Vpn.fortiConnected ? disconnectBody : passwordBody
 
