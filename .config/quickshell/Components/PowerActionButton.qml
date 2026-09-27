@@ -12,12 +12,14 @@ Rectangle {
     radius: width / 2
     color: mouseArea.containsMouse ? Theme.colLayer1 : Theme.colLayer0
 
-    transform: Scale {
-        id: buttonScale
-        origin.x: button.width / 2
-        origin.y: button.height / 2
-        xScale: 1.0
-        yScale: 1.0
+    scale: mouseArea.containsMouse ? 1.15 : 1.0
+
+    Behavior on scale {
+        NumberAnimation {
+            duration: 150
+            easing.type: Easing.OutBack
+            easing.overshoot: 2.0
+        }
     }
 
     Text {
@@ -34,25 +36,6 @@ Rectangle {
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
         onClicked: button.clicked()
-    }
-
-    states: State {
-        name: "hovered"
-        when: mouseArea.containsMouse
-        PropertyChanges {
-            target: buttonScale
-            xScale: 1.15
-            yScale: 1.15
-        }
-    }
-
-    transitions: Transition {
-        NumberAnimation {
-            properties: "xScale,yScale"
-            duration: 150
-            easing.type: Easing.OutBack
-            easing.overshoot: 2.0
-        }
     }
 
     Behavior on color {

@@ -6,15 +6,15 @@ Item {
     id: root
 
     property real value: 0
-    property real lineWidth: 2
-    property real wavelength: 20
-    property real amp: 1.6
+    readonly property real lineWidth: 2
+    readonly property real wavelength: 20
+    readonly property real amp: 1.6
     property real phase: 0.0
     property bool isPlaying: false
     property real currentAmp: 1.6
-    property color trackColor: Theme.alpha(Theme.colLayer2, 0.4)
-    property color fillColor: Theme.primary
-    property color playheadColor: Theme.primary
+    readonly property color trackColor: Theme.alpha(Theme.colLayer2, 0.4)
+    readonly property color fillColor: Theme.primary
+    readonly property color playheadColor: Theme.primary
 
     property real dpr: (root.window ? root.window.devicePixelRatio : 1)
     function snap(v) {
@@ -47,12 +47,10 @@ Item {
             joinStyle: ShapePath.RoundJoin
             fillColor: "transparent"
             PathMove {
-                id: flatStart
                 x: 0
                 y: root.midY
             }
             PathLine {
-                id: flatEnd
                 x: root.width
                 y: root.midY
             }
@@ -141,7 +139,7 @@ Item {
         z: 3
     }
 
-    property real k: (2 * Math.PI) / Math.max(1e-6, wavelength)
+    readonly property real k: (2 * Math.PI) / Math.max(1e-6, wavelength)
     function wrapMod(a, m) {
         let r = a % m;
         return r < 0 ? r + m : r;
@@ -196,15 +194,7 @@ Item {
         currentAmp = isPlaying ? amp : 0;
         buildStaticWave();
     }
-    onWidthChanged: {
-        flatStart.x = 0;
-        flatEnd.x = width;
-        buildStaticWave();
-    }
+    onWidthChanged: buildStaticWave()
     onHeightChanged: buildStaticWave()
     onCurrentAmpChanged: buildStaticWave()
-    onWavelengthChanged: {
-        k = (2 * Math.PI) / Math.max(1e-6, wavelength);
-        buildStaticWave();
-    }
 }

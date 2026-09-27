@@ -6,8 +6,7 @@ Window {
 
     property Item target: null
     property string text: ""
-    property int delay: 500
-    property bool isVisible: false
+    property bool pending: false
 
     flags: Qt.ToolTip | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
     color: Theme.surface
@@ -19,22 +18,18 @@ Window {
     function show() {
         if (!target || text === "")
             return;
-        isVisible = true;
-        if (delay > 0) {
-            showTimer.restart();
-        } else {
-            _showNow();
-        }
+        pending = true;
+        showTimer.restart();
     }
 
     function hide() {
-        isVisible = false;
+        pending = false;
         showTimer.stop();
         visible = false;
     }
 
     function _showNow() {
-        if (!isVisible)
+        if (!pending)
             return;
         var pos = target.mapToGlobal(0, target.height);
         x = pos.x - width / 2 + target.width / 2;
@@ -44,7 +39,7 @@ Window {
 
     Timer {
         id: showTimer
-        interval: tooltip.delay
+        interval: 500
         onTriggered: tooltip._showNow()
     }
 

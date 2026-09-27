@@ -6,14 +6,13 @@ Item {
 
     property list<real> values: []
     property bool live: true
-    property real maxValue: 1000
-    property color barColor: Theme.primary
-    property int barCount: 8
-    property real barSpacing: 3
-    property real minBarHeight: 2
+    readonly property real maxValue: 1000
+    readonly property color barColor: Theme.primary
+    readonly property int barCount: 8
+    readonly property real barSpacing: 3
+    readonly property real minBarHeight: 2
 
     Row {
-        id: barsRow
         anchors.fill: parent
         spacing: root.barSpacing
 
@@ -21,7 +20,6 @@ Item {
             model: root.barCount
 
             Rectangle {
-                id: bar
                 required property int index
 
                 width: (root.width - (root.barCount - 1) * root.barSpacing) / root.barCount
