@@ -1,5 +1,4 @@
 pragma Singleton
-import "../../Utils"
 import QtQuick
 import Quickshell
 
@@ -10,7 +9,6 @@ Singleton {
     // Volume Icons
     // ==================
     readonly property string volumeMuted: "󰖁"
-    readonly property string volumeOff: "󰖁"
     readonly property string volumeLow: "󰕿"
     readonly property string volumeMedium: "󰖀"
     readonly property string volumeHigh: "󰕾"
@@ -53,8 +51,6 @@ Singleton {
     readonly property string vpnOff: "󰦞"
     readonly property string hdrOn: "󰵽"
     readonly property string hdrOff: "󰵾"
-    readonly property string dndOn: "󰂛"
-    readonly property string dndOff: "󰂚"
     readonly property string idleOn: "󰒲" // sleep icon - idle mode is on, system can sleep
     readonly property string idleOff: "󰒳" // no-sleep icon - idle mode is off, system stays awake
     readonly property string screenSnip: "󰹑"
@@ -76,7 +72,6 @@ Singleton {
     // Power/System Icons
     // ==================
     readonly property string power: "󰣇"
-    readonly property string battery: "󰁹"
     readonly property string battery10: "󰁺"
     readonly property string battery20: "󰁻"
     readonly property string battery30: "󰁼"
@@ -126,15 +121,12 @@ Singleton {
     // Weather Icons (Nerd Font md-weather_*)
     // ==================
     readonly property string weatherSunny: "󰖙"
-    readonly property string weatherClear: "󰖙"
-    readonly property string weatherNight: "󰖔"
     readonly property string weatherPartlyCloudy: "󰖕"
     readonly property string weatherCloudy: "󰖐"
     readonly property string weatherFog: "󰖑"
     readonly property string weatherRainy: "󰖗"
     readonly property string weatherSnowy: "󰖘"
     readonly property string weatherThunderstorm: "󰖓"
-    readonly property string weatherWindy: "󰖝"
     // Weather detail icons
     readonly property string thermometer: "󰔏"
     readonly property string humidity: "󰖌"
@@ -162,17 +154,12 @@ Singleton {
     // ==================
     // Misc Icons
     // ==================
-    readonly property string menu: "☰"
     readonly property string workspace: ""
     readonly property string device: "󰒔"
     readonly property string checkmark: ""
-    readonly property string emptyState: ""
     readonly property string cross: "✝"
-    readonly property string star: "★"
-    readonly property string flag: "⚑"
-    readonly property string heart: "♡"
 
+    // Called by shell.qml to instantiate the singleton eagerly.
     function init() {
-        Logger.info("Service initialized");
     }
 }
