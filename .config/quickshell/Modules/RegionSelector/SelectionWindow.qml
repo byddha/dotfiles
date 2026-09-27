@@ -57,10 +57,9 @@ PanelWindow {
 
     // Adjustment mode (after initial drag, before confirming)
     property bool adjusting: false
-    property bool editMode: false  // When true, snip opens in Swappy instead of copying
-    property bool saveMode: false  // When true, save directly to file instead of clipboard
-    property bool lensMode: false  // When true, send to Google Lens for visual search
-    property bool ocrMode: false   // When true, extract text via Tesseract OCR
+    // What snip() does with the grabbed region: "copy" (clipboard), "edit" (Swappy),
+    // "save" (~/Pictures/Screenshots), "lens" (Google Lens) or "ocr" (Tesseract)
+    property string snipMode: "copy"
     property bool ocrAllLangs: false // When true, use all installed languages; otherwise English only
     property bool ocrTranslate: false // When true, open OCR result in Kagi Translate
     property string adjustHandle: ""  // Which handle is being dragged: "", "move", "nw", "ne", "sw", "se", "n", "s", "e", "w"
@@ -381,6 +380,24 @@ PanelWindow {
         }
     }
 
+    readonly property bool canSnip: adjusting && regionWidth > 0 && regionHeight > 0 && cursorOnThisMonitor
+
+    function snipAs(mode, allLangs = false, translate = false) {
+        root.snipping = true;
+        root.snipMode = mode;
+        root.ocrAllLangs = allLangs;
+        root.ocrTranslate = translate;
+        root.snip();
+    }
+
+    function snipFullscreen(mode) {
+        root.regionX = 0;
+        root.regionY = 0;
+        root.regionWidth = root.width;
+        root.regionHeight = root.height;
+        root.snipAs(mode);
+    }
+
     function snip() {
         if (root.regionWidth <= 0 || root.regionHeight <= 0) {
             // No region - try to find window at click position
@@ -419,15 +436,15 @@ PanelWindow {
             const f = root.screenshotPath;
             const cleanup = `rm '${f}'`;
             let cmd;
-            if (root.saveMode) {
+            if (root.snipMode === "save") {
                 cmd = `mkdir -p ~/Pictures/Screenshots && cp '${f}' ~/Pictures/Screenshots/screenshot_$(date +%Y-%m-%d_%H-%M-%S).png && ${cleanup}`;
-            } else if (root.lensMode) {
+            } else if (root.snipMode === "lens") {
                 cmd = `imageLink=$(curl -sF files[]=@'${f}' 'https://uguu.se/upload' | jq -r '.files[0].url') && xdg-open "https://lens.google.com/uploadbyurl?url=\${imageLink}" && ${cleanup}`;
-            } else if (root.ocrMode) {
+            } else if (root.snipMode === "ocr") {
                 const langFlag = root.ocrAllLangs ? `$(tesseract --list-langs 2>/dev/null | tail -n +2 | paste -sd+)` : "eng";
                 const base = `tesseract '${f}' stdout -l ${langFlag}`;
                 cmd = root.ocrTranslate ? `text=$(${base}) && printf '%s' "$text" | wl-copy && xdg-open "https://translate.kagi.com/?from=auto&to=&text=$(printf '%s' "$text" | jq -sRr @uri)" && ${cleanup}` : `${base} | wl-copy && ${cleanup}`;
-            } else if (root.editMode) {
+            } else if (root.snipMode === "edit") {
                 cmd = `swappy -f '${f}' && ${cleanup}`;
             } else {
                 cmd = `wl-copy --type image/png < '${f}' && ${cleanup}`;
@@ -485,39 +502,17 @@ PanelWindow {
             case Qt.Key_Space:
             case Qt.Key_Return:
             case Qt.Key_Enter:
-                // Confirm and copy to clipboard
-                if (root.adjusting && root.regionWidth > 0 && root.regionHeight > 0 && root.cursorOnThisMonitor) {
-                    root.snipping = true;
-                    root.editMode = false;
-                    root.lensMode = false;
-                    root.ocrMode = false;
-                    root.ocrTranslate = false;
-                    root.snip();
-                }
+                if (root.canSnip)
+                    root.snipAs("copy");
                 break;
             case Qt.Key_E:
-                // Confirm and open in Swappy for editing
-                if (root.adjusting && root.regionWidth > 0 && root.regionHeight > 0 && root.cursorOnThisMonitor) {
-                    root.snipping = true;
-                    root.editMode = true;
-                    root.lensMode = false;
-                    root.ocrMode = false;
-                    root.ocrTranslate = false;
-                    root.snip();
-                }
+                if (root.canSnip)
+                    root.snipAs("edit");
                 break;
             case Qt.Key_S:
                 if (event.modifiers & Qt.ControlModifier) {
-                    // Ctrl+S: Save directly to file
-                    if (root.adjusting && root.regionWidth > 0 && root.regionHeight > 0 && root.cursorOnThisMonitor) {
-                        root.snipping = true;
-                        root.saveMode = true;
-                        root.editMode = false;
-                        root.lensMode = false;
-                        root.ocrMode = false;
-                        root.ocrTranslate = false;
-                        root.snip();
-                    }
+                    if (root.canSnip)
+                        root.snipAs("save");
                 } else {
                     // Plain S: Switch to Screenshot mode
                     root.actionChangeRequested(RegionSelector.SnipAction.Copy);
@@ -527,20 +522,9 @@ PanelWindow {
                 root.actionChangeRequested(RegionSelector.SnipAction.Record);
                 break;
             case Qt.Key_F:
-                // Select fullscreen (Shift+F = edit in swappy)
-                // Only capture if mouse is on this monitor
-                if (!root.cursorOnThisMonitor)
-                    break;
-                root.snipping = true;
-                root.regionX = 0;
-                root.regionY = 0;
-                root.regionWidth = root.width;
-                root.regionHeight = root.height;
-                root.editMode = (event.modifiers & Qt.ShiftModifier);
-                root.lensMode = false;
-                root.ocrMode = false;
-                root.ocrTranslate = false;
-                root.snip();
+                // Shift+F = edit in swappy
+                if (root.cursorOnThisMonitor)
+                    root.snipFullscreen((event.modifiers & Qt.ShiftModifier) ? "edit" : "copy");
                 break;
             case Qt.Key_C:
                 // Shrink selection to content bounds
@@ -549,27 +533,14 @@ PanelWindow {
                 }
                 break;
             case Qt.Key_L:
-                // Send to Google Lens for visual search
-                if (root.adjusting && root.regionWidth > 0 && root.regionHeight > 0 && root.cursorOnThisMonitor) {
-                    root.snipping = true;
-                    root.editMode = false;
-                    root.lensMode = true;
-                    root.ocrMode = false;
-                    root.ocrTranslate = false;
-                    root.snip();
-                }
+                if (root.canSnip)
+                    root.snipAs("lens");
                 break;
             case Qt.Key_O:
-                // Extract text via Tesseract OCR
                 // O = English, Shift+O = all languages, Ctrl+O = all languages + Kagi Translate
-                if (root.adjusting && root.regionWidth > 0 && root.regionHeight > 0 && root.cursorOnThisMonitor) {
-                    root.snipping = true;
-                    root.editMode = false;
-                    root.lensMode = false;
-                    root.ocrMode = true;
-                    root.ocrTranslate = (event.modifiers & Qt.ControlModifier);
-                    root.ocrAllLangs = (event.modifiers & Qt.ShiftModifier) || root.ocrTranslate;
-                    root.snip();
+                if (root.canSnip) {
+                    const translate = !!(event.modifiers & Qt.ControlModifier);
+                    root.snipAs("ocr", !!(event.modifiers & Qt.ShiftModifier) || translate, translate);
                 }
                 break;
             }
@@ -818,57 +789,15 @@ PanelWindow {
                 adjusting: root.adjusting
                 onDismiss: root.dismiss()
                 onCropRequested: root.shrinkToContent()
-                onLensRequested: {
-                    root.snipping = true;
-                    root.editMode = false;
-                    root.lensMode = true;
-                    root.ocrMode = false;
-                    root.ocrTranslate = false;
-                    root.snip();
-                }
-                onOcrRequested: {
-                    root.snipping = true;
-                    root.editMode = false;
-                    root.lensMode = false;
-                    root.ocrMode = true;
-                    root.ocrAllLangs = false;
-                    root.ocrTranslate = false;
-                    root.snip();
-                }
-                onOcrAllRequested: {
-                    root.snipping = true;
-                    root.editMode = false;
-                    root.lensMode = false;
-                    root.ocrMode = true;
-                    root.ocrAllLangs = true;
-                    root.ocrTranslate = false;
-                    root.snip();
-                }
-                onTranslateRequested: {
-                    root.snipping = true;
-                    root.editMode = false;
-                    root.lensMode = false;
-                    root.ocrMode = true;
-                    root.ocrAllLangs = true;
-                    root.ocrTranslate = true;
-                    root.snip();
-                }
+                onLensRequested: root.snipAs("lens")
+                onOcrRequested: root.snipAs("ocr")
+                onOcrAllRequested: root.snipAs("ocr", true)
+                onTranslateRequested: root.snipAs("ocr", true, true)
                 onActionRequested: newAction => {
-                    if (newAction === -1) {
-                        // Fullscreen
-                        root.snipping = true;
-                        root.regionX = 0;
-                        root.regionY = 0;
-                        root.regionWidth = root.width;
-                        root.regionHeight = root.height;
-                        root.editMode = false;
-                        root.lensMode = false;
-                        root.ocrMode = false;
-                        root.ocrTranslate = false;
-                        root.snip();
-                    } else {
+                    if (newAction === -1)
+                        root.snipFullscreen("copy");
+                    else
                         root.actionChangeRequested(newAction);
-                    }
                 }
             }
         }
