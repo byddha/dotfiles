@@ -1,6 +1,5 @@
 import QtQuick
 import "../../Config"
-import "../../Utils"
 import "../../Services"
 import "../../Components"
 

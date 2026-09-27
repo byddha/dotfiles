@@ -3,7 +3,6 @@ import Quickshell.Services.Mpris
 import "../../Config"
 import "../../Services"
 import "../../Components"
-import "../../Utils"
 import "Popups"
 
 Rectangle {

@@ -2,7 +2,6 @@ import QtQuick
 import Quickshell
 import "../../Config"
 import "../../Services"
-import "../../Utils"
 import "../../Components"
 import "Popups"
 
@@ -41,7 +40,6 @@ Rectangle {
         active: false  // NOT bound to visibility!
         windows: clock.activePopup ? [clock.activePopup] : []
         onCleared: {
-            Logger.info("Focus cleared (clicked outside or Escape pressed)");
             if (clock.activePopup) {
                 clock.activePopup.hidePanel();
                 clock.releaseFocus();
@@ -52,7 +50,6 @@ Rectangle {
     function setActivePopupAndGrabFocus(popupWindow) {
         clock.activePopup = popupWindow;
         focusGrab.active = Compositor.useHyprlandFocusGrab;
-        Logger.info("Focus grabbed for calendar popup");
     }
 
     function releaseFocus() {
@@ -60,7 +57,6 @@ Rectangle {
         clock.activePopup = null;
         popupLoader.active = false;
         Settings.calendarPanelVisible = false;
-        Logger.info("Focus released");
     }
 
     function showCalendarPopup() {
@@ -136,7 +132,6 @@ Rectangle {
                 Settings.calendarPanelVisible = true;
                 clock.showCalendarPopup();
             }
-            Logger.info("Calendar panel toggled: " + Settings.calendarPanelVisible);
         }
     }
 

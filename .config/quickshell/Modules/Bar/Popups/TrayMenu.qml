@@ -91,7 +91,6 @@ PanelWindow {
         visible = true;
         menuOpened(trayMenu);  // Emit signal with window instance
         Qt.callLater(updatePosition);
-        Logger.info(`Menu opened at anchor offset ${x}, ${y}`);
     }
 
     function hideMenu() {
@@ -100,7 +99,6 @@ PanelWindow {
         while (stackView.depth > 1) {
             stackView.pop();
         }
-        Logger.info("Menu hidden");
     }
 
     MouseArea {
@@ -223,7 +221,6 @@ PanelWindow {
 
                     onClicked: {
                         stackView.pop();
-                        Logger.info("Navigated back from submenu");
                     }
                 }
             }
@@ -354,7 +351,6 @@ PanelWindow {
                                             menuHandle: modelData,
                                             isSubMenu: true
                                         });
-                                        Logger.info("Opened submenu");
                                     } else {
                                         // Execute action and close menu
                                         modelData.triggered();

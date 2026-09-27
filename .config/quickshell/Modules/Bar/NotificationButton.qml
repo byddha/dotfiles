@@ -1,7 +1,6 @@
 import QtQuick
 import "../../Config"
 import "../../Services"
-import "../../Utils"
 
 Rectangle {
     id: notificationButton
@@ -55,7 +54,6 @@ Rectangle {
         onClicked: {
             Settings.sidebarSelectedTab = 1;
             Settings.sidebarVisible = true;
-            Logger.info("Opening notifications sidebar");
         }
     }
 

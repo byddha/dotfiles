@@ -2,7 +2,6 @@ import QtQuick
 import Quickshell
 import "../../Config"
 import "../../Services"
-import "../../Utils"
 
 /**
  * Workspaces - Multi-icon workspace indicator

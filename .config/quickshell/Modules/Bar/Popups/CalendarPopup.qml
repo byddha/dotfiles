@@ -77,12 +77,10 @@ PanelWindow {
         visible = true;
         panelOpened(calendarPopup);  // Emit signal with window instance
         Qt.callLater(updatePosition);
-        Logger.info("Panel opened");
     }
 
     function hidePanel() {
         visible = false;
-        Logger.info("Panel hidden");
     }
 
     MouseArea {

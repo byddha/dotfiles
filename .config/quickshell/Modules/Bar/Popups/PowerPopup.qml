@@ -67,12 +67,10 @@ PanelWindow {
         visible = true;
         panelOpened(powerPopup);
         Qt.callLater(updatePosition);
-        Logger.info("Panel opened");
     }
 
     function hidePanel() {
         visible = false;
-        Logger.info("Panel hidden");
     }
 
     MouseArea {

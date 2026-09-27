@@ -2,7 +2,6 @@ import QtQuick
 import Quickshell
 import Quickshell.Services.SystemTray
 import Quickshell.Widgets
-import "../../Utils"
 import "../../Config"
 import "../../Services"
 import "../../Components"
@@ -36,7 +35,6 @@ Item {
         active: false
         windows: [root.activeMenu]
         onCleared: {
-            Logger.info("Focus cleared (clicked outside or Escape pressed)");
             if (root.activeMenu) {
                 root.activeMenu.hideMenu();
                 root.releaseFocus();
@@ -47,14 +45,12 @@ Item {
     function setActiveMenuAndGrabFocus(menuWindow) {
         root.activeMenu = menuWindow;
         focusGrab.active = Compositor.useHyprlandFocusGrab;
-        Logger.info("Focus grabbed for menu");
     }
 
     function releaseFocus() {
         focusGrab.active = false;
         root.activeMenu = null;
         menuLoader.active = false;  // Destroy menu component
-        Logger.info("Focus released");
     }
 
     function showMenuFor(item, x, y) {
@@ -173,11 +169,9 @@ Item {
                         if (mouse.button === Qt.LeftButton) {
                             if (!trayItem.item.onlyMenu) {
                                 trayItem.item.activate();
-                                Logger.info(`Activated: ${trayItem.item.name || trayItem.item.id}`);
                             }
                         } else if (mouse.button === Qt.MiddleButton) {
                             trayItem.item.secondaryActivate();
-                            Logger.info(`Secondary activated: ${trayItem.item.name || trayItem.item.id}`);
                         } else if (mouse.button === Qt.RightButton) {
                             if (trayItem.item.menu) {
                                 // Calculate menu position as offset from tray icon
@@ -185,7 +179,6 @@ Item {
                                 const menuY = Theme.barHeight;
 
                                 root.showMenuFor(trayItem, menuX, menuY);
-                                Logger.info(`Menu opened: ${trayItem.item.name || trayItem.item.id}`);
                             }
                         }
                     }

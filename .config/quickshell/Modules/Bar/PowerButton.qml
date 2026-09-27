@@ -1,5 +1,4 @@
 import QtQuick
-import "../../Utils"
 import "../../Services"
 import "../../Components"
 import "Popups"
@@ -19,7 +18,6 @@ Rectangle {
         active: false
         windows: powerButton.activePopup ? [powerButton.activePopup] : []
         onCleared: {
-            Logger.info("Focus cleared");
             if (powerButton.activePopup) {
                 powerButton.activePopup.hidePanel();
                 powerButton.releaseFocus();
@@ -30,14 +28,12 @@ Rectangle {
     function setActivePopupAndGrabFocus(popupWindow) {
         powerButton.activePopup = popupWindow;
         focusGrab.active = Compositor.useHyprlandFocusGrab;
-        Logger.info("Focus grabbed for power popup");
     }
 
     function releaseFocus() {
         focusGrab.active = false;
         powerButton.activePopup = null;
         popupLoader.active = false;
-        Logger.info("Focus released");
     }
 
     function showPowerPopup() {
@@ -77,7 +73,6 @@ Rectangle {
             } else {
                 powerButton.showPowerPopup();
             }
-            Logger.info("Power menu clicked");
         }
     }
 
