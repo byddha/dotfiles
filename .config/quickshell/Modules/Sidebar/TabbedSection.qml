@@ -20,23 +20,28 @@ Card {
     readonly property var tabModel: [
         {
             icon: Icons.volumeHigh,
-            name: "Volume"
+            name: "Volume",
+            label: "Volume"
         },
         {
             icon: Icons.bell,
-            name: "Notifications"
+            name: "Notifications",
+            label: "Notifs"
         },
         {
             icon: Icons.bluetoothOn,
-            name: "Bluetooth"
+            name: "Bluetooth",
+            label: "Bluetooth"
         },
         {
             icon: Icons.wifiOn,
-            name: "Network"
+            name: "Network",
+            label: "Network"
         },
         {
             icon: Icons.device,
-            name: "Peripherals"
+            name: "Peripherals",
+            label: "Devices"
         }
     ]
 
@@ -51,15 +56,17 @@ Card {
         Repeater {
             model: root.tabModel
 
+            // Equal widths and an always-visible label: switching tabs never moves the other tabs
             Rectangle {
                 id: tab
                 required property var modelData
                 required property int index
                 readonly property bool active: index === root.selectedTab
+                readonly property color foreground: active ? Theme.secondaryContainerText : Theme.textSecondary
 
-                Layout.fillWidth: !active
-                Layout.preferredWidth: active ? tabRow.implicitWidth + 24 : 0
-                implicitHeight: 36
+                Layout.fillWidth: true
+                Layout.preferredWidth: 1
+                implicitHeight: 48
                 radius: Theme.radiusBase
                 color: active ? Theme.secondaryContainer : "transparent"
 
@@ -68,31 +75,25 @@ Card {
                     pressed: tabMouse.pressed
                 }
 
-                RowLayout {
-                    id: tabRow
+                ColumnLayout {
                     anchors.centerIn: parent
-                    spacing: Theme.spacingBase
+                    spacing: 2
 
                     Text {
+                        Layout.alignment: Qt.AlignHCenter
                         text: tab.modelData.icon
                         font.family: Theme.fontFamilyGlyphs
                         font.pixelSize: 20
-                        color: tab.active ? Theme.secondaryContainerText : Theme.textSecondary
+                        color: tab.foreground
                     }
 
                     StyledText {
-                        visible: tab.active
-                        text: tab.modelData.name
-                        font.pixelSize: Theme.fontSizeSmall
-                        font.weight: Font.Medium
-                        color: Theme.secondaryContainerText
+                        Layout.alignment: Qt.AlignHCenter
+                        text: tab.modelData.label
+                        font.pixelSize: 11
+                        font.weight: tab.active ? Font.Medium : Font.Normal
+                        color: tab.foreground
                     }
-                }
-
-                Tooltip {
-                    id: tooltip
-                    target: tab
-                    text: tab.modelData.name
                 }
 
                 MouseArea {
@@ -100,13 +101,7 @@ Card {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onEntered: {
-                        if (!tab.active)
-                            tooltip.show();
-                    }
-                    onExited: tooltip.hide()
                     onClicked: {
-                        tooltip.hide();
                         root.selectedTab = tab.index;
                     }
                 }
