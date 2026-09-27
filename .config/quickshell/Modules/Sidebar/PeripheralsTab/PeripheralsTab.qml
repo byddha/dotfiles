@@ -5,7 +5,6 @@ import Quickshell
 import "../../../Config"
 import "../../../Components"
 import "../../../Services"
-import "../../../Utils"
 
 ColumnLayout {
     id: root

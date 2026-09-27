@@ -3,7 +3,6 @@ import QtQuick.Layouts
 import "../../../Config"
 import "../../../Components"
 import "../../../Services"
-import "../../../Utils"
 
 Rectangle {
     id: root
@@ -15,6 +14,7 @@ Rectangle {
     property bool isLow: !charging && percentage <= 20
     property bool isCritical: !charging && percentage <= 10
     property string logoPath: device?.logoPath ?? ""
+    readonly property color batteryColor: isCritical ? Theme.accentRed : isLow ? Theme.accentOrange : charging ? Theme.primary : Theme.textColor
 
     implicitHeight: contentColumn.implicitHeight + Theme.spacingBase * 2
     radius: Theme.radiusBase
@@ -127,7 +127,7 @@ Rectangle {
                 StyledText {
                     text: root.percentage + "%"
                     font.pixelSize: Theme.fontSizeSmall
-                    color: root.isCritical ? Theme.accentRed : root.isLow ? Theme.accentOrange : root.charging ? Theme.primary : Theme.textColor
+                    color: root.batteryColor
                 }
             }
 
@@ -142,7 +142,7 @@ Rectangle {
                     width: parent.width * (root.percentage / 100)
                     height: parent.height
                     radius: parent.radius
-                    color: root.isCritical ? Theme.accentRed : root.isLow ? Theme.accentOrange : root.charging ? Theme.primary : Theme.textColor
+                    color: root.batteryColor
                 }
             }
         }
