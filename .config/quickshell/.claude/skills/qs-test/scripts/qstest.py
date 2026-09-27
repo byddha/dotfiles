@@ -2,7 +2,7 @@
 """Drive the live quickshell like a user, for tests.
 
   qstest.py start                       play the "testing" sound, restart qs with the debug port, arm the guard
-  qstest.py click NAME [N] [--right]    glide to the Nth item called NAME (see `debug locate`) and click
+  qstest.py click NAME [N] [--right] [--force]  glide to the Nth match and click (system toggles need --force)
   qstest.py hover NAME [N]              glide there, no click
   qstest.py move X Y [--click]          glide to global logical X Y
   qstest.py drag X1 Y1 X2 Y2            press at X1 Y1, glide to X2 Y2 holding the left button, release
@@ -35,6 +35,11 @@ import os
 import subprocess
 import sys
 import time
+
+# Clicks that change the user's machine, not only the UI: refused without --force. A text selector can hit
+# them by accident (the "Bluetooth" tile shares its name with the Bluetooth tab and turned Bluetooth off once).
+RISKY_TYPES = {"ToggleTile", "Tile", "PowerActionButton"}
+RISKY_TEXT = {"Connect", "Disconnect", "Clear All"}
 
 RUNTIME = os.path.join(os.environ.get("XDG_RUNTIME_DIR", "/tmp"), "qstest")
 STATE = os.path.join(RUNTIME, "state.json")
@@ -162,7 +167,7 @@ GEO_FN = r"""function __geo(it) {
     if (r.x + it.width <= 0 || r.y + it.height <= 0 || r.x >= a.width || r.y >= a.height) return null;
   }
   const p = it.mapToGlobal(0, 0);
-  return {x: Math.round(p.x), y: Math.round(p.y), w: Math.round(it.width), h: Math.round(it.height)};
+  return {x: Math.round(p.x), y: Math.round(p.y), w: Math.round(it.width), h: Math.round(it.height), type: __typeOf(it)};
 }"""
 
 
@@ -319,7 +324,7 @@ def find_all(selector):
             if o["id"] == want:
                 g = evljson_scope(dbg, o["debugId"])
                 if g:
-                    hits.append(g)
+                    hits.append(dict(g, type=o["type"]))
         return hits
     hits = []
     for w in objs:
@@ -474,7 +479,11 @@ def main():
                 die(f"FAIL {cmd} {pos[0]}")
             time.sleep(0.1)
     elif cmd in ("click", "hover"):
-        x, y = center(target(pos[0], idx))
+        hit = target(pos[0], idx)
+        if cmd == "click" and "--force" not in flags and (hit.get("type") in RISKY_TYPES or pos[0].split("@")[0] in RISKY_TEXT):
+            die(f"REFUSED: {pos[0]!r} is a {hit.get('type')} that changes the system (toggle, power, connect). "
+                "Pick a more exact selector (index, #id, @SCREEN) or add --force if the user agreed.")
+        x, y = center(hit)
         glide(x, y)
         if cmd == "click":
             click("0xC1" if "--right" in flags else "0xC0")

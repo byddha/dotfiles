@@ -106,6 +106,10 @@ that "worked" but logged a TypeError is a bug.
 
 ## Do not
 
+`click` refuses system toggles (quick-toggle tiles, power buttons, Connect / Disconnect / Clear All) unless
+you add `--force`, which you only do when the user agreed. Text selectors are ambiguous: "Bluetooth" is
+both the Bluetooth tile and the Bluetooth tab (`find` first, then pick the index / type).
+
 - Type real passwords, or click Connect / Disconnect (Wi-Fi, VPN, Bluetooth), power actions (shutdown,
   reboot, logout, suspend), Clear All, or toggles that change the system (Wi-Fi, Bluetooth, airplane,
   HDR, DND, idle) without the user's OK. They change the user's machine, not only the UI.
