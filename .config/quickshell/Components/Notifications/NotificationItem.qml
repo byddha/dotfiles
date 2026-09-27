@@ -3,6 +3,7 @@ import "../../Config"
 import "../../Services"
 import "../../Utils"
 import QtQuick
+import QtQuick.Effects
 import QtQuick.Layouts
 import Quickshell
 
@@ -72,13 +73,23 @@ MouseArea {
         implicitHeight: 100
     }
 
+    // Same as the bar popups (BarPopup.qml): DankMaterialShell's elevationLevel2.
+    RectangularShadow {
+        visible: root.popup && background.visible
+        anchors.fill: background
+        radius: background.radius
+        blur: 8
+        offset: Qt.vector2d(0, 4)
+        color: Qt.rgba(0, 0, 0, 0.25)
+    }
+
     // Normal notification background (for non-media or sidebar)
     Rectangle {
         id: background
 
         width: parent.width
         anchors.left: parent.left
-        radius: Theme.radiusBase
+        radius: root.popup ? Theme.radiusWindow : Theme.radiusBase
         visible: !root.showMediaCard
         color: {
             if (notificationObject.urgency === "critical")
@@ -86,8 +97,8 @@ MouseArea {
 
             return Theme.colLayer1;
         }
-        border.width: 2
-        border.color: Theme.colLayer2
+        border.width: root.popup ? 1 : 2
+        border.color: root.popup ? Theme.popupBorder : Theme.colLayer2
         implicitHeight: Math.max(contentColumn.implicitHeight + Theme.spacingBase * 4, 130)
 
         // HoverHandler re-evaluates on geometry changes (unlike MouseArea.containsMouse), so

@@ -28,9 +28,13 @@ Scope {
                 bottom: true
             }
 
+            // Room on every side for the card shadows, as in DankMaterialShell's windowShadowPad.
+            // The mask keeps that room click-through; the margins keep cards 2 * spacingBase from the edge.
+            readonly property int shadowPad: 16
+
             WlrLayershell.margins {
-                right: Theme.spacingBase * 2
-                bottom: Theme.spacingBase * 2
+                right: Theme.spacingBase * 2 - shadowPad
+                bottom: Theme.spacingBase * 2 - shadowPad
             }
 
             mask: Region {
@@ -38,16 +42,18 @@ Scope {
             }
 
             color: "transparent"
-            implicitWidth: 400 - Theme.spacingBase * 2
-            implicitHeight: listview.height
+            implicitWidth: 400 - Theme.spacingBase * 2 + shadowPad * 2
+            implicitHeight: listview.height + shadowPad * 2
 
             NotificationListView {
                 id: listview
                 anchors {
                     bottom: parent.bottom
                     right: parent.right
+                    bottomMargin: notificationPopup.shadowPad
+                    rightMargin: notificationPopup.shadowPad
                 }
-                width: parent.width
+                width: parent.width - notificationPopup.shadowPad * 2
                 height: Math.min(implicitHeight, screen.height * 0.8)  // Allow up to 80% of screen height
                 popup: true
             }

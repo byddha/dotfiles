@@ -21,7 +21,8 @@ ScrollView {
         return summary.includes(lowerQuery) || body.includes(lowerQuery);
     }
 
-    clip: true
+    // Popup cards draw shadows past the list edge; the popup window clips instead (as in DankMaterialShell).
+    clip: !popup
     ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
     ScrollBar.vertical.policy: ScrollBar.AsNeeded
 
@@ -53,8 +54,6 @@ ScrollView {
                 required property var modelData
                 required property int index
                 Layout.fillWidth: true
-                // Room above the top popup for its border.
-                Layout.topMargin: root.popup && index === 0 ? 2 : 0
                 notificationObject: modelData
                 popup: root.popup
                 // Item that will slide into this slot when dismissed (the one visually below).
