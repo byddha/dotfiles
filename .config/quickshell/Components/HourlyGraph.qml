@@ -1,14 +1,11 @@
 import QtQuick
-import QtQuick.Layouts
 import "../Config"
-import "../Services"
 
 Item {
     id: root
 
     property var temperatures: []  // Array of temperature values
     property var times: []         // Array of time strings (e.g., "2PM")
-    property int hours: 12         // Number of hours to show
 
     implicitHeight: 80
     implicitWidth: 300
