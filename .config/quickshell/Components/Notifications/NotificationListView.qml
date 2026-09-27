@@ -37,12 +37,6 @@ ScrollView {
         }
         spacing: 4
 
-        // Top spacer for popup border visibility
-        Item {
-            Layout.preferredHeight: root.popup ? 6 : 0
-            visible: root.popup
-        }
-
         Repeater {
             model: ScriptModel {
                 id: scriptModel
@@ -59,6 +53,8 @@ ScrollView {
                 required property var modelData
                 required property int index
                 Layout.fillWidth: true
+                // Room above the top popup for its border.
+                Layout.topMargin: root.popup && index === 0 ? 2 : 0
                 notificationObject: modelData
                 popup: root.popup
                 // Item that will slide into this slot when dismissed (the one visually below).

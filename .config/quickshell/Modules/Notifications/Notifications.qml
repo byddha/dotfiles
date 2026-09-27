@@ -29,8 +29,8 @@ Scope {
             }
 
             WlrLayershell.margins {
-                right: Theme.spacingBase
-                bottom: Theme.spacingBase
+                right: Theme.spacingBase * 2
+                bottom: Theme.spacingBase * 2
             }
 
             mask: Region {
@@ -38,7 +38,7 @@ Scope {
             }
 
             color: "transparent"
-            implicitWidth: 400
+            implicitWidth: 400 - Theme.spacingBase * 2
             implicitHeight: listview.height
 
             NotificationListView {
@@ -46,10 +46,8 @@ Scope {
                 anchors {
                     bottom: parent.bottom
                     right: parent.right
-                    rightMargin: Theme.spacingBase
-                    bottomMargin: Theme.spacingBase
                 }
-                width: parent.width - Theme.spacingBase * 2
+                width: parent.width
                 height: Math.min(implicitHeight, screen.height * 0.8)  // Allow up to 80% of screen height
                 popup: true
             }
