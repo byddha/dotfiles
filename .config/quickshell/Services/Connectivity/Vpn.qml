@@ -179,8 +179,14 @@ Singleton {
             disconnectMullvad();
         fortiConnectionFailed = false;  // Clear any previous error
         fortiUptimeSeconds = 0;  // Reset uptime counter
-        // Use execDetached for long-running daemon process
-        Quickshell.execDetached(["bash", "-c", `sudo openfortivpn --set-dns=1 -p '${password}'`]);
+        // Detached so the tunnel survives shell reloads. The password goes in through stdin
+        // (openfortivpn prompts on it), never through argv or the script text.
+        Quickshell.execDetached({
+            command: ["bash", "-c", 'exec sudo openfortivpn --set-dns=1 <<< "$FORTI_PASS"'],
+            environment: {
+                FORTI_PASS: password
+            }
+        });
         Logger.info("FortiVPN launched");
         // Check status after a delay to allow connection
         fortiConnectDelay.start();
