@@ -11,7 +11,7 @@ Button {
     contentItem: Text {
         text: root.text
         font: root.font
-        color: root.down ? Theme.textColor : Theme.textColor
+        color: Theme.textColor
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
         elide: Text.ElideRight
