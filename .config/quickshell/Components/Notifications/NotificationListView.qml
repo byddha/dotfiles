@@ -4,7 +4,6 @@ import QtQuick.Layouts
 import Quickshell
 import "../../Config"
 import "../../Services"
-import "."
 
 ScrollView {
     id: root
