@@ -1,6 +1,7 @@
 pragma Singleton
 
 import QtQuick
+import QtCore
 import Quickshell
 import Quickshell.Io
 import "../../Utils"
@@ -20,7 +21,6 @@ Singleton {
 
     property var games: []
     property bool isLoading: false
-    property string lastError: ""
 
     // Search/filter state
     property string searchQuery: ""
@@ -46,15 +46,6 @@ Singleton {
     // PROVIDERS
     // ========================================================================
 
-    Connections {
-        target: PlayTimeDb
-        function onDataLoaded() {
-            if (steamProvider.games.length > 0) {
-                root.aggregateGames();
-            }
-        }
-    }
-
     SteamProvider {
         id: steamProvider
         onGamesChanged: root.aggregateGames()
@@ -69,7 +60,6 @@ Singleton {
     // ========================================================================
 
     function refresh() {
-        Logger.info("GameService: Refreshing all providers");
         root.isLoading = true;
         steamProvider.refresh();
     }
@@ -80,8 +70,8 @@ Singleton {
             return;
         }
 
-        Logger.info(`GameService: Launching ${game.name}`);
-        PlayTimeDb.recordPlay(game.id);
+        root.lastPlayed[game.id] = Math.floor(Date.now() / 1000);
+        root.savePlaytime();
         gameLauncher.command = game.launchCommand;
         gameLauncher.running = true;
     }
@@ -96,8 +86,8 @@ Singleton {
 
         // Sort by lastPlayed (descending), then alphabetically
         all.sort((a, b) => {
-            const aLastPlayed = PlayTimeDb.getLastPlayed(a.id);
-            const bLastPlayed = PlayTimeDb.getLastPlayed(b.id);
+            const aLastPlayed = root.lastPlayed[a.id] || 0;
+            const bLastPlayed = root.lastPlayed[b.id] || 0;
             if (bLastPlayed !== aLastPlayed) {
                 return bLastPlayed - aLastPlayed;
             }
@@ -105,26 +95,55 @@ Singleton {
         });
 
         root.games = all;
-        root.lastError = steamProvider.lastError;
-
-        Logger.info(`GameService: Total ${root.games.length} games loaded`);
     }
 
     Process {
         id: gameLauncher
-        running: false
+    }
 
-        onStarted: {
-            Logger.info("GameService: Game process started");
+    // ========================================================================
+    // PLAY TIME
+    // ========================================================================
+
+    // gameId -> unix timestamp of the last launch from here
+    property var lastPlayed: ({})
+
+    function savePlaytime() {
+        playtimeFile.setText(JSON.stringify(root.lastPlayed, null, 2));
+    }
+
+    function aggregateIfLoaded() {
+        if (steamProvider.games.length > 0)
+            root.aggregateGames();
+    }
+
+    FileView {
+        id: playtimeFile
+        path: StandardPaths.standardLocations(StandardPaths.CacheLocation)[0] + "/bidshell/game_playtime.json"
+        printErrors: false
+
+        onLoaded: {
+            try {
+                root.lastPlayed = JSON.parse(playtimeFile.text());
+            } catch (e) {
+                Logger.error(`GameService: Failed to parse play time JSON: ${e}`);
+                root.lastPlayed = {};
+            }
+            root.aggregateIfLoaded();
         }
 
-        onExited: (code, status) => {
-            Logger.info(`GameService: Game process exited with code ${code}`);
+        onLoadFailed: error => {
+            root.lastPlayed = {};
+            if (error == FileViewError.FileNotFound)
+                root.savePlaytime();
+            else
+                Logger.error(`GameService: Error loading play time file: ${error}`);
+            root.aggregateIfLoaded();
         }
     }
 
     Component.onCompleted: {
-        Logger.info("GameService initialized");
+        playtimeFile.reload();
         Qt.callLater(refresh);
     }
 }
