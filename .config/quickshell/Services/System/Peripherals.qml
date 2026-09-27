@@ -125,7 +125,8 @@ Singleton {
             const mac = macMatch ? macMatch[0] : (btMatch?.address ?? "");
             const connectionType = btMatch ? "bluetooth" : (charging || full) ? "wired" : "2.4ghz";
 
-            seen.add(btMatch ? ("bt:" + btMatch.name) : "");
+            if (btMatch)
+                seen.add("bt:" + btMatch.name);
             result.push(_entry("upower:" + name, name, PeripheralBatteries.upowerTypeName(dev.type) || "device", mac, connectionType, Math.round((dev.percentage ?? 0) * 100), charging));
         }
 
@@ -142,7 +143,8 @@ Singleton {
             const charging = dev.charging ?? false;
             const connectionType = btMatch ? "bluetooth" : charging ? "wired" : "2.4ghz";
 
-            seen.add(btMatch ? ("bt:" + btMatch.name) : "");
+            if (btMatch)
+                seen.add("bt:" + btMatch.name);
             // Only a BlueZ match can give a custom device a MAC
             result.push(_entry("custom:" + i, name, configEntry.type || "device", btMatch?.address ?? "", connectionType, dev.percentage ?? 0, charging));
         }
