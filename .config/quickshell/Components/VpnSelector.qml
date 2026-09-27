@@ -3,7 +3,6 @@ import QtQuick.Layouts
 import QtQuick.Controls
 import "../Config"
 import "../Services"
-import "../Utils"
 
 // Inline VPN selector that expands below the quick toggles
 Rectangle {
@@ -25,6 +24,15 @@ Rectangle {
     }
 
     clip: true
+
+    function submitFortiPassword() {
+        if (passwordField.text.length > 0) {
+            Vpn.connectFortiWithPassword(passwordField.text);
+            passwordField.text = "";
+            root.showFortiPassword = false;
+            // Don't collapse - let user see connection result
+        }
+    }
 
     // Reset password field when collapsed
     onExpandedChanged: {
@@ -55,56 +63,14 @@ Rectangle {
         anchors.margins: Theme.spacingBase
         spacing: Theme.spacingSmall
 
-        // Mullvad option
-        Rectangle {
-            readonly property bool locked: Vpn.fortiConnected
-            Layout.fillWidth: true
-            height: 44
-            radius: Theme.radiusSmall
-            opacity: locked ? 0.4 : 1.0
-            color: mullvadMouse.containsMouse && !locked ? Theme.colLayer2 : "transparent"
-
-            RowLayout {
-                anchors.fill: parent
-                anchors.leftMargin: Theme.spacingBase
-                anchors.rightMargin: Theme.spacingBase
-                spacing: Theme.spacingBase
-
-                // Connection indicator
-                Rectangle {
-                    width: 8
-                    height: 8
-                    radius: 4
-                    color: Vpn.mullvadConnected ? Theme.primary : Theme.textSecondary
-                }
-
-                Text {
-                    text: "Mullvad"
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeBase
-                    color: Theme.textColor
-                    Layout.fillWidth: true
-                }
-
-                Text {
-                    text: Vpn.mullvadConnected ? Vpn.mullvadCity || "Connected" : "Disconnected"
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeSmall
-                    color: Theme.textSecondary
-                }
-            }
-
-            MouseArea {
-                id: mullvadMouse
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: parent.locked ? Qt.ForbiddenCursor : Qt.PointingHandCursor
-                onClicked: {
-                    if (parent.locked)
-                        return;
-                    Vpn.toggleMullvad();
-                    root.expanded = false;
-                }
+        VpnRow {
+            name: "Mullvad"
+            locked: Vpn.fortiConnected
+            indicatorColor: Vpn.mullvadConnected ? Theme.primary : Theme.textSecondary
+            status: Vpn.mullvadConnected ? Vpn.mullvadCity || "Connected" : "Disconnected"
+            onClicked: {
+                Vpn.toggleMullvad();
+                root.expanded = false;
             }
         }
 
@@ -115,61 +81,19 @@ Rectangle {
             color: Theme.alpha(Theme.textColor, 0.1)
         }
 
-        // FortiVPN option
-        Rectangle {
-            readonly property bool locked: Vpn.mullvadConnected
-            Layout.fillWidth: true
-            height: 44
-            radius: Theme.radiusSmall
-            opacity: locked ? 0.4 : 1.0
-            color: fortiMouse.containsMouse && !locked ? Theme.colLayer2 : "transparent"
-
-            RowLayout {
-                anchors.fill: parent
-                anchors.leftMargin: Theme.spacingBase
-                anchors.rightMargin: Theme.spacingBase
-                spacing: Theme.spacingBase
-
-                // Connection indicator
-                Rectangle {
-                    width: 8
-                    height: 8
-                    radius: 4
-                    color: Vpn.fortiConnectionFailed ? Theme.accentRed : (Vpn.fortiConnected ? Theme.primary : Theme.textSecondary)
-                }
-
-                Text {
-                    text: "FortiVPN"
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeBase
-                    color: Theme.textColor
-                    Layout.fillWidth: true
-                }
-
-                Text {
-                    text: Vpn.fortiConnectionFailed ? "Failed" : (Vpn.fortiConnected ? "Connected" : "Disconnected")
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeSmall
-                    color: Vpn.fortiConnectionFailed ? Theme.accentRed : Theme.textSecondary
-                }
-            }
-
-            MouseArea {
-                id: fortiMouse
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: parent.locked ? Qt.ForbiddenCursor : Qt.PointingHandCursor
-                onClicked: {
-                    if (parent.locked)
-                        return;
-                    if (Vpn.fortiConnected) {
-                        Vpn.disconnectForti();
-                        root.expanded = false;
-                    } else {
-                        // Show password field
-                        root.showFortiPassword = true;
-                        passwordField.forceActiveFocus();
-                    }
+        VpnRow {
+            name: "FortiVPN"
+            locked: Vpn.mullvadConnected
+            indicatorColor: Vpn.fortiConnectionFailed ? Theme.accentRed : (Vpn.fortiConnected ? Theme.primary : Theme.textSecondary)
+            status: Vpn.fortiConnectionFailed ? "Failed" : (Vpn.fortiConnected ? "Connected" : "Disconnected")
+            statusColor: Vpn.fortiConnectionFailed ? Theme.accentRed : Theme.textSecondary
+            onClicked: {
+                if (Vpn.fortiConnected) {
+                    Vpn.disconnectForti();
+                    root.expanded = false;
+                } else {
+                    root.showFortiPassword = true;
+                    passwordField.forceActiveFocus();
                 }
             }
         }
@@ -197,14 +121,7 @@ Rectangle {
                     border.width: 1
                 }
 
-                onAccepted: {
-                    if (text.length > 0) {
-                        Vpn.connectFortiWithPassword(text);
-                        text = "";
-                        root.showFortiPassword = false;
-                        // Don't collapse - let user see connection result
-                    }
-                }
+                onAccepted: root.submitFortiPassword()
 
                 Keys.onEscapePressed: {
                     root.showFortiPassword = false;
@@ -231,15 +148,67 @@ Rectangle {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        if (passwordField.text.length > 0) {
-                            Vpn.connectFortiWithPassword(passwordField.text);
-                            passwordField.text = "";
-                            root.showFortiPassword = false;
-                            // Don't collapse - let user see connection result
-                        }
-                    }
+                    onClicked: root.submitFortiPassword()
                 }
+            }
+        }
+    }
+
+    component VpnRow: Rectangle {
+        id: vpnRow
+
+        property string name
+        property string status
+        property color indicatorColor
+        property color statusColor: Theme.textSecondary
+        property bool locked
+
+        signal clicked
+
+        Layout.fillWidth: true
+        height: 44
+        radius: Theme.radiusSmall
+        opacity: locked ? 0.4 : 1.0
+        color: rowMouse.containsMouse && !locked ? Theme.colLayer2 : "transparent"
+
+        RowLayout {
+            anchors.fill: parent
+            anchors.leftMargin: Theme.spacingBase
+            anchors.rightMargin: Theme.spacingBase
+            spacing: Theme.spacingBase
+
+            // Connection indicator
+            Rectangle {
+                width: 8
+                height: 8
+                radius: 4
+                color: vpnRow.indicatorColor
+            }
+
+            Text {
+                text: vpnRow.name
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSizeBase
+                color: Theme.textColor
+                Layout.fillWidth: true
+            }
+
+            Text {
+                text: vpnRow.status
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSizeSmall
+                color: vpnRow.statusColor
+            }
+        }
+
+        MouseArea {
+            id: rowMouse
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: vpnRow.locked ? Qt.ForbiddenCursor : Qt.PointingHandCursor
+            onClicked: {
+                if (!vpnRow.locked)
+                    vpnRow.clicked();
             }
         }
     }
