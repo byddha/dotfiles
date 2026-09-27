@@ -2,7 +2,6 @@ import QtQuick
 import Quickshell
 import Quickshell.Wayland
 import "../../Config"
-import "../../Utils"
 import "../../Services"
 import "../../Components"
 
@@ -47,7 +46,6 @@ Scope {
                 active: false  // Manually activated after window is visible
 
                 onCleared: {
-                    Logger.info("Focus cleared (clicked outside or Escape)");
                     Settings.sidebarVisible = false;
                     focusGrab.active = false;
                 }
@@ -60,7 +58,6 @@ Scope {
                     // Delay slightly to ensure window is ready
                     Qt.callLater(() => {
                         focusGrab.active = Compositor.useHyprlandFocusGrab;
-                        Logger.info("Focus grab activated");
                     });
                 } else {
                     focusGrab.active = false;
@@ -74,7 +71,6 @@ Scope {
                 Keys.onPressed: event => {
                     if (event.key === Qt.Key_Escape) {
                         Settings.sidebarVisible = false;
-                        Logger.info("Closed via Escape key");
                         event.accepted = true;
                     }
                 }
@@ -98,9 +94,6 @@ Scope {
                     anchors.fill: parent
                     acceptedButtons: Qt.AllButtons
                     onPressed: mouse => {
-                        mouse.accepted = true;
-                    }
-                    onClicked: mouse => {
                         mouse.accepted = true;
                     }
                     z: -1
@@ -138,10 +131,6 @@ Scope {
                         }
                     }
                 }
-            }
-
-            Component.onCompleted: {
-                Logger.info(`Initialized on screen ${modelData.name}`);
             }
         }
     }

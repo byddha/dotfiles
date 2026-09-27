@@ -3,7 +3,6 @@ import QtQuick.Layouts
 import "../../Config"
 import "../../Components"
 import "../../Services"
-import "../../Utils"
 
 Item {
     id: root
@@ -45,10 +44,6 @@ Item {
             Item {
                 Layout.fillHeight: true
             }
-        }
-
-        Component.onCompleted: {
-            Logger.info("Content loaded");
         }
     }
 }

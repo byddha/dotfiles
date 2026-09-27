@@ -1,9 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Controls
 import "../../Config"
 import "../../Components"
-import "../../Utils"
 import "../../Services"
 import "VolumeMixer"
 import "NotificationHistory"
@@ -17,7 +15,6 @@ Card {
     property int selectedTab: Settings.sidebarSelectedTab
     onSelectedTabChanged: Settings.sidebarSelectedTab = selectedTab
     collapsible: true
-    collapsed: false
 
     // Tab data model with icon and name
     property var tabModel: [
@@ -159,9 +156,5 @@ Card {
                 sourceComponent: PeripheralsTab {}
             }
         }
-    }
-
-    Component.onCompleted: {
-        Logger.info("Tabbed section loaded");
     }
 }

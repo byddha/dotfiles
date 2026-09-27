@@ -1,7 +1,6 @@
 import QtQuick
 import "../../Config"
 import "../../Components"
-import "../../Utils"
 import "../../Services"
 
 Card {
@@ -9,7 +8,6 @@ Card {
 
     title: "Quick Toggles"
     collapsible: true
-    collapsed: false
 
     Column {
         width: parent.width
@@ -101,9 +99,5 @@ Card {
             id: vpnSelector
             width: parent.width
         }
-    }
-
-    Component.onCompleted: {
-        Logger.info("Panel loaded");
     }
 }
