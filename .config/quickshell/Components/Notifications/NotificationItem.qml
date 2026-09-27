@@ -52,6 +52,16 @@ MouseArea {
     }
 
     hoverEnabled: true
+    // Pause the popup timeout while hovered, restart it on leave (as in DankMaterialShell).
+    onContainsMouseChanged: {
+        const timer = popup ? notificationObject.timer : null;
+        if (!timer)
+            return;
+        if (containsMouse)
+            timer.stop();
+        else
+            timer.restart();
+    }
     acceptedButtons: Qt.RightButton
     onClicked: mouse => {
         if (mouse.button === Qt.RightButton)
