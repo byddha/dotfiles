@@ -35,6 +35,7 @@ Singleton {
     property string primaryTextColor: "#000000"
     property string secondary: "#ee5a6f"
     property string error: "#ff6b6b"
+    property string outline: "#8a8a8a"
 
     // base16 slots with no material role
     property string base08: "#ff6b6b"  // Variables, XML Tags, Markup Link Text
@@ -117,6 +118,7 @@ Singleton {
         root.primaryTextColor = c.on_primary;
         root.secondary = c.secondary;
         root.error = c.error;
+        root.outline = c.outline;
 
         root.base08 = ansi(1);
         root.base09 = ansi(9);

@@ -44,7 +44,8 @@ PopupWindow {
         showControls: false
         showVisualizer: true
         visualizerValues: root.visualizerValues
-        border.color: Theme.colLayer0Border
+        radius: Theme.radiusWindow
+        border.color: Theme.popupBorder
         border.width: 1
     }
 }

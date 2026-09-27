@@ -38,6 +38,8 @@ Singleton {
     // Surface and border colors
     property color surface: ThemeService.surfaceContainer        // Surface background
     property color colLayer0Border: ColorUtils.mix(ThemeService.surfaceContainerHigh, ThemeService.background, 0.4)
+    // DankMaterialShell's popup border: outline at 35% (BlurService.borderColor)
+    property color popupBorder: alpha(ThemeService.outline, 0.35)
 
     // ========================================================================
     // TYPOGRAPHY
@@ -61,6 +63,8 @@ Singleton {
     property int spacingSmall: 4
 
     property int radiusBase: 6
+    // Matches Hyprland decoration:rounding, as DankMaterialShell's windowRadius does
+    readonly property int radiusWindow: 10
     property int radiusSmall: 4
 
     property int barHeight: 32
@@ -122,6 +126,7 @@ Singleton {
      * @returns Color with specified opacity
      */
     function alpha(color, opacity) {
-        return Qt.rgba(color.r, color.g, color.b, opacity);
+        const c = Qt.color(color);
+        return Qt.rgba(c.r, c.g, c.b, opacity);
     }
 }

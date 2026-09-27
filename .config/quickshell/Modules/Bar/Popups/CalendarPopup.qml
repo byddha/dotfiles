@@ -16,8 +16,8 @@ BarPopup {
         implicitWidth: width
         implicitHeight: height
         color: Theme.colLayer0
-        radius: Theme.radiusBase
-        border.color: Theme.colLayer0Border
+        radius: Theme.radiusWindow
+        border.color: Theme.popupBorder
         border.width: 1
 
         onImplicitWidthChanged: Qt.callLater(calendarPopup.updatePosition)

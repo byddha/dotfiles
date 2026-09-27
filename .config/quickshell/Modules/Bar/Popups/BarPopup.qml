@@ -1,7 +1,9 @@
 pragma ComponentBehavior: Bound
 import QtQuick
+import QtQuick.Effects
 import Quickshell
 import Quickshell.Wayland
+import "../../../Config"
 import "../../../Utils"
 import "../../../Services"
 
@@ -49,6 +51,30 @@ PanelWindow {
             panelClosed();
         } else {
             Qt.callLater(updatePosition);
+            openAnim.restart();
+        }
+    }
+
+    // DankMaterialShell popout defaults: 150 ms, scale from 0.96, emphasized-decelerate curve.
+    ParallelAnimation {
+        id: openAnim
+        NumberAnimation {
+            target: panel
+            property: "opacity"
+            from: 0
+            to: 1
+            duration: 150
+            easing.type: Easing.BezierSpline
+            easing.bezierCurve: [0.05, 0.7, 0.1, 1, 1, 1]
+        }
+        NumberAnimation {
+            target: panel
+            property: "scale"
+            from: 0.96
+            to: 1
+            duration: 150
+            easing.type: Easing.BezierSpline
+            easing.bezierCurve: [0.05, 0.7, 0.1, 1, 1, 1]
         }
     }
 
@@ -109,6 +135,20 @@ PanelWindow {
         onClicked: mouse => {
             mouse.accepted = true;
         }
+    }
+
+    // Values from DankMaterialShell's elevationLevel2 (Common/Theme.qml).
+    RectangularShadow {
+        x: panel.x
+        y: panel.y
+        width: panel.width
+        height: panel.height
+        opacity: panel.opacity
+        scale: panel.scale
+        radius: Theme.radiusWindow
+        blur: 8
+        offset: Qt.vector2d(0, 4)
+        color: Qt.rgba(0, 0, 0, 0.25)
     }
 
     Item {

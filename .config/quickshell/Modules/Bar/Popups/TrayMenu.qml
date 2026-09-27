@@ -39,9 +39,9 @@ BarPopup {
         implicitWidth: width
         implicitHeight: height
         color: Theme.surface
-        border.color: Theme.colLayer0Border
+        border.color: Theme.popupBorder
         border.width: 1
-        radius: Theme.radiusBase
+        radius: Theme.radiusWindow
 
         onImplicitWidthChanged: Qt.callLater(trayMenu.updatePosition)
         onImplicitHeightChanged: Qt.callLater(trayMenu.updatePosition)
