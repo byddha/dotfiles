@@ -1,14 +1,26 @@
 ### Dependencies
 
-General: `quickshell-git`, `yq` and must have [base16 themes](https://github.com/byddha/dotfiles/tree/master/.config/base16) in ~/.config/base16
+General: `quickshell-git`, `libnotify` (`notify-send`), `python-gobject` + `gtk3` (icon lookup)
 
-Wifi: `nmcli`
+Compositor: `hyprland` or `niri`
 
-Vpn: `mullvad`, `openfortivpn`
+Theme: `~/dotfiles/scripts/theme-set` (writes `~/.cache/theme/dms-colors.json`)
 
-Compositor: `hyprland`
+Wifi: `networkmanager` (`nmcli`)
+
+Bluetooth: `bluez`, `blueman` (manager button)
+
+Vpn: `mullvad`, `openfortivpn` (run through `sudo`)
 
 Laptop screen / keyboard brightness: `brightnessctl`
+
+Screenshots and recording: `wl-clipboard`, `swappy`, `tesseract` (+ language data), `curl`, `jq`, `xdg-utils`, `python-pillow`, `wf-recorder`, `hyprpicker`
+
+Media visualizer: `cava`
+
+Peripheral brand lookup: `hwdata`
+
+Game launcher: `steam`
 
 Fill monitors in ~/.config/bidshell/config.json. Keys are the monitor `model` from EDID (check with `hyprctl monitors` → `model:` line), for example:
 
