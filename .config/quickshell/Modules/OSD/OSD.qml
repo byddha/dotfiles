@@ -95,7 +95,6 @@ Scope {
         }
     }
 
-    // OSD Window - matching Overview's pattern exactly
     Variants {
         model: Quickshell.screens
 
@@ -114,13 +113,11 @@ Scope {
             WlrLayershell.exclusionMode: ExclusionMode.Ignore
             exclusiveZone: 0
 
-            // Match Overview's anchor pattern exactly
             anchors {
                 right: true
                 bottom: true
             }
 
-            // Match Overview's margin pattern exactly
             WlrLayershell.margins {
                 right: Settings.sidebarVisible ? (Config.options.sidebar.width + 50) : 50
                 bottom: (modelData.height / 2) - (contentLayout.implicitHeight / 2)

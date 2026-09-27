@@ -15,7 +15,6 @@ Singleton {
     property bool notificationsVisible: true
     property bool barVisible: true
     property bool hyprWhichKeyVisible: false
-    property bool overviewVisible: false
     property bool sidebarVisible: false
     property int sidebarSelectedTab: 0  // 0 = Volume Mixer, 1 = Notifications
     property bool osdVisible: false
@@ -26,7 +25,6 @@ Singleton {
 
     onSidebarVisibleChanged: Logger.debug("sidebarVisible →", sidebarVisible)
     onGameLauncherVisibleChanged: Logger.debug("gameLauncherVisible →", gameLauncherVisible)
-    onOverviewVisibleChanged: Logger.debug("overviewVisible →", overviewVisible)
     onCalendarPanelVisibleChanged: Logger.debug("calendarPanelVisible →", calendarPanelVisible)
     onHyprWhichKeyVisibleChanged: Logger.debug("hyprWhichKeyVisible →", hyprWhichKeyVisible)
     onOsdVisibleChanged: Logger.debug("osdVisible →", osdVisible)

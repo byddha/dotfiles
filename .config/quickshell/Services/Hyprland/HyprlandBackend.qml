@@ -19,13 +19,6 @@ QtObject {
     // shortly after startup and on refreshToplevels()/refreshMonitors(); each update
     // re-evaluates these bindings through lastIpcObjectChanged.
     readonly property var windowList: Hyprland.toplevels.values.map(t => t.lastIpcObject).filter(w => w?.address)
-    readonly property var addresses: windowList.map(w => w.address)
-    readonly property var windowByAddress: {
-        const map = {};
-        for (const w of windowList)
-            map[w.address] = w;
-        return map;
-    }
     readonly property var monitors: Hyprland.monitors.values.map(m => m.lastIpcObject).filter(m => m?.name)
 
     signal workspaceFocusChanged
@@ -131,11 +124,6 @@ QtObject {
     function activeWorkspaceIdForScreen(screen) {
         const mon = monitorForScreen(screen);
         return mon?.activeWorkspaceId ?? 1;
-    }
-
-    function windowForToplevel(toplevel) {
-        const address = `0x${toplevel.HyprlandToplevel.address}`;
-        return backend.windowByAddress[address] ?? null;
     }
 
     function getCursorPosition(callback) {

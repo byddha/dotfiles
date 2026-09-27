@@ -7,7 +7,6 @@ import "Components"
 import "Modules/IPC"
 import "Modules/Notifications"
 import "Modules/HyprWhichKey"
-import "Modules/Overview"
 import "Modules/Bar"
 import "Modules/Sidebar"
 import "Modules/OSD"
@@ -44,10 +43,6 @@ ShellRoot {
 
     Notifications {
         id: notifications
-    }
-
-    Overview {
-        id: overview
     }
 
     Sidebar {

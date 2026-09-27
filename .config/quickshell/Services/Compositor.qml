@@ -42,8 +42,6 @@ Singleton {
     property string focusedMonitorName: backend?.focusedMonitorName ?? ""
 
     property var windowList: backend?.windowList ?? []
-    property var addresses: backend?.addresses ?? []
-    property var windowByAddress: backend?.windowByAddress ?? ({})
     property var monitors: backend?.monitors ?? []
 
     // --- Signals ---
@@ -77,9 +75,6 @@ Singleton {
     }
     function activeWorkspaceIdForScreen(screen) {
         return backend ? backend.activeWorkspaceIdForScreen(screen) : 1;
-    }
-    function windowForToplevel(toplevel) {
-        return backend ? backend.windowForToplevel(toplevel) : null;
     }
 
     function getCursorPosition(callback) {

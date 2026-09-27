@@ -154,11 +154,6 @@ Singleton {
                 }
             }
 
-            property var overview: JsonObject {
-                property bool enabled: true
-                property real scale: 0.08
-            }
-
             // Centralized monitor configuration
             // Keys are monitor model strings from EDID (e.g., "MO34WQC2", "0x1920")
             // Fields: workspaces ([start, end]), hdrCapable (bool), primary (bool)

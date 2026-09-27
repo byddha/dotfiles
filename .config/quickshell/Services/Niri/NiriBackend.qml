@@ -15,8 +15,6 @@ QtObject {
     property int focusedMonitorId: -1
 
     property var windowList: []
-    property var addresses: []
-    property var windowByAddress: ({})
     property var monitors: []
 
     signal workspaceFocusChanged
@@ -154,7 +152,6 @@ QtObject {
 
     function _processWindows(raw) {
         windowList = raw.map(w => _normalizeWindow(w));
-        _rebuildWindowMaps();
         windowDataUpdated();
         Logger.trace("Windows updated:", windowList.length);
     }
@@ -218,14 +215,6 @@ QtObject {
         };
     }
 
-    function _rebuildWindowMaps() {
-        const byAddr = {};
-        for (let i = 0; i < windowList.length; ++i)
-            byAddr[windowList[i].address] = windowList[i];
-        windowByAddress = byAddr;
-        addresses = windowList.map(w => w.address);
-    }
-
     function _getActiveWorkspaceForOutput(outputName) {
         const ws = _workspacesRaw.find(w => w.output === outputName && w.is_active);
         return ws?.id ?? 1;
@@ -280,12 +269,10 @@ QtObject {
             } else {
                 windowList = [...windowList, normalized];
             }
-            _rebuildWindowMaps();
             windowDataUpdated();
         } else if (event.WindowClosed) {
             const addr = "niri-" + event.WindowClosed.id;
             windowList = windowList.filter(w => w.address !== addr);
-            _rebuildWindowMaps();
             windowDataUpdated();
         } else if (event.WindowFocusTimestampChanged) {
             const {
@@ -300,7 +287,6 @@ QtObject {
                     focusHistoryID: -(focus_timestamp ?? 0)
                 });
                 windowList = newList;
-                _rebuildWindowMaps();
                 windowDataUpdated();
             }
         }
@@ -377,12 +363,6 @@ QtObject {
     function activeWorkspaceIdForScreen(screen) {
         const mon = monitorForScreen(screen);
         return mon?.activeWorkspaceId ?? 1;
-    }
-
-    function windowForToplevel(toplevel) {
-        const appId = toplevel.appId ?? "";
-        const title = toplevel.title ?? "";
-        return windowList.find(w => w.class === appId && w.title === title) ?? null;
     }
 
     function getCursorPosition(callback) {
