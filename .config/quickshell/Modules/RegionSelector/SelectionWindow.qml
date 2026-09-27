@@ -74,45 +74,24 @@ PanelWindow {
     // Window regions on this workspace, sorted for proper z-order (floating above tiled)
     readonly property var windowRegions: {
         const workspaceWindows = Compositor.windowList.filter(w => w.workspace.id === root.effectiveWorkspaceId);
-
-        // If any window is fullscreen or maximized, only show that window (others are occluded)
-        // fullscreen: 1 = real fullscreen, 2 = maximized
-        const fullscreenWindow = workspaceWindows.find(w => w.fullscreen > 0);
-        if (fullscreenWindow) {
-            return [
-                {
-                    at: [fullscreenWindow.at[0] - root.monitorOffsetX, fullscreenWindow.at[1] - root.monitorOffsetY],
-                    size: fullscreenWindow.size,
-                    class: fullscreenWindow.class,
-                    title: fullscreenWindow.title,
-                    floating: fullscreenWindow.floating
-                }
-            ];
-        }
-
-        // Sort: floating windows first (higher z-order), then tiled
-        // Among floating windows, smaller ones first (easier to target, likely on top)
-        const sorted = [...workspaceWindows].sort((a, b) => {
-            if (a.floating && !b.floating)
-                return -1;
-            if (!a.floating && b.floating)
-                return 1;
-            // Both floating: smaller area first (higher priority for targeting)
-            if (a.floating && b.floating) {
-                const areaA = a.size[0] * a.size[1];
-                const areaB = b.size[0] * b.size[1];
-                return areaA - areaB;
-            }
-            return 0;
-        });
-
-        return sorted.map(w => ({
+        const toRegion = w => ({
                     at: [w.at[0] - root.monitorOffsetX, w.at[1] - root.monitorOffsetY],
                     size: w.size,
                     class: w.class,
                     title: w.title,
                     floating: w.floating
-                }));
+                });
+
+        // If any window is fullscreen or maximized, only show that window (others are occluded)
+        // fullscreen: 1 = real fullscreen, 2 = maximized
+        const fullscreenWindow = workspaceWindows.find(w => w.fullscreen > 0);
+        if (fullscreenWindow)
+            return [toRegion(fullscreenWindow)];
+
+        // Floating windows first (higher z-order), and among them smaller ones first
+        // (easier to target, likely on top)
+        const area = w => w.size[0] * w.size[1];
+        return workspaceWindows.sort((a, b) => (!!b.floating - !!a.floating) || (a.floating ? area(a) - area(b) : 0)).map(toRegion);
     }
 
     // Floating windows only (for computing cutouts in tiled windows)
