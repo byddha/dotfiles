@@ -16,7 +16,7 @@ Scope {
             required property ShellScreen modelData
 
             screen: modelData
-            visible: Settings.sidebarVisible && Config.options.sidebar.enabled && modelData.name === Compositor.focusedMonitorName
+            visible: Settings.sidebarVisible && modelData.name === Compositor.focusedMonitorName
 
             anchors {
                 left: true
@@ -29,9 +29,9 @@ Scope {
             WlrLayershell.namespace: "bidshell:sidebar"
             WlrLayershell.keyboardFocus: sidebarWindow.visible ? (Compositor.useHyprlandFocusGrab ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.Exclusive) : WlrKeyboardFocus.None
             WlrLayershell.margins {
-                top: Config.options.sidebar.marginTop
-                right: Config.options.sidebar.marginRight
-                bottom: Config.options.sidebar.marginBottom
+                top: 50
+                right: 10
+                bottom: 10
             }
 
             exclusiveZone: 0  // Float over windows
@@ -85,7 +85,7 @@ Scope {
             // Content wrapper for animations
             Item {
                 id: contentWrapper
-                width: Config.options.sidebar.width
+                width: Theme.sidebarWidth
                 height: parent.height
                 anchors.right: parent.right
                 anchors.top: parent.top

@@ -13,8 +13,6 @@ Scope {
     property bool shown: false
 
     function triggerOsd(indicatorType) {
-        if (!Config.options.osd?.enabled)
-            return;
         root.currentIndicator = indicatorType;
         root.shown = true;
         osdTimeout.restart();
@@ -22,7 +20,7 @@ Scope {
 
     Timer {
         id: osdTimeout
-        interval: Config.options.osd?.timeout ?? 1000
+        interval: 1000
         onTriggered: root.shown = false
     }
 
@@ -64,7 +62,7 @@ Scope {
             property bool monitorIsFocused: Compositor.focusedMonitorName === modelData.name
 
             screen: modelData
-            visible: root.shown && Config.options.osd?.enabled && monitorIsFocused
+            visible: root.shown && monitorIsFocused
             color: "transparent"
 
             WlrLayershell.namespace: "bidshell:osd"
@@ -79,7 +77,7 @@ Scope {
             }
 
             WlrLayershell.margins {
-                right: Settings.sidebarVisible ? (Config.options.sidebar.width + 50) : 50
+                right: Settings.sidebarVisible ? (Theme.sidebarWidth + 50) : 50
                 bottom: (modelData.height / 2) - (contentLayout.implicitHeight / 2)
             }
 

@@ -149,11 +149,7 @@ Item {
                     cursorShape: Qt.PointingHandCursor
                     acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
 
-                    onEntered: {
-                        if (Config.options?.bar?.tray?.showTooltips ?? true) {
-                            trayTooltip.show();
-                        }
-                    }
+                    onEntered: trayTooltip.show()
 
                     onExited: {
                         trayTooltip.hide();

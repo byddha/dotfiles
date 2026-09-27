@@ -38,7 +38,7 @@ Singleton {
 
             property var _timer: Timer {
                 interval: Math.max(10, (feedDelegate.modelData?.interval ?? 900)) * 1000
-                running: root._stateLoaded && (Config.options.rssFeedNotifier?.enabled ?? true)
+                running: root._stateLoaded
                 repeat: true
                 triggeredOnStart: true
                 onTriggered: root._fetch(feedDelegate.modelData)

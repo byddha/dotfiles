@@ -64,12 +64,7 @@ Rectangle {
 
                     // Location name
                     Text {
-                        text: {
-                            if (!weatherReady)
-                                return "";
-                            const location = Config.options.calendar?.weather?.location ?? "London";
-                            return location.split(",")[0];
-                        }
+                        text: weatherReady ? WeatherService.location : ""
                         font.family: Theme.fontFamily
                         font.pixelSize: Theme.fontSizeBase + 2
                         font.weight: Font.Bold

@@ -81,13 +81,7 @@ Item {
 
                     // Location (from weather config)
                     Text {
-                        text: {
-                            const weatherEnabled = Config.options.calendar?.weather?.enabled ?? false;
-                            if (!weatherEnabled)
-                                return "";
-                            const location = Config.options.calendar?.weather?.location ?? "";
-                            return location.split(",")[0];
-                        }
+                        text: WeatherService.location
                         font.family: Theme.fontFamily
                         font.pixelSize: Theme.fontSizeSmall
                         color: Theme.colLayer0
@@ -493,8 +487,6 @@ Item {
         Loader {
             id: weatherLoader
             Layout.fillWidth: true
-            active: Config.options.calendar?.weather?.enabled ?? false
-            visible: active
 
             sourceComponent: WeatherCard {}
         }

@@ -20,7 +20,7 @@ Scope {
 
             required property ShellScreen modelData
             screen: modelData
-            visible: Config?.options.hyprWhichKey.enabled && root.shown && modelData.name === Compositor.focusedMonitorName
+            visible: root.shown && modelData.name === Compositor.focusedMonitorName
 
             anchors {
                 bottom: true
@@ -89,7 +89,7 @@ Scope {
 
                     // Approximate monospace char width so every key column lines up.
                     readonly property real maxKeyWidth: {
-                        const charWidth = Config.options.hyprWhichKey.fontSize * 0.6;
+                        const charWidth = Theme.whichKeyFontSize * 0.6;
                         let maxWidth = 0;
                         for (const bind of HyprWhichKeyService.keybindList)
                             maxWidth = Math.max(maxWidth, HyprWhichKeyService.getRawKey(bind).length * charWidth);

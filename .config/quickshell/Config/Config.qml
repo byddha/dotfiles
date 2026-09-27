@@ -104,7 +104,6 @@ Singleton {
             id: adapter
 
             property var notifications: JsonObject {
-                property bool enabled: true
                 // Rules evaluated when a window gains focus — each matching rule clears notifications whose fields match.
                 // Shape: [{ "focus": { <window fields> }, "match": { <notification fields> } }, ...]
                 // Each block ANDs its keys. Values: case-insensitive substring, "/regex/flags", or array (OR).
@@ -133,25 +132,10 @@ Singleton {
                 property var rules: ([])
             }
 
-            property var hyprWhichKey: JsonObject {
-                property bool enabled: true
-                property int fontSize: 24
-            }
-
             property var general: JsonObject {
                 property string base16Theme: "tokyo-night-dark"
                 property bool debugLogging: false
                 property bool traceLogging: false
-            }
-
-            property var bar: JsonObject {
-                property bool enabled: true
-                property string position: "top"
-
-                property var tray: JsonObject {
-                    property bool enabled: true
-                    property bool showTooltips: true
-                }
             }
 
             // Centralized monitor configuration
@@ -164,34 +148,13 @@ Singleton {
                 // "0x1920":   { "workspaces": [6, 8], "hdrCapable": false }
                 {})
 
-            property var sidebar: JsonObject {
-                property bool enabled: true
-                property int width: 400
-                property int marginTop: 50
-                property int marginRight: 10
-                property int marginBottom: 10
-
-                property var sliders: JsonObject {
-                    property bool showVolume: true
-                    property bool showBrightness: true
-                    property bool showMicrophone: true
-                    property bool showKeyboardBrightness: true
-                }
-            }
-
-            property var osd: JsonObject {
-                property bool enabled: true
-                property int timeout: 1000
-            }
-
             // Custom peripheral battery sources
             // devices: [{ name, type, command, interval, replaces? }]
             // type: trackpad, mouse, keyboard, headset, headphones, speakers, gamepad, phone
             // command: outputs JSON {"percentage": 0-100, "charging": true/false}
             // replaces: UPower model name substring to suppress (optional)
             property var peripheralBatteries: ({
-                    devices: [],
-                    shutdownReminderThreshold: 40
+                    devices: []
                 })
 
             property var brandLogos: JsonObject {
@@ -206,22 +169,7 @@ Singleton {
             //            absent/empty passes everything through
             // format: parser key, default "rss"
             property var rssFeedNotifier: JsonObject {
-                property bool enabled: true
                 property var feeds: ([])
-            }
-
-            property var calendar: JsonObject {
-                property bool enabled: true
-
-                property var weather: JsonObject {
-                    property bool enabled: true
-                    property string location: "Bucharest"  // City name for geocoding
-                }
-
-                property var holidays: JsonObject {
-                    property bool enabled: true
-                    property string countryCode: "RO"  // ISO 3166-1 alpha-2
-                }
             }
         }
     }

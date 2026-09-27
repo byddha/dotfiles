@@ -16,7 +16,7 @@ Row {
     Text {
         text: HyprWhichKeyService.getRawKey(bind)
         font.family: Theme.fontFamily
-        font.pixelSize: Config.options.hyprWhichKey.fontSize
+        font.pixelSize: Theme.whichKeyFontSize
         color: Theme.primary
         anchors.verticalCenter: parent.verticalCenter
         width: columnWidth
@@ -26,7 +26,7 @@ Row {
     Text {
         text: "→"
         font.family: Theme.fontFamily
-        font.pixelSize: Config.options.hyprWhichKey.fontSize
+        font.pixelSize: Theme.whichKeyFontSize
         color: Theme.textSecondary
         anchors.verticalCenter: parent.verticalCenter
         leftPadding: 8
@@ -37,7 +37,7 @@ Row {
         visible: parsedDesc.glyph !== ""
         text: parsedDesc.glyph
         font.family: Theme.fontFamily
-        font.pixelSize: Config.options.hyprWhichKey.fontSize
+        font.pixelSize: Theme.whichKeyFontSize
         font.weight: Font.Bold
         color: ThemeService.base08
         anchors.verticalCenter: parent.verticalCenter
@@ -46,7 +46,7 @@ Row {
     Text {
         text: parsedDesc.text
         font.family: Theme.fontFamily
-        font.pixelSize: Config.options.hyprWhichKey.fontSize
+        font.pixelSize: Theme.whichKeyFontSize
         color: {
             if (bind?.dispatcher === "submap")
                 return Theme.colSecondary;

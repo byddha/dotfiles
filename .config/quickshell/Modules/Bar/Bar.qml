@@ -58,11 +58,8 @@ Scope {
 
             Component.onCompleted: Qt.callLater(updateWorkspaceConfig)
 
-            visible: Config.options.bar.enabled
-
             anchors {
-                top: Config.options.bar.position === "top"
-                bottom: Config.options.bar.position === "bottom"
+                top: true
                 left: true
                 right: true
             }
@@ -77,8 +74,7 @@ Scope {
             Rectangle {
                 id: barBackground
                 anchors.fill: parent
-                anchors.topMargin: Config.options.bar.position === "bottom" ? BarStyle.barMargin : 0
-                anchors.bottomMargin: Config.options.bar.position === "top" ? BarStyle.barMargin : 0
+                anchors.bottomMargin: BarStyle.barMargin
                 color: BarStyle.barBackground
             }
 
@@ -92,12 +88,9 @@ Scope {
 
                 PowerButton {}
 
-                Loader {
-                    active: Config.options?.bar?.tray?.enabled ?? true
+                Tray {
+                    barWindow: bar
                     height: parent.height
-                    sourceComponent: Tray {
-                        barWindow: bar
-                    }
                 }
 
                 MediaButton {}

@@ -16,8 +16,6 @@ Card {
         // Volume Slider
         Loader {
             width: parent.width
-            active: Config.options.sidebar.sliders.showVolume
-            visible: active
 
             sourceComponent: Slider {
                 icon: Audio.isMuted ? Icons.volumeMuted : (Audio.volume > 0.5 ? Icons.volumeHigh : Icons.volumeLow)
@@ -42,7 +40,7 @@ Card {
         // Brightness Slider
         Loader {
             width: parent.width
-            active: Config.options.sidebar.sliders.showBrightness && Brightness.available
+            active: Brightness.available
             visible: active
 
             sourceComponent: Slider {
@@ -58,8 +56,6 @@ Card {
         // Microphone Slider
         Loader {
             width: parent.width
-            active: Config.options.sidebar.sliders.showMicrophone
-            visible: active
 
             sourceComponent: Slider {
                 icon: Audio.isMicMuted ? Icons.micMuted : Icons.micOn
@@ -85,7 +81,7 @@ Card {
         // Keyboard Brightness Slider
         Loader {
             width: parent.width
-            active: Config.options.sidebar.sliders.showKeyboardBrightness && KeyboardBrightness.available
+            active: KeyboardBrightness.available
             visible: active
 
             sourceComponent: Slider {

@@ -35,7 +35,8 @@ Singleton {
     readonly property alias data: adapter
 
     // Helper property for UI
-    readonly property bool weatherReady: Config.options.calendar?.weather?.enabled && adapter.weather !== null
+    readonly property string location: "Bucharest"
+    readonly property bool weatherReady: adapter.weather !== null
 
     // File view for caching
     FileView {
@@ -78,7 +79,7 @@ Singleton {
     Timer {
         id: updateTimer
         interval: 20 * 1000
-        running: Config.options.calendar?.weather?.enabled ?? false
+        running: true
         repeat: true
         onTriggered: updateWeather()
     }
@@ -91,16 +92,12 @@ Singleton {
      * Force weather refresh
      */
     function updateWeather() {
-        if (!(Config.options.calendar?.weather?.enabled ?? false)) {
-            return;
-        }
-
         if (isFetchingWeather) {
             Logger.warn("Weather is still fetching");
             return;
         }
 
-        const currentLocation = Config.options.calendar?.weather?.location ?? "London";
+        const currentLocation = root.location;
         const now = Math.floor(Date.now() / 1000);
 
         // Refresh if: no data, location changed, or cache expired
@@ -149,7 +146,7 @@ Singleton {
     function getFreshWeather() {
         isFetchingWeather = true;
 
-        const currentLocation = Config.options.calendar?.weather?.location ?? "London";
+        const currentLocation = root.location;
         const locationChanged = adapter.name !== currentLocation;
 
         // Need geocoding?

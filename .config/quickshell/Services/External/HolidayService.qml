@@ -151,11 +151,8 @@ Singleton {
      * Update holidays - checks cache and fetches if needed
      */
     function updateHolidays() {
-        if (!(Config.options.calendar?.holidays?.enabled ?? true))
-            return;
-
         const currentYear = new Date().getFullYear();
-        const countryCode = Config.options.calendar?.holidays?.countryCode ?? "RO";
+        const countryCode = "RO";
         const now = Math.floor(Date.now() / 1000);
 
         // Refetch if country changed or cache expired

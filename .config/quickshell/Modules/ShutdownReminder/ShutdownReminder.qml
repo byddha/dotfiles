@@ -18,8 +18,7 @@ Scope {
         function onShutdownReminderVisibleChanged() {
             if (!Settings.shutdownReminderVisible)
                 return;
-            const threshold = Config.options.peripheralBatteries?.shutdownReminderThreshold ?? 40;
-            root.lowDevices = PeripheralBatteries.getLowBatteryDevices(threshold);
+            root.lowDevices = PeripheralBatteries.getLowBatteryDevices();
             root.remaining = root.totalSeconds;
         }
     }

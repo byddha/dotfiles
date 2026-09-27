@@ -98,7 +98,8 @@ Singleton {
         return device.model || UPowerDeviceType.toString(device.type) || "Device";
     }
 
-    function getLowBatteryDevices(threshold: int): var {
+    function getLowBatteryDevices(): var {
+        const threshold = 40;
         const results = [];
         const configDevices = Config.options.peripheralBatteries?.devices ?? [];
 

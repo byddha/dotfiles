@@ -55,6 +55,8 @@ Singleton {
     // ========================================================================
 
     property int spacingBase: 8
+    readonly property int sidebarWidth: 400
+    readonly property int whichKeyFontSize: 24
     property int spacingLarge: 16
     property int spacingSmall: 4
 

@@ -31,8 +31,7 @@ BarPopup {
             PowerActionButton {
                 icon: Icons.shutdown
                 onClicked: {
-                    const threshold = Config.options.peripheralBatteries?.shutdownReminderThreshold ?? 40;
-                    const lowDevices = PeripheralBatteries.getLowBatteryDevices(threshold);
+                    const lowDevices = PeripheralBatteries.getLowBatteryDevices();
                     if (lowDevices.length === 0) {
                         PowerActions.poweroff();
                     } else {
