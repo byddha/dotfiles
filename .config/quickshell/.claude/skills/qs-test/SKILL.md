@@ -89,8 +89,11 @@ that "worked" but logged a TypeError is a bug.
 ## Method
 
 1. **Read the QML first** to know ids, types and what each state should look like.
-2. **Both monitors.** DP-3 (3440x1440, scale 1) and HDMI-A-1 (laptop, 1920x1200, scale 1.2, below
-   DP-3). The sidebar opens on the focused monitor: `move` onto a monitor before `bind super+space`.
+2. **Every monitor.** Run `hyprctl monitors` first: each monitor has its own copy of the bar, sidebar
+   and popups, so test on each (`@SCREEN` picks the copy). A monitor with a fractional scale (1.2, 1.5)
+   finds its own bugs: blurred or 1 px off captures, sub-pixel positions. The sidebar opens on the
+   focused monitor: `move` onto a monitor before `bind super+space`. In `hyprctl monitors`, x/y are
+   logical but width/height are physical pixels: divide them by the scale.
 3. **Screenshot every important state and look at each one** (open, expanded, each tab, each popup):
    clipping, overlap, wrong colors, wrong alignment, cut text only show in images. Text checks
    (`expect`, `wait`) add to screenshots; they never replace them.

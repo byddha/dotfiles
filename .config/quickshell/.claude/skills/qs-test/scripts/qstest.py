@@ -15,7 +15,7 @@
   qstest.py type TEXT                   type text (wtype)
   qstest.py bind super+space            compositor keybind (ydotool, real keyboard events)
   qstest.py shot NAME [N] [PAD]         crop screenshot of an item; prints the file path
-  qstest.py shot-screen OUTPUT          whole output (DP-3, HDMI-A-1)
+  qstest.py shot-screen OUTPUT          whole output (a name from `hyprctl monitors`)
   qstest.py test NAME                   start a test: marks the log (each step then prints its new warnings/errors)
   qstest.py done [N]                    end the test: print the log lines it made (last N, default 60)
   qstest.py log                         warnings/errors added since the last `log` (or since `start`)
