@@ -73,13 +73,11 @@ Scope {
         target: "lock"
 
         function lock(): string {
-            Logger.info("IPC: lock.lock");
             SessionLock.lock();
             return "Locked";
         }
 
         function unlock(): string {
-            Logger.info("IPC: lock.unlock");
             SessionLock.unlock();
             return "Unlocked";
         }

@@ -42,7 +42,6 @@ FocusScope {
         property real halftoneCellSize: 8.0
         property real halftoneStrength: 1.0
         property vector2d resolution: Qt.vector2d(width, height)
-        vertexShader: "shaders/lockbg.vert.qsb"
         fragmentShader: "shaders/lockbg.frag.qsb"
     }
 
@@ -91,8 +90,6 @@ FocusScope {
             font.pixelSize: Theme.fontSizeSmall
             text: ""
 
-            property real bootSeconds: 0
-
             function format(secsSinceBoot) {
                 const total = Math.floor(secsSinceBoot);
                 const d = Math.floor(total / 86400);
@@ -107,18 +104,13 @@ FocusScope {
                 return "Up " + parts.join(" ");
             }
 
-            Process {
-                id: uptimeProc
-                command: ["cat", "/proc/uptime"]
-                running: true
-                stdout: StdioCollector {
-                    onStreamFinished: {
-                        const secs = parseFloat(text.split(" ")[0]);
-                        if (!isNaN(secs)) {
-                            uptimeText.bootSeconds = secs;
-                            uptimeText.text = uptimeText.format(secs);
-                        }
-                    }
+            FileView {
+                id: uptimeFile
+                path: "/proc/uptime"
+                onLoaded: {
+                    const secs = parseFloat(text().split(" ")[0]);
+                    if (!isNaN(secs))
+                        uptimeText.text = uptimeText.format(secs);
                 }
             }
 
@@ -126,7 +118,7 @@ FocusScope {
                 interval: 60000
                 running: true
                 repeat: true
-                onTriggered: uptimeProc.running = true
+                onTriggered: uptimeFile.reload()
             }
         }
     }
@@ -416,7 +408,6 @@ FocusScope {
                     property real halftoneCellSize: 1.0
                     property real halftoneStrength: 0.0
                     property vector2d resolution: Qt.vector2d(tintedMedia.width, tintedMedia.height)
-                    vertexShader: "shaders/lockbg.vert.qsb"
                     fragmentShader: "shaders/lockbg.frag.qsb"
                 }
             }
@@ -432,6 +423,4 @@ FocusScope {
                 passwordField.forceActiveFocus();
         }
     }
-
-    Component.onCompleted: passwordField.forceActiveFocus()
 }
