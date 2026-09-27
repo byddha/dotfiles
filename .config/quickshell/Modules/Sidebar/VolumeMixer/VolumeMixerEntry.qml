@@ -1,10 +1,8 @@
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Layouts
 import "../../../Config"
 import "../../../Components"
 import "../../../Services"
-import "../../../Utils"
 import Quickshell.Services.Pipewire
 
 Item {
@@ -90,7 +88,6 @@ Item {
                 if (root.node) {
                     root.node.audio.volume = newValue;
                     root.volumeChanged(newValue);
-                    Logger.info(`${Audio.appNodeDisplayName(root.node)} volume: ${Math.round(newValue * 100)}%`);
                 }
             }
 
@@ -98,7 +95,6 @@ Item {
                 if (root.node) {
                     root.node.audio.muted = !root.node.audio.muted;
                     root.muteToggled();
-                    Logger.info(`${Audio.appNodeDisplayName(root.node)} ${root.node.audio.muted ? 'muted' : 'unmuted'}`);
                 }
             }
         }
