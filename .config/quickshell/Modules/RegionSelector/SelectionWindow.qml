@@ -17,7 +17,9 @@ PanelWindow {
     color: "transparent"
     WlrLayershell.namespace: "bidshell:regionselector"
     WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
+    // Only the focused monitor's window takes the keyboard (as in DankMaterialShell's overview);
+    // with Exclusive on every window, Hyprland gave keys to a random one and Space/F were ignored.
+    WlrLayershell.keyboardFocus: Compositor.focusedMonitorName === screen?.name ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
     exclusionMode: ExclusionMode.Ignore
 
     anchors {
@@ -130,8 +132,7 @@ PanelWindow {
     // Tracks whether the cursor is on THIS monitor. Seeded from a Compositor
     // probe on show (containsMouse alone isn't reliable — Wayland doesn't send
     // an enter event when a sibling MouseArea just becomes visible, so hover
-    // starts out false until the user wiggles the mouse). Key-press guards
-    // use this instead of root.cursorOnThisMonitor directly.
+    // starts out false until the user wiggles the mouse).
     property bool cursorOnThisMonitor: false
 
     function _probeCursorMonitor() {
@@ -621,9 +622,14 @@ PanelWindow {
             acceptedButtons: Qt.LeftButton
             hoverEnabled: true
 
-            // Once Wayland starts delivering hover events, keep the shared
-            // flag in sync with the real hover state.
-            onContainsMouseChanged: root.cursorOnThisMonitor = containsMouse
+            // A spurious leave arrives while the per-monitor surfaces map, with the cursor
+            // still here; trusting it left Space/F dead until the mouse moved. Re-probe instead.
+            onContainsMouseChanged: {
+                if (containsMouse)
+                    root.cursorOnThisMonitor = true;
+                else
+                    root._probeCursorMonitor();
+            }
 
             Component.onCompleted: root._probeCursorMonitor()
             Connections {
