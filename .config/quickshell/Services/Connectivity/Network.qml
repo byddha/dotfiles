@@ -63,6 +63,8 @@ Singleton {
 
     function changePassword(network: WifiAccessPoint, password: string) {
         network.askingPassword = false;
+        // changePasswordProc reconnects to this target when it exits
+        root.wifiConnectTarget = network;
         changePasswordProc.environment = {
             "PASSWORD": password
         };
