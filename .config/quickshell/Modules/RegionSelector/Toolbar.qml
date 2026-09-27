@@ -42,306 +42,68 @@ Rectangle {
                 anchors.centerIn: parent
                 spacing: 2
 
-                // Screenshot button
-                Rectangle {
-                    Layout.preferredWidth: screenshotContent.width + 20
-                    Layout.preferredHeight: 32
-                    radius: Theme.radiusBase - 2
-                    color: root.action === RegionSelector.SnipAction.Copy ? Theme.primary : "transparent"
-
-                    RowLayout {
-                        id: screenshotContent
-                        anchors.centerIn: parent
-                        spacing: 6
-
-                        Text {
-                            font.family: Theme.fontFamilyIcons
-                            font.pixelSize: 14
-                            color: root.action === RegionSelector.SnipAction.Copy ? Theme.primaryText : Theme.textSecondary
-                            text: Icons.screenshot
-                        }
-                        Text {
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSizeSmall
-                            font.weight: Font.Medium
-                            color: root.action === RegionSelector.SnipAction.Copy ? Theme.primaryText : Theme.textSecondary
-                            textFormat: Text.RichText
-                            text: `<u>S</u>creenshot`
-                        }
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.actionRequested(RegionSelector.SnipAction.Copy)
-                    }
+                SegmentButton {
+                    selected: root.action === RegionSelector.SnipAction.Copy
+                    icon: Icons.screenshot
+                    label: `<u>S</u>creenshot`
+                    onClicked: root.actionRequested(RegionSelector.SnipAction.Copy)
                 }
 
-                // Record button
-                Rectangle {
-                    Layout.preferredWidth: recordContent.width + 20
-                    Layout.preferredHeight: 32
-                    radius: Theme.radiusBase - 2
-                    color: root.action === RegionSelector.SnipAction.Record ? Theme.primary : "transparent"
-
-                    RowLayout {
-                        id: recordContent
-                        anchors.centerIn: parent
-                        spacing: 6
-
-                        Text {
-                            font.family: Theme.fontFamilyIcons
-                            font.pixelSize: 14
-                            color: root.action === RegionSelector.SnipAction.Record ? Theme.primaryText : Theme.textSecondary
-                            text: Icons.record
-                        }
-                        Text {
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSizeSmall
-                            font.weight: Font.Medium
-                            color: root.action === RegionSelector.SnipAction.Record ? Theme.primaryText : Theme.textSecondary
-                            textFormat: Text.RichText
-                            text: `<u>R</u>ecord`
-                        }
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.actionRequested(RegionSelector.SnipAction.Record)
-                    }
+                SegmentButton {
+                    selected: root.action === RegionSelector.SnipAction.Record
+                    icon: Icons.record
+                    label: `<u>R</u>ecord`
+                    onClicked: root.actionRequested(RegionSelector.SnipAction.Record)
                 }
             }
         }
 
-        // Fullscreen button
-        Rectangle {
-            Layout.preferredWidth: fullscreenContent.width + 16
-            Layout.preferredHeight: 36
-            radius: Theme.radiusBase
-            color: fullscreenMouse.containsMouse ? Theme.alpha(Theme.colLayer2, 0.8) : Theme.alpha(Theme.colLayer0, 0.6)
-
-            RowLayout {
-                id: fullscreenContent
-                anchors.centerIn: parent
-                spacing: 6
-
-                Text {
-                    font.family: Theme.fontFamilyIcons
-                    font.pixelSize: 16
-                    color: Theme.textColor
-                    text: Icons.fullscreen
-                }
-                Text {
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeSmall
-                    font.weight: Font.Medium
-                    color: Theme.textSecondary
-                    textFormat: Text.RichText
-                    text: `<u>F</u>ull`
-                }
-            }
-
-            MouseArea {
-                id: fullscreenMouse
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onClicked: root.actionRequested(-1)  // -1 signals fullscreen
-            }
+        ActionButton {
+            icon: Icons.fullscreen
+            label: `<u>F</u>ull`
+            labelFont.family: Theme.fontFamily
+            onClicked: root.actionRequested(-1)  // -1 signals fullscreen
         }
 
-        // Crop button (shrink to content)
-        Rectangle {
-            Layout.preferredWidth: cropContent.width + 16
-            Layout.preferredHeight: 36
-            radius: Theme.radiusBase
-            color: cropMouse.containsMouse && root.adjusting ? Theme.alpha(Theme.colLayer2, 0.8) : Theme.alpha(Theme.colLayer0, 0.6)
-            opacity: root.adjusting ? 1.0 : 0.4
-
-            RowLayout {
-                id: cropContent
-                anchors.centerIn: parent
-                spacing: 6
-
-                Text {
-                    font.family: Theme.fontFamilyIcons
-                    font.pixelSize: 16
-                    color: root.adjusting ? Theme.textColor : Theme.textSecondary
-                    text: Icons.crop
-                }
-                Text {
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeSmall
-                    font.weight: Font.Medium
-                    color: root.adjusting ? Theme.textSecondary : Theme.textSecondary
-                    textFormat: Text.RichText
-                    text: `<u>C</u>rop`
-                }
-            }
-
-            MouseArea {
-                id: cropMouse
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: root.adjusting ? Qt.PointingHandCursor : Qt.ArrowCursor
-                onClicked: if (root.adjusting)
-                    root.cropRequested()
-            }
+        // Shrink to content
+        ActionButton {
+            active: root.adjusting
+            icon: Icons.crop
+            label: `<u>C</u>rop`
+            labelFont.family: Theme.fontFamily
+            onClicked: root.cropRequested()
         }
 
-        // Lens button (Google Lens visual search)
-        Rectangle {
-            Layout.preferredWidth: lensContent.width + 16
-            Layout.preferredHeight: 36
-            radius: Theme.radiusBase
-            color: lensMouse.containsMouse && root.adjusting ? Theme.alpha(Theme.colLayer2, 0.8) : Theme.alpha(Theme.colLayer0, 0.6)
-            opacity: root.adjusting ? 1.0 : 0.4
-
-            RowLayout {
-                id: lensContent
-                anchors.centerIn: parent
-                spacing: 6
-
-                Text {
-                    font.family: Theme.fontFamilyIcons
-                    font.pixelSize: 16
-                    color: root.adjusting ? Theme.textColor : Theme.textSecondary
-                    text: Icons.lens
-                }
-                Text {
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeSmall
-                    font.weight: Font.Medium
-                    color: root.adjusting ? Theme.textSecondary : Theme.textSecondary
-                    textFormat: Text.RichText
-                    text: `<u>L</u>ens`
-                }
-            }
-
-            MouseArea {
-                id: lensMouse
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: root.adjusting ? Qt.PointingHandCursor : Qt.ArrowCursor
-                onClicked: if (root.adjusting)
-                    root.lensRequested()
-            }
+        // Google Lens visual search
+        ActionButton {
+            active: root.adjusting
+            icon: Icons.lens
+            label: `<u>L</u>ens`
+            labelFont.family: Theme.fontFamily
+            onClicked: root.lensRequested()
         }
 
-        // Text button (OCR English)
-        Rectangle {
-            Layout.preferredWidth: textContent.width + 16
-            Layout.preferredHeight: 36
-            radius: Theme.radiusBase
-            color: textMouse.containsMouse && root.adjusting ? Theme.alpha(Theme.colLayer2, 0.8) : Theme.alpha(Theme.colLayer0, 0.6)
-            opacity: root.adjusting ? 1.0 : 0.4
-
-            RowLayout {
-                id: textContent
-                anchors.centerIn: parent
-                spacing: 6
-
-                Text {
-                    font.family: Theme.fontFamilyIcons
-                    font.pixelSize: 16
-                    color: root.adjusting ? Theme.textColor : Theme.textSecondary
-                    text: Icons.ocr
-                }
-                Text {
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeSmall
-                    font.weight: Font.Medium
-                    color: root.adjusting ? Theme.textSecondary : Theme.textSecondary
-                    textFormat: Text.RichText
-                    text: `<u>O</u>CR copy (En)`
-                }
-            }
-
-            MouseArea {
-                id: textMouse
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: root.adjusting ? Qt.PointingHandCursor : Qt.ArrowCursor
-                onClicked: if (root.adjusting)
-                    root.ocrRequested()
-            }
+        ActionButton {
+            active: root.adjusting
+            icon: Icons.ocr
+            label: `<u>O</u>CR copy (En)`
+            labelFont.family: Theme.fontFamily
+            onClicked: root.ocrRequested()
         }
 
-        // Text+ button (OCR All Languages)
-        Rectangle {
-            Layout.preferredWidth: textPlusContent.width + 16
-            Layout.preferredHeight: 36
-            radius: Theme.radiusBase
-            color: textPlusMouse.containsMouse && root.adjusting ? Theme.alpha(Theme.colLayer2, 0.8) : Theme.alpha(Theme.colLayer0, 0.6)
-            opacity: root.adjusting ? 1.0 : 0.4
-
-            RowLayout {
-                id: textPlusContent
-                anchors.centerIn: parent
-                spacing: 6
-
-                Text {
-                    font.family: Theme.fontFamilyIcons
-                    font.pixelSize: 16
-                    color: root.adjusting ? Theme.textColor : Theme.textSecondary
-                    text: Icons.ocrAll
-                }
-                Text {
-                    font.pixelSize: Theme.fontSizeSmall
-                    font.weight: Font.Medium
-                    color: root.adjusting ? Theme.textSecondary : Theme.textSecondary
-                    textFormat: Text.RichText
-                    text: `<u><font face="${Theme.fontFamilyIcons}">${Icons.keyShift}</font>O</u>CR copy (All)`
-                }
-            }
-
-            MouseArea {
-                id: textPlusMouse
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: root.adjusting ? Qt.PointingHandCursor : Qt.ArrowCursor
-                onClicked: if (root.adjusting)
-                    root.ocrAllRequested()
-            }
+        // These two labels use the default font, not Theme.fontFamily
+        ActionButton {
+            active: root.adjusting
+            icon: Icons.ocrAll
+            label: `<u><font face="${Theme.fontFamilyIcons}">${Icons.keyShift}</font>O</u>CR copy (All)`
+            onClicked: root.ocrAllRequested()
         }
 
-        // Translate button (OCR + Kagi Translate)
-        Rectangle {
-            Layout.preferredWidth: translateContent.width + 16
-            Layout.preferredHeight: 36
-            radius: Theme.radiusBase
-            color: translateMouse.containsMouse && root.adjusting ? Theme.alpha(Theme.colLayer2, 0.8) : Theme.alpha(Theme.colLayer0, 0.6)
-            opacity: root.adjusting ? 1.0 : 0.4
-
-            RowLayout {
-                id: translateContent
-                anchors.centerIn: parent
-                spacing: 6
-
-                Text {
-                    font.family: Theme.fontFamilyIcons
-                    font.pixelSize: 16
-                    color: root.adjusting ? Theme.textColor : Theme.textSecondary
-                    text: Icons.translate
-                }
-                Text {
-                    font.pixelSize: Theme.fontSizeSmall
-                    font.weight: Font.Medium
-                    color: root.adjusting ? Theme.textSecondary : Theme.textSecondary
-                    textFormat: Text.RichText
-                    text: `<u><font face="${Theme.fontFamilyIcons}">${Icons.keyCtrl}</font>O</u>CR + Translate`
-                }
-            }
-
-            MouseArea {
-                id: translateMouse
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: root.adjusting ? Qt.PointingHandCursor : Qt.ArrowCursor
-                onClicked: if (root.adjusting)
-                    root.translateRequested()
-            }
+        ActionButton {
+            active: root.adjusting
+            icon: Icons.translate
+            label: `<u><font face="${Theme.fontFamilyIcons}">${Icons.keyCtrl}</font>O</u>CR + Translate`
+            onClicked: root.translateRequested()
         }
 
         // Cancel button
@@ -378,6 +140,97 @@ Rectangle {
                 cursorShape: Qt.PointingHandCursor
                 onClicked: root.dismiss()
             }
+        }
+    }
+
+    component SegmentButton: Rectangle {
+        id: segment
+
+        required property bool selected
+        property string icon
+        property string label
+
+        signal clicked
+
+        Layout.preferredWidth: segmentContent.width + 20
+        Layout.preferredHeight: 32
+        radius: Theme.radiusBase - 2
+        color: segment.selected ? Theme.primary : "transparent"
+
+        RowLayout {
+            id: segmentContent
+            anchors.centerIn: parent
+            spacing: 6
+
+            Text {
+                font.family: Theme.fontFamilyIcons
+                font.pixelSize: 14
+                color: segment.selected ? Theme.primaryText : Theme.textSecondary
+                text: segment.icon
+            }
+            Text {
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSizeSmall
+                font.weight: Font.Medium
+                color: segment.selected ? Theme.primaryText : Theme.textSecondary
+                textFormat: Text.RichText
+                text: segment.label
+            }
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            cursorShape: Qt.PointingHandCursor
+            onClicked: segment.clicked()
+        }
+    }
+
+    // Inactive buttons stay hoverable and swallow clicks so a press doesn't
+    // fall through and start a new selection, hence `active` instead of `enabled`.
+    component ActionButton: Rectangle {
+        id: button
+
+        property bool active: true
+        property string icon
+        property string label
+        property alias labelFont: labelText.font
+
+        signal clicked
+
+        Layout.preferredWidth: buttonContent.width + 16
+        Layout.preferredHeight: 36
+        radius: Theme.radiusBase
+        color: buttonMouse.containsMouse && button.active ? Theme.alpha(Theme.colLayer2, 0.8) : Theme.alpha(Theme.colLayer0, 0.6)
+        opacity: button.active ? 1.0 : 0.4
+
+        RowLayout {
+            id: buttonContent
+            anchors.centerIn: parent
+            spacing: 6
+
+            Text {
+                font.family: Theme.fontFamilyIcons
+                font.pixelSize: 16
+                color: button.active ? Theme.textColor : Theme.textSecondary
+                text: button.icon
+            }
+            Text {
+                id: labelText
+                font.pixelSize: Theme.fontSizeSmall
+                font.weight: Font.Medium
+                color: Theme.textSecondary
+                textFormat: Text.RichText
+                text: button.label
+            }
+        }
+
+        MouseArea {
+            id: buttonMouse
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: button.active ? Qt.PointingHandCursor : Qt.ArrowCursor
+            onClicked: if (button.active)
+                button.clicked()
         }
     }
 }
