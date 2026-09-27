@@ -12,32 +12,12 @@ ColumnLayout {
 
     spacing: Theme.spacingBase
 
-    // Disabled state - centered icon and text
-    Item {
+    EmptyState {
         Layout.fillWidth: true
         Layout.fillHeight: true
         visible: !Bluetooth.enabled
-
-        ColumnLayout {
-            anchors.centerIn: parent
-            spacing: Theme.spacingBase
-
-            Text {
-                Layout.alignment: Qt.AlignHCenter
-                text: "Bluetooth disabled"
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSizeBase
-                color: Theme.textSecondary
-            }
-
-            Text {
-                Layout.alignment: Qt.AlignHCenter
-                text: Icons.bluetoothOff
-                font.family: Theme.fontFamilyIcons
-                font.pixelSize: 64
-                color: Theme.textSecondary
-            }
-        }
+        text: "Bluetooth disabled"
+        icon: Icons.bluetoothOff
     }
 
     // Device list

@@ -67,31 +67,11 @@ ColumnLayout {
             visible: Notifications.list.length > 0
         }
 
-        // Empty state
-        Item {
+        EmptyState {
             anchors.fill: parent
             visible: Notifications.list.length === 0
-
-            ColumnLayout {
-                anchors.centerIn: parent
-                spacing: Theme.spacingBase
-
-                Text {
-                    Layout.alignment: Qt.AlignHCenter
-                    text: "No notifications"
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeBase
-                    color: Theme.textSecondary
-                }
-
-                Text {
-                    Layout.alignment: Qt.AlignHCenter
-                    text: Icons.bell
-                    font.family: Theme.fontFamilyIcons
-                    font.pixelSize: 64
-                    color: Theme.textSecondary
-                }
-            }
+            text: "No notifications"
+            icon: Icons.bell
         }
     }
 
