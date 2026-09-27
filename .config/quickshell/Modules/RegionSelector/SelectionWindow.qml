@@ -902,7 +902,7 @@ PanelWindow {
                         root.ocrTranslate = false;
                         root.snip();
                     } else {
-                        root.action = newAction;
+                        root.actionChangeRequested(newAction);
                     }
                 }
             }
