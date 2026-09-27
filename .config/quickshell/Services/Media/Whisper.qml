@@ -3,7 +3,6 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import "../../Utils"
 
 /**
  * Whisper - Speech-to-text recording detection service
@@ -14,8 +13,6 @@ Singleton {
     id: root
 
     property bool recording: false
-
-    onRecordingChanged: Logger.info("Whisper:", recording ? "transcribing" : "idle")
 
     // Poll status every 2 seconds
     Timer {
@@ -33,8 +30,5 @@ Singleton {
         }
     }
 
-    Component.onCompleted: {
-        Logger.info("Whisper service initialized");
-        statusProc.running = true;
-    }
+    Component.onCompleted: statusProc.running = true
 }
