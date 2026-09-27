@@ -67,24 +67,41 @@ Item {
                 Layout.fillWidth: true
                 spacing: 0
 
-                // As DMS DankLauncherV2 SectionHeader: the name elides only when the suffix would not fit
-                Row {
+                RowLayout {
                     Layout.fillWidth: true
+                    spacing: Theme.spacingSmall
 
-                    StyledText {
-                        width: Math.min(implicitWidth, parent.width - streamCount.implicitWidth)
-                        text: avatar.entry?.name || root.group.appName
-                        font.pixelSize: Theme.fontSizeSmall
-                        font.weight: Font.Medium
-                        color: Theme.textColor
-                        elide: Text.ElideRight
+                    // As DMS DankLauncherV2 SectionHeader: the name elides only when the suffix would not fit
+                    Row {
+                        Layout.fillWidth: true
+                        Layout.alignment: Qt.AlignVCenter
+
+                        StyledText {
+                            width: Math.min(implicitWidth, parent.width - streamCount.implicitWidth)
+                            text: avatar.entry?.name || root.group.appName
+                            font.pixelSize: Theme.fontSizeSmall
+                            font.weight: Font.Medium
+                            color: Theme.textColor
+                            elide: Text.ElideRight
+                        }
+
+                        StyledText {
+                            id: streamCount
+                            text: ` · ${root.group.nodes.length} streams`
+                            font.pixelSize: Theme.fontSizeTiny
+                            color: Theme.textSecondary
+                        }
                     }
 
-                    StyledText {
-                        id: streamCount
-                        text: ` · ${root.group.nodes.length} streams`
-                        font.pixelSize: Theme.fontSizeTiny
-                        color: Theme.textSecondary
+                    // In the title line, so the group slider is as wide as the stream sliders
+                    IconButton {
+                        implicitWidth: 24
+                        implicitHeight: 24
+                        radius: Theme.radiusSmall
+                        icon: root.linked ? Icons.linkVariant : Icons.linkVariantOff
+                        iconSize: 14
+                        toggled: root.linked
+                        onClicked: root.linked = !root.linked
                     }
                 }
 
@@ -105,12 +122,6 @@ Item {
                             n.audio.muted = muted;
                     }
                 }
-            }
-
-            IconButton {
-                icon: root.linked ? Icons.linkVariant : Icons.linkVariantOff
-                toggled: root.linked
-                onClicked: root.linked = !root.linked
             }
         }
 
