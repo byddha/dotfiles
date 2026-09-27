@@ -671,70 +671,9 @@ PanelWindow {
                 regionHeight: root.regionHeight
                 mouseX: mouseArea.mouseX
                 mouseY: mouseArea.mouseY
+                monitorScale: root.monitorScale
+                showHandles: root.adjusting
                 visible: root.regionWidth > 2 && root.regionHeight > 2 && !root.snipping
-            }
-
-            // Corner bracket handles (only in adjusting mode)
-            Item {
-                visible: root.adjusting && root.regionWidth > 0 && !root.snipping
-                z: 10
-
-                readonly property int bracketLength: 20
-                readonly property int bracketThickness: 5
-                readonly property color bracketColor: Theme.textColor
-
-                // L-shaped corner brackets
-                Repeater {
-                    model: [
-                        // nw: horizontal goes right, vertical goes down
-                        {
-                            x: root.regionX,
-                            y: root.regionY,
-                            hDir: 1,
-                            vDir: 1
-                        },
-                        // ne: horizontal goes left, vertical goes down
-                        {
-                            x: root.regionX + root.regionWidth,
-                            y: root.regionY,
-                            hDir: -1,
-                            vDir: 1
-                        },
-                        // sw: horizontal goes right, vertical goes up
-                        {
-                            x: root.regionX,
-                            y: root.regionY + root.regionHeight,
-                            hDir: 1,
-                            vDir: -1
-                        },
-                        // se: horizontal goes left, vertical goes up
-                        {
-                            x: root.regionX + root.regionWidth,
-                            y: root.regionY + root.regionHeight,
-                            hDir: -1,
-                            vDir: -1
-                        }
-                    ]
-                    Item {
-                        required property var modelData
-                        // Horizontal arm of L
-                        Rectangle {
-                            x: modelData.hDir > 0 ? modelData.x : modelData.x - parent.parent.bracketLength
-                            y: modelData.vDir > 0 ? modelData.y : modelData.y - parent.parent.bracketThickness
-                            width: parent.parent.bracketLength
-                            height: parent.parent.bracketThickness
-                            color: parent.parent.bracketColor
-                        }
-                        // Vertical arm of L
-                        Rectangle {
-                            x: modelData.hDir > 0 ? modelData.x : modelData.x - parent.parent.bracketThickness
-                            y: modelData.vDir > 0 ? modelData.y : modelData.y - parent.parent.bracketLength
-                            width: parent.parent.bracketThickness
-                            height: parent.parent.bracketLength
-                            color: parent.parent.bracketColor
-                        }
-                    }
-                }
             }
 
             // Window region highlights (hidden during adjusting or dragging)

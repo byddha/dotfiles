@@ -30,16 +30,13 @@ Rectangle {
         return Qt.vector4d(0, 0, 0, 0);
     }
 
-    // Shader-based hatching with rounded corners
+    // Dims the window (rounded corners, floating windows above it cut out)
     ShaderEffect {
         anchors.fill: parent
         visible: !root.targeted
 
-        property real overlayOpacity: 0.85
-        property real hatchOpacity: 1.0
-        property real hatchSpacing: 16.0
-        property color overlayColor: Theme.colLayer0
-        property color hatchColor: Theme.textColor
+        property real overlayOpacity: 0.5
+        property color overlayColor: "black"
         property vector4d selection: Qt.vector4d(0, 0, 0, 0)
         property vector4d resolutionAndRadius: Qt.vector4d(root.width, root.height, Theme.roundingWindow, 0)
         // Floating window cutouts
