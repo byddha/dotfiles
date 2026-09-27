@@ -4,6 +4,7 @@ import Quickshell.Services.SystemTray
 import Quickshell.Widgets
 import "../../Utils"
 import "../../Config"
+import "../../Services"
 import "../../Components"
 import "Popups"
 
