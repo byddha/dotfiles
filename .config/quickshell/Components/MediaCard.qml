@@ -187,18 +187,18 @@ Rectangle {
 
                 // Time display
                 Text {
-                    text: formatTime(root.player?.position) + " / " + formatTime(root.player?.length)
+                    text: formatTime(root.player?.position) + " / " + formatTime(MprisController.stableTrackLength)
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSizeTiny
                     color: Theme.textSecondary
-                    visible: root.player?.length > 0
+                    visible: MprisController.stableTrackLength > 0
                 }
             }
 
             // Time display (when showing visualizer instead of controls)
             Text {
                 visible: root.showVisualizer && !root.showControls
-                text: formatTime(root.player?.position) + " / " + formatTime(root.player?.length)
+                text: formatTime(root.player?.position) + " / " + formatTime(MprisController.stableTrackLength)
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSizeTiny
                 color: Theme.textSecondary

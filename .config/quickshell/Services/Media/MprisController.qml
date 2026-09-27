@@ -4,7 +4,6 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import Quickshell
 import Quickshell.Services.Mpris
-import "../../Utils"
 
 Singleton {
     id: root
@@ -64,6 +63,7 @@ Singleton {
         if (activePlayer && activePlayer.trackTitle) {
             if (stableTrackTitle !== activePlayer.trackTitle) {
                 stableTrackArtUrl = "";
+                stableTrackLength = 0;
             }
             stableTrackTitle = activePlayer.trackTitle;
             // Firefox/Zen bounce trackArtUrl to "" whenever a page fires a
@@ -77,7 +77,10 @@ Singleton {
                 stableTrackArtUrl = activePlayer.trackArtUrl;
             }
             stableTrackArtist = activePlayer.trackArtist || "";
-            stableTrackLength = activePlayer.length || 0;
+            // Firefox/Zen also drop mpris:length after every seek, and Quickshell then reports
+            // length == position. Keep the last real length, as DankMaterialShell does.
+            if (activePlayer.lengthSupported && activePlayer.length > 1)
+                stableTrackLength = activePlayer.length;
             stableCanGoPrevious = activePlayer.canGoPrevious || false;
             stableCanGoNext = activePlayer.canGoNext || false;
             stableHasPlayer = true;
@@ -136,7 +139,6 @@ Singleton {
         } else {
             selectedIndex = (selectedIndex + 1) % availablePlayers.length;
         }
-        Logger.info(`Switched to: ${activePlayer?.identity || "Unknown"}`);
     }
 
     // Cycle to previous player
@@ -149,7 +151,6 @@ Singleton {
         } else {
             selectedIndex = (selectedIndex - 1 + availablePlayers.length) % availablePlayers.length;
         }
-        Logger.info(`Switched to: ${activePlayer?.identity || "Unknown"}`);
     }
 
     // Reset to auto-select when players change
@@ -159,20 +160,9 @@ Singleton {
         }
     }
 
-    Component.onCompleted: {
-        Logger.info("MPRIS service initialized");
-        Logger.info(`Available players: ${availablePlayers.length}`);
-    }
-
     onActivePlayerChanged: {
-        // Update stable data
+        stableTrackLength = 0;
         updateStableData();
-
-        if (activePlayer) {
-            Logger.debug("Active player:", activePlayer.identity || "Unknown");
-        } else {
-            Logger.debug("No active player");
-        }
 
         // Defer sticky state update to break binding loop
         // (_stickyPlayer is read in activePlayer binding, so writing it directly causes a loop)
