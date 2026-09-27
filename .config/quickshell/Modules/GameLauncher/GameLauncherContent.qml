@@ -38,7 +38,7 @@ Item {
         property var source: bgImage
         property real time: root.shaderTime
 
-        fragmentShader: "file:///home/bida/dotfiles/.config/quickshell/Modules/GameLauncher/shaders/hero_bloom.frag.qsb"
+        fragmentShader: "shaders/hero_bloom.frag.qsb"
 
         Behavior on opacity {
             NumberAnimation {

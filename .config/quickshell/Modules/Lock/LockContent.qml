@@ -22,7 +22,7 @@ FocusScope {
     Image {
         id: wallpaper
         anchors.fill: parent
-        source: "file:///home/bida/.config/hypr/assets/wallpaper.jpg"
+        source: "file://" + Quickshell.env("HOME") + "/.config/hypr/assets/wallpaper.jpg"
         fillMode: Image.PreserveAspectCrop
         smooth: true
         cache: true
