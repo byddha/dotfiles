@@ -12,13 +12,39 @@ Rectangle {
     property bool showControls: true
     property bool showVisualizer: false
     property list<real> visualizerValues: []
+    // No longer affects layout; kept because callers still set it.
     property bool compact: false
+    readonly property string timeText: formatTime(player?.position) + " / " + formatTime(MprisController.stableTrackLength)
 
     radius: Theme.radiusBase
     color: Theme.colLayer1
     clip: true
 
-    implicitHeight: compact ? 60 : 80
+    implicitHeight: 80
+
+    component ControlButton: Text {
+        id: control
+
+        property color idleColor
+        signal clicked
+
+        font.family: Theme.fontFamilyIcons
+        color: controlArea.containsMouse ? Theme.primary : idleColor
+
+        Behavior on color {
+            ColorAnimation {
+                duration: 100
+            }
+        }
+
+        MouseArea {
+            id: controlArea
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: control.clicked()
+        }
+    }
 
     // Blurred background art
     Image {
@@ -44,7 +70,7 @@ Rectangle {
 
     RowLayout {
         anchors.fill: parent
-        anchors.margins: compact ? Theme.spacingBase / 2 : Theme.spacingBase
+        anchors.margins: Theme.spacingBase
         spacing: Theme.spacingBase
 
         // Album art
@@ -70,7 +96,7 @@ Rectangle {
                 anchors.centerIn: parent
                 text: Icons.musicAlt
                 font.family: Theme.fontFamilyIcons
-                font.pixelSize: compact ? 20 : 28
+                font.pixelSize: 28
                 color: Theme.textSecondary
                 visible: albumArt.status !== Image.Ready
             }
@@ -87,7 +113,7 @@ Rectangle {
                 Layout.fillWidth: true
                 text: root.player?.trackTitle ?? "No track"
                 font.family: Theme.fontFamily
-                font.pixelSize: compact ? Theme.fontSizeSmall : Theme.fontSizeBase
+                font.pixelSize: Theme.fontSizeBase
                 font.bold: true
                 color: Theme.textColor
                 elide: Text.ElideRight
@@ -113,72 +139,27 @@ Rectangle {
                 visible: root.showControls
                 spacing: Theme.spacingBase
 
-                // Previous
-                Text {
+                ControlButton {
                     text: Icons.skipPrevious
-                    font.family: Theme.fontFamilyIcons
-                    font.pixelSize: compact ? 16 : 20
-                    color: prevArea.containsMouse ? Theme.primary : Theme.textSecondary
+                    font.pixelSize: 20
+                    idleColor: Theme.textSecondary
                     opacity: root.player?.canGoPrevious ? 1 : 0.3
-
-                    Behavior on color {
-                        ColorAnimation {
-                            duration: 100
-                        }
-                    }
-
-                    MouseArea {
-                        id: prevArea
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.player?.previous()
-                    }
+                    onClicked: root.player?.previous()
                 }
 
-                // Play/Pause
-                Text {
+                ControlButton {
                     text: root.player?.playbackState === MprisPlaybackState.Playing ? Icons.pause : Icons.play
-                    font.family: Theme.fontFamilyIcons
-                    font.pixelSize: compact ? 20 : 24
-                    color: playArea.containsMouse ? Theme.primary : Theme.textColor
-
-                    Behavior on color {
-                        ColorAnimation {
-                            duration: 100
-                        }
-                    }
-
-                    MouseArea {
-                        id: playArea
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.player?.togglePlaying()
-                    }
+                    font.pixelSize: 24
+                    idleColor: Theme.textColor
+                    onClicked: root.player?.togglePlaying()
                 }
 
-                // Next
-                Text {
+                ControlButton {
                     text: Icons.skipNext
-                    font.family: Theme.fontFamilyIcons
-                    font.pixelSize: compact ? 16 : 20
-                    color: nextArea.containsMouse ? Theme.primary : Theme.textSecondary
+                    font.pixelSize: 20
+                    idleColor: Theme.textSecondary
                     opacity: root.player?.canGoNext ? 1 : 0.3
-
-                    Behavior on color {
-                        ColorAnimation {
-                            duration: 100
-                        }
-                    }
-
-                    MouseArea {
-                        id: nextArea
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.player?.next()
-                    }
+                    onClicked: root.player?.next()
                 }
 
                 Item {
@@ -187,7 +168,7 @@ Rectangle {
 
                 // Time display
                 Text {
-                    text: formatTime(root.player?.position) + " / " + formatTime(MprisController.stableTrackLength)
+                    text: root.timeText
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSizeTiny
                     color: Theme.textSecondary
@@ -198,7 +179,7 @@ Rectangle {
             // Time display (when showing visualizer instead of controls)
             Text {
                 visible: root.showVisualizer && !root.showControls
-                text: formatTime(root.player?.position) + " / " + formatTime(MprisController.stableTrackLength)
+                text: root.timeText
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSizeTiny
                 color: Theme.textSecondary
