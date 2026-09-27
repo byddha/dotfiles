@@ -9,6 +9,8 @@ Rectangle {
 
     required property string deviceName
     required property bool isSelected
+    property color foreground: isSelected ? Theme.primary : Theme.textColor
+
     signal clicked
 
     implicitHeight: 32
@@ -27,6 +29,12 @@ Rectangle {
         }
     }
 
+    Behavior on foreground {
+        ColorAnimation {
+            duration: 150
+        }
+    }
+
     RowLayout {
         anchors.fill: parent
         anchors.leftMargin: Theme.spacingBase
@@ -38,15 +46,9 @@ Rectangle {
             text: Icons.device
             font.family: Theme.fontFamilyIcons
             font.pixelSize: Theme.fontSizeBase + 2
-            color: root.isSelected ? Theme.primary : Theme.textColor
+            color: root.foreground
 
             Layout.alignment: Qt.AlignVCenter
-
-            Behavior on color {
-                ColorAnimation {
-                    duration: 150
-                }
-            }
         }
 
         // Device name
@@ -54,14 +56,8 @@ Rectangle {
             Layout.fillWidth: true
             text: root.deviceName
             font.pixelSize: Theme.fontSizeBase
-            color: root.isSelected ? Theme.primary : Theme.textColor
+            color: root.foreground
             elide: Text.ElideRight
-
-            Behavior on color {
-                ColorAnimation {
-                    duration: 150
-                }
-            }
         }
 
         // Checkmark (only visible when selected)
