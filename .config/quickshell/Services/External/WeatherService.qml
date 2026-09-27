@@ -17,8 +17,8 @@ import ".."
 Singleton {
     id: root
 
+    // Called by shell.qml to instantiate the singleton eagerly.
     function init() {
-        Logger.info("Service initialized");
     }
 
     // Cache directory and file
@@ -44,7 +44,6 @@ Singleton {
         printErrors: false
 
         onLoaded: {
-            Logger.info("Loaded cached data");
             updateWeather();
         }
 
@@ -110,63 +109,37 @@ Singleton {
         }
     }
 
-    /**
-     * Get weather icon from WMO weather code
-     * Returns Nerd Font icon - use with Theme.fontFamilyIcons
-     */
-    function weatherSymbolFromCode(code) {
-        if (code === 0)
-            return Icons.weatherSunny;           // Clear sky
-        if (code === 1 || code === 2)
-            return Icons.weatherPartlyCloudy;    // Partly cloudy
-        if (code === 3)
-            return Icons.weatherCloudy;          // Overcast
-        if (code >= 45 && code <= 48)
-            return Icons.weatherFog;             // Fog
-        if (code >= 51 && code <= 67)
-            return Icons.weatherRainy;           // Drizzle/Rain
-        if (code >= 71 && code <= 77)
-            return Icons.weatherSnowy;           // Snow
-        if (code >= 80 && code <= 82)
-            return Icons.weatherRainy;           // Rain showers
-        if (code >= 85 && code <= 86)
-            return Icons.weatherSnowy;           // Snow showers
-        if (code >= 95 && code <= 99)
-            return Icons.weatherThunderstorm;    // Thunderstorm
-        return Icons.weatherCloudy;              // Default
+    // WMO weather code -> [icon, description]
+    readonly property var wmoCodes: {
+        const table = {};
+        const add = (from, to, icon, description) => {
+            for (let code = from; code <= to; code++)
+                table[code] = [icon, description];
+        };
+        add(0, 0, Icons.weatherSunny, "Clear sky");
+        add(1, 1, Icons.weatherPartlyCloudy, "Mainly clear");
+        add(2, 2, Icons.weatherPartlyCloudy, "Partly cloudy");
+        add(3, 3, Icons.weatherCloudy, "Overcast");
+        add(45, 45, Icons.weatherFog, "Fog");
+        add(48, 48, Icons.weatherFog, "Fog");
+        add(51, 55, Icons.weatherRainy, "Drizzle");
+        add(56, 57, Icons.weatherRainy, "Freezing drizzle");
+        add(61, 65, Icons.weatherRainy, "Rain");
+        add(66, 67, Icons.weatherRainy, "Freezing rain");
+        add(71, 77, Icons.weatherSnowy, "Snow");
+        add(80, 82, Icons.weatherRainy, "Rain showers");
+        add(85, 86, Icons.weatherSnowy, "Snow showers");
+        add(95, 99, Icons.weatherThunderstorm, "Thunderstorm");
+        return table;
     }
 
-    /**
-     * Get weather description from WMO weather code
-     */
+    // Returns a Nerd Font icon - use with Theme.fontFamilyIcons
+    function weatherSymbolFromCode(code) {
+        return wmoCodes[code]?.[0] ?? Icons.weatherCloudy;
+    }
+
     function weatherDescriptionFromCode(code) {
-        if (code === 0)
-            return "Clear sky";
-        if (code === 1)
-            return "Mainly clear";
-        if (code === 2)
-            return "Partly cloudy";
-        if (code === 3)
-            return "Overcast";
-        if (code === 45 || code === 48)
-            return "Fog";
-        if (code >= 51 && code <= 55)
-            return "Drizzle";
-        if (code >= 56 && code <= 57)
-            return "Freezing drizzle";
-        if (code >= 61 && code <= 65)
-            return "Rain";
-        if (code >= 66 && code <= 67)
-            return "Freezing rain";
-        if (code >= 71 && code <= 77)
-            return "Snow";
-        if (code >= 80 && code <= 82)
-            return "Rain showers";
-        if (code >= 85 && code <= 86)
-            return "Snow showers";
-        if (code >= 95 && code <= 99)
-            return "Thunderstorm";
-        return "Unknown";
+        return wmoCodes[code]?.[1] ?? "Unknown";
     }
 
     // ========================================================================
@@ -179,15 +152,9 @@ Singleton {
         const currentLocation = Config.options.calendar?.weather?.location ?? "London";
         const locationChanged = adapter.name !== currentLocation;
 
-        if (locationChanged) {
-            Logger.info("Location changed to: " + currentLocation);
-        }
-
         // Need geocoding?
         if (adapter.latitude === "" || adapter.longitude === "" || locationChanged) {
             geocodeLocation(currentLocation, function (lat, lon, name, country) {
-                Logger.info("Geocoded " + currentLocation + " to: " + lat + ", " + lon);
-
                 adapter.name = currentLocation;
                 adapter.latitude = lat.toString();
                 adapter.longitude = lon.toString();
@@ -200,8 +167,6 @@ Singleton {
     }
 
     function geocodeLocation(locationName, callback, errorCallback) {
-        Logger.info("Geocoding: " + locationName);
-
         const url = "https://geocoding-api.open-meteo.com/v1/search?name=" + encodeURIComponent(locationName) + "&count=1&language=en&format=json";
 
         const xhr = new XMLHttpRequest();
@@ -229,8 +194,6 @@ Singleton {
     }
 
     function fetchWeather(latitude, longitude) {
-        Logger.info("Fetching weather for: " + latitude + ", " + longitude);
-
         const url = "https://api.open-meteo.com/v1/forecast?" + "latitude=" + latitude + "&longitude=" + longitude + "&current=temperature_2m,apparent_temperature,relative_humidity_2m,precipitation,weather_code,wind_speed_10m" + "&hourly=temperature_2m,weather_code,precipitation_probability" + "&daily=temperature_2m_max,temperature_2m_min,weather_code" + "&timezone=auto";
 
         const xhr = new XMLHttpRequest();
@@ -248,7 +211,6 @@ Singleton {
                         adapter.longitude = weatherData.longitude.toString();
 
                         isFetchingWeather = false;
-                        Logger.info("Weather data updated successfully");
                     } catch (e) {
                         errorCallback("WeatherService", "Failed to parse weather response: " + e);
                     }
