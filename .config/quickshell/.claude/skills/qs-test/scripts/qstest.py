@@ -123,7 +123,15 @@ PORT = int(os.environ.get("QS_DEBUG_PORT", "47777"))
 # Runs inside the shell (QML debugger EVAL_EXPRESSION) with a window as scope: walks its items and returns
 # the on-screen ones whose text / label / title / tab name matches. Items scrolled out of a clipping
 # ancestor, hidden or zero-sized do not count. Coordinates: global logical, the space of hyprctl cursorpos.
+# QML type of an item from its string form: "VolumeMixerGroupEntry_QMLTYPE_12(0x...)" -> VolumeMixerGroupEntry
+TYPE_FN = r"""function __typeOf(it) {
+  return String(it).split("(")[0].replace(/(_QML(TYPE)?_[0-9]+)+$/, "");
+}"""
+
+# Walks the window's visual tree (Repeater / Loader items included, unlike the debugger's QObject tree).
+# Matches text / label / title / placeholderText / tab name, or the QML type for "type:Name".
 TEXT_WALK = r"""(function (query) {
+  const typeWanted = query.startsWith("type:") ? query.slice(5) : null;
   const needle = query.startsWith("~") ? query.slice(1).toLowerCase() : null;
   const match = n => needle !== null ? n.toLowerCase().includes(needle) : n === query;
   const out = [];
@@ -139,7 +147,7 @@ TEXT_WALK = r"""(function (query) {
   }
   function walk(it) {
     if (!it || !it.visible) return;
-    if (names(it).some(match)) out.push(it);
+    if (typeWanted !== null ? __typeOf(it) === typeWanted : names(it).some(match)) out.push(it);
     for (const c of it.children) walk(c);
   }
   walk(contentItem);
@@ -219,7 +227,7 @@ def evaluate(pos):
     if len(pos) > 1:
         sel, screen = split_screen(pos[0])
         if sel.startswith("type:"):
-            cands = [o["debugId"] for o in objs if o["type"] == sel[5:]]
+            return eval_on_type(dbg, objs, sel[5:], screen, pos[-1])
         else:
             sel = sel[1:] if sel.startswith("#") else sel
             cands = [o["debugId"] for o in objs if o["id"] == sel]
@@ -231,6 +239,36 @@ def evaluate(pos):
             cands = [c for c in cands if dbg.eval(c, "visible") is True] or cands
         scope = cands[0]
     return dbg.eval(scope, pos[-1])
+
+
+FIRST_OF_TYPE = r"""(function (typeName) {
+  %s
+  %s
+  function walk(it) {
+    if (!it || !it.visible) return null;
+    if (__typeOf(it) === typeName && __geo(it)) return it;
+    for (const c of it.children) { const r = walk(c); if (r) return r; }
+    return null;
+  }
+  const it = walk(contentItem);
+  if (!it) return "__none__";
+  with (it) { return (%s); }
+})(%s)"""
+
+
+def eval_on_type(dbg, objs, type_name, screen, expr):
+    """EXPR with the first on-screen item of that QML type as scope (walks the visual tree of the windows)."""
+    for w in objs:
+        if not (w["type"] in ("PanelWindow", "Popout", "FloatingWindow", "PopupWindow") or w["type"].endswith("Window")):
+            continue
+        if dbg.eval(w["debugId"], "visible") is not True:
+            continue
+        if screen and dbg.eval(w["debugId"], SCREEN_OF) != screen:
+            continue
+        value = dbg.eval(w["debugId"], FIRST_OF_TYPE % (GEO_FN, TYPE_FN, expr, json.dumps(type_name)))
+        if value != "__none__":
+            return value
+    die(f"no type:{type_name} on screen" + (f" on {screen}" if screen else ""))
 
 
 def monitors():
@@ -272,11 +310,13 @@ def find(selector):
 def find_all(selector):
     dbg = debugger()
     _, objs = objects(dbg)
-    if selector.startswith("#") or selector.startswith("type:"):
-        key, want = ("id", selector[1:]) if selector.startswith("#") else ("type", selector[5:])
+    if selector.startswith("#"):
+        # QML ids only exist in the debugger's object tree (items made by a Repeater are not in it:
+        # reach those by type or text)
+        want = selector[1:]
         hits = []
         for o in objs:
-            if o[key] == want:
+            if o["id"] == want:
                 g = evljson_scope(dbg, o["debugId"])
                 if g:
                     hits.append(g)
@@ -285,7 +325,7 @@ def find_all(selector):
     for w in objs:
         if w["type"] in ("PanelWindow", "Popout", "FloatingWindow", "PopupWindow") or w["type"].endswith("Window"):
             if dbg.eval(w["debugId"], "visible") is True:
-                expr = "(function(){" + GEO_FN + "; return " + TEXT_WALK % json.dumps(selector) + ";})()"
+                expr = "(function(){" + GEO_FN + ";" + TYPE_FN + "; return " + TEXT_WALK % json.dumps(selector) + ";})()"
                 raw = dbg.eval(w["debugId"], expr)
                 if isinstance(raw, str) and raw.startswith("["):
                     hits.extend(json.loads(raw))

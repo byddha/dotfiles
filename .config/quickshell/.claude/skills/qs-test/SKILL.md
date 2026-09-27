@@ -45,8 +45,10 @@ the previous one.
 
 ## Selectors
 
-- `#fortiRow` - QML `id` (best: stable, unique; read the QML file to find ids)
-- `type:ToggleTile` - every item of that QML type (inline components use their own name, e.g. `type:Tile`)
+- `#fortiRow` - QML `id` (stable, unique; read the QML file to find ids). Ids come from the debugger's
+  object tree, which does not hold items made by a `Repeater` / list delegate: reach those by type or text.
+- `type:ToggleTile` - every on-screen item of that QML type, found in the visual tree, so list rows work too
+  (inline components use their own name, e.g. `type:Tile`). `eval 'type:X' EXPR` runs on the first one.
 - `Bluetooth` - text / `label` / `title` / `placeholderText` / tab name, exact; `~blue` = contains
 - An optional index picks the Nth match: `click Bluetooth 1`
 - `@SCREEN` limits a selector to one monitor: `click VPN@HDMI-A-1`, `eval '#sidebarWindow@HDMI-A-1' 'visible'`.
