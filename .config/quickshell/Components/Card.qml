@@ -4,12 +4,8 @@ import "../Config"
 Rectangle {
     id: root
 
-    // Allow content to be added
     default property alias contentData: contentItem.data
-    property alias contentItem: contentItem
 
-    // Styling properties
-    property int padding: Theme.spacingBase
     property bool collapsible: false
     property bool collapsed: false
     property string title: ""
@@ -17,13 +13,13 @@ Rectangle {
     color: Theme.colLayer1
     radius: Theme.radiusBase
 
-    implicitHeight: contentColumn.implicitHeight + (padding * 2)
-    implicitWidth: contentColumn.implicitWidth + (padding * 2)
+    implicitHeight: contentColumn.implicitHeight + Theme.spacingBase * 2
+    implicitWidth: contentColumn.implicitWidth + Theme.spacingBase * 2
 
     Column {
         id: contentColumn
         anchors.fill: parent
-        anchors.margins: root.padding
+        anchors.margins: Theme.spacingBase
         spacing: Theme.spacingBase
 
         // Optional title header
@@ -58,14 +54,6 @@ Rectangle {
                     anchors.margins: -4
                     cursorShape: Qt.PointingHandCursor
                     onClicked: root.collapsed = !root.collapsed
-                }
-
-                Behavior on rotation {
-                    NumberAnimation {
-                        duration: Theme.animation.elementMoveFast.duration
-                        easing.type: Theme.animation.elementMoveFast.type
-                        easing.bezierCurve: Theme.animation.elementMoveFast.bezierCurve
-                    }
                 }
             }
         }
