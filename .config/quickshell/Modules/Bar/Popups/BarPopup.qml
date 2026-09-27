@@ -51,30 +51,6 @@ PanelWindow {
             panelClosed();
         } else {
             Qt.callLater(updatePosition);
-            openAnim.restart();
-        }
-    }
-
-    // DankMaterialShell popout defaults: 150 ms, scale from 0.96, emphasized-decelerate curve.
-    ParallelAnimation {
-        id: openAnim
-        NumberAnimation {
-            target: panel
-            property: "opacity"
-            from: 0
-            to: 1
-            duration: 150
-            easing.type: Easing.BezierSpline
-            easing.bezierCurve: [0.05, 0.7, 0.1, 1, 1, 1]
-        }
-        NumberAnimation {
-            target: panel
-            property: "scale"
-            from: 0.96
-            to: 1
-            duration: 150
-            easing.type: Easing.BezierSpline
-            easing.bezierCurve: [0.05, 0.7, 0.1, 1, 1, 1]
         }
     }
 
@@ -124,8 +100,8 @@ PanelWindow {
 
     // Swallows clicks on the panel so they don't reach the close-on-click area.
     MouseArea {
-        x: panel.x
-        y: panel.y
+        x: root.popupX
+        y: root.popupY
         width: panel.width
         height: panel.height
         acceptedButtons: Qt.AllButtons
@@ -143,8 +119,6 @@ PanelWindow {
         y: panel.y
         width: panel.width
         height: panel.height
-        opacity: panel.opacity
-        scale: panel.scale
         radius: Theme.radiusWindow
         blur: 8
         offset: Qt.vector2d(0, 4)
