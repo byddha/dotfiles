@@ -8,8 +8,6 @@ import "../../../Services"
 BarPopup {
     id: powerPopup
 
-    offsetY: anchorItem ? anchorItem.height + 4 : 0
-
     WlrLayershell.namespace: "bidshell:power-popup"
 
     Rectangle {
