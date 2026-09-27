@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Drive the live quickshell like a user, for tests.
 
-  qstest.py start                       notify the user, wait 1 s, arm the mouse guard
+  qstest.py start                       play the "testing" sound, restart qs with the debug port, arm the guard
   qstest.py click NAME [N] [--right]    glide to the Nth item called NAME (see `debug locate`) and click
   qstest.py hover NAME [N]              glide there, no click
   qstest.py move X Y [--click]          glide to global logical X Y
@@ -41,6 +41,7 @@ STATE = os.path.join(RUNTIME, "state.json")
 SHOTS = os.path.join(RUNTIME, "shots")
 # Without `end` (crash, interrupted session) the debug port would stay open: restart qs normally after this
 WATCHDOG_SECONDS = 1800
+SOUND = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "assets", "testing.mp3")
 
 GAIN, MAX_STEP, MIN_STEP, STEP_DELAY = 0.18, 50, 2, 0.016
 # Linux input event codes (linux/input-event-codes.h) for `bind`
@@ -369,8 +370,10 @@ def main():
     idx = int(pos[1]) if len(pos) > 1 and pos[1].isdigit() else 0
 
     if cmd == "start":
-        run("notify-send", "-t", "2500", "-a", "Claude", "Test starts", "Don't touch the mouse")
-        time.sleep(1)
+        # Tell the user to let go of the mouse: play the sound to the end (it is the warning time)
+        if subprocess.run(["pw-play", SOUND], capture_output=True).returncode != 0:
+            run("notify-send", "-t", "2500", "-a", "Claude", "Test starts", "Don't touch the mouse")
+            time.sleep(1)
         if f":{PORT} " not in run("ss", "-ltn"):
             restart_qs(["--debug", str(PORT)])
         # Startup keeps logging for a moment (async services): wait until the log is quiet for 1 s

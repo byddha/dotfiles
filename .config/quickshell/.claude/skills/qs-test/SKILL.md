@@ -24,14 +24,15 @@ for Qt's QML debug protocol; you do not call it directly.
   `ydotool` for Hyprland keybinds (wtype cannot trigger compositor binds).
 - A guard stops any move if the cursor is not where the last move left it: the user took the mouse.
   Stop, tell the user, and wait for them before `start` again.
-- `start` sends the user a notification ("Test starts - don't touch the mouse") and waits 1 s.
+- `start` plays `assets/testing.mp3` (the user's chosen sound) to the end before anything moves, so the
+  user knows to let go of the mouse (falls back to a notification if it cannot play).
 
 ## Session
 
 ```bash
 # a function, not Q="python3 ...": zsh does not word-split variables
 Q() { python3 /home/bida/dotfiles/.config/quickshell/.claude/skills/qs-test/scripts/qstest.py "$@"; }
-Q start                        # notify, restart qs with the debug port, arm guard + watchdog
+Q start                        # sound, restart qs with the debug port, arm guard + watchdog
 Q test "sidebar vpn row"       # one test = one behaviour; marks the log
 ...steps...
 Q done                         # all log lines this test made
