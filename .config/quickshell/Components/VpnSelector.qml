@@ -11,17 +11,20 @@ Rectangle {
     property bool expanded: false
     property bool showFortiPassword: false
 
-    visible: expanded
-    implicitHeight: expanded ? content.implicitHeight + Theme.spacingBase * 2 : 0
-    color: Theme.colLayer1
-    radius: Theme.radiusBase
+    // Animate how open the selector is, not its height: content size changes then apply at once.
+    property real openFraction: expanded ? 1 : 0
 
-    Behavior on implicitHeight {
+    Behavior on openFraction {
         NumberAnimation {
             duration: 150
             easing.type: Easing.OutQuad
         }
     }
+
+    visible: openFraction > 0
+    implicitHeight: openFraction * (content.implicitHeight + Theme.spacingBase * 2)
+    color: Theme.colLayer1
+    radius: Theme.radiusBase
 
     clip: true
 

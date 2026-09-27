@@ -7,6 +7,18 @@ RowLayout {
     id: root
 
     property real value: 0.5
+    // Animated copy of the slider position. Animating the position (not the fill width) keeps value
+    // changes smooth while layout changes (first build, resize) apply at once.
+    property real displayPosition: slider.visualPosition
+
+    Behavior on displayPosition {
+        enabled: !slider.pressed
+        NumberAnimation {
+            duration: Theme.animation.elementMoveFast.duration
+            easing.type: Theme.animation.elementMoveFast.type
+            easing.bezierCurve: Theme.animation.elementMoveFast.bezierCurve
+        }
+    }
     property alias from: slider.from
     property alias to: slider.to
     property alias stepSize: slider.stepSize
@@ -90,18 +102,10 @@ RowLayout {
 
                 // Normal range (0-100%)
                 Rectangle {
-                    width: Math.min(slider.visualPosition, (1.0 / slider.to)) * parent.width
+                    width: Math.min(root.displayPosition, (1.0 / slider.to)) * parent.width
                     height: parent.height
                     color: root.isMuted ? Theme.textSecondary : Theme.primary
                     radius: 2
-
-                    Behavior on width {
-                        NumberAnimation {
-                            duration: Theme.animation.elementMoveFast.duration
-                            easing.type: Theme.animation.elementMoveFast.type
-                            easing.bezierCurve: Theme.animation.elementMoveFast.bezierCurve
-                        }
-                    }
 
                     Behavior on color {
                         ColorAnimation {
@@ -113,19 +117,11 @@ RowLayout {
                 // Boosted range (above 100%)
                 Rectangle {
                     x: (1.0 / slider.to) * parent.width
-                    width: Math.max(0, (slider.visualPosition - (1.0 / slider.to))) * parent.width
+                    width: Math.max(0, (root.displayPosition - (1.0 / slider.to))) * parent.width
                     height: parent.height
                     color: root.isMuted ? Theme.textSecondary : Theme.accentOrange
                     radius: 2
                     visible: slider.value > 1.0
-
-                    Behavior on width {
-                        NumberAnimation {
-                            duration: Theme.animation.elementMoveFast.duration
-                            easing.type: Theme.animation.elementMoveFast.type
-                            easing.bezierCurve: Theme.animation.elementMoveFast.bezierCurve
-                        }
-                    }
 
                     Behavior on color {
                         ColorAnimation {
@@ -136,7 +132,7 @@ RowLayout {
             }
 
             handle: Rectangle {
-                x: slider.leftPadding + slider.visualPosition * (slider.availableWidth - width)
+                x: slider.leftPadding + root.displayPosition * (slider.availableWidth - width)
                 y: slider.topPadding + slider.availableHeight / 2 - height / 2
                 implicitWidth: 16
                 implicitHeight: 16

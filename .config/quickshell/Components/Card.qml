@@ -13,7 +13,21 @@ Rectangle {
     color: Theme.colLayer1
     radius: Theme.radiusBase
 
-    implicitHeight: contentColumn.implicitHeight + Theme.spacingBase * 2
+    // Animate how open the card is, not its height: content size changes then apply at once.
+    readonly property real headerHeight: title !== "" ? titleText.height : 0
+    property real openFraction: collapsed ? 0 : 1
+
+    Behavior on openFraction {
+        enabled: root.collapsible
+        NumberAnimation {
+            duration: Theme.animation.elementMoveFast.duration
+            easing.type: Theme.animation.elementMoveFast.type
+            easing.bezierCurve: Theme.animation.elementMoveFast.bezierCurve
+        }
+    }
+
+    implicitHeight: Theme.spacingBase * 2 + headerHeight + openFraction * ((headerHeight > 0 ? Theme.spacingBase : 0) + contentItem.implicitHeight)
+    clip: true
     implicitWidth: contentColumn.implicitWidth + Theme.spacingBase * 2
 
     Column {
@@ -63,26 +77,8 @@ Rectangle {
             id: contentItem
             width: parent.width
             implicitHeight: childrenRect.height
-            visible: !root.collapsed
+            visible: root.openFraction > 0
             clip: true
-
-            Behavior on implicitHeight {
-                NumberAnimation {
-                    duration: Theme.animation.elementMoveFast.duration
-                    easing.type: Theme.animation.elementMoveFast.type
-                    easing.bezierCurve: Theme.animation.elementMoveFast.bezierCurve
-                }
-            }
-        }
-    }
-
-    // Animated height for collapse
-    Behavior on implicitHeight {
-        enabled: root.collapsible
-        NumberAnimation {
-            duration: Theme.animation.elementMoveFast.duration
-            easing.type: Theme.animation.elementMoveFast.type
-            easing.bezierCurve: Theme.animation.elementMoveFast.bezierCurve
         }
     }
 }

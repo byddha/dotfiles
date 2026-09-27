@@ -21,7 +21,17 @@ Rectangle {
 
     signal actionClicked
 
-    implicitHeight: mainRow.implicitHeight + Theme.spacingBase * 2 + (expanded ? actionRowHeight + Theme.spacingBase + (extraContentVisible ? extraLoader.implicitHeight + Theme.spacingBase : 0) : 0)
+    // Animate how open the row is, not its height: content size changes then apply at once.
+    property real openFraction: expanded ? 1 : 0
+
+    Behavior on openFraction {
+        NumberAnimation {
+            duration: 150
+            easing.type: Easing.OutQuad
+        }
+    }
+
+    implicitHeight: mainRow.implicitHeight + Theme.spacingBase * 2 + openFraction * (actionRowHeight + Theme.spacingBase + (extraContentVisible ? extraLoader.implicitHeight + Theme.spacingBase : 0))
     radius: Theme.radiusBase
     clip: true
     color: {
@@ -35,13 +45,6 @@ Rectangle {
     Behavior on color {
         ColorAnimation {
             duration: 150
-        }
-    }
-
-    Behavior on implicitHeight {
-        NumberAnimation {
-            duration: 150
-            easing.type: Easing.OutQuad
         }
     }
 
