@@ -112,13 +112,16 @@ PanelWindow {
     // an enter event when a sibling MouseArea just becomes visible, so hover
     // starts out false until the user wiggles the mouse).
     property bool cursorOnThisMonitor: false
+    // False (then undefined) once destroyed: `root` itself stays truthy in a late callback, its functions do not
+    property bool alive: true
+    Component.onDestruction: alive = false
 
     function _probeCursorMonitor() {
         if (!root.visible || !root.preparationDone)
             return;
         Compositor.getCursorPosition((globalX, globalY) => {
             // The reply is async; the window may be gone by then.
-            if (!root)
+            if (!root?.alive)
                 return;
             const localX = globalX - root.monitorOffsetX;
             const localY = globalY - root.monitorOffsetY;
@@ -166,10 +169,15 @@ PanelWindow {
         property real grabH: 1
         property real grabScale: 1
 
+        // grabToImage() renders the item at the window's device pixel ratio (the monitor scale), so the item
+        // gets the logical size of the rounded native size: the image comes out exactly nativeW x nativeH.
+        // (A native item size would be scaled twice; a fractional logical size would be truncated.)
+        readonly property int nativeW: Math.max(1, Math.round(grabW * grabScale))
+        readonly property int nativeH: Math.max(1, Math.round(grabH * grabScale))
         sourceRect: Qt.rect(grabX, grabY, grabW, grabH)
-        width: Math.max(1, Math.round(grabW * grabScale))
-        height: Math.max(1, Math.round(grabH * grabScale))
-        textureSize: Qt.size(width, height)
+        width: nativeW / grabScale
+        height: nativeH / grabScale
+        textureSize: Qt.size(nativeW, nativeH)
     }
 
     // Grab the given logical-coord region to `screenshotPath` at native
@@ -190,8 +198,6 @@ PanelWindow {
         regionCrop.grabW = rw;
         regionCrop.grabH = rh;
         regionCrop.scheduleUpdate();
-        const nativeW = regionCrop.width;
-        const nativeH = regionCrop.height;
         // One tick so ShaderEffectSource re-captures with the new sourceRect
         Qt.callLater(() => {
             const ok = regionCrop.grabToImage(result => {
@@ -207,7 +213,7 @@ PanelWindow {
                     return;
                 }
                 onDone(true);
-            }, Qt.size(nativeW, nativeH));
+            });
             if (!ok) {
                 Logger.error("RegionSelector: region grabToImage returned false");
                 onDone(false);
