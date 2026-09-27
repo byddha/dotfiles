@@ -11,7 +11,7 @@ Item {
     property real stableLength: 0
     readonly property bool canSeek: (activePlayer?.canSeek ?? false) && stableLength > 0
 
-    readonly property real playerValue: stableLength > 0 ? clampRatio((activePlayer.position || 0) / stableLength) : 0
+    readonly property real playerValue: activePlayer && stableLength > 0 ? clampRatio((activePlayer.position || 0) / stableLength) : 0
     // While dragging, and until the player reports the new position, show the target instead.
     property real previewRatio: -1
     property real value: previewRatio >= 0 ? previewRatio : playerValue
