@@ -3,14 +3,12 @@ import QtQuick.Layouts
 import "../../Config"
 import "../../Components"
 import "../../Services"
-import "../../Utils"
 
 Card {
     id: root
 
     title: "Quick Controls"
     collapsible: true
-    collapsed: false
 
     Column {
         width: parent.width
@@ -39,10 +37,6 @@ Card {
                 onRightClicked: {
                     Audio.toggleMute();
                 }
-
-                Component.onCompleted: {
-                    Logger.info("Volume slider loaded");
-                }
             }
         }
 
@@ -58,10 +52,6 @@ Card {
 
                 onMoved: newValue => {
                     Brightness.setBrightness(newValue);
-                }
-
-                Component.onCompleted: {
-                    Logger.info("Brightness slider loaded");
                 }
             }
         }
@@ -90,27 +80,14 @@ Card {
                 onRightClicked: {
                     Audio.toggleMicMute();
                 }
-
-                Component.onCompleted: {
-                    Logger.info("Microphone slider loaded");
-                }
             }
         }
 
         // Keyboard Brightness Slider
         Loader {
-            id: kbdLoader
             width: parent.width
-            active: (Config.options.sidebar.sliders.showKeyboardBrightness ?? true) && KeyboardBrightness.available
+            active: Config.options.sidebar.sliders.showKeyboardBrightness && KeyboardBrightness.available
             visible: active
-
-            onActiveChanged: {
-                Logger.info("Kbd slider active:", active, "config:", Config.options.sidebar.sliders.showKeyboardBrightness, "available:", KeyboardBrightness.available);
-            }
-
-            Component.onCompleted: {
-                Logger.info("Kbd Loader created, active:", active);
-            }
 
             sourceComponent: Slider {
                 icon: Icons.keyboard
@@ -131,15 +108,7 @@ Card {
                 onRightClicked: {
                     KeyboardBrightness.cycle();
                 }
-
-                Component.onCompleted: {
-                    Logger.info("Keyboard brightness slider loaded");
-                }
             }
         }
-    }
-
-    Component.onCompleted: {
-        Logger.info("Panel loaded");
     }
 }
