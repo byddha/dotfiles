@@ -46,47 +46,10 @@ Singleton {
         if (!available)
             return Icons.batteryAlert;
 
-        if (charging) {
-            if (percentage >= 95)
-                return Icons.batteryCharging100;
-            if (percentage >= 85)
-                return Icons.batteryCharging90;
-            if (percentage >= 75)
-                return Icons.batteryCharging80;
-            if (percentage >= 65)
-                return Icons.batteryCharging70;
-            if (percentage >= 55)
-                return Icons.batteryCharging60;
-            if (percentage >= 45)
-                return Icons.batteryCharging50;
-            if (percentage >= 35)
-                return Icons.batteryCharging40;
-            if (percentage >= 25)
-                return Icons.batteryCharging30;
-            if (percentage >= 15)
-                return Icons.batteryCharging20;
-            return Icons.batteryCharging10;
-        } else {
-            if (percentage >= 95)
-                return Icons.battery100;
-            if (percentage >= 85)
-                return Icons.battery90;
-            if (percentage >= 75)
-                return Icons.battery80;
-            if (percentage >= 65)
-                return Icons.battery70;
-            if (percentage >= 55)
-                return Icons.battery60;
-            if (percentage >= 45)
-                return Icons.battery50;
-            if (percentage >= 35)
-                return Icons.battery40;
-            if (percentage >= 25)
-                return Icons.battery30;
-            if (percentage >= 15)
-                return Icons.battery20;
-            return Icons.battery10;
-        }
+        // 10% steps, rounded to the nearest step: 95+ is full, below 15 is the lowest glyph
+        const step = Math.min(10, Math.max(1, Math.floor((percentage + 5) / 10)));
+        const icons = charging ? [Icons.batteryCharging10, Icons.batteryCharging20, Icons.batteryCharging30, Icons.batteryCharging40, Icons.batteryCharging50, Icons.batteryCharging60, Icons.batteryCharging70, Icons.batteryCharging80, Icons.batteryCharging90, Icons.batteryCharging100] : [Icons.battery10, Icons.battery20, Icons.battery30, Icons.battery40, Icons.battery50, Icons.battery60, Icons.battery70, Icons.battery80, Icons.battery90, Icons.battery100];
+        return icons[step - 1];
     }
 
     // Format time as "Xh Ym"
@@ -149,9 +112,5 @@ Singleton {
         } else if (!isCritical) {
             _notifiedCritical = false;
         }
-    }
-
-    Component.onCompleted: {
-        Logger.info(available ? `Service initialized: ${percentage}%` : "No battery detected");
     }
 }
