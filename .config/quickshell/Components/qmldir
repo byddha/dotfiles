@@ -16,3 +16,14 @@ VpnSelector 1.0 VpnSelector.qml
 FocusGrab 1.0 FocusGrab.qml
 EmptyState 1.0 EmptyState.qml
 ExpandableListItem 1.0 ExpandableListItem.qml
+StateLayer 1.0 StateLayer.qml
+IconButton 1.0 IconButton.qml
+TextButton 1.0 TextButton.qml
+FilledButton 1.0 FilledButton.qml
+InputField 1.0 InputField.qml
+SectionHeader 1.0 SectionHeader.qml
+ListFooter 1.0 ListFooter.qml
+ListRow 1.0 ListRow.qml
+ScrollList 1.0 ScrollList.qml
+ToggleTile 1.0 ToggleTile.qml
+Popout 1.0 Popout.qml

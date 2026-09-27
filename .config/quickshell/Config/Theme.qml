@@ -22,6 +22,7 @@ Singleton {
     property color colLayer0: ThemeService.background            // Default background
     property color colLayer1: ThemeService.surfaceContainer      // Lighter background (surfaces)
     property color colLayer2: ThemeService.surfaceContainerHigh  // Selection/hover background
+    property color colLayer3: ThemeService.surfaceContainerHighest
 
     // Foreground colors
     property color textColor: ThemeService.surfaceText             // Default text
@@ -35,6 +36,7 @@ Singleton {
     property color secondaryContainer: ThemeService.secondaryContainer
     property color onSecondaryContainer: ThemeService.secondaryContainerText
     property color accentRed: ThemeService.error                 // Red accent (warnings/danger)
+    property color accentRedText: ThemeService.errorText
     property color accentOrange: ThemeService.base09             // Orange accent (no material role for it)
 
     // Surface and border colors
@@ -42,6 +44,14 @@ Singleton {
     property color colLayer0Border: ColorUtils.mix(ThemeService.surfaceContainerHigh, ThemeService.background, 0.4)
     // DankMaterialShell's popup border: outline at 35% (BlurService.borderColor)
     property color popupBorder: alpha(ThemeService.outline, 0.35)
+    property color outline: ThemeService.outline
+    property color outlineVariant: ThemeService.outlineVariant
+
+    // State layer opacities: one overlay rule for every interactive element
+    readonly property real stateHover: 0.08
+    readonly property real statePressed: 0.12
+    readonly property real stateSelected: 0.12
+    readonly property real stateDisabled: 0.38
 
     // ========================================================================
     // TYPOGRAPHY
@@ -49,6 +59,8 @@ Singleton {
 
     property string fontFamily: "JetBrainsMono Nerd Font Mono"
     property string fontFamilyIcons: "CaskaydiaCove Nerd Font Mono"
+    // Full-size glyphs: the Mono font shrinks wide glyphs to one cell
+    property string fontFamilyGlyphs: "Symbols Nerd Font"
 
     property int fontSizeTiny: 12
     property int fontSizeSmall: 13

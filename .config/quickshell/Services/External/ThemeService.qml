@@ -29,13 +29,16 @@ Singleton {
     property string background: "#000000"
     property string surfaceContainer: "#1a1a1a"
     property string surfaceContainerHigh: "#333333"
+    property string surfaceContainerHighest: "#3d3d3d"
     property string surfaceText: "#d0d0d0"
     property string surfaceVariantText: "#b3b3b3"
     property string primary: "#5f27cd"
     property string primaryTextColor: "#000000"
     property string secondary: "#ee5a6f"
     property string error: "#ff6b6b"
+    property string errorText: "#000000"
     property string outline: "#8a8a8a"
+    property string outlineVariant: "#444444"
     property string secondaryContainer: "#333333"
     property string secondaryContainerText: "#d0d0d0"
 
@@ -114,13 +117,16 @@ Singleton {
         root.background = c.background;
         root.surfaceContainer = c.surface_container;
         root.surfaceContainerHigh = c.surface_container_high;
+        root.surfaceContainerHighest = c.surface_container_highest;
         root.surfaceText = c.on_surface;
         root.surfaceVariantText = c.on_surface_variant;
         root.primary = c.primary;
         root.primaryTextColor = c.on_primary;
         root.secondary = c.secondary;
         root.error = c.error;
+        root.errorText = c.on_error;
         root.outline = c.outline;
+        root.outlineVariant = c.outline_variant;
         root.secondaryContainer = c.secondary_container;
         root.secondaryContainerText = c.on_secondary_container;
 
