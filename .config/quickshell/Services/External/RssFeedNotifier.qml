@@ -10,7 +10,7 @@ import "../../Utils"
 // RSS/Atom parser (_parseRSS, _extractTag, _extractAttr, _cleanText) adapted from
 // noctalia-plugins (MIT) — https://github.com/noctalia-dev/noctalia-plugins
 // rss-feed/BarWidget.qml. Differences from upstream: parallel per-feed fetches,
-// pluggable format registry, no pluginApi-polling Timer.
+// no pluginApi-polling Timer.
 Singleton {
     id: root
 
@@ -22,24 +22,12 @@ Singleton {
 
     property var _seen: ({})
     property bool _stateLoaded: false
-    property var _parsers: ({})
 
     function init() {
         _state.reload();
         const feeds = Config.options.rssFeedNotifier?.feeds ?? [];
-        if (feeds.length === 0) {
+        if (feeds.length === 0)
             Logger.info(`no feeds configured — add entries to ${Config.configFile} under "rssFeedNotifier.feeds"`);
-        } else {
-            Logger.info(`monitoring ${feeds.length} feed(s)`);
-        }
-    }
-
-    function registerParser(name, fn) {
-        _parsers[name] = fn;
-    }
-
-    Component.onCompleted: {
-        registerParser("rss", _parseRSS);
     }
 
     Instantiator {
@@ -90,13 +78,12 @@ Singleton {
 
     function _parse(feed, text) {
         const fmt = feed.format || "rss";
-        const parser = _parsers[fmt];
-        if (!parser) {
+        if (fmt !== "rss") {
             Logger.warn(`no parser for format '${fmt}' (feed ${feed.name})`);
             return [];
         }
         try {
-            return parser(text, feed);
+            return _parseRSS(text);
         } catch (e) {
             Logger.warn(`parse error in ${feed.name}: ${e}`);
             return [];
@@ -110,7 +97,7 @@ Singleton {
         const firstFetch = root._seen[feed.url] === undefined;
         const seenForUrl = (root._seen[feed.url] || []).slice();
         const seenSet = new Set(seenForUrl);
-        let added = 0, notified = 0;
+        let added = 0;
         for (const it of items) {
             const guid = it.guid || it.link;
             if (!guid || seenSet.has(guid))
@@ -120,7 +107,6 @@ Singleton {
             added++;
             if (!firstFetch && _whitelistMatches(feed.whitelist, it.title)) {
                 _fireNotification(feed, it);
-                notified++;
             }
         }
         if (seenForUrl.length > root._seenCap) {
@@ -129,11 +115,6 @@ Singleton {
         root._seen[feed.url] = seenForUrl;
         if (added > 0)
             _saveSeen();
-        if (firstFetch) {
-            Logger.info(`${feed.name}: first fetch, seeded ${added} item(s) silently`);
-        } else {
-            Logger.info(`${feed.name}: ${items.length} parsed, ${added} new, ${notified} notified`);
-        }
     }
 
     function _whitelistMatches(whitelist, title) {
@@ -154,7 +135,7 @@ Singleton {
         Quickshell.execDetached(args);
     }
 
-    function _parseRSS(xml, feed) {
+    function _parseRSS(xml) {
         const items = [];
         const itemRegex = /<(?:item|entry)[^>]*>([\s\S]*?)<\/(?:item|entry)>/gi;
         let match;
@@ -163,16 +144,10 @@ Singleton {
             const itemXml = match[1];
             const title = _extractTag(itemXml, "title") || "Untitled";
             const link = _extractTag(itemXml, "link") || _extractAttr(itemXml, "link", "href") || "";
-            const description = _extractTag(itemXml, "description") || _extractTag(itemXml, "summary") || _extractTag(itemXml, "content") || "";
-            const pubDate = _extractTag(itemXml, "pubDate") || _extractTag(itemXml, "published") || _extractTag(itemXml, "updated") || new Date().toISOString();
             const guid = _extractTag(itemXml, "guid") || _extractTag(itemXml, "id") || link;
             items.push({
-                "feedName": feed.name,
-                "feedUrl": feed.url,
                 "title": _cleanText(title),
                 "link": link,
-                "description": _cleanText(description).substring(0, 200),
-                "pubDate": pubDate,
                 "guid": guid
             });
             count++;
@@ -228,11 +203,9 @@ Singleton {
                 root._seen = {};
             }
             root._stateLoaded = true;
-            Logger.info(`state loaded (${Object.keys(root._seen).length} feed(s) tracked)`);
         }
         onLoadFailed: err => {
             if (err == FileViewError.FileNotFound) {
-                Logger.info("no state file, creating cache dir and empty state");
                 _ensureCacheDirProc.running = true;
             } else {
                 Logger.error(`state load: ${err}`);
