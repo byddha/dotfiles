@@ -66,7 +66,8 @@ Singleton {
         changePasswordProc.environment = {
             "PASSWORD": password
         };
-        changePasswordProc.command = ["bash", "-c", `nmcli connection modify "${network.ssid}" wifi-sec.psk "$PASSWORD"`];
+        // SSID as a positional arg so quotes in it can't break the script; password via env to keep it out of argv
+        changePasswordProc.command = ["bash", "-c", 'nmcli connection modify "$1" wifi-sec.psk "$PASSWORD"', "bash", network.ssid];
         changePasswordProc.running = true;
     }
 
