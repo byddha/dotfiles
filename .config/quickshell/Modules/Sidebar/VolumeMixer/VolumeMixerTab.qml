@@ -1,74 +1,66 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
 import "../../../Config"
 import "../../../Components"
 import "../../../Services"
 
-ColumnLayout {
+ScrollList {
     id: root
 
-    spacing: Theme.spacingBase
+    property bool shown: false
 
-    // App list
-    ScrollView {
-        Layout.fillWidth: true
-        Layout.fillHeight: true
-        Layout.minimumHeight: 100
+    function deviceIcon(node, isOutput) {
+        if (!isOutput)
+            return Icons.microphone;
+        const name = (node?.name ?? "").toLowerCase();
+        if (name.includes("hdmi") || name.includes("displayport"))
+            return Icons.monitor;
+        if (name.startsWith("bluez"))
+            return Icons.headphones;
+        return Icons.speaker;
+    }
 
-        clip: true
+    SectionHeader {
+        first: true
+        text: "Apps"
+        meta: Audio.groupedOutputAppNodes.length > 0 ? `${Audio.groupedOutputAppNodes.length} playing` : ""
+    }
 
-        ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
-        ScrollBar.vertical.policy: ScrollBar.AsNeeded
+    Repeater {
+        model: ScriptModel {
+            values: Audio.groupedOutputAppNodes
+        }
 
-        ColumnLayout {
-            width: parent.width
-            spacing: Theme.spacingBase
-
-            // List of apps playing audio (grouped by application)
-            Repeater {
-                model: ScriptModel {
-                    values: Audio.groupedOutputAppNodes
-                }
-
-                VolumeMixerGroupEntry {
-                    required property var modelData
-                    Layout.fillWidth: true
-                    group: modelData
-                }
-            }
-
-            // Empty state
-            Item {
-                Layout.fillWidth: true
-                Layout.preferredHeight: emptyText.height
-                visible: Audio.groupedOutputAppNodes.length === 0
-
-                StyledText {
-                    id: emptyText
-                    text: "No apps playing audio"
-                    font.pixelSize: Theme.fontSizeBase
-                    color: Theme.textSecondary
-                    anchors.centerIn: parent
-                }
-            }
+        VolumeMixerGroupEntry {
+            required property var modelData
+            Layout.fillWidth: true
+            group: modelData
         }
     }
 
+    EmptyState {
+        Layout.fillWidth: true
+        visible: Audio.groupedOutputAppNodes.length === 0
+        text: "No apps playing audio"
+        icon: Icons.volumeMuted
+    }
+
     DeviceSection {
-        title: "Output Devices"
+        title: "Output devices"
         devices: Audio.outputDevices
         selectedId: Audio.sink?.id
+        isOutput: true
         onDeviceSelected: device => Audio.setDefaultSink(device)
     }
 
     DeviceSection {
-        title: "Input Devices"
+        title: "Input devices"
         devices: Audio.inputDevices
         selectedId: Audio.source?.id
+        isOutput: false
         onDeviceSelected: device => Audio.setDefaultSource(device)
     }
 
@@ -78,35 +70,33 @@ ColumnLayout {
         property string title
         property var devices
         property var selectedId
+        property bool isOutput
 
         signal deviceSelected(var device)
 
         Layout.fillWidth: true
-        spacing: 4
+        spacing: 2
 
-        StyledText {
+        SectionHeader {
             text: section.title
-            font.pixelSize: Theme.fontSizeSmall
-            color: Theme.textSecondary
         }
 
-        ColumnLayout {
-            Layout.fillWidth: true
-            spacing: 2
+        Repeater {
+            model: ScriptModel {
+                values: section.devices
+            }
 
-            Repeater {
-                model: ScriptModel {
-                    values: section.devices
-                }
-
-                DeviceListItem {
-                    required property var modelData
-                    Layout.fillWidth: true
-
-                    deviceName: Audio.friendlyDeviceName(modelData)
-                    isSelected: modelData.id === section.selectedId
-
-                    onClicked: section.deviceSelected(modelData)
+            ListRow {
+                required property var modelData
+                readonly property bool isCurrent: modelData.id === section.selectedId
+                Layout.fillWidth: true
+                leadIcon: root.deviceIcon(modelData, section.isOutput)
+                title: Audio.friendlyDeviceName(modelData)
+                selected: isCurrent
+                trailIcon: isCurrent ? Icons.check : ""
+                onClicked: {
+                    if (!isCurrent)
+                        section.deviceSelected(modelData);
                 }
             }
         }

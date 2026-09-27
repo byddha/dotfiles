@@ -1,73 +1,47 @@
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
 import "../../../Config"
 import "../../../Components"
 import "../../../Services"
 
-ColumnLayout {
+ScrollList {
     id: root
-    spacing: Theme.spacingBase
 
-    // Empty state
-    ColumnLayout {
-        visible: Peripherals.devices.length === 0
-        Layout.fillWidth: true
-        Layout.fillHeight: true
-        spacing: Theme.spacingBase
+    property bool shown: false
 
-        Item {
-            Layout.fillHeight: true
-        }
-
-        Text {
-            Layout.alignment: Qt.AlignHCenter
-            text: Icons.device
-            font.family: Theme.fontFamilyIcons
-            font.pixelSize: 32
-            color: Theme.textSecondary
-            opacity: 0.5
-        }
-
-        StyledText {
-            Layout.alignment: Qt.AlignHCenter
-            text: "No peripherals detected"
-            font.pixelSize: Theme.fontSizeBase
-            color: Theme.textSecondary
-        }
-
-        Item {
-            Layout.fillHeight: true
-        }
+    // Tabs stay loaded, so read the batteries again each time this tab is shown
+    onShownChanged: {
+        if (shown)
+            PeripheralBatteries.repollRequested();
     }
-
-    // Device list
-    ScrollView {
-        visible: Peripherals.devices.length > 0
-        Layout.fillWidth: true
-        Layout.fillHeight: true
-        clip: true
-
-        ColumnLayout {
-            width: parent.width
-            spacing: 2
-
-            Repeater {
-                model: ScriptModel {
-                    values: Peripherals.devices
-                }
-
-                PeripheralDeviceItem {
-                    required property var modelData
-                    Layout.fillWidth: true
-                    device: modelData
-                }
-            }
-        }
-    }
-
     Component.onCompleted: {
-        PeripheralBatteries.repollRequested();
+        if (shown)
+            PeripheralBatteries.repollRequested();
+    }
+
+    SectionHeader {
+        first: true
+        text: "Batteries"
+        meta: Peripherals.devices.length > 0 ? `${Peripherals.devices.length} device${Peripherals.devices.length === 1 ? "" : "s"}` : ""
+    }
+
+    Repeater {
+        model: ScriptModel {
+            values: Peripherals.devices
+        }
+
+        PeripheralDeviceItem {
+            required property var modelData
+            Layout.fillWidth: true
+            device: modelData
+        }
+    }
+
+    EmptyState {
+        Layout.fillWidth: true
+        visible: Peripherals.devices.length === 0
+        text: "No battery devices"
+        icon: Icons.device
     }
 }

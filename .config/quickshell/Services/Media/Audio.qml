@@ -93,24 +93,25 @@ Singleton {
     }
 
     // Set volume (0.0 to 1.0)
-    function setVolume(value) {
+    // limit > 1 allows boost (sidebar sliders go to 150%)
+    function setVolume(value, limit = 1) {
         if (!sink) {
             Logger.error("No audio sink available");
             return;
         }
 
-        const clampedValue = Math.max(0, Math.min(1, value));
+        const clampedValue = Math.max(0, Math.min(limit, value));
         sink.audio.volume = clampedValue;
     }
 
     // Set microphone volume (0.0 to 1.0)
-    function setMicVolume(value) {
+    function setMicVolume(value, limit = 1) {
         if (!source) {
             Logger.error("No audio source available");
             return;
         }
 
-        const clampedValue = Math.max(0, Math.min(1, value));
+        const clampedValue = Math.max(0, Math.min(limit, value));
         source.audio.volume = clampedValue;
     }
 

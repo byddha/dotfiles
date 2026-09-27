@@ -24,11 +24,23 @@ ListView {
     }
 
     clip: true
+    // Natural height is the whole list; a layout that gives it less makes it scroll
+    implicitHeight: contentHeight
     // DMS groupedListGap: history cards form one grouped list.
     spacing: 2
     boundsBehavior: Flickable.StopAtBounds
     ScrollBar.vertical: ScrollBar {
-        policy: ScrollBar.AsNeeded
+        id: bar
+        policy: root.contentHeight > root.height ? ScrollBar.AlwaysOn : ScrollBar.AlwaysOff
+        rightPadding: 3
+        topPadding: 3
+        bottomPadding: 3
+        contentItem: Rectangle {
+            implicitWidth: 4
+            radius: 2
+            color: Theme.alpha(Theme.outline, bar.hovered || bar.pressed ? 0.6 : 0.35)
+        }
+        background: null
     }
 
     // Most recent first.

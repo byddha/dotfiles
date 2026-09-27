@@ -7,12 +7,21 @@ import "../../../Config"
 import "../../../Components"
 import "../../../Services"
 
+// An app with one stream is a plain entry; with several, a parent row (slider moves all streams)
+// and its streams in a tree. While linked, moving or muting one stream does the same to the others.
 Item {
     id: root
 
     required property var group
     property bool linked: true
     readonly property bool isGroup: group.nodes.length > 1
+    readonly property real groupVolume: Math.max(0, ...group.nodes.map(n => n?.audio?.volume ?? 0))
+    readonly property bool groupMuted: group.nodes.every(n => n?.audio?.muted ?? false)
+
+    readonly property int rowMargin: 8
+    // Streams line up under the app name; the tree trunk runs under the app icon's center
+    readonly property real streamIndent: rowMargin + avatar.width + parentRow.spacing
+    readonly property real trunkX: rowMargin + avatar.width / 2
 
     implicitHeight: layout.implicitHeight
 
@@ -22,165 +31,128 @@ Item {
         anchors.right: parent.right
         spacing: 0
 
-        // Group header (icon + app name + link toggle) — only for multi-stream
-        RowLayout {
+        Loader {
             Layout.fillWidth: true
-            spacing: Theme.spacingBase
-            visible: root.isGroup
-
-            Text {
-                text: AppIcons.getIcon(root.group.appKey)
-                font.family: Theme.fontFamilyIcons
-                font.pixelSize: 20
-                color: Theme.textColor
-                Layout.alignment: Qt.AlignVCenter
-            }
-
-            StyledText {
-                Layout.fillWidth: true
-                text: root.group.appName
-                font.pixelSize: Theme.fontSizeSmall
-                color: Theme.textSecondary
-                elide: Text.ElideRight
-            }
-
-            Item {
-                Layout.preferredWidth: 24
-                Layout.preferredHeight: 24
-                Layout.alignment: Qt.AlignVCenter
-
-                Text {
-                    anchors.centerIn: parent
-                    text: root.linked ? Icons.link : Icons.linkOff
-                    font.family: Theme.fontFamilyIcons
-                    font.pixelSize: 14
-                    color: root.linked ? Theme.primary : Theme.textSecondary
-
-                    Behavior on color {
-                        ColorAnimation {
-                            duration: 150
-                        }
-                    }
-                }
-
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.linked = !root.linked
-                }
+            active: !root.isGroup && root.group.nodes.length > 0
+            visible: active
+            sourceComponent: VolumeMixerEntry {
+                node: root.group.nodes[0]
             }
         }
 
-        // Stream entries with link indicator
-        Item {
-            Layout.fillWidth: true
-            implicitHeight: streamColumn.implicitHeight
+        RowLayout {
+            id: parentRow
             visible: root.isGroup
+            Layout.fillWidth: true
+            Layout.leftMargin: root.rowMargin
+            Layout.rightMargin: root.rowMargin
+            Layout.topMargin: 6
+            spacing: 12
 
-            // Tree connector lines
-            Item {
-                anchors.left: parent.left
-                anchors.leftMargin: 9
-                anchors.top: parent.top
-                anchors.bottom: parent.bottom
-                width: 19
-                opacity: root.linked ? 1 : 0
+            AppAvatar {
+                id: avatar
+                node: root.group.nodes[0]
 
-                Behavior on opacity {
-                    NumberAnimation {
-                        duration: 150
-                    }
-                }
-
-                // Vertical trunk line (from top to last entry's midpoint)
+                // Start of the tree trunk, from under the icon to the first stream
                 Rectangle {
-                    id: trunk
-                    width: 2
-                    radius: 1
-                    anchors.left: parent.left
-                    anchors.top: parent.top
-                    color: Theme.primary
-
-                    // Extend to the vertical center of the last entry
-                    height: {
-                        const count = streamRepeater.count;
-                        if (count === 0)
-                            return 0;
-                        const lastItem = streamRepeater.itemAt(count - 1);
-                        if (!lastItem)
-                            return 0;
-                        return lastItem.y + lastItem.height / 2;
-                    }
-                }
-
-                // Horizontal branches to each entry
-                Repeater {
-                    id: branchRepeater
-                    model: streamRepeater.count
-
-                    Rectangle {
-                        required property int index
-                        // Fixed geometry (container is 19 wide): reading `parent` here warns while delegates are created/destroyed.
-                        x: 2
-                        width: 17
-                        height: 2
-                        radius: 1
-                        color: Theme.primary
-                        y: {
-                            const item = streamRepeater.itemAt(index);
-                            return item ? item.y + item.height / 2 - 1 : 0;
-                        }
-                    }
+                    x: parent.width / 2
+                    y: parent.height
+                    width: 1
+                    height: parentRow.height - parent.y - parent.height
+                    color: Theme.outlineVariant
                 }
             }
 
             ColumnLayout {
-                id: streamColumn
-                anchors.left: parent.left
-                anchors.right: parent.right
+                Layout.fillWidth: true
                 spacing: 0
 
-                Repeater {
-                    id: streamRepeater
-                    model: ScriptModel {
-                        values: root.group.nodes
+                // As DMS DankLauncherV2 SectionHeader: the name elides only when the suffix would not fit
+                Row {
+                    Layout.fillWidth: true
+
+                    StyledText {
+                        width: Math.min(implicitWidth, parent.width - streamCount.implicitWidth)
+                        text: avatar.entry?.name || root.group.appName
+                        font.pixelSize: Theme.fontSizeSmall
+                        font.weight: Font.Medium
+                        color: Theme.textColor
+                        elide: Text.ElideRight
                     }
 
-                    VolumeMixerEntry {
-                        required property var modelData
-                        Layout.fillWidth: true
-                        node: modelData
-                        isGroupChild: true
+                    StyledText {
+                        id: streamCount
+                        text: ` · ${root.group.nodes.length} streams`
+                        font.pixelSize: Theme.fontSizeTiny
+                        color: Theme.textSecondary
+                    }
+                }
 
-                        onVolumeChanged: value => {
-                            if (root.linked) {
-                                for (const n of root.group.nodes) {
-                                    if (n !== node)
-                                        n.audio.volume = value;
-                                }
-                            }
-                        }
-
-                        onMuteToggled: {
-                            if (root.linked) {
-                                const muted = node.audio.muted;
-                                for (const n of root.group.nodes) {
-                                    if (n !== node)
-                                        n.audio.muted = muted;
-                                }
-                            }
-                        }
+                Slider {
+                    Layout.fillWidth: true
+                    implicitHeight: 24
+                    value: root.groupVolume
+                    to: 1.5
+                    showMuteIcon: true
+                    isMuted: root.groupMuted
+                    onMoved: newValue => {
+                        for (const n of root.group.nodes)
+                            n.audio.volume = newValue;
+                    }
+                    onRightClicked: {
+                        const muted = !root.groupMuted;
+                        for (const n of root.group.nodes)
+                            n.audio.muted = muted;
                     }
                 }
             }
+
+            IconButton {
+                icon: root.linked ? Icons.linkVariant : Icons.linkVariantOff
+                toggled: root.linked
+                onClicked: root.linked = !root.linked
+            }
         }
 
-        // Single stream (no group)
-        Loader {
+        ColumnLayout {
+            visible: root.isGroup
             Layout.fillWidth: true
-            active: !root.isGroup && root.group.nodes.length > 0
-            sourceComponent: VolumeMixerEntry {
-                node: root.group.nodes[0]
+            Layout.leftMargin: root.streamIndent
+            spacing: 0
+
+            Repeater {
+                id: streamRepeater
+                model: ScriptModel {
+                    values: root.group.nodes
+                }
+
+                VolumeMixerEntry {
+                    required property var modelData
+                    required property int index
+                    Layout.fillWidth: true
+                    node: modelData
+                    isGroupChild: true
+                    treeX: root.trunkX - root.streamIndent
+                    isLastChild: index === streamRepeater.count - 1
+
+                    onVolumeChanged: value => {
+                        if (!root.linked)
+                            return;
+                        for (const n of root.group.nodes) {
+                            if (n !== node)
+                                n.audio.volume = value;
+                        }
+                    }
+
+                    onMuteToggled: {
+                        if (!root.linked)
+                            return;
+                        for (const n of root.group.nodes) {
+                            if (n !== node)
+                                n.audio.muted = node.audio.muted;
+                        }
+                    }
+                }
             }
         }
     }

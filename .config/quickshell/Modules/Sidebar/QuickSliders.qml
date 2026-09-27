@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Layouts
 import "../../Config"
 import "../../Components"
 import "../../Services"
@@ -6,104 +7,69 @@ import "../../Services"
 Card {
     id: root
 
-    title: "Quick Controls"
-    collapsible: true
+    padding: 8
+    spacing: 4
 
-    Column {
-        width: parent.width
-        spacing: Theme.spacingLarge
+    function volumeIcon(volume, muted) {
+        if (muted || volume <= 0)
+            return Icons.volumeMuted;
+        if (volume < 0.34)
+            return Icons.volumeLow;
+        if (volume < 0.67)
+            return Icons.volumeMedium;
+        return Icons.volumeHigh;
+    }
 
-        // Volume Slider
-        Loader {
-            width: parent.width
+    Slider {
+        Layout.fillWidth: true
+        icon: root.volumeIcon(Audio.volume, Audio.isMuted)
+        value: Audio.volume
+        to: 1.5
+        showMuteIcon: true
+        isMuted: Audio.isMuted
+        onMoved: newValue => Audio.setVolume(newValue, 1.5)
+        onIconClicked: Audio.toggleMute()
+        onRightClicked: Audio.toggleMute()
+    }
 
-            sourceComponent: Slider {
-                icon: Audio.isMuted ? Icons.volumeMuted : (Audio.volume > 0.5 ? Icons.volumeHigh : Icons.volumeLow)
-                value: Audio.volume
-                showMuteIcon: true
-                isMuted: Audio.isMuted
+    Slider {
+        Layout.fillWidth: true
+        icon: Audio.isMicMuted ? Icons.micMuted : Icons.micOn
+        value: Audio.micVolume
+        to: 1.5
+        showMuteIcon: true
+        isMuted: Audio.isMicMuted
+        onMoved: newValue => Audio.setMicVolume(newValue, 1.5)
+        onIconClicked: Audio.toggleMicMute()
+        onRightClicked: Audio.toggleMicMute()
+    }
 
-                onMoved: newValue => {
-                    Audio.setVolume(newValue);
-                }
+    Loader {
+        Layout.fillWidth: true
+        active: Brightness.available
+        visible: active
 
-                onIconClicked: {
-                    Audio.toggleMute();
-                }
-
-                onRightClicked: {
-                    Audio.toggleMute();
-                }
-            }
+        sourceComponent: Slider {
+            icon: Icons.brightness
+            value: Brightness.brightness
+            onMoved: newValue => Brightness.setBrightness(newValue)
         }
+    }
 
-        // Brightness Slider
-        Loader {
-            width: parent.width
-            active: Brightness.available
-            visible: active
+    Loader {
+        Layout.fillWidth: true
+        active: KeyboardBrightness.available
+        visible: active
 
-            sourceComponent: Slider {
-                icon: Icons.brightness
-                value: Brightness.brightness
-
-                onMoved: newValue => {
-                    Brightness.setBrightness(newValue);
-                }
-            }
-        }
-
-        // Microphone Slider
-        Loader {
-            width: parent.width
-
-            sourceComponent: Slider {
-                icon: Audio.isMicMuted ? Icons.micMuted : Icons.micOn
-                iconSize: Audio.isMicMuted ? Theme.iconSize : Theme.iconSize - 4
-                value: Audio.micVolume
-                showMuteIcon: true
-                isMuted: Audio.isMicMuted
-
-                onMoved: newValue => {
-                    Audio.setMicVolume(newValue);
-                }
-
-                onIconClicked: {
-                    Audio.toggleMicMute();
-                }
-
-                onRightClicked: {
-                    Audio.toggleMicMute();
-                }
-            }
-        }
-
-        // Keyboard Brightness Slider
-        Loader {
-            width: parent.width
-            active: KeyboardBrightness.available
-            visible: active
-
-            sourceComponent: Slider {
-                icon: Icons.keyboard
-                value: KeyboardBrightness.brightness
-                stepSize: KeyboardBrightness.stepSize
-                snapMode: true
-                showMuteIcon: true
-                isMuted: KeyboardBrightness.brightness === 0
-
-                onMoved: newValue => {
-                    KeyboardBrightness.setBrightness(newValue);
-                }
-
-                onIconClicked: {
-                    KeyboardBrightness.toggle();
-                }
-
-                onRightClicked: {
-                    KeyboardBrightness.cycle();
-                }
-            }
+        sourceComponent: Slider {
+            icon: Icons.keyboard
+            value: KeyboardBrightness.brightness
+            stepSize: KeyboardBrightness.stepSize
+            snapMode: true
+            labelText: `${Math.round(KeyboardBrightness.brightness / KeyboardBrightness.stepSize)}/${Math.round(1 / KeyboardBrightness.stepSize)}`
+            onMoved: newValue => KeyboardBrightness.setBrightness(newValue)
+            onIconClicked: KeyboardBrightness.toggle()
+            onRightClicked: KeyboardBrightness.cycle()
         }
     }
 }

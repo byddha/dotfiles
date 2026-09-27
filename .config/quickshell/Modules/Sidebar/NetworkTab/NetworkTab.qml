@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
 import "../../../Config"
@@ -9,129 +8,90 @@ import "../../../Services"
 ColumnLayout {
     id: root
 
-    spacing: Theme.spacingBase
+    property bool shown: false
 
-    EmptyState {
+    spacing: 0
+
+    ScrollList {
         Layout.fillWidth: true
         Layout.fillHeight: true
-        visible: !Network.wifiEnabled
-        text: "WiFi disabled"
-        icon: Icons.wifiOff
-    }
 
-    // Ethernet status (if connected)
-    Rectangle {
-        Layout.fillWidth: true
-        visible: Network.ethernet
-        height: 40
-        radius: Theme.radiusBase
-        color: Theme.alpha(Theme.primary, 0.15)
-
-        RowLayout {
-            anchors.fill: parent
-            anchors.margins: Theme.spacingBase
-            spacing: Theme.spacingBase
-
-            Text {
-                text: Icons.network
-                font.family: Theme.fontFamilyIcons
-                font.pixelSize: Theme.fontSizeBase + 4
-                color: Theme.primary
-            }
-
-            StyledText {
-                Layout.fillWidth: true
-                text: "Ethernet connected"
-                font.pixelSize: Theme.fontSizeBase
-                color: Theme.primary
-            }
-        }
-    }
-
-    // Scanning indicator
-    Rectangle {
-        Layout.fillWidth: true
-        visible: Network.wifiScanning && Network.wifiEnabled
-        height: 4
-        radius: 2
-        color: Theme.colLayer2
-
+        // Ethernet banner
         Rectangle {
-            id: scanningBar
-            width: parent.width * 0.3
-            height: parent.height
-            radius: 2
-            color: Theme.primary
+            Layout.fillWidth: true
+            Layout.bottomMargin: 8
+            visible: Network.ethernet
+            implicitHeight: 40
+            radius: Theme.radiusBase
+            color: Theme.alpha(Theme.primary, Theme.stateSelected)
 
-            SequentialAnimation on x {
-                running: Network.wifiScanning
-                loops: Animation.Infinite
-                NumberAnimation {
-                    from: 0
-                    to: scanningBar.parent.width - scanningBar.width
-                    duration: 800
-                    easing.type: Easing.InOutQuad
+            RowLayout {
+                anchors.fill: parent
+                anchors.leftMargin: 8
+                anchors.rightMargin: 8
+                spacing: 12
+
+                Text {
+                    Layout.preferredWidth: 32
+                    horizontalAlignment: Text.AlignHCenter
+                    text: Icons.ethernet
+                    font.family: Theme.fontFamilyGlyphs
+                    font.pixelSize: 20
+                    color: Theme.primary
                 }
-                NumberAnimation {
-                    from: scanningBar.parent.width - scanningBar.width
-                    to: 0
-                    duration: 800
-                    easing.type: Easing.InOutQuad
-                }
-            }
-        }
-    }
-
-    // Network list
-    ScrollView {
-        id: scrollView
-        Layout.fillWidth: true
-        Layout.fillHeight: true
-        Layout.minimumHeight: 100
-        visible: Network.wifiEnabled
-
-        clip: true
-        ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
-        ScrollBar.vertical.policy: ScrollBar.AsNeeded
-
-        ColumnLayout {
-            width: scrollView.availableWidth
-            spacing: 4
-
-            Repeater {
-                model: ScriptModel {
-                    values: Network.friendlyWifiNetworks
-                }
-
-                NetworkItem {
-                    required property var modelData
-                    Layout.fillWidth: true
-                    network: modelData
-                }
-            }
-
-            // Empty state
-            Item {
-                Layout.fillWidth: true
-                Layout.preferredHeight: emptyText.height + Theme.spacingLarge * 2
-                visible: Network.friendlyWifiNetworks.length === 0 && Network.wifiEnabled && !Network.wifiScanning
 
                 StyledText {
-                    id: emptyText
-                    anchors.centerIn: parent
-                    text: "No networks found"
-                    font.pixelSize: Theme.fontSizeBase
-                    color: Theme.textSecondary
+                    Layout.fillWidth: true
+                    text: "Ethernet connected"
+                    font.pixelSize: Theme.fontSizeSmall
+                    font.weight: Font.Medium
+                    color: Theme.textColor
                 }
             }
         }
+
+        EmptyState {
+            Layout.fillWidth: true
+            visible: !Network.wifiEnabled
+            text: "Wi-Fi disabled"
+            icon: Icons.wifiOff
+        }
+
+        SectionHeader {
+            first: true
+            visible: Network.wifiEnabled
+            text: "Wi-Fi networks"
+            meta: Network.wifiScanning ? "Scanning…" : ""
+            metaIcon: Network.wifiScanning ? Icons.refresh : ""
+            metaColor: Theme.primary
+        }
+
+        Repeater {
+            model: ScriptModel {
+                values: Network.wifiEnabled ? Network.friendlyWifiNetworks : []
+            }
+
+            NetworkItem {
+                required property var modelData
+                Layout.fillWidth: true
+                network: modelData
+            }
+        }
+
+        EmptyState {
+            Layout.fillWidth: true
+            visible: Network.wifiEnabled && !Network.wifiScanning && Network.friendlyWifiNetworks.length === 0
+            text: "No networks found"
+            icon: Icons.wifiOn
+        }
     }
 
-    // Footer button
-    Button {
-        Layout.fillWidth: true
-        text: "Scan"
-        enabled: Network.wifiEnabled && !Network.wifiScanning
-        onClicked: Network.rescanWifi()
+    ListFooter {
+        visible: Network.wifiEnabled
+        meta: `${Network.friendlyWifiNetworks.length} network${Network.friendlyWifiNetworks.length === 1 ? "" : "s"}`
+        actionText: "Scan"
+        actionIcon: Icons.refresh
+        actionEnabled: !Network.wifiScanning
+        onActionClicked: Network.rescanWifi()
     }
 }

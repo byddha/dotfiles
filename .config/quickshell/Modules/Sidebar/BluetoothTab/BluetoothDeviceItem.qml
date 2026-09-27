@@ -1,31 +1,48 @@
 import QtQuick
+import QtQuick.Layouts
 import "../../../Components"
 import "../../../Services"
 
-ExpandableListItem {
+ListRow {
     id: root
 
     required property var device
 
-    active: device?.connected ?? false
-    icon: Bluetooth.getDeviceIcon(device?.icon ?? "")
+    leadIcon: Bluetooth.getDeviceIcon(device?.icon ?? "")
     title: device?.name ?? "Unknown device"
-    subtitleVisible: (device?.connected || device?.paired) ?? false
     subtitle: {
-        if (!device?.paired)
-            return "";
         let status = device?.connected ? "Connected" : "Paired";
-        if (device?.batteryAvailable) {
+        if (device?.batteryAvailable)
             status += ` • ${Math.round(device.battery * 100)}%`;
-        }
         return status;
     }
-    actionText: device?.connected ? "Disconnect" : "Connect"
-    onActionClicked: {
-        if (device?.connected) {
-            device.disconnect();
-        } else {
-            device.connect();
+    selected: device?.connected ?? false
+    expandable: true
+    body: device?.connected ? disconnectBody : connectBody
+
+    Component {
+        id: connectBody
+        RowLayout {
+            FilledButton {
+                text: "Connect"
+                onClicked: {
+                    root.device.connect();
+                    root.expanded = false;
+                }
+            }
+        }
+    }
+
+    Component {
+        id: disconnectBody
+        RowLayout {
+            TextButton {
+                text: "Disconnect"
+                onClicked: {
+                    root.device.disconnect();
+                    root.expanded = false;
+                }
+            }
         }
     }
 }

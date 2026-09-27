@@ -1,3 +1,4 @@
+pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
 import "../../Config"
@@ -12,12 +13,11 @@ import "PeripheralsTab"
 Card {
     id: root
 
+    property bool shown: false
     property int selectedTab: Settings.sidebarSelectedTab
     onSelectedTabChanged: Settings.sidebarSelectedTab = selectedTab
-    collapsible: true
 
-    // Tab data model with icon and name
-    property var tabModel: [
+    readonly property var tabModel: [
         {
             icon: Icons.volumeHigh,
             name: "Volume"
@@ -40,121 +40,110 @@ Card {
         }
     ]
 
-    ColumnLayout {
-        width: parent.width
-        spacing: Theme.spacingBase
+    padding: 0
 
-        // Tab bar
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: 4
+    RowLayout {
+        Layout.fillWidth: true
+        Layout.margins: 8
+        Layout.minimumHeight: implicitHeight
+        spacing: 4
 
-            Repeater {
-                model: root.tabModel
+        Repeater {
+            model: root.tabModel
 
-                Rectangle {
-                    id: tabButton
-                    property bool isActive: index === root.selectedTab
-                    property bool isHovered: tabMouseArea.containsMouse
+            Rectangle {
+                id: tab
+                required property var modelData
+                required property int index
+                readonly property bool active: index === root.selectedTab
 
-                    Layout.fillWidth: true
-                    Layout.preferredWidth: isActive ? 3 : 1  // Active tab gets 3x weight
-                    height: 32
-                    radius: Theme.radiusBase
-                    color: isActive ? Theme.primary : (isHovered ? Theme.colLayer2 : "transparent")
+                Layout.fillWidth: !active
+                Layout.preferredWidth: active ? tabRow.implicitWidth + 24 : 0
+                implicitHeight: 36
+                radius: Theme.radiusBase
+                color: active ? Theme.secondaryContainer : "transparent"
 
-                    Behavior on Layout.preferredWidth {
-                        NumberAnimation {
-                            duration: 150
-                            easing.type: Easing.OutQuad
-                        }
+                StateLayer {
+                    hovered: tabMouse.containsMouse
+                    pressed: tabMouse.pressed
+                }
+
+                RowLayout {
+                    id: tabRow
+                    anchors.centerIn: parent
+                    spacing: Theme.spacingBase
+
+                    Text {
+                        text: tab.modelData.icon
+                        font.family: Theme.fontFamilyGlyphs
+                        font.pixelSize: 20
+                        color: tab.active ? Theme.onSecondaryContainer : Theme.textSecondary
                     }
 
-                    Behavior on color {
-                        ColorAnimation {
-                            duration: 150
-                        }
+                    StyledText {
+                        visible: tab.active
+                        text: tab.modelData.name
+                        font.pixelSize: Theme.fontSizeSmall
+                        font.weight: Font.Medium
+                        color: Theme.onSecondaryContainer
                     }
+                }
 
-                    // Content row
-                    Row {
-                        id: expandedContent
-                        anchors.centerIn: parent
-                        spacing: 6
+                Tooltip {
+                    id: tooltip
+                    target: tab
+                    text: tab.modelData.name
+                }
 
-                        // Icon
-                        Text {
-                            text: modelData.icon
-                            font.family: Theme.fontFamilyIcons
-                            font.pixelSize: Theme.fontSizeBase + 2
-                            color: tabButton.isActive ? Theme.primaryText : Theme.textColor
-                            anchors.verticalCenter: parent.verticalCenter
-
-                            Behavior on color {
-                                ColorAnimation {
-                                    duration: 150
-                                }
-                            }
-                        }
-
-                        // Name (only visible when active)
-                        Text {
-                            text: modelData.name
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSizeBase
-                            color: Theme.primaryText
-                            visible: tabButton.isActive
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
+                MouseArea {
+                    id: tabMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onEntered: {
+                        if (!tab.active)
+                            tooltip.show();
                     }
-
-                    MouseArea {
-                        id: tabMouseArea
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        hoverEnabled: true
-                        onClicked: root.selectedTab = index
+                    onExited: tooltip.hide()
+                    onClicked: {
+                        tooltip.hide();
+                        root.selectedTab = tab.index;
                     }
                 }
             }
         }
+    }
 
-        // Tab content
-        StackLayout {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 450
+    Rectangle {
+        Layout.fillWidth: true
+        Layout.minimumHeight: 1
+        implicitHeight: 1
+        color: Theme.outlineVariant
+    }
 
-            currentIndex: root.selectedTab
+    // All tabs stay loaded: switching never rebuilds a tab and keeps its scroll position.
+    // StackLayout's own natural height is its tallest tab; the sidebar follows the open one.
+    StackLayout {
+        id: stack
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+        Layout.preferredHeight: stack.children[stack.currentIndex]?.implicitHeight ?? 0
+        currentIndex: root.selectedTab
 
-            // Volume Mixer tab
-            Loader {
-                active: root.selectedTab === 0
-                sourceComponent: VolumeMixerTab {}
-            }
-
-            // Notifications tab
-            Loader {
-                active: root.selectedTab === 1
-                sourceComponent: NotificationHistoryTab {}
-            }
-
-            // Bluetooth tab
-            Loader {
-                active: root.selectedTab === 2
-                sourceComponent: BluetoothTab {}
-            }
-
-            // Network tab
-            Loader {
-                active: root.selectedTab === 3
-                sourceComponent: NetworkTab {}
-            }
-
-            // Peripherals tab
-            Loader {
-                active: root.selectedTab === 4
-                sourceComponent: PeripheralsTab {}
-            }
+        VolumeMixerTab {
+            shown: root.shown && root.selectedTab === 0
+        }
+        NotificationHistoryTab {
+            shown: root.shown && root.selectedTab === 1
+        }
+        BluetoothTab {
+            shown: root.shown && root.selectedTab === 2
+        }
+        NetworkTab {
+            shown: root.shown && root.selectedTab === 3
+        }
+        PeripheralsTab {
+            shown: root.shown && root.selectedTab === 4
         }
     }
 }
