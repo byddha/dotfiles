@@ -18,8 +18,10 @@ Item {
     property bool showActions: popup
     property bool showClose: popup
     property string dismissText: popup ? "Clear" : "Dismiss"
-    property color surfaceColor: popup ? ThemeService.background : Theme.colLayer1
-    property color chipColor: Theme.colLayer2
+    // History sits on a surface_container card; one step up keeps the grouped cards apart even in
+    // themes where surface_container equals the background
+    property color surfaceColor: popup ? ThemeService.background : Theme.colLayer2
+    property color chipColor: popup ? Theme.colLayer2 : Theme.colLayer3
     // Grouped list corners (DMS groupedListOuterRadius / groupedListInnerRadius), used in history.
     property bool firstInGroup: true
     property bool lastInGroup: true
