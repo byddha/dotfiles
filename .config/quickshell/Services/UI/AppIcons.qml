@@ -152,11 +152,13 @@ QtObject {
         })
 
     // Keys are tried as exact class, then as substrings of the class, then of the title, in declaration order.
+    // "^name$" keys are exact-only, for names too short to use as substrings.
     function findEntry(className, title) {
         if (className && className.length > 0) {
             const lowerClass = className.toLowerCase();
-            if (iconMap[lowerClass])
-                return iconMap[lowerClass];
+            const exact = iconMap[lowerClass] || iconMap["^" + lowerClass + "$"];
+            if (exact)
+                return exact;
             for (const key in iconMap) {
                 if (lowerClass.includes(key))
                     return iconMap[key];
