@@ -4,7 +4,6 @@ import Quickshell
 import Quickshell.Wayland
 import "../../../Config"
 import "../../../Utils"
-import "../../../Components"
 import "../../../Services"
 import "../../CalendarPanel"
 

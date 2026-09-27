@@ -19,7 +19,6 @@ Rectangle {
         height: parent.height
 
         Text {
-            id: iconText
             text: micButton.micIcon
             font.family: BarStyle.iconFont
             font.pixelSize: Audio.isMicMuted ? BarStyle.iconSize : BarStyle.iconSize - 4
@@ -29,7 +28,6 @@ Rectangle {
         }
 
         Text {
-            id: percentText
             text: Math.round(Audio.micVolume * 100) + "%"
             font.family: BarStyle.textFont
             font.pixelSize: BarStyle.textSize

@@ -1,6 +1,5 @@
 pragma ComponentBehavior: Bound
 import QtQuick
-import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Mpris
@@ -39,18 +38,13 @@ PopupWindow {
         Qt.callLater(() => root.anchor.updateAnchor());
     }
 
-    Item {
+    MediaCard {
         anchors.fill: parent
-
-        MediaCard {
-            id: mediaCard
-            anchors.fill: parent
-            player: root.activePlayer
-            showControls: false
-            showVisualizer: true
-            visualizerValues: root.visualizerValues
-            border.color: Theme.colLayer0Border
-            border.width: 1
-        }
+        player: root.activePlayer
+        showControls: false
+        showVisualizer: true
+        visualizerValues: root.visualizerValues
+        border.color: Theme.colLayer0Border
+        border.width: 1
     }
 }

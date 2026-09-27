@@ -51,13 +51,6 @@ Rectangle {
         }
     }
 
-    Behavior on opacity {
-        NumberAnimation {
-            duration: 150
-            easing.type: Easing.InOutQuad
-        }
-    }
-
     Row {
         id: contentRow
         anchors.left: parent.left
@@ -78,13 +71,11 @@ Rectangle {
         }
 
         // Scrolling text container
-        Rectangle {
+        Item {
             id: textContainer
             width: root.textWidth
             height: parent.height
-            color: "transparent"
             clip: true
-            visible: root.playerAvailable
 
             property string displayText: {
                 const title = MprisController.stableTrackTitle;
@@ -154,7 +145,7 @@ Rectangle {
             anchors.verticalCenter: parent.verticalCenter
             activePlayer: root.activePlayer
             stableLength: MprisController.stableTrackLength
-            visible: root.playerAvailable && MprisController.stableTrackLength > 0
+            visible: MprisController.stableTrackLength > 0
         }
 
         // Previous button
@@ -164,7 +155,6 @@ Rectangle {
             radius: 10
             anchors.verticalCenter: parent.verticalCenter
             color: prevArea.containsMouse ? BarStyle.buttonBackgroundHover : "transparent"
-            visible: root.playerAvailable
             opacity: MprisController.stableCanGoPrevious ? 1 : 0.3
             clip: true
 
@@ -196,7 +186,6 @@ Rectangle {
             radius: 12
             anchors.verticalCenter: parent.verticalCenter
             color: activePlayer && activePlayer.playbackState === MprisPlaybackState.Playing ? Theme.primary : BarStyle.buttonBackgroundHover
-            visible: root.playerAvailable
             opacity: activePlayer ? 1 : 0.3
             clip: true
 
@@ -227,7 +216,6 @@ Rectangle {
             radius: 10
             anchors.verticalCenter: parent.verticalCenter
             color: nextArea.containsMouse ? BarStyle.buttonBackgroundHover : "transparent"
-            visible: root.playerAvailable
             opacity: MprisController.stableCanGoNext ? 1 : 0.3
             clip: true
 

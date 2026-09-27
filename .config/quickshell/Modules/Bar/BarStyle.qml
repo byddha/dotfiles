@@ -24,7 +24,6 @@ QtObject {
 
     // Layout
     readonly property int spacing: Theme.spacingBase
-    readonly property int spacingLarge: Theme.spacingLarge
 
     // Bar dimensions
     readonly property int barHeight: Theme.barHeight

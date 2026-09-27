@@ -7,13 +7,6 @@ import "../../Components"
 Item {
     id: root
 
-    visible: {
-        for (let i = 0; i < peripheralRow.children.length; i++) {
-            if (peripheralRow.children[i].visible)
-                return true;
-        }
-        return false;
-    }
     implicitWidth: peripheralRow.implicitWidth
     height: BarStyle.buttonSize
 

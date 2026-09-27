@@ -1,7 +1,6 @@
 import QtQuick
 import "../../Config"
 import "../../Services"
-import "../../Services" as Services
 
 Rectangle {
     id: activeWindowTitle
@@ -17,8 +16,7 @@ Rectangle {
         spacing: BarStyle.spacing / 2
 
         Text {
-            id: iconText
-            text: Services.AppIcons.getIcon(Compositor.activeWindowClass, Compositor.activeWindow)
+            text: AppIcons.getIcon(Compositor.activeWindowClass, Compositor.activeWindow)
             font.family: BarStyle.iconFont
             font.pixelSize: BarStyle.iconSize
             color: Theme.primary
@@ -26,8 +24,7 @@ Rectangle {
         }
 
         Text {
-            id: titleText
-            text: Services.AppIcons.getDisplayName(Compositor.activeWindowClass, Compositor.activeWindow)
+            text: AppIcons.getDisplayName(Compositor.activeWindowClass, Compositor.activeWindow)
             font.family: BarStyle.textFont
             font.pixelSize: BarStyle.textSize
             font.weight: BarStyle.textWeight

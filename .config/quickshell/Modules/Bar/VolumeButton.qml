@@ -28,7 +28,6 @@ Rectangle {
         height: parent.height
 
         Text {
-            id: iconText
             text: volumeButton.volumeIcon
             font.family: BarStyle.iconFont
             font.pixelSize: BarStyle.iconSize
@@ -38,7 +37,6 @@ Rectangle {
         }
 
         Text {
-            id: percentText
             text: Math.round(Audio.volume * 100) + "%"
             font.family: BarStyle.textFont
             font.pixelSize: BarStyle.textSize

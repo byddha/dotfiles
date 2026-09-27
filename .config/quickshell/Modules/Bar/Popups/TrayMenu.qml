@@ -93,12 +93,9 @@ PanelWindow {
         Qt.callLater(updatePosition);
     }
 
+    // The owning Loader destroys this window on close, so the submenu stack needs no reset.
     function hideMenu() {
         visible = false;
-        // Pop all submenu views back to root
-        while (stackView.depth > 1) {
-            stackView.pop();
-        }
     }
 
     MouseArea {
