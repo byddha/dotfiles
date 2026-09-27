@@ -10,7 +10,7 @@ import "Popups"
  * Uses a compositor-aware panel popup for click-outside-to-close.
  * Signal chain ensures focus handling is activated AFTER popup is shown.
  */
-Rectangle {
+BarPill {
     id: clock
 
     required property var barWindow  // Need screen reference from bar
@@ -18,9 +18,18 @@ Rectangle {
     property var now: new Date()
 
     width: clockRow.implicitWidth + BarStyle.spacing * 2
-    height: BarStyle.buttonSize
-    color: BarStyle.buttonBackground
-    radius: BarStyle.buttonRadius
+    onClicked: {
+        if (Settings.calendarPanelVisible) {
+            // Close
+            if (clock.activePopup) {
+                clock.activePopup.hidePanel();
+            }
+        } else {
+            // Open
+            Settings.calendarPanelVisible = true;
+            clock.showCalendarPopup();
+        }
+    }
 
     // Update time every second
     Timer {
@@ -111,42 +120,6 @@ Rectangle {
             font.pixelSize: BarStyle.textSize
             font.weight: BarStyle.textWeight
             color: BarStyle.textColor
-        }
-    }
-
-    MouseArea {
-        id: mouseArea
-        anchors.fill: parent
-        hoverEnabled: true
-        cursorShape: Qt.PointingHandCursor
-
-        onClicked: {
-            if (Settings.calendarPanelVisible) {
-                // Close
-                if (clock.activePopup) {
-                    clock.activePopup.hidePanel();
-                }
-            } else {
-                // Open
-                Settings.calendarPanelVisible = true;
-                clock.showCalendarPopup();
-            }
-        }
-    }
-
-    states: State {
-        name: "hovered"
-        when: mouseArea.containsMouse
-        PropertyChanges {
-            target: clock
-            color: BarStyle.buttonBackgroundHover
-        }
-    }
-
-    transitions: Transition {
-        ColorAnimation {
-            duration: 150
-            easing.type: Easing.InOutQuad
         }
     }
 }

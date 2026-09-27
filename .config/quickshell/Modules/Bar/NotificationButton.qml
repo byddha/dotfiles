@@ -2,15 +2,16 @@ import QtQuick
 import "../../Config"
 import "../../Services"
 
-Rectangle {
+BarPill {
     id: notificationButton
 
     readonly property int notificationCount: Notifications.list.length
 
     width: BarStyle.buttonSize
-    height: BarStyle.buttonSize
-    color: BarStyle.buttonBackground
-    radius: BarStyle.buttonRadius
+    onClicked: {
+        Settings.sidebarSelectedTab = 1;
+        Settings.sidebarVisible = true;
+    }
 
     Text {
         anchors.centerIn: parent
@@ -43,33 +44,6 @@ Rectangle {
             font.weight: Font.Bold
             color: Theme.primaryText
             text: notificationButton.notificationCount
-        }
-    }
-
-    MouseArea {
-        id: mouseArea
-        anchors.fill: parent
-        hoverEnabled: true
-        cursorShape: Qt.PointingHandCursor
-        onClicked: {
-            Settings.sidebarSelectedTab = 1;
-            Settings.sidebarVisible = true;
-        }
-    }
-
-    states: State {
-        name: "hovered"
-        when: mouseArea.containsMouse
-        PropertyChanges {
-            target: notificationButton
-            color: BarStyle.buttonBackgroundHover
-        }
-    }
-
-    transitions: Transition {
-        ColorAnimation {
-            duration: 150
-            easing.type: Easing.InOutQuad
         }
     }
 }

@@ -3,13 +3,17 @@ import "../../Services"
 import "../../Components"
 import "Popups"
 
-Rectangle {
+BarPill {
     id: powerButton
 
     width: BarStyle.buttonSize
-    height: BarStyle.buttonSize
-    color: BarStyle.buttonBackground
-    radius: BarStyle.buttonRadius
+    onClicked: {
+        if (powerButton.activePopup) {
+            powerButton.activePopup.hidePanel();
+        } else {
+            powerButton.showPowerPopup();
+        }
+    }
 
     property var activePopup: null
 
@@ -60,35 +64,5 @@ Rectangle {
         font.family: BarStyle.iconFont
         font.pixelSize: BarStyle.iconSize
         color: BarStyle.iconColor
-    }
-
-    MouseArea {
-        id: mouseArea
-        anchors.fill: parent
-        hoverEnabled: true
-        cursorShape: Qt.PointingHandCursor
-        onClicked: {
-            if (powerButton.activePopup) {
-                powerButton.activePopup.hidePanel();
-            } else {
-                powerButton.showPowerPopup();
-            }
-        }
-    }
-
-    states: State {
-        name: "hovered"
-        when: mouseArea.containsMouse
-        PropertyChanges {
-            target: powerButton
-            color: BarStyle.buttonBackgroundHover
-        }
-    }
-
-    transitions: Transition {
-        ColorAnimation {
-            duration: 150
-            easing.type: Easing.InOutQuad
-        }
     }
 }

@@ -3,14 +3,19 @@ import "../../Config"
 import "../../Services"
 import "../../Components"
 
-Rectangle {
+BarPill {
     id: vpnButton
 
     visible: Vpn.anyConnected
     width: visible ? vpnRow.implicitWidth + BarStyle.spacing * 2 : 0
-    height: BarStyle.buttonSize
-    color: BarStyle.buttonBackground
-    radius: BarStyle.buttonRadius
+    tooltip: vpnTooltip
+    onClicked: {
+        if (Vpn.mullvadConnected) {
+            Vpn.disconnectMullvad();
+        } else if (Vpn.fortiConnected) {
+            Vpn.disconnectForti();
+        }
+    }
 
     Behavior on width {
         NumberAnimation {
@@ -60,42 +65,9 @@ Rectangle {
         }
     }
 
-    MouseArea {
-        id: mouseArea
-        anchors.fill: parent
-        hoverEnabled: true
-        cursorShape: Qt.PointingHandCursor
-        onEntered: tooltip.show()
-        onExited: tooltip.hide()
-        onClicked: {
-            // Disconnect the active VPN
-            if (Vpn.mullvadConnected) {
-                Vpn.disconnectMullvad();
-            } else if (Vpn.fortiConnected) {
-                Vpn.disconnectForti();
-            }
-        }
-    }
-
     Tooltip {
-        id: tooltip
+        id: vpnTooltip
         target: vpnButton
         text: Vpn.mullvadConnected ? `Mullvad VPN - ${Vpn.mullvadCity || ""}, ${Vpn.mullvadCountry || "Connected"}\nClick to disconnect` : `FortiVPN - Uptime ${Vpn.fortiUptime}\nClick to disconnect`
-    }
-
-    states: State {
-        name: "hovered"
-        when: mouseArea.containsMouse
-        PropertyChanges {
-            target: vpnButton
-            color: BarStyle.buttonBackgroundHover
-        }
-    }
-
-    transitions: Transition {
-        ColorAnimation {
-            duration: 150
-            easing.type: Easing.InOutQuad
-        }
     }
 }

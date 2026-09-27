@@ -2,13 +2,11 @@ import QtQuick
 import "../../Config"
 import "../../Services"
 
-Rectangle {
+BarPill {
     id: activeWindowTitle
 
     width: contentRow.implicitWidth + BarStyle.spacing * 2
-    height: BarStyle.buttonSize
-    color: BarStyle.buttonBackground
-    radius: BarStyle.buttonRadius
+    cursorShape: Qt.ArrowCursor
 
     Row {
         id: contentRow
@@ -30,28 +28,6 @@ Rectangle {
             font.weight: BarStyle.textWeight
             color: BarStyle.textColor
             anchors.verticalCenter: parent.verticalCenter
-        }
-    }
-
-    MouseArea {
-        id: mouseArea
-        anchors.fill: parent
-        hoverEnabled: true
-    }
-
-    states: State {
-        name: "hovered"
-        when: mouseArea.containsMouse
-        PropertyChanges {
-            target: activeWindowTitle
-            color: BarStyle.buttonBackgroundHover
-        }
-    }
-
-    transitions: Transition {
-        ColorAnimation {
-            duration: 150
-            easing.type: Easing.InOutQuad
         }
     }
 }
