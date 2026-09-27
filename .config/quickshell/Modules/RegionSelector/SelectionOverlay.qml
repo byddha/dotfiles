@@ -11,23 +11,16 @@ Item {
     required property real mouseX
     required property real mouseY
 
-    property color overlayColor: Theme.colLayer0
-    property real overlayOpacity: 0.85
-    property color selectionColor: Theme.primary
-    property color hatchColor: Theme.textColor
-    property real hatchOpacity: 1
-    property real hatchSpacing: 12.0
-
     // GPU-rendered overlay with hatching
     ShaderEffect {
         anchors.fill: parent
 
         // Properties must match shader uniform order (std140 layout)
-        property real overlayOpacity: root.overlayOpacity
-        property real hatchOpacity: root.hatchOpacity
-        property real hatchSpacing: root.hatchSpacing
-        property color overlayColor: root.overlayColor
-        property color hatchColor: root.hatchColor
+        property real overlayOpacity: 0.85
+        property real hatchOpacity: 1
+        property real hatchSpacing: 12.0
+        property color overlayColor: Theme.colLayer0
+        property color hatchColor: Theme.textColor
         property vector4d selection: Qt.vector4d(root.regionX, root.regionY, root.regionWidth, root.regionHeight)
         property vector4d resolutionAndRadius: Qt.vector4d(root.width, root.height, 0, 0)  // No corner rounding for fullscreen
         // No cutouts for selection overlay
@@ -47,7 +40,7 @@ Item {
         width: root.regionWidth
         height: root.regionHeight
         color: "transparent"
-        border.color: root.selectionColor
+        border.color: Theme.primary
         border.width: 2
     }
 
@@ -83,7 +76,7 @@ Item {
             bottom: parent.bottom
         }
         width: 1
-        color: Theme.alpha(root.selectionColor, 0.4)
+        color: Theme.alpha(Theme.primary, 0.4)
     }
 
     // Crosshair - horizontal
@@ -95,6 +88,6 @@ Item {
             right: parent.right
         }
         height: 1
-        color: Theme.alpha(root.selectionColor, 0.4)
+        color: Theme.alpha(Theme.primary, 0.4)
     }
 }
