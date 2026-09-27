@@ -22,8 +22,10 @@ Singleton {
     // (so it survives shell reloads); width 0 when unknown
     property rect region: Qt.rect(0, 0, 0, 0)
 
-    // Logical global region "WxH+X+Y"; gpu-screen-recorder records the native pixels of scaled monitors
-    function start(region: string) {
+    // Logical global area; gpu-screen-recorder records the native pixels of scaled monitors itself.
+    // Even sizes: gsr widens odd ones by a pixel, which would reach past the area (and into the frame).
+    function start(x: int, y: int, width: int, height: int) {
+        const region = `${width - width % 2}x${height - height % 2}+${x}+${y}`;
         if (recording || starting)
             return;
         starting = true;

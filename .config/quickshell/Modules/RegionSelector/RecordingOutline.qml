@@ -4,8 +4,7 @@ import Quickshell.Wayland
 import "../../Config"
 import "../../Services"
 
-// Thin red frame around the area being recorded, drawn just outside it so the recording never
-// contains it. Takes no input: clicks and keys go to whatever is under it.
+// Thin red frame around the area being recorded, with a gap so the recording never contains it. Takes no input: clicks and keys go to whatever is under it.
 Scope {
     Variants {
         model: Quickshell.screens
@@ -35,10 +34,11 @@ Scope {
             }
 
             Rectangle {
-                x: window.local.x - 3
-                y: window.local.y - 3
-                width: window.local.width + 6
-                height: window.local.height + 6
+                readonly property int gap: 3
+                x: window.local.x - gap - 3
+                y: window.local.y - gap - 3
+                width: window.local.width + (gap + 3) * 2
+                height: window.local.height + (gap + 3) * 2
                 color: "transparent"
                 border.color: Qt.rgba(0, 0, 0, 0.35)
                 border.width: 1

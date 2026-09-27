@@ -429,7 +429,7 @@ PanelWindow {
         // Record mode: the recorder captures live, no file grab needed. Lens, OCR, Edit and Save
         // still take a screenshot of the region.
         if (root.action === RegionSelector.SnipAction.Record && root.snipMode === "copy") {
-            Recording.start(`${Math.round(root.regionWidth)}x${Math.round(root.regionHeight)}+${Math.round(root.regionX + root.monitorOffsetX)}+${Math.round(root.regionY + root.monitorOffsetY)}`);
+            Recording.start(Math.round(root.regionX + root.monitorOffsetX), Math.round(root.regionY + root.monitorOffsetY), Math.round(root.regionWidth), Math.round(root.regionHeight));
             root.dismiss();
             return;
         }
