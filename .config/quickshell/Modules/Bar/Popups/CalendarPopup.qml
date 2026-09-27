@@ -2,34 +2,17 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import Quickshell.Wayland
 import "../../../Config"
+import "../../../Components"
 import "../../CalendarPanel"
 
-BarPopup {
+Popout {
     id: calendarPopup
 
     WlrLayershell.namespace: "bidshell:calendar-popup"
+    padding: Theme.spacingBase
 
-    Rectangle {
-        id: panelBg
-        width: (contentLoader.item?.implicitWidth ?? 380) + Theme.spacingBase * 2
-        height: (contentLoader.item?.implicitHeight ?? 400) + Theme.spacingBase * 2
-        implicitWidth: width
-        implicitHeight: height
-        color: Theme.colLayer0
-        radius: Theme.radiusWindow
-        border.color: Theme.popupBorder
-        border.width: 1
-
-        onImplicitWidthChanged: Qt.callLater(calendarPopup.updatePosition)
-        onImplicitHeightChanged: Qt.callLater(calendarPopup.updatePosition)
-
-        Loader {
-            id: contentLoader
-            anchors.fill: parent
-            anchors.margins: Theme.spacingBase
-            active: calendarPopup.visible
-
-            sourceComponent: CalendarPanelContent {}
-        }
+    // Built with the popup (the owner recreates it on each open), so its size is known before it shows
+    CalendarPanelContent {
+        anchors.fill: parent
     }
 }

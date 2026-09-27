@@ -5,59 +5,47 @@ import "../../../Config"
 import "../../../Components"
 import "../../../Services"
 
-BarPopup {
+Popout {
     id: powerPopup
 
     WlrLayershell.namespace: "bidshell:power-popup"
+    padding: Theme.spacingBase
 
-    Rectangle {
-        id: panelBg
-        width: buttonsRow.implicitWidth + Theme.spacingBase * 2
-        height: buttonsRow.implicitHeight + Theme.spacingBase * 2
-        implicitWidth: width
-        implicitHeight: height
-        color: Theme.colLayer0
-        radius: Theme.radiusWindow
-        border.color: Theme.popupBorder
-        border.width: 1
+    Row {
+        anchors.fill: parent
+        spacing: Theme.spacingBase
 
-        Row {
-            id: buttonsRow
-            anchors.centerIn: parent
-            spacing: Theme.spacingBase
-
-            PowerActionButton {
-                icon: Icons.shutdown
-                onClicked: {
-                    const lowDevices = PeripheralBatteries.getLowBatteryDevices();
-                    if (lowDevices.length === 0) {
-                        PowerActions.poweroff();
-                    } else {
-                        Settings.shutdownReminderVisible = true;
-                    }
-                    powerPopup.hidePanel();
+        PowerActionButton {
+            icon: Icons.shutdown
+            onClicked: {
+                const lowDevices = PeripheralBatteries.getLowBatteryDevices();
+                if (lowDevices.length === 0) {
+                    PowerActions.poweroff();
+                } else {
+                    Settings.shutdownReminderVisible = true;
                 }
+                powerPopup.hidePanel();
             }
-            PowerActionButton {
-                icon: Icons.reboot
-                onClicked: {
-                    PowerActions.reboot();
-                    powerPopup.hidePanel();
-                }
+        }
+        PowerActionButton {
+            icon: Icons.reboot
+            onClicked: {
+                PowerActions.reboot();
+                powerPopup.hidePanel();
             }
-            PowerActionButton {
-                icon: Icons.logout
-                onClicked: {
-                    PowerActions.logout();
-                    powerPopup.hidePanel();
-                }
+        }
+        PowerActionButton {
+            icon: Icons.logout
+            onClicked: {
+                PowerActions.logout();
+                powerPopup.hidePanel();
             }
-            PowerActionButton {
-                icon: Icons.suspend
-                onClicked: {
-                    PowerActions.suspend();
-                    powerPopup.hidePanel();
-                }
+        }
+        PowerActionButton {
+            icon: Icons.suspend
+            onClicked: {
+                PowerActions.suspend();
+                powerPopup.hidePanel();
             }
         }
     }

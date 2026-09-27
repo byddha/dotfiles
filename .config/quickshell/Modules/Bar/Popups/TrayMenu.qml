@@ -7,10 +7,14 @@ import Quickshell.Widgets
 import Quickshell.Wayland
 import "../../../Config"
 import "../../../Utils"
+import "../../../Components"
 import ".."
 
-BarPopup {
+Popout {
     id: trayMenu
+
+    padding: Theme.spacingBase
+    panelColor: Theme.surface
 
     property var menu: null
     property real anchorX: 0
@@ -32,37 +36,21 @@ BarPopup {
         showPanel(item, panelScreen);
     }
 
-    Rectangle {
-        id: menuBg
-        width: stackView.implicitWidth + Theme.spacingBase * 2
-        height: stackView.implicitHeight + Theme.spacingBase * 2
-        implicitWidth: width
-        implicitHeight: height
-        color: Theme.surface
-        border.color: Theme.popupBorder
-        border.width: 1
-        radius: Theme.radiusWindow
+    StackView {
+        id: stackView
+        anchors.fill: parent
 
-        onImplicitWidthChanged: Qt.callLater(trayMenu.updatePosition)
-        onImplicitHeightChanged: Qt.callLater(trayMenu.updatePosition)
+        // No animations for instant transitions
+        pushEnter: Transition {}
+        pushExit: Transition {}
+        popEnter: Transition {}
+        popExit: Transition {}
 
-        StackView {
-            id: stackView
-            anchors.fill: parent
-            anchors.margins: Theme.spacingBase
+        implicitWidth: currentItem ? currentItem.implicitWidth : 200
+        implicitHeight: currentItem ? currentItem.implicitHeight : 40
 
-            // No animations for instant transitions
-            pushEnter: Transition {}
-            pushExit: Transition {}
-            popEnter: Transition {}
-            popExit: Transition {}
-
-            implicitWidth: currentItem ? currentItem.implicitWidth : 200
-            implicitHeight: currentItem ? currentItem.implicitHeight : 40
-
-            initialItem: MenuLevel {
-                menuHandle: trayMenu.menu
-            }
+        initialItem: MenuLevel {
+            menuHandle: trayMenu.menu
         }
     }
 
