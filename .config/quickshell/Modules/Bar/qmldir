@@ -7,13 +7,9 @@ MicButton 1.0 MicButton.qml
 BatteryButton 1.0 BatteryButton.qml
 PeripheralBatteryButton 1.0 PeripheralBatteryButton.qml
 Clock 1.0 Clock.qml
-CalendarPopup 1.0 CalendarPopup.qml
 PowerButton 1.0 PowerButton.qml
 Tray 1.0 Tray.qml
-TrayMenu 1.0 TrayMenu.qml
 MediaButton 1.0 MediaButton.qml
-MediaPopup 1.0 MediaPopup.qml
-PowerPopup 1.0 PowerPopup.qml
 NotificationButton 1.0 NotificationButton.qml
 VpnButton 1.0 VpnButton.qml
 RecordingButton 1.0 RecordingButton.qml
