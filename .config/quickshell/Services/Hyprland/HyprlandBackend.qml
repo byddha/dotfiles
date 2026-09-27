@@ -15,14 +15,36 @@ QtObject {
     property string focusedMonitorName: Hyprland.focusedMonitor?.name ?? ""
     property int focusedMonitorId: Hyprland.focusedMonitor?.id ?? -1
 
-    property var windowList: []
-    property var addresses: []
-    property var windowByAddress: ({})
-    property var monitors: []
+    // lastIpcObject holds the same JSON as `hyprctl clients/monitors -j`. Quickshell fills it
+    // shortly after startup and on refreshToplevels()/refreshMonitors(); each update
+    // re-evaluates these bindings through lastIpcObjectChanged.
+    readonly property var windowList: Hyprland.toplevels.values.map(t => t.lastIpcObject).filter(w => w?.address)
+    readonly property var addresses: windowList.map(w => w.address)
+    readonly property var windowByAddress: {
+        const map = {};
+        for (const w of windowList)
+            map[w.address] = w;
+        return map;
+    }
+    readonly property var monitors: Hyprland.monitors.values.map(m => m.lastIpcObject).filter(m => m?.name)
 
     signal workspaceFocusChanged
     signal windowDataUpdated
     signal monitorDataUpdated
+
+    // A refresh updates each toplevel separately, so coalesce the per-object binding updates.
+    onWindowListChanged: Qt.callLater(_emitWindowData)
+    onMonitorsChanged: Qt.callLater(_emitMonitorData)
+
+    function _emitWindowData() {
+        windowDataUpdated();
+        Logger.trace("Clients updated:", windowList.length, "windows");
+    }
+
+    function _emitMonitorData() {
+        monitorDataUpdated();
+        Logger.trace("Monitors updated:", monitors.length, "displays");
+    }
 
     Component.onCompleted: detectCompositor()
 
@@ -41,68 +63,11 @@ QtObject {
 
     function initHyprland() {
         updateWorkspaces();
-        updateAllData();
     }
 
     function updateWorkspaces() {
         workspaces = Hyprland.workspaces.values;
         activeWorkspace = Hyprland.focusedWorkspace?.id ?? 1;
-    }
-
-    // --- hyprctl data fetching ---
-
-    function updateWindowList() {
-        getClients.running = true;
-    }
-
-    function updateMonitorData() {
-        getMonitors.running = true;
-    }
-
-    function updateAllData() {
-        updateWindowList();
-        updateMonitorData();
-    }
-
-    property var _getClients: Process {
-        id: getClients
-        command: ["hyprctl", "clients", "-j"]
-        stdout: StdioCollector {
-            id: clientsCollector
-            onStreamFinished: {
-                try {
-                    backend.windowList = JSON.parse(clientsCollector.text);
-                    let tempWinByAddress = {};
-                    for (var i = 0; i < backend.windowList.length; ++i) {
-                        var win = backend.windowList[i];
-                        tempWinByAddress[win.address] = win;
-                    }
-                    backend.windowByAddress = tempWinByAddress;
-                    backend.addresses = backend.windowList.map(win => win.address);
-                    backend.windowDataUpdated();
-                    Logger.trace("Clients updated:", backend.windowList.length, "windows");
-                } catch (e) {
-                    Logger.error("Failed to parse clients data:", e);
-                }
-            }
-        }
-    }
-
-    property var _getMonitors: Process {
-        id: getMonitors
-        command: ["hyprctl", "monitors", "-j"]
-        stdout: StdioCollector {
-            id: monitorsCollector
-            onStreamFinished: {
-                try {
-                    backend.monitors = JSON.parse(monitorsCollector.text);
-                    backend.monitorDataUpdated();
-                    Logger.trace("Monitors updated:", backend.monitors.length, "displays");
-                } catch (e) {
-                    Logger.error("Failed to parse monitors data:", e);
-                }
-            }
-        }
     }
 
     // --- Data query functions ---
@@ -207,8 +172,28 @@ QtObject {
     property var _cmComponent: Component {
         id: cmComponent
         Process {
-            onExited: destroy()
+            // `monitor cm` emits no event, so pull the new colorManagementPreset for Hdr.
+            onExited: {
+                Hyprland.refreshMonitors();
+                destroy();
+            }
         }
+    }
+
+    // Filter as in DankMaterialShell. windowtitle is skipped: titles come live from ToplevelManager.
+    readonly property var _toplevelEvents: ["openwindow", "closewindow", "movewindow", "movewindowv2", "activewindow", "activewindowv2", "changefloatingmode", "fullscreen", "moveintogroup", "moveoutofgroup"]
+    readonly property var _monitorEvents: ["workspace", "workspacev2", "focusedmon", "focusedmonv2", "activespecial", "activespecialv2", "moveworkspace", "moveworkspacev2", "monitoradded", "monitoraddedv2", "monitorremoved", "monitorremovedv2", "configreloaded"]
+    property bool _toplevelsDirty: false
+    property bool _monitorsDirty: false
+
+    // Hyprland sends most events twice (v1 + v2) in one burst; callLater runs the refresh once.
+    function _flushRefresh() {
+        if (_toplevelsDirty)
+            Hyprland.refreshToplevels();
+        if (_monitorsDirty)
+            Hyprland.refreshMonitors();
+        _toplevelsDirty = false;
+        _monitorsDirty = false;
     }
 
     // --- Connections ---
@@ -229,7 +214,14 @@ QtObject {
         }
 
         function onRawEvent(event) {
-            backend.updateAllData();
+            const isMonitorEvent = backend._monitorEvents.includes(event.name);
+            if (!isMonitorEvent && !backend._toplevelEvents.includes(event.name))
+                return;
+            // Workspace switches also move which windows are visible, so they refresh both.
+            backend._toplevelsDirty = true;
+            if (isMonitorEvent)
+                backend._monitorsDirty = true;
+            Qt.callLater(backend._flushRefresh);
         }
     }
 

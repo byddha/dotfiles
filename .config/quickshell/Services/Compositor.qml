@@ -37,8 +37,8 @@ Singleton {
     // --- Public properties ---
 
     property var workspaces: backend?.workspaces ?? []
-    property string activeWindow: ""
-    property string activeWindowClass: ""
+    readonly property string activeWindow: ToplevelManager.activeToplevel?.title ?? ""
+    readonly property string activeWindowClass: ToplevelManager.activeToplevel?.appId ?? ""
     property string focusedMonitorName: backend?.focusedMonitorName ?? ""
 
     property var windowList: backend?.windowList ?? []
@@ -65,17 +65,7 @@ Singleton {
         }
     }
 
-    // --- Wayland toplevel tracking (compositor-generic) ---
-
-    Connections {
-        target: ToplevelManager
-
-        function onActiveToplevelChanged() {
-            activeWindow = ToplevelManager.activeToplevel?.title ?? "";
-            activeWindowClass = ToplevelManager.activeToplevel?.appId ?? "";
-            Logger.debug("Focus →", activeWindowClass || "none");
-        }
-    }
+    onActiveWindowClassChanged: Logger.debug("Focus →", activeWindowClass || "none")
 
     // --- Function forwarding ---
 
