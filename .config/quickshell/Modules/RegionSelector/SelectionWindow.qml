@@ -117,6 +117,9 @@ PanelWindow {
         if (!root.visible || !root.preparationDone)
             return;
         Compositor.getCursorPosition((globalX, globalY) => {
+            // The reply is async; the window may be gone by then.
+            if (!root)
+                return;
             const localX = globalX - root.monitorOffsetX;
             const localY = globalY - root.monitorOffsetY;
             root.cursorOnThisMonitor = localX >= 0 && localX < root.width && localY >= 0 && localY < root.height;
