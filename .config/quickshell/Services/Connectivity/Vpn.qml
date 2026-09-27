@@ -165,13 +165,11 @@ Singleton {
             disconnectForti();
         mullvadConnectProc.command = ["mullvad", "connect"];
         mullvadConnectProc.running = true;
-        Logger.info("Connecting to Mullvad...");
     }
 
     function disconnectMullvad() {
         mullvadConnectProc.command = ["mullvad", "disconnect"];
         mullvadConnectProc.running = true;
-        Logger.info("Disconnecting Mullvad...");
     }
 
     function connectFortiWithPassword(password: string) {
@@ -187,14 +185,12 @@ Singleton {
                 FORTI_PASS: password
             }
         });
-        Logger.info("FortiVPN launched");
         // Check status after a delay to allow connection
         fortiConnectDelay.start();
     }
 
     function disconnectForti() {
         fortiDisconnectProc.running = true;
-        Logger.info("Disconnecting FortiVPN...");
     }
 
     function toggleMullvad() {
@@ -205,7 +201,6 @@ Singleton {
     }
 
     Component.onCompleted: {
-        Logger.info("VPN service initialized");
         updateStatus();
     }
 }
