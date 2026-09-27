@@ -21,6 +21,8 @@ Singleton {
     // Recorded area in global logical coordinates, read from the recorder's command line
     // (so it survives shell reloads); width 0 when unknown
     property rect region: Qt.rect(0, 0, 0, 0)
+    // When the running recorder started (ms since epoch), from its process age; 0 when not recording
+    property double startedAt: 0
 
     // Logical global area; gpu-screen-recorder records the native pixels of scaled monitors itself.
     // Even sizes: gsr widens odd ones by a pixel, which would reach past the area (and into the frame).
@@ -49,23 +51,27 @@ Singleton {
         onTriggered: statusProc.running = true
     }
 
+    // One line per recorder: "<seconds running> <command line>". The ^ anchors keep bash itself out.
     Process {
         id: statusProc
-        command: ["pgrep", "-af", "^gpu-screen-recorder"]
+        command: ["bash", "-c", "for p in $(pgrep -f '^gpu-screen-recorder'); do echo \"$(ps -o etimes= -p $p) $(tr '\\0' ' ' < /proc/$p/cmdline)\"; done"]
         stdout: StdioCollector {
             onStreamFinished: {
-                const m = text.match(/-w (\d+)x(\d+)\+(-?\d+)\+(-?\d+)/);
+                const line = text.trim().split("\n")[0] ?? "";
+                root.recording = line !== "";
+                const m = line.match(/-w (\d+)x(\d+)\+(-?\d+)\+(-?\d+)/);
                 root.region = m ? Qt.rect(Number(m[3]), Number(m[4]), Number(m[1]), Number(m[2])) : Qt.rect(0, 0, 0, 0);
+                // Only move the start time on a real change, so the shown timer does not jitter
+                const started = root.recording ? Date.now() - parseInt(line) * 1000 : 0;
+                if (Math.abs(started - root.startedAt) > 1500)
+                    root.startedAt = started;
+                if (root.recording)
+                    root.starting = false;
+                else
+                    root.stopping = false;
+                if (!root.starting && !root.stopping)
+                    waitTimeout.stop();
             }
-        }
-        onExited: code => {
-            root.recording = code === 0;
-            if (root.recording)
-                root.starting = false;
-            else
-                root.stopping = false;
-            if (!root.starting && !root.stopping)
-                waitTimeout.stop();
         }
     }
 
