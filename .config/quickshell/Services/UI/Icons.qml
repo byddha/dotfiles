@@ -136,16 +136,20 @@ Singleton {
     // ==================
     // Screenshot/Region Selector Icons
     // ==================
-    readonly property string screenshot: "󰆏"
-    readonly property string record: "󰻃"
-    readonly property string fullscreen: "󰍉"
+    readonly property string screenshot: "󰄀"
+    readonly property string record: "󰕧"
+    readonly property string fullscreen: "󰹑"
     readonly property string crop: "󰆞"
-    readonly property string lens: "󰈈"
-    readonly property string ocr: "󰊄"
-    readonly property string ocrAll: "󰗊"
-    readonly property string translate: "󰗺"
+    readonly property string lens: "󰧶"
+    readonly property string ocr: "󱄽"
+    readonly property string ocrAll: "󰖟"
+    readonly property string translate: "󰗊"
     readonly property string cancel: "󰅖"
     readonly property string copy: "󰆏"
+    readonly property string edit: "󰏫"
+    readonly property string save: "󰆓"
+    readonly property string recordDot: "󰑊"
+    readonly property string keyReturn: "󰌑"
     // ==================
     // Link Icons
     // ==================

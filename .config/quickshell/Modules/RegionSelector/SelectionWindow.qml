@@ -426,13 +426,12 @@ PanelWindow {
             }
         }
 
-        const effectiveAction = root.action;
-
         const rwNative = Math.round(root.regionWidth * root.monitorScale);
         const rhNative = Math.round(root.regionHeight * root.monitorScale);
 
-        // Record mode: wf-recorder captures live, no file grab needed.
-        if (effectiveAction === RegionSelector.SnipAction.Record) {
+        // Record mode: wf-recorder captures live, no file grab needed. Lens, OCR, Edit and Save
+        // still take a screenshot of the region.
+        if (root.action === RegionSelector.SnipAction.Record && root.snipMode === "copy") {
             const slurpRegion = `${Math.round(root.regionX + root.monitorOffsetX)},${Math.round(root.regionY + root.monitorOffsetY)} ${rwNative}x${rhNative}`;
             snipProc.command = ["bash", "-c", `mkdir -p ~/Videos/Screencasts && wf-recorder -g '${slurpRegion}' -c h264_vaapi -f ~/Videos/Screencasts/recording_$(date +%Y-%m-%d_%H-%M-%S).mp4`];
             snipProc.startDetached();
@@ -513,7 +512,10 @@ PanelWindow {
         Keys.onPressed: event => {
             switch (event.key) {
             case Qt.Key_Escape:
-                root.dismiss();
+                if (toolbar.ocrMenuOpen)
+                    toolbar.ocrMenuOpen = false;
+                else
+                    root.dismiss();
                 break;
             case Qt.Key_Space:
             case Qt.Key_Return:
@@ -793,28 +795,29 @@ PanelWindow {
                 }
             }
 
-            // Bottom toolbar
+            // Closes the OCR menu on a press anywhere else, without starting a selection
+            MouseArea {
+                anchors.fill: parent
+                visible: toolbar.ocrMenuOpen
+                z: 19
+                onPressed: toolbar.ocrMenuOpen = false
+            }
+
+            // Bottom toolbar, snapped to whole physical pixels so it stays sharp on scaled monitors
             Toolbar {
                 id: toolbar
-                anchors {
-                    horizontalCenter: parent.horizontalCenter
-                    bottom: parent.bottom
-                    bottomMargin: 20
-                }
+                z: 20
+                x: Math.round((parent.width - width) / 2 * root.monitorScale) / root.monitorScale
+                y: Math.round((parent.height - height - 60) * root.monitorScale) / root.monitorScale
+                width: implicitWidth
+                height: implicitHeight
                 action: root.action
                 adjusting: root.adjusting
                 onDismiss: root.dismiss()
+                onFullscreenRequested: root.snipFullscreen("copy")
                 onCropRequested: root.shrinkToContent()
-                onLensRequested: root.snipAs("lens")
-                onOcrRequested: root.snipAs("ocr")
-                onOcrAllRequested: root.snipAs("ocr", true)
-                onTranslateRequested: root.snipAs("ocr", true, true)
-                onActionRequested: newAction => {
-                    if (newAction === -1)
-                        root.snipFullscreen("copy");
-                    else
-                        root.actionChangeRequested(newAction);
-                }
+                onSnipRequested: (mode, allLangs, translate) => root.snipAs(mode, allLangs, translate)
+                onActionRequested: newAction => root.actionChangeRequested(newAction)
             }
         }
     }
