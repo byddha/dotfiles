@@ -7,76 +7,19 @@ import Quickshell.Widgets
 import Quickshell.Wayland
 import "../../../Config"
 import "../../../Utils"
-import "../../../Components"
-import "../../../Services"
 import ".."
 
-PanelWindow {
+BarPopup {
     id: trayMenu
 
     property var menu: null
-    property var anchorItem: null
-    property var targetScreen: null
     property real anchorX: 0
     property real anchorY: 0
-    property real popupX: 0
-    property real popupY: 0
 
-    // Signals for parent focus management (ii pattern)
-    signal menuOpened(window: var)
-    signal menuClosed
-
-    screen: targetScreen
-    implicitWidth: 0
-    implicitHeight: 0
-    visible: false
-    color: "transparent"
-
-    anchors {
-        left: true
-        right: true
-        top: true
-        bottom: true
-    }
+    offsetX: anchorX
+    offsetY: anchorY
 
     WlrLayershell.namespace: "bidshell:tray-menu"
-    WlrLayershell.layer: WlrLayer.Top
-    WlrLayershell.keyboardFocus: visible ? (Compositor.useHyprlandFocusGrab ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.Exclusive) : WlrKeyboardFocus.None
-    WlrLayershell.exclusionMode: ExclusionMode.Ignore
-    exclusiveZone: 0
-
-    // Emit menuClosed only when menu actually closes
-    onVisibleChanged: {
-        if (!visible) {
-            menuClosed();
-        } else {
-            Qt.callLater(updatePosition);
-        }
-    }
-
-    // Keyboard focus for Escape key handling
-    Item {
-        id: keyHandler
-        focus: trayMenu.visible
-        Keys.onPressed: event => {
-            if (event.key === Qt.Key_Escape) {
-                trayMenu.hideMenu();
-                event.accepted = true;
-            }
-        }
-    }
-
-    function updatePosition() {
-        if (!anchorItem || !targetScreen)
-            return;
-        const pos = anchorItem.mapToGlobal(0, 0);
-        const screenX = targetScreen.x || 0;
-        const screenY = targetScreen.y || 0;
-        const w = menuBg.implicitWidth;
-        const h = menuBg.implicitHeight;
-        popupX = Math.max(8, Math.min((targetScreen.width || width) - w - 8, pos.x - screenX + anchorX));
-        popupY = Math.max(8, Math.min((targetScreen.height || height) - h - 8, pos.y - screenY + anchorY));
-    }
 
     function showAt(item, x, y, panelScreen) {
         if (!item) {
@@ -84,75 +27,41 @@ PanelWindow {
             return;
         }
         menu = item.item.menu;
-        anchorItem = item;
-        targetScreen = panelScreen ?? item.QsWindow?.window?.screen ?? null;
         anchorX = x;
         anchorY = y;
-        visible = true;
-        menuOpened(trayMenu);  // Emit signal with window instance
-        Qt.callLater(updatePosition);
+        showPanel(item, panelScreen);
     }
 
-    // The owning Loader destroys this window on close, so the submenu stack needs no reset.
-    function hideMenu() {
-        visible = false;
-    }
+    Rectangle {
+        id: menuBg
+        width: stackView.implicitWidth + Theme.spacingBase * 2
+        height: stackView.implicitHeight + Theme.spacingBase * 2
+        implicitWidth: width
+        implicitHeight: height
+        color: Theme.surface
+        border.color: Theme.colLayer0Border
+        border.width: 1
+        radius: Theme.radiusBase
 
-    MouseArea {
-        anchors.fill: parent
-        enabled: trayMenu.visible
-        onClicked: trayMenu.hideMenu()
-    }
+        onImplicitWidthChanged: Qt.callLater(trayMenu.updatePosition)
+        onImplicitHeightChanged: Qt.callLater(trayMenu.updatePosition)
 
-    // Background with shadow
-    Item {
-        x: trayMenu.popupX
-        y: trayMenu.popupY
-        width: menuBg.implicitWidth
-        height: menuBg.implicitHeight
-
-        MouseArea {
+        StackView {
+            id: stackView
             anchors.fill: parent
-            acceptedButtons: Qt.AllButtons
-            onPressed: mouse => {
-                mouse.accepted = true;
-            }
-            onClicked: mouse => {
-                mouse.accepted = true;
-            }
-        }
+            anchors.margins: Theme.spacingBase
 
-        Rectangle {
-            id: menuBg
-            width: stackView.implicitWidth + Theme.spacingBase * 2
-            height: stackView.implicitHeight + Theme.spacingBase * 2
-            implicitWidth: width
-            implicitHeight: height
-            color: Theme.surface
-            border.color: Theme.colLayer0Border
-            border.width: 1
-            radius: Theme.radiusBase
+            // No animations for instant transitions
+            pushEnter: Transition {}
+            pushExit: Transition {}
+            popEnter: Transition {}
+            popExit: Transition {}
 
-            onImplicitWidthChanged: Qt.callLater(trayMenu.updatePosition)
-            onImplicitHeightChanged: Qt.callLater(trayMenu.updatePosition)
+            implicitWidth: currentItem ? currentItem.implicitWidth : 200
+            implicitHeight: currentItem ? currentItem.implicitHeight : 40
 
-            StackView {
-                id: stackView
-                anchors.fill: parent
-                anchors.margins: Theme.spacingBase
-
-                // No animations for instant transitions
-                pushEnter: Transition {}
-                pushExit: Transition {}
-                popEnter: Transition {}
-                popExit: Transition {}
-
-                implicitWidth: currentItem ? currentItem.implicitWidth : 200
-                implicitHeight: currentItem ? currentItem.implicitHeight : 40
-
-                initialItem: MenuLevel {
-                    menuHandle: trayMenu.menu
-                }
+            initialItem: MenuLevel {
+                menuHandle: trayMenu.menu
             }
         }
     }
@@ -351,7 +260,7 @@ PanelWindow {
                                     } else {
                                         // Execute action and close menu
                                         modelData.triggered();
-                                        trayMenu.hideMenu();
+                                        trayMenu.hidePanel();
                                     }
                                 }
                             }

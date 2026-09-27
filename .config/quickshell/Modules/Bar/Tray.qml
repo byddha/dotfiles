@@ -36,7 +36,7 @@ Item {
         windows: [root.activeMenu]
         onCleared: {
             if (root.activeMenu) {
-                root.activeMenu.hideMenu();
+                root.activeMenu.hidePanel();
                 root.releaseFocus();
             }
         }
@@ -71,8 +71,8 @@ Item {
                 showAt(root.pendingMenuItem, root.pendingMenuX, root.pendingMenuY, root.barWindow?.screen);
             }
 
-            onMenuOpened: window => root.setActiveMenuAndGrabFocus(window)
-            onMenuClosed: root.releaseFocus()
+            onPanelOpened: window => root.setActiveMenuAndGrabFocus(window)
+            onPanelClosed: root.releaseFocus()
         }
     }
 
