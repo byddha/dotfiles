@@ -3,31 +3,15 @@ import QtQuick.Layouts
 import "../../Config"
 import "../../Components"
 
-/**
- * Reusable OSD indicator component - Vertical Bar Layout
- *
- * Layout (top to bottom):
- * ┌─────────┐
- * │   75    │  ← Percentage number
- * ├─────────┤
- * │ ▓▓▓▓▓▓▓ │  ← Vertical bar (fills bottom-to-top)
- * │ ░░░░░░░ │
- * └─────────┘
- * ┌─────────┐
- * │   🔊    │  ← Icon (inverted colors)
- * └─────────┘
- */
 Item {
     id: root
 
-    // Required properties
     required property real value  // 0.0 to 1.0
-    required property string icon  // Icon character
+    required property string icon
 
-    // Sizing
-    property real barWidth: 24
-    property real barHeight: 180
-    property real padding: Theme.spacingBase
+    readonly property real barWidth: 24
+    readonly property real barHeight: 180
+    readonly property real padding: Theme.spacingBase
 
     implicitWidth: mainColumn.implicitWidth + Theme.elevationMargin * 2
     implicitHeight: mainColumn.implicitHeight + Theme.elevationMargin * 2
@@ -37,18 +21,14 @@ Item {
         anchors.centerIn: parent
         spacing: 0
 
-        // Top section: Number + Vertical Bar (shared background)
         Rectangle {
             id: topSection
             color: Theme.alpha(Theme.colLayer0, 0.95)
             border.width: 1
             border.color: Theme.colLayer2
 
-            // Only round top corners
             topLeftRadius: Theme.radiusBase
             topRightRadius: Theme.radiusBase
-            bottomLeftRadius: 0
-            bottomRightRadius: 0
 
             Layout.preferredWidth: root.barWidth + root.padding * 2
             Layout.preferredHeight: numberText.implicitHeight + root.padding + root.barHeight + root.padding
@@ -58,7 +38,6 @@ Item {
                 anchors.margins: root.padding
                 spacing: root.padding
 
-                // Percentage number
                 Text {
                     id: numberText
                     text: Math.round(root.value * 100)
@@ -70,7 +49,6 @@ Item {
                     Layout.fillWidth: true
                 }
 
-                // Vertical progress bar
                 Rectangle {
                     id: barTrack
                     Layout.preferredWidth: 12
@@ -79,7 +57,6 @@ Item {
                     color: Theme.colLayer2
                     radius: 6
 
-                    // Fill (anchored to bottom, height based on value)
                     Rectangle {
                         id: barFill
                         anchors.left: parent.left
@@ -101,14 +78,10 @@ Item {
             }
         }
 
-        // Bottom section: Icon (primary color background)
         Rectangle {
             id: iconSection
             color: Theme.primary
 
-            // Only round bottom corners
-            topLeftRadius: 0
-            topRightRadius: 0
             bottomLeftRadius: Theme.radiusBase
             bottomRightRadius: Theme.radiusBase
 

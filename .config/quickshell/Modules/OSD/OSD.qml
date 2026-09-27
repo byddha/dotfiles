@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
 import "../../Config"
@@ -7,88 +6,48 @@ import "../../Services"
 import "../../Utils"
 import "."
 
-/**
- * On-Screen Display (OSD) system
- * Shows overlay indicators for volume, microphone, and brightness changes
- */
 Scope {
     id: root
 
-    // Track which indicator to show
     property string currentIndicator: "volume"
 
-    // Available indicators
-    property var indicators: [
-        {
-            id: "volume",
-            sourceUrl: "indicators/VolumeIndicator.qml"
-        },
-        {
-            id: "microphone",
-            sourceUrl: "indicators/MicrophoneIndicator.qml"
-        },
-        {
-            id: "brightness",
-            sourceUrl: "indicators/BrightnessIndicator.qml"
-        }
-    ]
-
-    // Show OSD and restart timeout
     function triggerOsd(indicatorType) {
+        if (!Config.options.osd?.enabled)
+            return;
         root.currentIndicator = indicatorType;
         Settings.osdVisible = true;
         osdTimeout.restart();
-        Logger.info(`Showing ${indicatorType} indicator`);
     }
 
-    // Auto-hide timer
     Timer {
         id: osdTimeout
         interval: Config.options.osd?.timeout ?? 1000
-        repeat: false
-        running: false
-        onTriggered: {
-            Settings.osdVisible = false;
-            Logger.info("Auto-hiding after timeout");
-        }
+        onTriggered: Settings.osdVisible = false
     }
 
-    // Listen for volume changes
     Connections {
         target: Audio.sink?.audio ?? null
         function onVolumeChanged() {
-            if (!Config.options.osd?.enabled)
-                return;
             root.triggerOsd("volume");
         }
         function onMutedChanged() {
-            if (!Config.options.osd?.enabled)
-                return;
             root.triggerOsd("volume");
         }
     }
 
-    // Listen for microphone changes
     Connections {
         target: Audio.source?.audio ?? null
         function onVolumeChanged() {
-            if (!Config.options.osd?.enabled)
-                return;
             root.triggerOsd("microphone");
         }
         function onMutedChanged() {
-            if (!Config.options.osd?.enabled)
-                return;
             root.triggerOsd("microphone");
         }
     }
 
-    // Listen for brightness changes
     Connections {
         target: Brightness
         function onBrightnessChanged() {
-            if (!Config.options.osd?.enabled)
-                return;
             if (!Brightness.available)
                 return;
             root.triggerOsd("brightness");
@@ -126,29 +85,56 @@ Scope {
             implicitWidth: contentLayout.implicitWidth
             implicitHeight: contentLayout.implicitHeight
 
-            ColumnLayout {
+            Item {
                 id: contentLayout
                 anchors {
                     right: parent.right
                     bottom: parent.bottom
                 }
+                implicitHeight: indicatorLoader.item?.implicitHeight ?? 100
+                implicitWidth: indicatorLoader.item?.implicitWidth ?? 60
 
-                Item {
-                    id: osdContainer
-                    implicitHeight: indicatorLoader.item?.implicitHeight ?? 100
-                    implicitWidth: indicatorLoader.item?.implicitWidth ?? 60
+                // One Component per indicator so switching type recreates the item instead of animating the bar between unrelated values.
+                Loader {
+                    id: indicatorLoader
+                    active: osdWindow.visible
+                    sourceComponent: {
+                        switch (root.currentIndicator) {
+                        case "volume":
+                            return volumeIndicator;
+                        case "microphone":
+                            return microphoneIndicator;
+                        case "brightness":
+                            return brightnessIndicator;
+                        }
+                        return null;
+                    }
+                }
 
-                    Loader {
-                        id: indicatorLoader
-                        active: osdWindow.visible
-                        source: root.indicators.find(i => i.id === root.currentIndicator)?.sourceUrl ?? ""
+                Component {
+                    id: volumeIndicator
+                    OsdValueIndicator {
+                        value: Audio.volume
+                        icon: Audio.isMuted ? Icons.volumeMuted : Icons.volumeHigh
+                    }
+                }
+
+                Component {
+                    id: microphoneIndicator
+                    OsdValueIndicator {
+                        value: Audio.micVolume
+                        icon: Audio.isMicMuted ? Icons.micMuted : Icons.micOn
+                    }
+                }
+
+                Component {
+                    id: brightnessIndicator
+                    OsdValueIndicator {
+                        value: Brightness.brightness
+                        icon: Icons.brightness
                     }
                 }
             }
         }
-    }
-
-    Component.onCompleted: {
-        Logger.info("OSD system initialized");
     }
 }
