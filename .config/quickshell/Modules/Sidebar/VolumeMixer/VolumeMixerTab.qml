@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -5,7 +7,6 @@ import Quickshell
 import "../../../Config"
 import "../../../Components"
 import "../../../Services"
-import "../../../Utils"
 
 ColumnLayout {
     id: root
@@ -57,13 +58,34 @@ ColumnLayout {
         }
     }
 
-    // Output devices section
-    ColumnLayout {
+    DeviceSection {
+        title: "Output Devices"
+        devices: Audio.outputDevices
+        selectedId: Audio.sink?.id
+        onDeviceSelected: device => Audio.setDefaultSink(device)
+    }
+
+    DeviceSection {
+        title: "Input Devices"
+        devices: Audio.inputDevices
+        selectedId: Audio.source?.id
+        onDeviceSelected: device => Audio.setDefaultSource(device)
+    }
+
+    component DeviceSection: ColumnLayout {
+        id: section
+
+        property string title
+        property var devices
+        property var selectedId
+
+        signal deviceSelected(var device)
+
         Layout.fillWidth: true
         spacing: 4
 
         StyledText {
-            text: "Output Devices"
+            text: section.title
             font.pixelSize: Theme.fontSizeSmall
             color: Theme.textSecondary
         }
@@ -74,7 +96,7 @@ ColumnLayout {
 
             Repeater {
                 model: ScriptModel {
-                    values: Audio.outputDevices
+                    values: section.devices
                 }
 
                 DeviceListItem {
@@ -82,54 +104,11 @@ ColumnLayout {
                     Layout.fillWidth: true
 
                     deviceName: Audio.friendlyDeviceName(modelData)
-                    isSelected: modelData.id === Audio.sink?.id
+                    isSelected: modelData.id === section.selectedId
 
-                    onClicked: {
-                        Audio.setDefaultSink(modelData);
-                        Logger.info(`Switched to output device: ${deviceName}`);
-                    }
+                    onClicked: section.deviceSelected(modelData)
                 }
             }
         }
-    }
-
-    // Input devices section
-    ColumnLayout {
-        Layout.fillWidth: true
-        spacing: 4
-
-        StyledText {
-            text: "Input Devices"
-            font.pixelSize: Theme.fontSizeSmall
-            color: Theme.textSecondary
-        }
-
-        ColumnLayout {
-            Layout.fillWidth: true
-            spacing: 2
-
-            Repeater {
-                model: ScriptModel {
-                    values: Audio.inputDevices
-                }
-
-                DeviceListItem {
-                    required property var modelData
-                    Layout.fillWidth: true
-
-                    deviceName: Audio.friendlyDeviceName(modelData)
-                    isSelected: modelData.id === Audio.source?.id
-
-                    onClicked: {
-                        Audio.setDefaultSource(modelData);
-                        Logger.info(`Switched to input device: ${deviceName}`);
-                    }
-                }
-            }
-        }
-    }
-
-    Component.onCompleted: {
-        Logger.info("Volume mixer tab loaded");
     }
 }
