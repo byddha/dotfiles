@@ -19,10 +19,9 @@ Rectangle {
 
     color: "transparent"
     radius: Theme.roundingWindow
-    clip: true  // For precise AA rounded corners: use layer.effect + SDF shader (roundedBoxSDF)
+    clip: true  // keeps the class label inside windows smaller than it
     visible: opacity > 0
 
-    // Helper to get cutout at index, or zero vector if not present
     function getCutout(index) {
         if (index < cutouts.length && cutouts[index]) {
             const c = cutouts[index];
@@ -69,7 +68,6 @@ Rectangle {
             spacing: 8
 
             Text {
-                id: iconText
                 text: AppIcons.getIcon(root.clientDimensions.class, root.clientDimensions.title, "")
                 font.family: Theme.fontFamilyIcons
                 font.pixelSize: 22
@@ -77,7 +75,6 @@ Rectangle {
             }
 
             Text {
-                id: classText
                 text: AppIcons.getDisplayName(root.clientDimensions.class, root.clientDimensions.title, "") || root.clientDimensions.class || "Window"
                 font.family: Theme.fontFamily
                 font.pixelSize: 24
