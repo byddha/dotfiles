@@ -1,18 +1,9 @@
 import QtQuick
 import QtQuick.Layouts
 import "../../Config"
-import "../../Utils"
 import "../../Services"
 import "../../Components"
 
-/**
- * CalendarPanelContent - Content for the calendar popup panel
- *
- * Contains:
- * - Banner with date display and analog/digital clock
- * - Calendar grid with month navigation
- * - Weather card (optional)
- */
 Item {
     id: root
 
@@ -21,15 +12,6 @@ Item {
     implicitWidth: 380
     implicitHeight: content.implicitHeight
 
-    // Update time every minute for calendar
-    Timer {
-        interval: 60000
-        running: true
-        repeat: true
-        onTriggered: root.now = new Date()
-    }
-
-    // Also update on second for the clock
     Timer {
         interval: 1000
         running: true
@@ -42,9 +24,6 @@ Item {
         anchors.fill: parent
         spacing: Theme.spacingBase
 
-        // ====================================================================
-        // BANNER - Date display with clock
-        // ====================================================================
         Rectangle {
             id: banner
             Layout.fillWidth: true
@@ -122,17 +101,10 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     width: 56
                     height: 56
-                    backgroundColor: Theme.primary
-                    clockColor: Theme.colLayer0
-                    secondHandColor: Theme.accentRed
-                    now: root.now
                 }
             }
         }
 
-        // ====================================================================
-        // CALENDAR GRID
-        // ====================================================================
         Rectangle {
             id: calendarCard
             Layout.fillWidth: true
@@ -179,92 +151,29 @@ Item {
                         }
                     }
 
-                    // Previous month button (circular)
-                    Rectangle {
-                        Layout.preferredWidth: 28
-                        Layout.preferredHeight: 28
-                        radius: width / 2
-                        color: prevMouseArea.containsMouse ? Theme.colLayer2 : Theme.colLayer1
-                        border.width: 1
-                        border.color: Theme.colLayer0Border
-
-                        Text {
-                            anchors.centerIn: parent
-                            text: Icons.chevronLeft
-                            font.pixelSize: 14
-                            font.family: Theme.fontFamilyIcons
-                            color: prevMouseArea.containsMouse ? Theme.primary : Theme.textColor
-                        }
-
-                        MouseArea {
-                            id: prevMouseArea
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                const newDate = new Date(calendarGrid.year, calendarGrid.month - 1, 1);
-                                calendarGrid.year = newDate.getFullYear();
-                                calendarGrid.month = newDate.getMonth();
-                            }
+                    CircleButton {
+                        icon: Icons.chevronLeft
+                        onClicked: {
+                            const newDate = new Date(calendarGrid.year, calendarGrid.month - 1, 1);
+                            calendarGrid.year = newDate.getFullYear();
+                            calendarGrid.month = newDate.getMonth();
                         }
                     }
 
-                    // Today button (circular)
-                    Rectangle {
-                        Layout.preferredWidth: 28
-                        Layout.preferredHeight: 28
-                        radius: width / 2
-                        color: todayMouseArea.containsMouse ? Theme.colLayer2 : Theme.colLayer1
-                        border.width: 1
-                        border.color: Theme.colLayer0Border
-
-                        Text {
-                            anchors.centerIn: parent
-                            text: Icons.today
-                            font.family: Theme.fontFamilyIcons
-                            font.pixelSize: 14
-                            color: todayMouseArea.containsMouse ? Theme.primary : Theme.textColor
-                        }
-
-                        MouseArea {
-                            id: todayMouseArea
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                calendarGrid.month = root.now.getMonth();
-                                calendarGrid.year = root.now.getFullYear();
-                            }
+                    CircleButton {
+                        icon: Icons.today
+                        onClicked: {
+                            calendarGrid.month = root.now.getMonth();
+                            calendarGrid.year = root.now.getFullYear();
                         }
                     }
 
-                    // Next month button (circular)
-                    Rectangle {
-                        Layout.preferredWidth: 28
-                        Layout.preferredHeight: 28
-                        radius: width / 2
-                        color: nextMouseArea.containsMouse ? Theme.colLayer2 : Theme.colLayer1
-                        border.width: 1
-                        border.color: Theme.colLayer0Border
-
-                        Text {
-                            anchors.centerIn: parent
-                            text: Icons.chevronRight
-                            font.family: Theme.fontFamilyIcons
-                            font.pixelSize: 14
-                            color: nextMouseArea.containsMouse ? Theme.primary : Theme.textColor
-                        }
-
-                        MouseArea {
-                            id: nextMouseArea
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                const newDate = new Date(calendarGrid.year, calendarGrid.month + 1, 1);
-                                calendarGrid.year = newDate.getFullYear();
-                                calendarGrid.month = newDate.getMonth();
-                            }
+                    CircleButton {
+                        icon: Icons.chevronRight
+                        onClicked: {
+                            const newDate = new Date(calendarGrid.year, calendarGrid.month + 1, 1);
+                            calendarGrid.year = newDate.getFullYear();
+                            calendarGrid.month = newDate.getMonth();
                         }
                     }
                 }
@@ -393,6 +302,7 @@ Item {
                             property var event: modelData.holiday
                             property bool hasEvent: event !== null && event !== undefined
                             property string eventType: hasEvent ? event.type : ""
+                            property bool showMarker: hasEvent && modelData.currentMonth
 
                             Rectangle {
                                 width: 32
@@ -417,50 +327,28 @@ Item {
                                     opacity: modelData.currentMonth ? 1.0 : 0.4
                                 }
 
-                                // Event indicators
-                                // Dot for user events
+                                // Dot for user events, diamond for public holidays
                                 Rectangle {
-                                    visible: dayCell.hasEvent && modelData.currentMonth && dayCell.eventType === "user"
+                                    visible: dayCell.showMarker && (dayCell.eventType === "user" || dayCell.eventType === "public")
                                     width: 6
                                     height: 6
-                                    radius: 3
+                                    radius: dayCell.eventType === "user" ? 3 : 0
+                                    rotation: dayCell.eventType === "public" ? 45 : 0
                                     anchors.horizontalCenter: parent.horizontalCenter
                                     anchors.bottom: parent.bottom
                                     anchors.bottomMargin: 2
-                                    color: Theme.primary
+                                    color: dayCell.eventType === "public" ? Theme.accentRed : Theme.primary
                                 }
 
-                                // Diamond for public holiday
-                                Rectangle {
-                                    visible: dayCell.hasEvent && modelData.currentMonth && dayCell.eventType === "public"
-                                    width: 6
-                                    height: 6
-                                    rotation: 45
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    anchors.bottom: parent.bottom
-                                    anchors.bottomMargin: 2
-                                    color: Theme.accentRed
-                                }
-
-                                // Cross for nameday
+                                // Cross for namedays, asterisk for observances
                                 Text {
-                                    visible: dayCell.hasEvent && modelData.currentMonth && dayCell.eventType === "nameday"
+                                    readonly property bool nameday: dayCell.eventType === "nameday"
+                                    visible: dayCell.showMarker && (nameday || dayCell.eventType === "observance")
                                     anchors.horizontalCenter: parent.horizontalCenter
                                     anchors.bottom: parent.bottom
-                                    anchors.bottomMargin: -2
-                                    text: Icons.cross
-                                    font.pixelSize: 12
-                                    color: Theme.primary
-                                }
-
-                                // Asterisk for observance
-                                Text {
-                                    visible: dayCell.hasEvent && modelData.currentMonth && dayCell.eventType === "observance"
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    anchors.bottom: parent.bottom
-                                    anchors.bottomMargin: -1
-                                    text: "∗"
-                                    font.pixelSize: 10
+                                    anchors.bottomMargin: nameday ? -2 : -1
+                                    text: nameday ? Icons.cross : "∗"
+                                    font.pixelSize: nameday ? 12 : 10
                                     color: Theme.primary
                                 }
                             }
@@ -584,64 +472,93 @@ Item {
                     }
                 }
 
-                Rectangle {
-                    implicitWidth: 32
-                    implicitHeight: 32
-                    radius: Theme.radiusSmall
-                    color: saveMouse.containsMouse ? Qt.darker(Theme.primary, 1.1) : Theme.primary
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: "✓"
-                        font.pixelSize: 16
-                        color: Theme.primaryText
-                    }
-
-                    MouseArea {
-                        id: saveMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: inlineInput.save()
-                    }
+                InputAction {
+                    glyph: "✓"
+                    glyphColor: Theme.primaryText
+                    baseColor: Theme.primary
+                    hoverColor: Qt.darker(Theme.primary, 1.1)
+                    onClicked: inlineInput.save()
                 }
 
-                Rectangle {
-                    implicitWidth: 32
-                    implicitHeight: 32
-                    radius: Theme.radiusSmall
-                    color: cancelMouse.containsMouse ? Theme.colLayer2 : Theme.colLayer1
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: "✕"
-                        font.pixelSize: 16
-                        color: Theme.textColor
-                    }
-
-                    MouseArea {
-                        id: cancelMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: inlineInput.hide()
-                    }
+                InputAction {
+                    glyph: "✕"
+                    glyphColor: Theme.textColor
+                    baseColor: Theme.colLayer1
+                    hoverColor: Theme.colLayer2
+                    onClicked: inlineInput.hide()
                 }
             }
         }
 
-        // ====================================================================
-        // WEATHER SECTION (conditional)
-        // ====================================================================
         Loader {
             id: weatherLoader
             Layout.fillWidth: true
             active: Config.options.calendar?.weather?.enabled ?? false
             visible: active
 
-            sourceComponent: WeatherCard {
-                forecastDays: 5
-            }
+            sourceComponent: WeatherCard {}
+        }
+    }
+
+    component CircleButton: Rectangle {
+        id: circleButton
+
+        property string icon
+
+        signal clicked
+
+        Layout.preferredWidth: 28
+        Layout.preferredHeight: 28
+        radius: width / 2
+        color: circleMouse.containsMouse ? Theme.colLayer2 : Theme.colLayer1
+        border.width: 1
+        border.color: Theme.colLayer0Border
+
+        Text {
+            anchors.centerIn: parent
+            text: circleButton.icon
+            font.family: Theme.fontFamilyIcons
+            font.pixelSize: 14
+            color: circleMouse.containsMouse ? Theme.primary : Theme.textColor
+        }
+
+        MouseArea {
+            id: circleMouse
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: circleButton.clicked()
+        }
+    }
+
+    component InputAction: Rectangle {
+        id: inputAction
+
+        property string glyph
+        property color glyphColor
+        property color baseColor
+        property color hoverColor
+
+        signal clicked
+
+        implicitWidth: 32
+        implicitHeight: 32
+        radius: Theme.radiusSmall
+        color: actionMouse.containsMouse ? hoverColor : baseColor
+
+        Text {
+            anchors.centerIn: parent
+            text: inputAction.glyph
+            font.pixelSize: 16
+            color: inputAction.glyphColor
+        }
+
+        MouseArea {
+            id: actionMouse
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: inputAction.clicked()
         }
     }
 }
