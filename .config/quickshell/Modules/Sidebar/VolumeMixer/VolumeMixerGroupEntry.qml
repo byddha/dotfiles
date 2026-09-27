@@ -120,11 +120,11 @@ Item {
 
                     Rectangle {
                         required property int index
+                        // Fixed geometry (container is 19 wide): reading `parent` here warns while delegates are created/destroyed.
+                        x: 2
+                        width: 17
                         height: 2
                         radius: 1
-                        width: parent.width - 2
-                        anchors.left: parent.left
-                        anchors.leftMargin: 2
                         color: Theme.primary
                         y: {
                             const item = streamRepeater.itemAt(index);
