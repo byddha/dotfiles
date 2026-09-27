@@ -340,7 +340,7 @@ Item {
                         for (let i = daysBefore - 1; i >= 0; i--) {
                             const day = prevMonthDays - i;
                             const prevYear = month === 0 ? year - 1 : year;
-                            const prevMonthIdx = month - 1;
+                            const prevMonthIdx = month === 0 ? 11 : month - 1;
                             days.push({
                                 day: day,
                                 month: prevMonthIdx,
@@ -368,7 +368,7 @@ Item {
                         // Next month days
                         for (let i = 1; i <= daysAfter; i++) {
                             const nextYear = month === 11 ? year + 1 : year;
-                            const nextMonthIdx = month + 1;
+                            const nextMonthIdx = month === 11 ? 0 : month + 1;
                             days.push({
                                 day: i,
                                 month: nextMonthIdx,
