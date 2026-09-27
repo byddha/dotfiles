@@ -5,27 +5,11 @@ import "../../../Config"
 import "../../../Components"
 import "../../../Components/Notifications"
 import "../../../Services"
-import "../../../Utils"
 
 ColumnLayout {
     id: root
 
     spacing: Theme.spacingBase
-
-    onVisibleChanged: {
-        if (!visible) {
-            searchField.text = "";
-            searchField.focus = false;
-        }
-    }
-
-    Connections {
-        target: Settings
-        function onSidebarVisibleChanged() {
-            searchField.text = "";
-            searchField.focus = false;
-        }
-    }
 
     // Search field
     TextField {
@@ -103,14 +87,7 @@ ColumnLayout {
             text: "Clear All"
             font.pixelSize: Theme.fontSizeSmall
             enabled: Notifications.list.length > 0
-            onClicked: {
-                Notifications.discardAllNotifications();
-                Logger.info("All notifications cleared");
-            }
+            onClicked: Notifications.discardAllNotifications()
         }
-    }
-
-    Component.onCompleted: {
-        Logger.info("Notification history tab loaded");
     }
 }
