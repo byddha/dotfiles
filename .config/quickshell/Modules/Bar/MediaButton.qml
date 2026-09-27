@@ -154,6 +154,7 @@ Rectangle {
             height: 20
             anchors.verticalCenter: parent.verticalCenter
             activePlayer: root.activePlayer
+            stableLength: MprisController.stableTrackLength
             visible: root.playerAvailable && MprisController.stableTrackLength > 0
         }
 

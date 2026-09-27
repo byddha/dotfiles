@@ -2,91 +2,101 @@ import QtQuick
 import Quickshell.Services.Mpris
 import "../Config"
 
+// Seek handling follows DankMaterialShell's DankSeekbar: one seek on release, preview while dragging.
 Item {
     id: root
 
     property MprisPlayer activePlayer
-    property real value: {
-        if (!activePlayer || activePlayer.length <= 0)
-            return 0;
-        const pos = (activePlayer.position || 0) % Math.max(1, activePlayer.length);
-        const calculatedRatio = pos / activePlayer.length;
-        return Math.max(0, Math.min(1, calculatedRatio));
-    }
+    // Pass MprisController.stableTrackLength: player.length is wrong after a seek on Firefox/Zen.
+    property real stableLength: 0
+    readonly property bool canSeek: (activePlayer?.canSeek ?? false) && stableLength > 0
+
+    readonly property real playerValue: stableLength > 0 ? clampRatio((activePlayer.position || 0) / stableLength) : 0
+    // While dragging, and until the player reports the new position, show the target instead.
+    property real previewRatio: -1
+    property real value: previewRatio >= 0 ? previewRatio : playerValue
+
     property bool isSeeking: false
+    property real committedRatio: -1
+    property int settleChecksRemaining: 0
 
     implicitHeight: 20
 
-    // Poll position updates - MPRIS doesn't emit change signals automatically
+    function clampRatio(ratio) {
+        return Math.max(0, Math.min(1, ratio));
+    }
+
+    function clampPosition(position) {
+        return Math.max(0.1, Math.min(position, stableLength * 0.99));
+    }
+
+    function clearPreview() {
+        settleTimer.stop();
+        committedRatio = -1;
+        if (!isSeeking)
+            previewRatio = -1;
+    }
+
+    // MPRIS doesn't emit position changes by itself
     Timer {
         interval: 300
-        running: root.visible && activePlayer && activePlayer.positionSupported
+        running: root.visible && !root.isSeeking && (root.activePlayer?.positionSupported ?? false)
+        repeat: true
+        onTriggered: root.activePlayer.positionChanged()
+    }
+
+    // Holds the preview after a seek until the player catches up, so the bar doesn't jump back.
+    Timer {
+        id: settleTimer
+        interval: 80
         repeat: true
         onTriggered: {
-            if (activePlayer?.positionSupported) {
-                activePlayer.positionChanged();
+            if (root.isSeeking || root.committedRatio < 0 || Math.abs(root.playerValue - root.committedRatio) <= 0.0015 || root.settleChecksRemaining <= 0) {
+                root.clearPreview();
+                return;
             }
+            root.settleChecksRemaining -= 1;
         }
     }
 
     M3WaveProgress {
         anchors.fill: parent
-        visible: activePlayer && activePlayer.length > 0
+        visible: root.stableLength > 0
         value: root.value
-        isPlaying: activePlayer && activePlayer.playbackState === MprisPlaybackState.Playing
+        isPlaying: root.activePlayer?.playbackState === MprisPlaybackState.Playing
 
         MouseArea {
             anchors.fill: parent
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
-            enabled: activePlayer && activePlayer.canSeek && activePlayer.length > 0
-
-            property real pendingSeekPosition: -1
-
-            Timer {
-                id: seekDebounceTimer
-                interval: 150
-                onTriggered: {
-                    if (parent.pendingSeekPosition >= 0 && activePlayer && activePlayer.canSeek && activePlayer.length > 0) {
-                        const clamped = Math.min(parent.pendingSeekPosition, activePlayer.length * 0.99);
-                        activePlayer.position = clamped;
-                        parent.pendingSeekPosition = -1;
-                    }
-                }
-            }
+            enabled: root.canSeek
 
             onPressed: mouse => {
+                root.clearPreview();
                 root.isSeeking = true;
-                if (activePlayer && activePlayer.length > 0 && activePlayer.canSeek) {
-                    const r = Math.max(0, Math.min(1, mouse.x / parent.width));
-                    pendingSeekPosition = r * activePlayer.length;
-                    seekDebounceTimer.restart();
-                }
+                root.previewRatio = root.clampRatio(mouse.x / width);
+            }
+
+            onPositionChanged: mouse => {
+                if (pressed && root.isSeeking)
+                    root.previewRatio = root.clampRatio(mouse.x / width);
             }
 
             onReleased: {
                 root.isSeeking = false;
-                seekDebounceTimer.stop();
-                if (pendingSeekPosition >= 0 && activePlayer && activePlayer.canSeek && activePlayer.length > 0) {
-                    const clamped = Math.min(pendingSeekPosition, activePlayer.length * 0.99);
-                    activePlayer.position = clamped;
-                    pendingSeekPosition = -1;
-                }
+                if (root.previewRatio < 0 || !root.canSeek)
+                    return;
+                const position = root.clampPosition(root.previewRatio * root.stableLength);
+                root.activePlayer.position = position;
+                root.previewRatio = position / root.stableLength;
+                root.committedRatio = root.previewRatio;
+                root.settleChecksRemaining = 15;
+                settleTimer.restart();
             }
 
-            onPositionChanged: mouse => {
-                if (pressed && root.isSeeking && activePlayer && activePlayer.length > 0 && activePlayer.canSeek) {
-                    const r = Math.max(0, Math.min(1, mouse.x / parent.width));
-                    pendingSeekPosition = r * activePlayer.length;
-                    seekDebounceTimer.restart();
-                }
-            }
-
-            onClicked: mouse => {
-                if (activePlayer && activePlayer.length > 0 && activePlayer.canSeek) {
-                    const r = Math.max(0, Math.min(1, mouse.x / parent.width));
-                    activePlayer.position = r * activePlayer.length;
-                }
+            onCanceled: {
+                root.isSeeking = false;
+                root.clearPreview();
             }
         }
     }
