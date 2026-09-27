@@ -32,6 +32,8 @@ Singleton {
     property color primary: ThemeService.primary                 // Primary accent
     property color primaryText: ThemeService.primaryTextColor           // Text on primary
     property color colSecondary: ThemeService.secondary          // Secondary accent
+    property color secondaryContainer: ThemeService.secondaryContainer
+    property color onSecondaryContainer: ThemeService.secondaryContainerText
     property color accentRed: ThemeService.error                 // Red accent (warnings/danger)
     property color accentOrange: ThemeService.base09             // Orange accent (no material role for it)
 

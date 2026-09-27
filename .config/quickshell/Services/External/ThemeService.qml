@@ -36,6 +36,8 @@ Singleton {
     property string secondary: "#ee5a6f"
     property string error: "#ff6b6b"
     property string outline: "#8a8a8a"
+    property string secondaryContainer: "#333333"
+    property string secondaryContainerText: "#d0d0d0"
 
     // base16 slots with no material role
     property string base08: "#ff6b6b"  // Variables, XML Tags, Markup Link Text
@@ -119,6 +121,8 @@ Singleton {
         root.secondary = c.secondary;
         root.error = c.error;
         root.outline = c.outline;
+        root.secondaryContainer = c.secondary_container;
+        root.secondaryContainerText = c.on_secondary_container;
 
         root.base08 = ansi(1);
         root.base09 = ansi(9);
