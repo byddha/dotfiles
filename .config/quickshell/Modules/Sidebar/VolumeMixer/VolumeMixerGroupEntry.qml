@@ -1,11 +1,11 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
 import "../../../Config"
 import "../../../Components"
 import "../../../Services"
-import "../../../Utils"
 
 Item {
     id: root
@@ -176,15 +176,11 @@ Item {
         }
 
         // Single stream (no group)
-        Repeater {
-            model: ScriptModel {
-                values: root.isGroup ? [] : root.group.nodes
-            }
-
-            VolumeMixerEntry {
-                required property var modelData
-                Layout.fillWidth: true
-                node: modelData
+        Loader {
+            Layout.fillWidth: true
+            active: !root.isGroup && root.group.nodes.length > 0
+            sourceComponent: VolumeMixerEntry {
+                node: root.group.nodes[0]
             }
         }
     }
