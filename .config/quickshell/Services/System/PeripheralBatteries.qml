@@ -72,30 +72,24 @@ Singleton {
         }
     }
 
-    function getDeviceIcon(device): string {
-        if (!device)
-            return Icons.device;
+    readonly property var _upowerTypeMap: ({
+            [UPowerDeviceType.Touchpad]: "trackpad",
+            [UPowerDeviceType.Mouse]: "mouse",
+            [UPowerDeviceType.Keyboard]: "keyboard",
+            [UPowerDeviceType.Headphones]: "headphones",
+            [UPowerDeviceType.Headset]: "headset",
+            [UPowerDeviceType.Speakers]: "speakers",
+            [UPowerDeviceType.GamingInput]: "gamepad",
+            [UPowerDeviceType.Phone]: "phone"
+        })
 
-        switch (device.type) {
-        case UPowerDeviceType.Touchpad:
-            return Icons.trackpad;
-        case UPowerDeviceType.Mouse:
-            return Icons.mouse;
-        case UPowerDeviceType.Keyboard:
-            return Icons.keyboard;
-        case UPowerDeviceType.Headphones:
-            return Icons.headphones;
-        case UPowerDeviceType.Headset:
-            return Icons.headset;
-        case UPowerDeviceType.Speakers:
-            return Icons.speaker;
-        case UPowerDeviceType.GamingInput:
-            return Icons.controller;
-        case UPowerDeviceType.Phone:
-            return Icons.phone;
-        default:
-            return Icons.device;
-        }
+    // UPower device type -> the type names used by getIconForType() and the config
+    function upowerTypeName(type): string {
+        return _upowerTypeMap[type] ?? "";
+    }
+
+    function getDeviceIcon(device): string {
+        return getIconForType(upowerTypeName(device?.type));
     }
 
     function getDeviceLabel(device): string {
@@ -152,6 +146,16 @@ Singleton {
             status += " - Fully charged";
 
         return status;
+    }
+
+    function _notifyLevel(label, percentage, critical) {
+        if (critical) {
+            Quickshell.execDetached(["notify-send", "-e", `Critical Battery: ${label}`, `${label} at ${percentage}%! Charge now!`, "-u", "critical", "-a", "Battery"]);
+            Logger.error(`Critical peripheral battery: ${label} at ${percentage}%`);
+        } else {
+            Quickshell.execDetached(["notify-send", "-e", `Low Battery: ${label}`, `${label} at ${percentage}%. Consider charging.`, "-u", "normal", "-a", "Battery"]);
+            Logger.warn(`Low peripheral battery: ${label} at ${percentage}%`);
+        }
     }
 
     function _updateCustomDevice(index, name, icon, percentage, charging, present) {
@@ -243,23 +247,15 @@ Singleton {
             }
 
             onIsLowChanged: {
-                if (isLow && !_notifiedLow) {
-                    _notifiedLow = true;
-                    Quickshell.execDetached(["notify-send", "-e", `Low Battery: ${deviceName}`, `${deviceName} at ${percentage}%. Consider charging.`, "-u", "normal", "-a", "Battery"]);
-                    Logger.warn(`Low peripheral battery: ${deviceName} at ${percentage}%`);
-                } else if (!isLow) {
-                    _notifiedLow = false;
-                }
+                if (isLow && !_notifiedLow)
+                    root._notifyLevel(deviceName, percentage, false);
+                _notifiedLow = isLow;
             }
 
             onIsCriticalChanged: {
-                if (isCritical && !_notifiedCritical) {
-                    _notifiedCritical = true;
-                    Quickshell.execDetached(["notify-send", "-e", `Critical Battery: ${deviceName}`, `${deviceName} at ${percentage}%! Charge now!`, "-u", "critical", "-a", "Battery"]);
-                    Logger.error(`Critical peripheral battery: ${deviceName} at ${percentage}%`);
-                } else if (!isCritical) {
-                    _notifiedCritical = false;
-                }
+                if (isCritical && !_notifiedCritical)
+                    root._notifyLevel(deviceName, percentage, true);
+                _notifiedCritical = isCritical;
             }
 
             property var _repollConnection: Connections {
@@ -293,30 +289,16 @@ Singleton {
             property bool _notifiedCritical: false
 
             onIsLowChanged: {
-                if (isLow && !_notifiedLow) {
-                    _notifiedLow = true;
-                    const label = root.getDeviceLabel(modelData);
-                    Quickshell.execDetached(["notify-send", "-e", `Low Battery: ${label}`, `${label} at ${percentage}%. Consider charging.`, "-u", "normal", "-a", "Battery"]);
-                    Logger.warn(`Low peripheral battery: ${label} at ${percentage}%`);
-                } else if (!isLow) {
-                    _notifiedLow = false;
-                }
+                if (isLow && !_notifiedLow)
+                    root._notifyLevel(root.getDeviceLabel(modelData), percentage, false);
+                _notifiedLow = isLow;
             }
 
             onIsCriticalChanged: {
-                if (isCritical && !_notifiedCritical) {
-                    _notifiedCritical = true;
-                    const label = root.getDeviceLabel(modelData);
-                    Quickshell.execDetached(["notify-send", "-e", `Critical Battery: ${label}`, `${label} at ${percentage}%! Charge now!`, "-u", "critical", "-a", "Battery"]);
-                    Logger.error(`Critical peripheral battery: ${label} at ${percentage}%`);
-                } else if (!isCritical) {
-                    _notifiedCritical = false;
-                }
+                if (isCritical && !_notifiedCritical)
+                    root._notifyLevel(root.getDeviceLabel(modelData), percentage, true);
+                _notifiedCritical = isCritical;
             }
         }
-    }
-
-    Component.onCompleted: {
-        Logger.info("Service initialized");
     }
 }

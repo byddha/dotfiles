@@ -4,7 +4,6 @@ import QtQuick
 import Quickshell
 import Quickshell.Services.UPower
 import "../../Config"
-import "../../Utils"
 import ".."
 
 /**
@@ -56,17 +55,6 @@ Singleton {
         }
     }
 
-    readonly property var _upowerTypeMap: ({
-            [UPowerDeviceType.Touchpad]: "trackpad",
-            [UPowerDeviceType.Mouse]: "mouse",
-            [UPowerDeviceType.Keyboard]: "keyboard",
-            [UPowerDeviceType.Headphones]: "headphones",
-            [UPowerDeviceType.Headset]: "headset",
-            [UPowerDeviceType.Speakers]: "speakers",
-            [UPowerDeviceType.GamingInput]: "gamepad",
-            [UPowerDeviceType.Phone]: "phone"
-        })
-
     function _findBlueZMatch(name) {
         if (!name)
             return null;
@@ -101,6 +89,21 @@ Singleton {
         return "";
     }
 
+    function _entry(id, name, type, mac, connectionType, percentage, charging) {
+        const brand = _resolveBrand(id, name, mac);
+        return {
+            id: id,
+            name: name,
+            brand: brand,
+            logoPath: BrandLogoService.getLogoPath(brand),
+            type: type,
+            typeIcon: PeripheralBatteries.getIconForType(type),
+            connectionType: connectionType,
+            percentage: percentage,
+            charging: charging
+        };
+    }
+
     function _rebuild() {
         const result = [];
         const seen = new Set();
@@ -114,37 +117,16 @@ Singleton {
                 continue;
 
             const name = dev.model || "Unknown Device";
-            const type = _upowerTypeMap[dev.type] || "device";
             const btMatch = _findBlueZMatch(name);
             const charging = dev.state === UPowerDeviceState.Charging;
             const full = dev.state === UPowerDeviceState.FullyCharged;
-            const id = "upower:" + name;
 
             const macMatch = (dev.nativePath || "").match(/([0-9a-fA-F]{2}[:\-]){5}[0-9a-fA-F]{2}/);
             const mac = macMatch ? macMatch[0] : (btMatch?.address ?? "");
-            const brand = _resolveBrand(id, name, mac);
-
-            let connectionType = "unknown";
-            if (btMatch)
-                connectionType = "bluetooth";
-            else if (charging || full)
-                connectionType = "wired";
-            else
-                connectionType = "2.4ghz";
+            const connectionType = btMatch ? "bluetooth" : (charging || full) ? "wired" : "2.4ghz";
 
             seen.add(btMatch ? ("bt:" + btMatch.name) : "");
-
-            result.push({
-                id: id,
-                name: name,
-                brand: brand,
-                logoPath: BrandLogoService.getLogoPath(brand),
-                type: type,
-                typeIcon: PeripheralBatteries.getIconForType(type),
-                connectionType: connectionType,
-                percentage: Math.round((dev.percentage ?? 0) * 100),
-                charging: charging
-            });
+            result.push(_entry("upower:" + name, name, PeripheralBatteries.upowerTypeName(dev.type) || "device", mac, connectionType, Math.round((dev.percentage ?? 0) * 100), charging));
         }
 
         // 2. Custom script devices
@@ -156,36 +138,13 @@ Singleton {
 
             const name = dev.name || "Device";
             const configEntry = configDevices[i] || {};
-            const type = configEntry.type || "device";
             const btMatch = _findBlueZMatch(name);
-            const id = "custom:" + i;
-
-            // Try BlueZ match for MAC
-            const mac = btMatch?.address ?? "";
-            const brand = _resolveBrand(id, name, mac);
-
             const charging = dev.charging ?? false;
-            let connectionType = "unknown";
-            if (btMatch)
-                connectionType = "bluetooth";
-            else if (charging)
-                connectionType = "wired";
-            else
-                connectionType = "2.4ghz";
+            const connectionType = btMatch ? "bluetooth" : charging ? "wired" : "2.4ghz";
 
             seen.add(btMatch ? ("bt:" + btMatch.name) : "");
-
-            result.push({
-                id: id,
-                name: name,
-                brand: brand,
-                logoPath: BrandLogoService.getLogoPath(brand),
-                type: type,
-                typeIcon: PeripheralBatteries.getIconForType(type),
-                connectionType: connectionType,
-                percentage: dev.percentage ?? 0,
-                charging: charging
-            });
+            // Only a BlueZ match can give a custom device a MAC
+            result.push(_entry("custom:" + i, name, configEntry.type || "device", btMatch?.address ?? "", connectionType, dev.percentage ?? 0, charging));
         }
 
         // 3. BlueZ devices with battery that weren't already matched
@@ -196,11 +155,6 @@ Singleton {
                 continue;
             if (seen.has("bt:" + dev.name))
                 continue;
-
-            const name = dev.name || "Bluetooth Device";
-            const id = "bluez:" + dev.name;
-            const mac = dev.address ?? "";
-            const brand = _resolveBrand(id, name, mac);
 
             // Infer type from BlueZ icon
             let type = "device";
@@ -216,25 +170,11 @@ Singleton {
             else if (icon.includes("gaming"))
                 type = "gamepad";
 
-            result.push({
-                id: id,
-                name: name,
-                brand: brand,
-                logoPath: BrandLogoService.getLogoPath(brand),
-                type: type,
-                typeIcon: PeripheralBatteries.getIconForType(type),
-                connectionType: "bluetooth",
-                percentage: Math.round((dev.battery ?? 0) * 100),
-                charging: false
-            });
+            result.push(_entry("bluez:" + dev.name, dev.name || "Bluetooth Device", type, dev.address ?? "", "bluetooth", Math.round((dev.battery ?? 0) * 100), false));
         }
 
-        Logger.debug(`Peripherals rebuilt: ${result.length} devices`);
         root.devices = result;
     }
 
-    Component.onCompleted: {
-        Logger.info("Peripherals service initialized");
-        _rebuild();
-    }
+    Component.onCompleted: _rebuild()
 }
