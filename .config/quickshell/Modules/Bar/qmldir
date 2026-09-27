@@ -17,3 +17,4 @@ WhisperButton 1.0 WhisperButton.qml
 BarPill 1.0 BarPill.qml
 AudioPill 1.0 AudioPill.qml
 ActivityPill 1.0 ActivityPill.qml
+BatteryPill 1.0 BatteryPill.qml
