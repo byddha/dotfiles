@@ -15,7 +15,6 @@ Singleton {
     property bool ethernet: false
     property bool wifiEnabled: false
     property bool wifiScanning: false
-    property bool wifiConnecting: connectProc.running
     property WifiAccessPoint wifiConnectTarget: null
 
     // Network lists
@@ -34,7 +33,6 @@ Singleton {
     // ==================
 
     function enableWifi(enabled: bool) {
-        Logger.info("WiFi", enabled ? "enabling" : "disabling");
         const cmd = enabled ? "on" : "off";
         enableWifiProc.command = ["nmcli", "radio", "wifi", cmd];
         enableWifiProc.running = true;
@@ -45,13 +43,11 @@ Singleton {
     }
 
     function rescanWifi() {
-        Logger.debug("WiFi scanning...");
         wifiScanning = true;
         rescanProcess.running = true;
     }
 
     function connectToWifiNetwork(accessPoint: WifiAccessPoint) {
-        Logger.info("Connecting to:", accessPoint.ssid);
         accessPoint.askingPassword = false;
         root.wifiConnectTarget = accessPoint;
         connectProc.command = ["nmcli", "dev", "wifi", "connect", accessPoint.ssid];
@@ -60,7 +56,6 @@ Singleton {
 
     function disconnectWifiNetwork() {
         if (active) {
-            Logger.info("Disconnecting from:", active.ssid);
             disconnectProc.command = ["nmcli", "connection", "down", active.ssid];
             disconnectProc.running = true;
         }
@@ -105,11 +100,8 @@ Singleton {
             }
         }
         onExited: (exitCode, exitStatus) => {
-            if (exitCode === 0) {
-                Logger.info("Connected successfully");
-            } else {
+            if (exitCode !== 0)
                 Logger.warn("Connection failed, code:", exitCode);
-            }
             if (root.wifiConnectTarget) {
                 root.wifiConnectTarget.askingPassword = (exitCode !== 0);
             }
@@ -170,7 +162,7 @@ Singleton {
     Process {
         id: updateConnectionType
         property string buffer: ""
-        command: ["sh", "-c", "nmcli -t -f TYPE,STATE d status && nmcli -t -f CONNECTIVITY g"]
+        command: ["nmcli", "-t", "-f", "TYPE,STATE", "d", "status"]
         running: true
 
         function startCheck() {
@@ -186,7 +178,6 @@ Singleton {
 
         onExited: (exitCode, exitStatus) => {
             const lines = buffer.trim().split('\n');
-            lines.pop(); // connectivity line
             root.ethernet = lines.some(line => line.includes("ethernet") && line.includes("connected"));
         }
     }
@@ -282,8 +273,5 @@ Singleton {
         WifiAccessPoint {}
     }
 
-    Component.onCompleted: {
-        Logger.info("Service initialized");
-        update();
-    }
+    Component.onCompleted: update()
 }
