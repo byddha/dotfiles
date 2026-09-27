@@ -5,7 +5,6 @@ import Quickshell
 import Quickshell.Wayland
 import "../../Config"
 import "../../Services"
-import "../../Utils"
 
 Scope {
     id: root
@@ -22,7 +21,6 @@ Scope {
             const threshold = Config.options.peripheralBatteries?.shutdownReminderThreshold ?? 40;
             root.lowDevices = PeripheralBatteries.getLowBatteryDevices(threshold);
             root.remaining = root.totalSeconds;
-            Logger.info(`Shutdown reminder shown, ${root.lowDevices.length} low device(s), poweroff in ${root.totalSeconds}s`);
         }
     }
 
@@ -136,9 +134,5 @@ Scope {
                 }
             }
         }
-    }
-
-    Component.onCompleted: {
-        Logger.info("ShutdownReminder initialized");
     }
 }
