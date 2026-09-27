@@ -1,5 +1,3 @@
-// End root
-
 import ".."
 import "../../Config"
 import "../../Services"
@@ -76,8 +74,6 @@ MouseArea {
 
     // Normal notification background (for non-media or sidebar)
     Rectangle {
-        // End mainRow
-
         id: background
 
         width: parent.width
@@ -139,8 +135,6 @@ MouseArea {
         }
 
         RowLayout {
-            // End contentColumn
-
             id: mainRow
 
             anchors.top: parent.top
@@ -259,13 +253,7 @@ MouseArea {
                         font.pixelSize: Theme.fontSizeSmall
                         color: Theme.textSecondary
                         opacity: 0.7
-                        text: {
-                            const date = new Date(root.notificationObject.time);
-                            const hours = String(date.getHours()).padStart(2, '0');
-                            const minutes = String(date.getMinutes()).padStart(2, '0');
-                            const seconds = String(date.getSeconds()).padStart(2, '0');
-                            return `${hours}:${minutes}:${seconds}`;
-                        }
+                        text: Qt.formatDateTime(new Date(root.notificationObject.time), "hh:mm:ss")
                     }
                 }
 
@@ -304,16 +292,16 @@ MouseArea {
                 RowLayout {
                     id: actionRowLayout
 
+                    readonly property var labelledActions: root.notificationObject.actions.filter(a => {
+                        return (a.text || "").trim() !== "";
+                    })
+
                     Layout.fillWidth: true
                     spacing: Theme.spacingBase / 2
-                    visible: notificationObject.actions.filter(a => {
-                        return (a.text || "").trim() !== "";
-                    }).length > 0
+                    visible: labelledActions.length > 0
 
                     Repeater {
-                        model: notificationObject.actions.filter(a => {
-                            return (a.text || "").trim() !== "";
-                        })
+                        model: actionRowLayout.labelledActions
 
                         Button {
                             Layout.fillWidth: true
@@ -327,7 +315,6 @@ MouseArea {
                 }
             }
         }
-        // End background
 
         Behavior on color {
             ColorAnimation {
