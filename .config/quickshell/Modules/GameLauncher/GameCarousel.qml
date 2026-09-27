@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Controls
 import "../../Config"
 import "../../Services"
 
@@ -61,12 +60,6 @@ Item {
             return;
         selectedIndex = (selectedIndex + 1) % gameCount;
         centerOnSelected();
-    }
-
-    // No up/down for single row
-    function moveUp() {
-    }
-    function moveDown() {
     }
 
     function centerOnSelected() {

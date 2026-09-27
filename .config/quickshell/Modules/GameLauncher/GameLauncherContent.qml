@@ -1,9 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Effects
 import "../../Config"
 import "../../Services"
-import "../../Components"
 
 Item {
     id: root
