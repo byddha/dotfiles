@@ -192,11 +192,18 @@ PanelWindow {
             onDone(false);
             return;
         }
-        regionCrop.grabScale = root.monitorScale;
-        regionCrop.grabX = rx;
-        regionCrop.grabY = ry;
-        regionCrop.grabW = rw;
-        regionCrop.grabH = rh;
+        // Snap the edges to the monitor's pixel grid: the pointer gives sub-pixel positions, and a region that
+        // starts between pixels is sampled across two of them, which blurs every sharp edge in the image.
+        const scale = root.monitorScale;
+        const left = Math.round(rx * scale);
+        const top = Math.round(ry * scale);
+        const right = Math.round((rx + rw) * scale);
+        const bottom = Math.round((ry + rh) * scale);
+        regionCrop.grabScale = scale;
+        regionCrop.grabX = left / scale;
+        regionCrop.grabY = top / scale;
+        regionCrop.grabW = Math.max(1, right - left) / scale;
+        regionCrop.grabH = Math.max(1, bottom - top) / scale;
         regionCrop.scheduleUpdate();
         // One tick so ShaderEffectSource re-captures with the new sourceRect
         Qt.callLater(() => {
