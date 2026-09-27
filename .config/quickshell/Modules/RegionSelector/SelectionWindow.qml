@@ -71,7 +71,7 @@ PanelWindow {
     property real adjustStartRegionW: 0
     property real adjustStartRegionH: 0
 
-    // Window regions from HyprlandData, sorted for proper z-order (floating above tiled)
+    // Window regions on this workspace, sorted for proper z-order (floating above tiled)
     readonly property var windowRegions: {
         const workspaceWindows = Compositor.windowList.filter(w => w.workspace.id === root.effectiveWorkspaceId);
 
@@ -146,20 +146,11 @@ PanelWindow {
         });
     }
 
-    // Timing instrumentation
-    property double _t0: Date.now()
-    function _tlog(label) {
-        Logger.trace(`RegionSelector[${screen.name}] +${Date.now() - root._t0}ms ${label}`);
-    }
-
-    onVisibleChanged: root._tlog(`visible=${visible}`)
-
     // Ensure screenshot temp directory exists (saveToFile won't mkdir)
     Process {
         id: mkdirProc
         running: true
         command: ["mkdir", "-p", root.screenshotDir]
-        onRunningChanged: root._tlog(`mkdir running=${running}`)
     }
 
     // UI is interactive as soon as the screencopy buffer arrives (~15ms).
@@ -170,11 +161,9 @@ PanelWindow {
     Connections {
         target: screencopyView
         function onHasContentChanged() {
-            root._tlog(`ScreencopyView hasContent=${screencopyView.hasContent}`);
             if (!screencopyView.hasContent || root.preparationDone)
                 return;
             root.preparationDone = true;
-            Logger.debug("RegionSelector: screencopy ready for", root.screen.name);
         }
     }
 
@@ -224,7 +213,6 @@ PanelWindow {
         const nativeH = regionCrop.height;
         // One tick so ShaderEffectSource re-captures with the new sourceRect
         Qt.callLater(() => {
-            const t0 = Date.now();
             const ok = regionCrop.grabToImage(result => {
                 if (!result) {
                     Logger.error("RegionSelector: region grabToImage returned null");
@@ -237,7 +225,6 @@ PanelWindow {
                     onDone(false);
                     return;
                 }
-                root._tlog(`region saved (${nativeW}x${nativeH}) in ${Date.now() - t0}ms`);
                 onDone(true);
             }, Qt.size(nativeW, nativeH));
             if (!ok) {
@@ -274,7 +261,6 @@ PanelWindow {
                     root.regionY = (result.y + shrinkProc.cropOffsetY) / shrinkProc.scale;
                     root.regionWidth = result.width / shrinkProc.scale;
                     root.regionHeight = result.height / shrinkProc.scale;
-                    Logger.debug("Shrink-to-content: new bounds", result);
                 } catch (e) {
                     Logger.error("Shrink-to-content parse error:", e, data);
                 }
@@ -437,7 +423,6 @@ PanelWindow {
         if (effectiveAction === RegionSelector.SnipAction.Record) {
             const slurpRegion = `${Math.round(root.regionX + root.monitorOffsetX)},${Math.round(root.regionY + root.monitorOffsetY)} ${rwNative}x${rhNative}`;
             snipProc.command = ["bash", "-c", `mkdir -p ~/Videos/Screencasts && wf-recorder -g '${slurpRegion}' -c h264_vaapi -f ~/Videos/Screencasts/recording_$(date +%Y-%m-%d_%H-%M-%S).mp4`];
-            Logger.info("RegionSelector: Starting recording");
             snipProc.startDetached();
             root.dismiss();
             return;
@@ -457,21 +442,16 @@ PanelWindow {
             let cmd;
             if (root.saveMode) {
                 cmd = `mkdir -p ~/Pictures/Screenshots && cp '${f}' ~/Pictures/Screenshots/screenshot_$(date +%Y-%m-%d_%H-%M-%S).png && ${cleanup}`;
-                Logger.info("RegionSelector: Saving screenshot to ~/Pictures/Screenshots");
             } else if (root.lensMode) {
                 cmd = `imageLink=$(curl -sF files[]=@'${f}' 'https://uguu.se/upload' | jq -r '.files[0].url') && xdg-open "https://lens.google.com/uploadbyurl?url=\${imageLink}" && ${cleanup}`;
-                Logger.info("RegionSelector: Sending region to Google Lens");
             } else if (root.ocrMode) {
                 const langFlag = root.ocrAllLangs ? `$(tesseract --list-langs 2>/dev/null | tail -n +2 | paste -sd+)` : "eng";
                 const base = `tesseract '${f}' stdout -l ${langFlag}`;
                 cmd = root.ocrTranslate ? `text=$(${base}) && printf '%s' "$text" | wl-copy && xdg-open "https://translate.kagi.com/?from=auto&to=&text=$(printf '%s' "$text" | jq -sRr @uri)" && ${cleanup}` : `${base} | wl-copy && ${cleanup}`;
-                Logger.info(`RegionSelector: OCR (${root.ocrAllLangs ? "all" : "eng"}${root.ocrTranslate ? ", translate" : ""})`);
             } else if (root.editMode) {
                 cmd = `swappy -f '${f}' && ${cleanup}`;
-                Logger.info("RegionSelector: Opening region in swappy");
             } else {
                 cmd = `wl-copy --type image/png < '${f}' && ${cleanup}`;
-                Logger.info("RegionSelector: Copying region to clipboard");
             }
             snipProc.command = ["bash", "-c", cmd];
             snipProc.startDetached();
@@ -913,10 +893,5 @@ PanelWindow {
                 }
             }
         }
-    }
-
-    Component.onCompleted: {
-        root._tlog("Component.onCompleted");
-        Logger.debug(`RegionSelector: Window initialized on ${screen.name}`);
     }
 }
