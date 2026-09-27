@@ -3,15 +3,6 @@ import QtQuick.Layouts
 import "../../Config"
 import "../../Services"
 
-/**
- * KeybindItem - Individual keybind display component
- *
- * Displays a single keybind entry with:
- * - Formatted key combination with modifier icons
- * - Arrow separator
- * - Description with optional glyph icon
- * - Color coding based on dispatcher type
- */
 Row {
     id: keybindItem
 

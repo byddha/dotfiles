@@ -1,10 +1,11 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
 import "../../Config"
 import "../../Services"
-import "../../Utils"
 
 Scope {
     Variants {
@@ -37,13 +38,10 @@ Scope {
             Connections {
                 target: HyprWhichKeyService
                 function onVisibleChanged() {
-                    if (HyprWhichKeyService.visible) {
-                        // Show window with delay after content is ready
+                    if (HyprWhichKeyService.visible)
                         showTimer.restart();
-                    } else {
-                        // Hide immediately
+                    else
                         Settings.hyprWhichKeyVisible = false;
-                    }
                 }
             }
 
@@ -79,70 +77,38 @@ Scope {
                     }
                 }
 
-                Behavior on width {
-                    enabled: false
-                }
-
-                Behavior on height {
-                    enabled: false
-                }
-
                 ColumnLayout {
                     id: columnLayout
                     anchors.centerIn: parent
 
                     spacing: 2
 
-                    Component.onCompleted: populateList()
+                    // Approximate monospace char width so every key column lines up.
+                    readonly property real maxKeyWidth: {
+                        const charWidth = Config.options.hyprWhichKey.fontSize * 0.6;
+                        let maxWidth = 0;
+                        for (const bind of HyprWhichKeyService.keybindList)
+                            maxWidth = Math.max(maxWidth, HyprWhichKeyService.getRawKey(bind).length * charWidth);
+                        return maxWidth;
+                    }
 
                     Connections {
                         target: HyprWhichKeyService
                         function onKeybindListChanged() {
                             // Hide entire window immediately to avoid resize artifacts
                             Settings.hyprWhichKeyVisible = false;
-                            columnLayout.populateList();
-                            // Show window after layout settles
                             showTimer.restart();
                         }
                     }
 
-                    function populateList() {
-                        // Clean up existing children
-                        const childrenToDestroy = [];
-                        for (let i = columnLayout.children.length - 1; i >= 0; i--) {
-                            const child = columnLayout.children[i];
-                            if (child) {
-                                childrenToDestroy.push(child);
-                                child.parent = null;
-                            }
-                        }
+                    Repeater {
+                        model: HyprWhichKeyService.keybindList
 
-                        for (const child of childrenToDestroy) {
-                            if (child)
-                                child.destroy();
+                        KeybindItem {
+                            required property var modelData
+                            bind: modelData
+                            columnWidth: columnLayout.maxKeyWidth
                         }
-
-                        // Calculate single global max key width for alignment
-                        // Scale character width based on font size (approximate ratio)
-                        Logger.info(JSON.stringify(Config.options.hyprWhichKey));
-                        const charWidth = Config.options.hyprWhichKey.fontSize * 0.6;
-                        let maxKeyWidth = 0;
-                        for (const bind of HyprWhichKeyService.keybindList) {
-                            const keyText = HyprWhichKeyService.getRawKey(bind);
-                            maxKeyWidth = Math.max(maxKeyWidth, keyText.length * charWidth);
-                        }
-
-                        // Create keybind items
-                        for (const bind of HyprWhichKeyService.keybindList) {
-                            const keybindComponent = Qt.createComponent("KeybindItem.qml");
-                            const keybind = keybindComponent.createObject(columnLayout, {
-                                bind: bind,
-                                columnWidth: maxKeyWidth
-                            });
-                        }
-
-                        //Debug
-                        Logger.info(`Populated ${HyprWhichKeyService.keybindList.length} keybinds, maxKeyWidth: ${maxKeyWidth}`);
                     }
                 }
             }
