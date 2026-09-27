@@ -8,8 +8,8 @@ Text {
     verticalAlignment: Text.AlignVCenter
     font {
         hintingPreference: Font.PreferFullHinting
-        family: Theme?.fontFamily ?? "sans-serif"
-        pixelSize: Theme?.fontSizeSmall ?? 12
+        family: Theme.fontFamily
+        pixelSize: Theme.fontSizeSmall
     }
-    color: Theme?.textColor ?? "white"
+    color: Theme.textColor
 }
