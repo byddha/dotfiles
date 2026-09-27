@@ -52,6 +52,9 @@ the previous one.
   Per-monitor components (`Variants`: bar, sidebar, notification popups) exist once per monitor with the
   same id; without `@SCREEN`, `eval` uses the visible instance and `find` lists all (with their monitor).
 
+The pointer lands on sub-pixel positions (QML may see 1400.59 where `hyprctl cursorpos` says 1400), like
+a real mouse: compare pixel sizes that come from pointer positions with a tolerance of 1 px.
+
 Only items really on screen match: hidden, zero-size or scrolled out of a clipping parent do not.
 Clicks and shots wait until the item stops moving (slide-in animations).
 
@@ -67,7 +70,7 @@ Clicks and shots wait until the item stops moving (slide-in animations).
 | `wait [#id] EXPR [--timeout=S]` | poll until the JS expression is truthy (use instead of `sleep`) |
 | `expect [#id] EXPR` | check once; prints `FAIL ... <value>` |
 | `see SEL` / `gone SEL` | wait until an item is / is not on screen |
-| `eval [#id] EXPR` | print any value, e.g. `eval 'Settings.sidebarSelectedTab'` |
+| `eval [#id or type:T][@SCREEN] EXPR` | print any value, e.g. `eval 'Settings.sidebarSelectedTab'`, `eval 'type:SelectionWindow@DP-3' 'regionWidth'` |
 | `shot SEL [N] [PAD]`, `shot-screen DP-3` | cropped / full screenshot, taken once the picture stops changing; prints the path - then Read it |
 | `find SEL` | list matches (x y w h) |
 | `reload [FILE]` | after editing QML: wait until qs reloaded (touches FILE if not) |

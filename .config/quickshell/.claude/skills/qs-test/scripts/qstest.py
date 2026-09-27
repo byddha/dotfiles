@@ -7,7 +7,7 @@
   qstest.py move X Y [--click]          glide to global logical X Y
   qstest.py drag X1 Y1 X2 Y2            press at X1 Y1, glide to X2 Y2 holding the left button, release
   qstest.py find NAME                   print the matches (x y w h)
-  qstest.py eval [#id] EXPR             run JS in the shell (scope: ShellRoot, or the object with that QML id)
+  qstest.py eval [#id|type:T] EXPR      run JS in the shell (scope: ShellRoot, or that object; @SCREEN picks one)
   qstest.py wait [#id] EXPR [--timeout=S]   poll until EXPR is truthy (default 3 s), else FAIL
   qstest.py expect [#id] EXPR           check once that EXPR is truthy, else FAIL with its value
   qstest.py see NAME / gone NAME [--timeout=S]  wait until an item is on screen / not on screen
@@ -217,10 +217,13 @@ def evaluate(pos):
     scope = shell["debugId"]
     if len(pos) > 1:
         sel, screen = split_screen(pos[0])
-        sel = sel[1:] if sel.startswith("#") else sel
-        cands = [o["debugId"] for o in objs if o["id"] == sel]
+        if sel.startswith("type:"):
+            cands = [o["debugId"] for o in objs if o["type"] == sel[5:]]
+        else:
+            sel = sel[1:] if sel.startswith("#") else sel
+            cands = [o["debugId"] for o in objs if o["id"] == sel]
         if not cands:
-            die(f"no #{sel}")
+            die(f"no {pos[0]}")
         if screen:
             cands = [c for c in cands if dbg.eval(c, SCREEN_OF) == screen] or die(f"no #{sel} on {screen}")
         elif len(cands) > 1:
