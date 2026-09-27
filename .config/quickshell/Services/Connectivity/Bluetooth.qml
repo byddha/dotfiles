@@ -42,10 +42,7 @@ Singleton {
     }
 
     // Combined list: connected first, then paired
-    property list<var> deviceList: {
-        refreshTrigger; // Dependency to force re-evaluation
-        return [...connectedDevices, ...pairedDevices];
-    }
+    property list<var> deviceList: [...connectedDevices, ...pairedDevices]
 
     // Watch for device list changes
     Connections {
@@ -80,7 +77,6 @@ Singleton {
             return;
         }
         Bluetooth.defaultAdapter.enabled = value;
-        Logger.info(`Adapter ${value ? "enabled" : "disabled"}`);
     }
 
     function toggleEnabled() {
@@ -89,7 +85,6 @@ Singleton {
 
     // Icon helper based on device type
     function getDeviceIcon(iconName: string): string {
-        Logger.debug(`Icon name ${iconName}`);
         if (!iconName)
             return Icons.bluetoothOn;
         if (iconName.includes("headset") || iconName.includes("headphones") || iconName.includes("audio"))
@@ -107,12 +102,5 @@ Singleton {
         return Icons.bluetoothOn;
     }
 
-    Component.onCompleted: {
-        Logger.info("Service initialized");
-    }
-
-    onEnabledChanged: {
-        Logger.info(`Enabled state changed: ${enabled}`);
-        refresh();
-    }
+    onEnabledChanged: refresh()
 }
