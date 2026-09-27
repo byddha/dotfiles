@@ -7,7 +7,7 @@ import Quickshell.Io
 /**
  * Recording - Screen recording detection service
  *
- * Monitors wf-recorder process to detect active screen recording.
+ * Monitors the gpu-screen-recorder process to detect active screen recording.
  */
 Singleton {
     id: root
@@ -24,7 +24,7 @@ Singleton {
 
     Process {
         id: statusProc
-        command: ["pgrep", "wf-recorder"]
+        command: ["pgrep", "-f", "^gpu-screen-recorder"]
         onExited: (code, status) => {
             root.recording = (code === 0);
         }

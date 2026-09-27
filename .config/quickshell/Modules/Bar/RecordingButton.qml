@@ -15,7 +15,7 @@ ActivityPill {
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
-        // SIGINT lets wf-recorder finalize the file
-        onClicked: Quickshell.execDetached(["pkill", "-INT", "wf-recorder"])
+        // SIGINT lets gpu-screen-recorder finalize the file
+        onClicked: Quickshell.execDetached(["pkill", "-INT", "-f", "^gpu-screen-recorder"])
     }
 }

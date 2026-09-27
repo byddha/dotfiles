@@ -14,7 +14,7 @@ Vpn: `mullvad`, `openfortivpn` (run through `sudo`)
 
 Laptop screen / keyboard brightness: `brightnessctl`
 
-Screenshots and recording: `wl-clipboard`, `swappy`, `tesseract` (+ language data), `curl`, `jq`, `xdg-utils`, `python-pillow`, `wf-recorder`, `hyprpicker`
+Screenshots and recording: `wl-clipboard`, `swappy`, `tesseract` (+ language data), `curl`, `jq`, `xdg-utils`, `python-pillow`, `gpu-screen-recorder`, `hyprpicker`
 
 Media visualizer: `cava`
 
