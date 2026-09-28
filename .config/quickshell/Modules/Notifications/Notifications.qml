@@ -21,20 +21,33 @@ Scope {
 
             WlrLayershell.namespace: "bidshell:notificationPopup"
             WlrLayershell.layer: WlrLayer.Overlay
-            exclusiveZone: 0
+            WlrLayershell.exclusionMode: ExclusionMode.Ignore
 
+            readonly property bool atTop: Placement.notificationsVertical === "top"
+            readonly property string horizontal: Placement.notificationsHorizontal
+
+            // A centered stack is anchored to neither side, so the compositor centers it
             anchors {
-                right: true
-                bottom: true
+                top: atTop
+                bottom: !atTop
+                left: horizontal === "left"
+                right: horizontal === "right"
             }
 
             // Room on every side for the card shadows, as in DankMaterialShell's windowShadowPad.
-            // The mask keeps that room click-through; the margins keep cards 2 * spacingBase from the edge.
+            // The mask keeps that room click-through; the margins keep cards 2 * spacingBase from the
+            // screen edge, or from the bar on that side.
             readonly property int shadowPad: 16
+            readonly property int edgeGap: Theme.spacingBase * 2
+
+            // An open sidebar on this side of this screen would cover the cards: they move next to it
+            readonly property int sidebarRoom: Settings.sidebarVisible && Compositor.focusedMonitorName === modelData.name && Placement.sidebarSide === horizontal ? Theme.sidebarWidth + 10 : 0
 
             WlrLayershell.margins {
-                right: Theme.spacingBase * 2 - shadowPad
-                bottom: Theme.spacingBase * 2 - shadowPad
+                top: atTop ? Placement.inset("top", edgeGap) - shadowPad : 0
+                bottom: atTop ? 0 : Placement.inset("bottom", edgeGap) - shadowPad
+                left: horizontal === "left" ? Placement.inset("left", edgeGap) + sidebarRoom - shadowPad : 0
+                right: horizontal === "right" ? Placement.inset("right", edgeGap) + sidebarRoom - shadowPad : 0
             }
 
             mask: Region {
@@ -44,11 +57,13 @@ Scope {
             color: "transparent"
             // DankMaterialShell's NotificationMetrics.popupWidth (400) minus its 4 px card inset on each side.
             implicitWidth: 400 - Theme.spacingBase + shadowPad * 2
-            // Fixed height so stack motion never resizes the surface; the mask limits input to the cards.
-            implicitHeight: modelData.height - Theme.barHeight - Theme.spacingBase * 2
+            // Fixed height so stack motion never resizes the surface (the mask limits input to the cards):
+            // the screen between the gaps at both ends, which clear the bar where it is.
+            implicitHeight: modelData.height - Placement.inset("top", edgeGap) - Placement.inset("bottom", edgeGap) + shadowPad * 2
 
-            // Single-window port of DMS NotificationPopupManager + NotificationPopup motion: newest card sits
-            // in the corner, older ones are pushed up by a spring; cards slide in/out from the right edge.
+            // Single-window port of DMS NotificationPopupManager + NotificationPopup motion: the newest card
+            // sits nearest the screen edge, older ones are pushed away from it by a spring. Cards in a corner
+            // slide in and out from their screen side; centered ones from their screen edge.
             Item {
                 id: stack
 
@@ -77,7 +92,8 @@ Scope {
                     entries = entries.filter(n => n !== notif);
                 }
 
-                // Distance from the stack bottom for a card, counting only cards in the layout (DMS _stackPositionFor).
+                // Distance from the stack's screen-edge end for a card, counting only cards in the layout
+                // (DMS _stackPositionFor).
                 function positionFor(notif) {
                     let y = 0;
                     for (const n of entries) {
@@ -99,10 +115,8 @@ Scope {
                     return start - now;
                 }
 
-                anchors.bottom: parent.bottom
-                anchors.right: parent.right
-                anchors.bottomMargin: notificationPopup.shadowPad
-                anchors.rightMargin: notificationPopup.shadowPad
+                x: notificationPopup.shadowPad
+                y: notificationPopup.atTop ? notificationPopup.shadowPad : parent.height - notificationPopup.shadowPad - height
                 width: parent.width - notificationPopup.shadowPad * 2
                 height: extent
 
@@ -157,11 +171,14 @@ Scope {
                             notificationObject: modelData
                             popup: true
                             width: stack.width
-                            y: stack.height - offset - height
+                            y: notificationPopup.atTop ? offset : stack.height - offset - height
                             opacity: progress
                             scale: 0.96 + 0.04 * progress
                             transform: Translate {
-                                x: card.width * (1 - card.progress)
+                                readonly property real away: 1 - card.progress
+
+                                x: notificationPopup.horizontal === "right" ? card.width * away : notificationPopup.horizontal === "left" ? -card.width * away : 0
+                                y: notificationPopup.horizontal !== "center" ? 0 : (notificationPopup.atTop ? -1 : 1) * card.height * away
                             }
 
                             onLiveChanged: {

@@ -37,7 +37,11 @@ PanelWindow {
     property real shadowBlur: 8
     property real shadowOffset: 4
     property color shadowColor: Qt.rgba(0, 0, 0, 0.25)
-    property bool slideFromRight: false
+    // "left" or "right": the panel slides in from that side of the screen; "" (default): it just appears
+    property string slideFrom: ""
+    // How far from that screen edge the slide is clipped, so the panel comes out from behind the bar there
+    // (the popout is on a layer above the bar) instead of passing over it
+    property real slideClip: 0
     // false: the owner closes it (e.g. binds visible) when dismissed() fires
     property bool closeOnDismiss: true
     property bool useFocusGrab: false
@@ -147,84 +151,96 @@ PanelWindow {
     }
 
     Item {
-        id: wrapper
-        // Ancestor of all content, so Esc from a focused field inside (that did not use it) still closes.
-        // Closes on release: closing on press unmaps the window with Esc still held, keyboard focus goes back
-        // to the app below together with the held key, and that app gets the Esc too (a video leaves fullscreen).
-        focus: root.visible
-        property bool escapePressed: false
-        Keys.onPressed: event => {
-            if (event.key === Qt.Key_Escape) {
-                escapePressed = true;
-                event.accepted = true;
-            }
-        }
-        Keys.onReleased: event => {
-            if (event.key === Qt.Key_Escape && escapePressed && !event.isAutoRepeat) {
-                escapePressed = false;
-                event.accepted = true;
-                root.dismiss();
-            }
-        }
-        x: root.popupX
-        y: root.popupY
-        width: panel.width
-        height: panel.height
-        opacity: !root.slideFromRight || root.presented ? 1 : 0
+        id: slideArea
 
-        Behavior on opacity {
-            enabled: root.slideFromRight
-            NumberAnimation {
-                duration: Theme.animation.elementMoveFast.duration
-                easing.type: Theme.animation.elementMoveFast.type
-                easing.bezierCurve: Theme.animation.elementMoveFast.bezierCurve
-            }
-        }
+        x: root.slideFrom === "left" ? root.slideClip : 0
+        width: parent.width - (root.slideFrom === "" ? 0 : root.slideClip)
+        height: parent.height
+        clip: root.slideFrom !== ""
 
-        transform: Translate {
-            x: !root.slideFromRight || root.presented ? 0 : wrapper.width + 10
-
-            Behavior on x {
-                enabled: root.slideFromRight
-                NumberAnimation {
-                    duration: Theme.animation.elementMoveEnter.duration
-                    easing.type: Theme.animation.elementMoveEnter.type
-                    easing.bezierCurve: Theme.animation.elementMoveEnter.bezierCurve
+        Item {
+            id: wrapper
+            // Ancestor of all content, so Esc from a focused field inside (that did not use it) still closes.
+            // Closes on release: closing on press unmaps the window with Esc still held, keyboard focus goes back
+            // to the app below together with the held key, and that app gets the Esc too (a video leaves fullscreen).
+            focus: root.visible
+            property bool escapePressed: false
+            Keys.onPressed: event => {
+                if (event.key === Qt.Key_Escape) {
+                    escapePressed = true;
+                    event.accepted = true;
                 }
             }
-        }
+            Keys.onReleased: event => {
+                if (event.key === Qt.Key_Escape && escapePressed && !event.isAutoRepeat) {
+                    escapePressed = false;
+                    event.accepted = true;
+                    root.dismiss();
+                }
+            }
+            // Past the clip edge: the panel's width, its gap to that edge and room for its shadow
+            readonly property real hiddenOffset: root.slideFrom === "left" ? -(x + width + root.shadowBlur) : slideArea.width - x + root.shadowBlur
 
-        // Swallows clicks on the panel so they don't reach the close-on-click area
-        MouseArea {
-            anchors.fill: parent
-            acceptedButtons: Qt.AllButtons
-            onPressed: mouse => mouse.accepted = true
-        }
+            x: root.popupX - slideArea.x
+            y: root.popupY
+            width: panel.width
+            height: panel.height
+            opacity: root.slideFrom === "" || root.presented ? 1 : 0
 
-        RectangularShadow {
-            anchors.fill: panel
-            radius: Theme.radiusWindow
-            blur: root.shadowBlur
-            offset: Qt.vector2d(0, root.shadowOffset)
-            color: root.shadowColor
-        }
+            Behavior on opacity {
+                enabled: root.slideFrom !== ""
+                NumberAnimation {
+                    duration: Theme.animation.elementMoveFast.duration
+                    easing.type: Theme.animation.elementMoveFast.type
+                    easing.bezierCurve: Theme.animation.elementMoveFast.bezierCurve
+                }
+            }
 
-        Rectangle {
-            id: panel
-            width: root.panelWidth > 0 ? root.panelWidth : (root.contentItem?.implicitWidth ?? 0) + root.padding * 2
-            height: Math.min(root.maxPanelHeight, (root.contentItem?.implicitHeight ?? 0) + root.padding * 2)
-            color: root.panelColor
-            radius: Theme.radiusWindow
-            border.width: 1
-            border.color: root.panelBorderColor
+            transform: Translate {
+                x: root.slideFrom === "" || root.presented ? 0 : wrapper.hiddenOffset
 
-            onWidthChanged: Qt.callLater(root.updatePosition)
-            onHeightChanged: Qt.callLater(root.updatePosition)
+                Behavior on x {
+                    enabled: root.slideFrom !== ""
+                    NumberAnimation {
+                        duration: Theme.animation.elementMoveEnter.duration
+                        easing.type: Theme.animation.elementMoveEnter.type
+                        easing.bezierCurve: Theme.animation.elementMoveEnter.bezierCurve
+                    }
+                }
+            }
 
-            Item {
-                id: contentHolder
+            // Swallows clicks on the panel so they don't reach the close-on-click area
+            MouseArea {
                 anchors.fill: parent
-                anchors.margins: root.padding
+                acceptedButtons: Qt.AllButtons
+                onPressed: mouse => mouse.accepted = true
+            }
+
+            RectangularShadow {
+                anchors.fill: panel
+                radius: Theme.radiusWindow
+                blur: root.shadowBlur
+                offset: Qt.vector2d(0, root.shadowOffset)
+                color: root.shadowColor
+            }
+
+            Rectangle {
+                id: panel
+                width: root.panelWidth > 0 ? root.panelWidth : (root.contentItem?.implicitWidth ?? 0) + root.padding * 2
+                height: Math.min(root.maxPanelHeight, (root.contentItem?.implicitHeight ?? 0) + root.padding * 2)
+                color: root.panelColor
+                radius: Theme.radiusWindow
+                border.width: 1
+                border.color: root.panelBorderColor
+
+                onWidthChanged: Qt.callLater(root.updatePosition)
+                onHeightChanged: Qt.callLater(root.updatePosition)
+
+                Item {
+                    id: contentHolder
+                    anchors.fill: parent
+                    anchors.margins: root.padding
+                }
             }
         }
     }

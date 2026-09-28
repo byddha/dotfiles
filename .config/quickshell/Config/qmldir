@@ -2,3 +2,4 @@ singleton Config 1.0 Config.qml
 singleton Settings 1.0 Settings.qml
 singleton Theme 1.0 Theme.qml
 singleton BarLayout 1.0 BarLayout.qml
+singleton Placement 1.0 Placement.qml

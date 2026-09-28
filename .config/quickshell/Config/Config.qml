@@ -104,6 +104,9 @@ Singleton {
             id: adapter
 
             property var notifications: JsonObject {
+                // "top-left", "top-center", "top-right", "bottom-left", "bottom-center" or "bottom-right"
+                property string position: "bottom-right"
+
                 // Rules evaluated when a window gains focus — each matching rule clears notifications whose fields match.
                 // Shape: [{ "focus": { <window fields> }, "match": { <notification fields> } }, ...]
                 // Each block ANDs its keys. Values: case-insensitive substring, "/regex/flags", or array (OR).
@@ -136,6 +139,16 @@ Singleton {
                 property string base16Theme: "tokyo-night-dark"
                 property bool debugLogging: false
                 property bool traceLogging: false
+            }
+
+            property var sidebar: JsonObject {
+                // "left" or "right": the screen side it opens on
+                property string side: "right"
+            }
+
+            property var osd: JsonObject {
+                // "left" or "right", vertically centered
+                property string position: "right"
             }
 
             property var bar: JsonObject {

@@ -71,13 +71,18 @@ Scope {
             WlrLayershell.exclusionMode: ExclusionMode.Ignore
             exclusiveZone: 0
 
+            // From the bar or the screen edge; an open sidebar on the same side pushes it further in
+            readonly property int sideMargin: Placement.inset(Placement.osdSide, 50) + (Settings.sidebarVisible && Placement.sidebarSide === Placement.osdSide ? Theme.sidebarWidth : 0)
+
             anchors {
-                right: true
+                left: Placement.osdSide === "left"
+                right: Placement.osdSide === "right"
                 bottom: true
             }
 
             WlrLayershell.margins {
-                right: Settings.sidebarVisible ? (Theme.sidebarWidth + 50) : 50
+                left: Placement.osdSide === "left" ? sideMargin : 0
+                right: Placement.osdSide === "right" ? sideMargin : 0
                 bottom: (modelData.height / 2) - (contentLayout.implicitHeight / 2)
             }
 
