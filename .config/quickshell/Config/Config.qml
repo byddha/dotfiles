@@ -82,7 +82,6 @@ Singleton {
             config.configLoaded = true;
             Logger.debugEnabled = adapter.general.debugLogging;
             Logger.traceEnabled = adapter.general.traceLogging;
-            Logger.debug("Full config:", adapter);
         }
 
         JsonAdapter {
