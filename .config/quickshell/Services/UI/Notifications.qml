@@ -403,8 +403,8 @@ Singleton {
     }
 
     // Chromium-based browsers put the site's link before a web app's message ("<a href=...>site</a>\n\n<message>").
-    // Cards, the history search and copy show the message; rules still see the whole body, where the site is
-    // what tells two web apps apart.
+    // Cards, the history search, copy and the saved history get the message; rules still see the whole body,
+    // where the site is what tells two web apps apart.
     function messageBody(body, appName) {
         const browsers = ["brave", "chrome", "chromium", "vivaldi", "opera", "microsoft edge"];
         const app = appName.toLowerCase();
@@ -518,7 +518,7 @@ Singleton {
                     "actions": (notif.actions || []).filter(a => typeof a?.identifier === "string" && a.identifier.startsWith("open:")),
                     "appIcon": notif.appIcon,
                     "appName": notif.appName,
-                    "body": root.messageBody(notif.body ?? "", notif.appName ?? ""),
+                    "body": notif.body,
                     "image": notif.image,
                     "summary": notif.summary,
                     "time": notif.time,
