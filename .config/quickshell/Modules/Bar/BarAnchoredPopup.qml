@@ -7,15 +7,23 @@ import "../../Config"
  * around its content for a shadow.
  *
  * An xdg popup of the bar window: the compositor places it on the right output and slides it
- * back onto the screen near a corner. Takes no input.
+ * back onto the screen near a corner. Hyprland gives it the pointer over its whole surface (an
+ * empty input region does not help), so the surface starts at the bar's inner edge and never
+ * covers the bar: on that side the content only keeps the popout gap, and the shadow room is on
+ * the other sides. Subclasses place their content at padLeft / padTop and size the window with
+ * the four pads.
  */
 PopupWindow {
     id: root
 
     required property Item target
     property int shadowRoom: 24
-    // From the target's inner-facing side to the content: the rest of the bar, then the popout gap
-    readonly property real reach: (BarLayout.thickness - (BarLayout.vertical ? target.width : target.height)) / 2 + BarLayout.popoutGap - shadowRoom
+    readonly property int padTop: BarLayout.edge === "top" ? BarLayout.popoutGap : shadowRoom
+    readonly property int padBottom: BarLayout.edge === "bottom" ? BarLayout.popoutGap : shadowRoom
+    readonly property int padLeft: BarLayout.edge === "left" ? BarLayout.popoutGap : shadowRoom
+    readonly property int padRight: BarLayout.edge === "right" ? BarLayout.popoutGap : shadowRoom
+    // From the target's inner-facing side to the bar's inner edge
+    readonly property real reach: (BarLayout.thickness - (BarLayout.vertical ? target.width : target.height)) / 2
     readonly property int awayFromBar: {
         switch (BarLayout.edge) {
         case "bottom":

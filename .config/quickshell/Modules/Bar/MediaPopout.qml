@@ -12,8 +12,8 @@ BarAnchoredPopup {
     property list<real> visualizerValues: []
 
     visible: shown && delay.done
-    implicitWidth: 280 + shadowRoom * 2
-    implicitHeight: 100 + shadowRoom * 2
+    implicitWidth: 280 + padLeft + padRight
+    implicitHeight: 100 + padTop + padBottom
 
     Timer {
         id: delay
@@ -46,8 +46,8 @@ BarAnchoredPopup {
     MediaCard {
         id: card
 
-        x: root.shadowRoom
-        y: root.shadowRoom
+        x: root.padLeft
+        y: root.padTop
         width: 280
         height: 100
         showControls: false

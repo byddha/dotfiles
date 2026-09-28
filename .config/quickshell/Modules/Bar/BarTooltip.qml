@@ -13,8 +13,8 @@ BarAnchoredPopup {
     property string detail: ""
 
     visible: shown && title !== "" && delay.done
-    implicitWidth: card.implicitWidth + shadowRoom * 2
-    implicitHeight: card.implicitHeight + shadowRoom * 2
+    implicitWidth: card.implicitWidth + padLeft + padRight
+    implicitHeight: card.implicitHeight + padTop + padBottom
 
     Timer {
         id: delay
@@ -39,8 +39,8 @@ BarAnchoredPopup {
     Rectangle {
         id: card
 
-        x: root.shadowRoom
-        y: root.shadowRoom
+        x: root.padLeft
+        y: root.padTop
         implicitWidth: lines.implicitWidth + 20
         implicitHeight: lines.implicitHeight + 16
         radius: 8
