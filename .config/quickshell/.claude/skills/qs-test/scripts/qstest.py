@@ -5,6 +5,7 @@
   qstest.py click NAME [N] [--right] [--force]  glide to the Nth match and click (system toggles need --force)
   qstest.py hover NAME [N]              glide there, no click
   qstest.py move X Y [--click]          glide to global logical X Y
+  qstest.py wheel N                     scroll N steps at the pointer (N > 0 up, N < 0 down)
   qstest.py drag X1 Y1 X2 Y2            press at X1 Y1, glide to X2 Y2 holding the left button, release
   qstest.py find NAME                   print the matches (x y w h)
   qstest.py eval [#id|type:T] EXPR      run JS in the shell (scope: ShellRoot, or that object; @SCREEN picks one)
@@ -16,11 +17,15 @@
   qstest.py bind super+space            compositor keybind (ydotool, real keyboard events)
   qstest.py shot NAME [N] [PAD]         crop screenshot of an item; prints the file path
   qstest.py shot-screen OUTPUT          whole output (a name from `hyprctl monitors`)
+  qstest.py shot-rect X Y W H           area in global logical coordinates (popups, tooltips)
   qstest.py test NAME                   start a test: marks the log (each step then prints its new warnings/errors)
   qstest.py done [N]                    end the test: print the log lines it made (last N, default 60)
   qstest.py log                         warnings/errors added since the last `log` (or since `start`)
   qstest.py reload [FILE]               wait for qs to reload after an edit (touch FILE if it does not)
   qstest.py end                         disarm the guard, restart qs without the debug port
+  qstest.py batch [FILE|-] [--keep-going] [--sheet [--open]]  run one step per line (stdin without FILE; `#` =
+                                        comment) in one process; stops at the first FAIL unless --keep-going; --sheet
+                                        puts every shot of the batch into one labelled image, --open also shows it
 
 NAME: `#qmlId`, `type:TypeName`, or text (exact; "~part" = contains); `@SCREEN` limits it to one monitor. Needs qs with a QML debug port: `start`
 restarts qs with `--debug` and `end` restarts it without (the port listens on every interface). The guard stops a move when the cursor is not
@@ -29,6 +34,7 @@ where the last move left it: the user took the mouse.
 import hashlib
 import json
 import re
+import shlex
 import shutil
 import math
 import os
@@ -104,6 +110,11 @@ def step(d):
 
 def glide(tx, ty):
     guard()
+    # A surface mapped under a resting cursor (qs just restarted or reloaded) gets no pointer enter until
+    # the pointer moves: always move, even when already on the target
+    if cursor() == (tx, ty):
+        run("ydotool", "mousemove", "-x", "-1", "-y", "0")
+        time.sleep(STEP_DELAY)
     for _ in range(400):
         cx, cy = cursor()
         dx, dy = tx - cx, ty - cy
@@ -167,7 +178,11 @@ GEO_FN = r"""function __geo(it) {
     if (r.x + it.width <= 0 || r.y + it.height <= 0 || r.x >= a.width || r.y >= a.height) return null;
   }
   const p = it.mapToGlobal(0, 0);
-  return {x: Math.round(p.x), y: Math.round(p.y), w: Math.round(it.width), h: Math.round(it.height), type: __typeOf(it)};
+  const l = it.mapToItem(null, 0, 0);
+  let top = it;
+  while (top.parent) top = top.parent;
+  return {x: Math.round(p.x), y: Math.round(p.y), w: Math.round(it.width), h: Math.round(it.height), type: __typeOf(it),
+          lx: l.x, ly: l.y, ww: Math.round(top.width), wh: Math.round(top.height)};
 }"""
 
 
@@ -197,13 +212,16 @@ def objects(dbg):
 # Same test as __geo, for the scope object of the expression (QML expressions have no `this`)
 SCOPE_GEO = r"""(function () {
   if (!visible || width <= 0 || height <= 0 || opacity <= 0) return "null";
+  if (!Window.window || !Window.window.visible) return "null";
   for (let a = parent; a; a = a.parent) {
     if (!a.clip) continue;
     const r = mapToItem(a, 0, 0);
     if (r.x + width <= 0 || r.y + height <= 0 || r.x >= a.width || r.y >= a.height) return "null";
   }
   const p = mapToGlobal(0, 0);
-  return JSON.stringify({x: Math.round(p.x), y: Math.round(p.y), w: Math.round(width), h: Math.round(height)});
+  const l = mapToItem(null, 0, 0);
+  return JSON.stringify({x: Math.round(p.x), y: Math.round(p.y), w: Math.round(width), h: Math.round(height),
+                         lx: l.x, ly: l.y, ww: Math.round(Window.width), wh: Math.round(Window.height)});
 })()"""
 
 
@@ -261,13 +279,17 @@ FIRST_OF_TYPE = r"""(function (typeName) {
 })(%s)"""
 
 
+def visible_windows(dbg, objs):
+    """Every visible shell window, whatever its QML type is called (CalendarPopup, TrayMenu, sidebarWindow...):
+    the parent of a ProxyWindowContentItem. A property test cannot tell them apart, as child items see the
+    window root's properties too."""
+    ids = {o["parentId"] for o in objs if o["type"] == "ProxyWindowContentItem"}
+    return [o for o in objs if o["debugId"] in ids and dbg.eval(o["debugId"], "visible") is True]
+
+
 def eval_on_type(dbg, objs, type_name, screen, expr):
     """EXPR with the first on-screen item of that QML type as scope (walks the visual tree of the windows)."""
-    for w in objs:
-        if not (w["type"] in ("PanelWindow", "Popout", "FloatingWindow", "PopupWindow") or w["type"].endswith("Window")):
-            continue
-        if dbg.eval(w["debugId"], "visible") is not True:
-            continue
+    for w in visible_windows(dbg, objs):
         if screen and dbg.eval(w["debugId"], SCREEN_OF) != screen:
             continue
         value = dbg.eval(w["debugId"], FIRST_OF_TYPE % (GEO_FN, TYPE_FN, expr, json.dumps(type_name)))
@@ -304,11 +326,28 @@ def evaljson(dbg, debug_id, expr):
         die(f"eval failed: {raw!r}")
 
 
+def layer_origin(hit, layers):
+    """Qt's mapToGlobal puts a layer surface at its monitor's corner (it cannot know where the compositor
+    placed it, e.g. a bar on the bottom or right edge), and with fractional scaling even Qt's idea of that
+    corner can be off. Take the real place from the one layer with the window's size, on any monitor;
+    keep Qt's answer when that is not a single place."""
+    if "ww" not in hit:
+        return hit
+    places = {(l["x"], l["y"]) for mon in layers.values() for level in mon.get("levels", {}).values() for l in level
+              if l["w"] == hit["ww"] and l["h"] == hit["wh"]}
+    if len(places) != 1:
+        return hit
+    x, y = places.pop()
+    return dict(hit, x=round(x + hit["lx"]), y=round(y + hit["ly"]))
+
+
 def find(selector):
     """#qmlId, type:TypeName, or text ("~part" = contains), optional @SCREEN. Only items on screen."""
     selector, screen = split_screen(selector)
     mons = monitors()
-    hits = [dict(h, screen=screen_at(h["x"] + h["w"] / 2, h["y"] + h["h"] / 2, mons)) for h in find_all(selector)]
+    layers = json.loads(run("hyprctl", "layers", "-j"))
+    hits = [layer_origin(h, layers) for h in find_all(selector)]
+    hits = [dict(h, screen=screen_at(h["x"] + h["w"] / 2, h["y"] + h["h"] / 2, mons)) for h in hits]
     return [h for h in hits if not screen or h["screen"] == screen]
 
 
@@ -327,13 +366,11 @@ def find_all(selector):
                     hits.append(dict(g, type=o["type"]))
         return hits
     hits = []
-    for w in objs:
-        if w["type"] in ("PanelWindow", "Popout", "FloatingWindow", "PopupWindow") or w["type"].endswith("Window"):
-            if dbg.eval(w["debugId"], "visible") is True:
-                expr = "(function(){" + GEO_FN + ";" + TYPE_FN + "; return " + TEXT_WALK % json.dumps(selector) + ";})()"
-                raw = dbg.eval(w["debugId"], expr)
-                if isinstance(raw, str) and raw.startswith("["):
-                    hits.extend(json.loads(raw))
+    for w in visible_windows(dbg, objs):
+        expr = "(function(){" + GEO_FN + ";" + TYPE_FN + "; return " + TEXT_WALK % json.dumps(selector) + ";})()"
+        raw = dbg.eval(w["debugId"], expr)
+        if isinstance(raw, str) and raw.startswith("["):
+            hits.extend(json.loads(raw))
     return hits
 
 
@@ -389,7 +426,7 @@ def reload_count():
     return sum("Configuration Loaded" in l for l in log_lines())
 
 
-ACTIONS = {"click", "hover", "move", "drag", "key", "type", "bind", "eval", "shot", "shot-screen", "wait", "expect", "see", "gone"}
+ACTIONS = {"click", "hover", "move", "wheel", "drag", "key", "type", "bind", "eval", "shot", "shot-screen", "shot-rect", "wait", "expect", "see", "gone"}
 
 
 def report_new_problems():
@@ -405,8 +442,58 @@ def report_new_problems():
         print("  LOG " + line.strip())
 
 
-def main():
-    args = sys.argv[1:]
+# Shots taken in this process, as (step, path): `batch --sheet` joins them into one image
+SHOTS_TAKEN = []
+
+
+def batch_args(line):
+    """Like the shell, except that for eval / wait / expect the rest of the line is the JS expression, unquoted
+    (`wait #sidebarWindow visible && presented`); a first word starting with # or type: is the scope."""
+    cmd, _, rest = line.partition(" ")
+    if cmd not in ("eval", "wait", "expect"):
+        return shlex.split(line)
+    words = rest.split()
+    flags = [w for w in words if w.startswith("--timeout=")]
+    words = [w for w in words if not w.startswith("--timeout=")]
+    scope = [words.pop(0)] if words and words[0].startswith(("#", "type:")) else []
+    return [cmd, *scope, " ".join(words), *flags]
+
+
+def batch(pos, flags):
+    src = sys.stdin if not pos or pos[0] == "-" else open(pos[0])
+    lines = [l.strip() for l in src.read().splitlines()]
+    failed = 0
+    for line in lines:
+        if not line or line.startswith("#"):
+            continue
+        print(f"> {line}", flush=True)
+        try:
+            run_step(batch_args(line))
+        except SystemExit as e:
+            if e.code in (0, None):
+                continue
+            failed += 1
+            # Never go on after the guard stopped (the user has the mouse) or outside a session
+            if "--keep-going" not in flags or not load().get("armed"):
+                break
+        finally:
+            sys.stdout.flush()
+    if "--sheet" in flags and SHOTS_TAKEN:
+        sheet = os.path.join(SHOTS, f"sheet-{int(time.time() * 1000)}.png")
+        cells = []
+        for label, path in SHOTS_TAKEN:
+            cells += ["-label", label, path]
+        run("magick", "montage", *cells, "-tile", "2x", "-geometry", "+12+12", "-pointsize", "18",
+            "-background", "#202020", "-fill", "#e0e0e0", sheet)
+        print(f"SHEET {sheet}")
+        # Only on request: a viewer popping up on the user's screen can take the focus the next steps need
+        if "--open" in flags:
+            subprocess.Popen(["xdg-open", sheet], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+    if failed:
+        sys.exit(1)
+
+
+def main(args):
     if not args:
         die(__doc__)
     cmd, rest = args[0], args[1:]
@@ -414,7 +501,9 @@ def main():
     pos = [a for a in rest if not a.startswith("--")]
     idx = int(pos[1]) if len(pos) > 1 and pos[1].isdigit() else 0
 
-    if cmd == "start":
+    if cmd == "batch":
+        batch(pos, flags)
+    elif cmd == "start":
         # Tell the user to let go of the mouse: play the sound to the end (it is the warning time)
         if subprocess.run(["pw-play", SOUND], capture_output=True).returncode != 0:
             run("notify-send", "-t", "2500", "-a", "Claude", "Test starts", "Don't touch the mouse")
@@ -504,6 +593,13 @@ def main():
         if "--click" in flags:
             click()
         print(f"at {pos[0]},{pos[1]}")
+    elif cmd == "wheel":
+        # At the pointer: positive steps scroll up (angleDelta.y > 0), negative ones down
+        guard()
+        for _ in range(abs(int(pos[0]))):
+            run("ydotool", "mousemove", "-w", "-x", "0", "-y", "1" if int(pos[0]) > 0 else "-1")
+            time.sleep(0.15)
+        print(f"wheel {pos[0]}")
     elif cmd == "find":
         for h in find(pos[0]):
             print(h["x"], h["y"], h["w"], h["h"], h["screen"])
@@ -522,20 +618,23 @@ def main():
         path = os.path.join(SHOTS, f"{int(time.time() * 1000)}.png")
         geo = f"{hit['x'] - pad},{hit['y'] - pad} {hit['w'] + 2 * pad}x{hit['h'] + 2 * pad}"
         run("grim", "-g", geo, path)
+        SHOTS_TAKEN.append((" ".join(args), path))
         print(path)
-    elif cmd == "shot-screen":
+    elif cmd in ("shot-screen", "shot-rect"):
         os.makedirs(SHOTS, exist_ok=True)
-        path = os.path.join(SHOTS, f"{pos[0]}-{int(time.time() * 1000)}.png")
+        path = os.path.join(SHOTS, f"{pos[0] if cmd == 'shot-screen' else 'rect'}-{int(time.time() * 1000)}.png")
+        where = ["-o", pos[0]] if cmd == "shot-screen" else ["-g", f"{pos[0]},{pos[1]} {pos[2]}x{pos[3]}"]
         # Retake until two shots in a row are equal, so a running animation is never captured half-way
         last = None
         for _ in range(12):
-            run("grim", "-o", pos[0], path)
+            run("grim", *where, path)
             with open(path, "rb") as f:
                 digest = hashlib.md5(f.read()).hexdigest()
             if digest == last:
                 break
             last = digest
             time.sleep(0.15)
+        SHOTS_TAKEN.append((" ".join(args), path))
         print(path)
     elif cmd == "test":
         state = load()
@@ -577,9 +676,13 @@ def main():
         die(__doc__)
 
 
-try:
-    main()
-finally:
-    # Also after a FAIL: the log of a failing step matters most
-    if len(sys.argv) > 1 and sys.argv[1] in ACTIONS:
-        report_new_problems()
+def run_step(args):
+    try:
+        main(args)
+    finally:
+        # Also after a FAIL: the log of a failing step matters most
+        if args and args[0] in ACTIONS:
+            report_new_problems()
+
+
+run_step(sys.argv[1:])

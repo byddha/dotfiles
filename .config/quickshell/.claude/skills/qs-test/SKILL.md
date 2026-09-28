@@ -39,7 +39,28 @@ Q done                         # all log lines this test made
 Q end                          # restart qs normally (closes the port)
 ```
 
-Chain steps with `&&` in one Bash call so a failing step stops the test, then decide what to do next.
+Run the steps as a `batch` (one step per line, as you would type them after `Q`): one Bash call and one
+process for a whole group of tests. A step takes about 50 ms plus its glide; the slow part is your own
+turns between calls, so put as many steps as you can in one batch and look at one sheet:
+
+```bash
+Q batch --keep-going --sheet <<'STEPS'
+test calendar popout
+click type:ClockButton@DP-3
+wait type:ClockButton@DP-3 calendar.visible
+shot type:CalendarPanelContent@DP-3
+key Escape
+done
+STEPS
+```
+
+A batch stops at the first FAIL, or goes on with `--keep-going`; it always stops when the guard stops it.
+`--sheet` joins all shots of the batch into one labelled image and prints `SHEET path`; read that one image,
+and crop a shot at full size when you need detail. `--open` also shows it on the user's screen - only when
+they asked, since the viewer can take the focus the next steps need.
+
+Get one case right before running a matrix: check it fully (look at its shots, fix what is wrong), then run
+the other edges, monitors and settings. A matrix run on a broken case only multiplies the same failure.
 Between tests, bring the UI back to a known state (Esc, close the sidebar) so a test never depends on
 the previous one.
 
@@ -59,6 +80,8 @@ The pointer lands on sub-pixel positions (QML may see 1400.59 where `hyprctl cur
 a real mouse: compare pixel sizes that come from pointer positions with a tolerance of 1 px.
 
 Only items really on screen match: hidden, zero-size or scrolled out of a clipping parent do not.
+Selectors look inside every visible shell window, whatever its type is called (`CalendarPopout`, `TrayMenu`).
+Tooltips show after a delay (500 ms): `wait #vpnTooltip visible` before the shot.
 Clicks and shots wait until the item stops moving (slide-in animations).
 
 ## Steps
@@ -67,6 +90,7 @@ Clicks and shots wait until the item stops moving (slide-in animations).
 |---|---|
 | `click SEL [N] [--right]`, `hover SEL [N]` | glide to the item's center, click / only hover |
 | `move X Y [--click]` | glide to global logical coordinates (same space as `hyprctl cursorpos`) |
+| `wheel N` | scroll N steps where the pointer is (N > 0 up, N < 0 down) |
 | `drag X1 Y1 X2 Y2` | press, glide holding the left button, release (selections, sliders, drag and drop) |
 | `key Escape`, `type "text"` | keyboard into the focused shell surface |
 | `bind super+space` | Hyprland keybind with real key events |
@@ -75,6 +99,7 @@ Clicks and shots wait until the item stops moving (slide-in animations).
 | `see SEL` / `gone SEL` | wait until an item is / is not on screen |
 | `eval [#id or type:T][@SCREEN] EXPR` | print any value, e.g. `eval 'Settings.sidebarSelectedTab'`, `eval 'type:SelectionWindow@DP-3' 'regionWidth'` |
 | `shot SEL [N] [PAD]`, `shot-screen DP-3` | cropped / full screenshot, taken once the picture stops changing; prints the path - then Read it |
+| `shot-rect X Y W H` | area in global logical coordinates, for popups and tooltips without a good selector |
 | `find SEL` | list matches (x y w h) |
 | `reload [FILE]` | after editing QML: wait until qs reloaded (touches FILE if not) |
 
@@ -124,4 +149,9 @@ both the Bluetooth tile and the Bluetooth tab (`find` first, then pick the index
 - Qt's `LIST_OBJECTS` answer is corrupt after reloads (it counts invalid child contexts but does not
   write them); the client only scans it for the ShellRoot id and gets everything else from `FETCH_OBJECT`.
 - AT-SPI does not work: Quickshell exposes no windows on the accessibility bus.
+- Layer windows (bar, popouts) cannot know where the compositor put them; positions come from the one
+  `hyprctl layers` surface with the window's size. xdg popups (bar tooltips, `PopupWindow`) are not layers:
+  their positions are only Qt's guess, so find them without `@SCREEN` and check them on a screenshot.
+- Before switching workspaces in a test, look at what is on the target workspace: an app that grabs input
+  (Remmina, a VM, a game) takes the keyboard and the pointer.
 - State and screenshots live in `$XDG_RUNTIME_DIR/qstest/`; `start` clears the screenshots.
