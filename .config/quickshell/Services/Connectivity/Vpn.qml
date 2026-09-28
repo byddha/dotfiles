@@ -36,7 +36,7 @@ Singleton {
     property string mullvadCity: ""
     property string mullvadCountry: ""
 
-    // FortiVPN uptime tracking
+    // How long openfortivpn has been running, read with its status, so it survives shell restarts
     property int fortiUptimeSeconds: 0
     readonly property int _fortiHours: Math.floor(fortiUptimeSeconds / 3600)
     readonly property int _fortiMinutes: Math.floor((fortiUptimeSeconds % 3600) / 60)
@@ -50,25 +50,6 @@ Singleton {
         running: true
         repeat: true
         onTriggered: root.updateStatus()
-    }
-
-    // FortiVPN uptime timer (tick every minute for HH:MM display)
-    Timer {
-        id: fortiUptimeTimer
-        interval: 60000
-        repeat: true
-        onTriggered: {
-            root.fortiUptimeSeconds = root.fortiUptimeSeconds + 60;
-        }
-    }
-
-    onFortiConnectedChanged: {
-        if (fortiConnected) {
-            fortiUptimeTimer.start();
-        } else {
-            fortiUptimeTimer.stop();
-            fortiUptimeSeconds = 0;
-        }
     }
 
     // ==================
@@ -126,13 +107,18 @@ Singleton {
     // FortiVPN Processes
     // ==================
 
+    // Prints the process's elapsed seconds, nothing when it is not running
     Process {
         id: fortiStatusProc
-        command: ["pgrep", "openfortivpn"]
-        onExited: code => {
-            root.fortiConnected = code === 0;
-            if (!root.fortiConnected)
-                root.fortiDisconnecting = false;
+        command: ["ps", "-o", "etimes=", "-C", "openfortivpn"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const seconds = parseInt(text.trim());
+                root.fortiConnected = !isNaN(seconds);
+                root.fortiUptimeSeconds = root.fortiConnected ? seconds : 0;
+                if (!root.fortiConnected)
+                    root.fortiDisconnecting = false;
+            }
         }
     }
 
