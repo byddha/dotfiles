@@ -38,6 +38,8 @@ Singleton {
     property color accentRed: ThemeService.error                 // Red accent (warnings/danger)
     property color accentRedText: ThemeService.errorText
     property color accentOrange: ThemeService.base09             // Orange accent (no material role for it)
+    property color accentYellow: ThemeService.base0A
+    property color accentGreen: ThemeService.base0B
 
     // Surface and border colors
     property color surface: ThemeService.surfaceContainer        // Surface background

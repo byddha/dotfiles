@@ -45,6 +45,8 @@ Singleton {
     // base16 slots with no material role
     property string base08: "#ff6b6b"  // Variables, XML Tags, Markup Link Text
     property string base09: "#ff9f43"  // Integers, Boolean, Constants
+    property string base0A: "#cec45c"
+    property string base0B: "#80c683"
 
     // Raw parse of dms-colors.json, re-applied whenever either file lands
     property var colorData: null
@@ -132,6 +134,8 @@ Singleton {
 
         root.base08 = ansi(1);
         root.base09 = ansi(9);
+        root.base0A = ansi(3);
+        root.base0B = ansi(10);
     }
 
     Process {
