@@ -412,7 +412,8 @@ def problems(lines):
 
 
 def restart_qs(extra):
-    subprocess.run(["pkill", "-x", "qs"])
+    # After a crash Quickshell restarts itself as "quickshell", not "qs"
+    subprocess.run(["pkill", "-x", "qs|quickshell"])
     time.sleep(1)
     subprocess.Popen(["qs", "-d", *extra], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     for _ in range(40):
