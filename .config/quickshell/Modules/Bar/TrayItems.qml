@@ -30,7 +30,8 @@ Grid {
 
             iconOnly: true
             highlighted: root.menu.visible && root.menu.menu === modelData.menu
-            tooltipTitle: highlighted ? "" : modelData.tooltipTitle || modelData.title || modelData.id
+            // The item is deleted a moment before its button when an app leaves the tray
+            tooltipTitle: highlighted || !modelData ? "" : modelData.tooltipTitle || modelData.title || modelData.id
 
             onClicked: mouse => {
                 const item = modelData;
@@ -54,7 +55,7 @@ Grid {
             IconImage {
                 implicitSize: BarLayout.appIconSize
                 source: {
-                    const icon = trayButton.modelData.icon;
+                    const icon = trayButton.modelData?.icon ?? "";
                     // Some apps send "name?path=/dir" for an icon outside the theme
                     if (icon.includes("?path=")) {
                         const [name, dir] = icon.split("?path=");
