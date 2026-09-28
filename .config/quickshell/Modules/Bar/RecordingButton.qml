@@ -1,6 +1,7 @@
 import QtQuick
 import "../../Config"
 import "../../Services"
+import "../../Components"
 
 // While recording: the elapsed time; a click stops it. Starting and saving show a spinner.
 BarItem {
@@ -18,15 +19,15 @@ BarItem {
     }
 
     Item {
-        implicitWidth: BarLayout.iconSize
-        implicitHeight: BarLayout.iconSize
+        implicitWidth: Theme.iconSize
+        implicitHeight: Theme.iconSize
 
-        BarSpinner {
+        Spinner {
             visible: root.busy
             color: Theme.accentRed
         }
         // Hovered, the dot turns into a stop button
-        BarIcon {
+        Icon {
             visible: !root.busy && root.hovered
             text: Lucide.circleStop
             color: Theme.accentRed
@@ -42,14 +43,14 @@ BarItem {
             border.color: Theme.alpha(Theme.accentRed, 0.22)
         }
     }
-    BarText {
+    StyledText {
         visible: root.busy && !root.vertical
         role: "secondary"
         text: Recording.stopping ? "Saving…" : "Starting…"
     }
     ElapsedText {
         visible: !root.busy
-        font.pixelSize: root.vertical ? BarLayout.captionSize : BarLayout.textSize
+        font.pixelSize: root.vertical ? Theme.fontSizeTiny : Theme.fontSizeBase
         font.weight: root.vertical ? Font.DemiBold : Font.Medium
         since: Recording.startedAt
     }

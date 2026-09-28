@@ -13,7 +13,6 @@ import "Modules/OSD"
 import "Modules/ShutdownReminder"
 import "Modules/GameLauncher"
 import "Modules/RegionSelector"
-import "Modules/Lock"
 
 ShellRoot {
     id: root
@@ -64,9 +63,5 @@ ShellRoot {
 
     RecordingOutline {
         id: recordingOutline
-    }
-
-    Lock {
-        id: lock
     }
 }

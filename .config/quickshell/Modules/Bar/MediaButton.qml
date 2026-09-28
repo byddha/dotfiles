@@ -3,6 +3,7 @@ import QtQuick
 import Quickshell.Services.Mpris
 import "../../Config"
 import "../../Services"
+import "../../Components"
 
 /**
  * MediaButton - The playing track. Hover swaps the artist for previous / play-pause / next and
@@ -57,14 +58,14 @@ BarItem {
             visible: root.playing
             appClass: root.player?.desktopEntry ?? ""
         }
-        BarIcon {
+        Icon {
             visible: !root.playing
             text: Lucide.pause
-            color: Theme.alpha(Theme.textSecondary, BarLayout.secondaryOpacity)
+            color: Theme.alpha(Theme.textSecondary, Theme.secondaryOpacity)
         }
     }
 
-    BarText {
+    StyledText {
         id: title
 
         visible: !root.iconView
@@ -80,7 +81,7 @@ BarItem {
         implicitWidth: root.level >= 1 ? controls.implicitWidth : Math.max(artist.implicitCapped, controls.implicitWidth)
         implicitHeight: controls.implicitHeight
 
-        BarText {
+        StyledText {
             id: artist
 
             readonly property real implicitCapped: Math.min(implicitWidth, 160)
@@ -129,7 +130,7 @@ BarItem {
         opacity: enabled ? 1 : 0.4
         color: tap.pressed ? Theme.colLayer3 : hover.hovered ? Theme.alpha(Theme.textColor, 0.08) : "transparent"
 
-        BarIcon {
+        Icon {
             anchors.centerIn: parent
             size: 16
             text: control.glyph

@@ -23,11 +23,10 @@ Item {
             radius: 24
             color: Theme.colLayer2
 
-            Text {
+            Icon {
                 anchors.centerIn: parent
                 text: root.icon
-                font.family: Theme.fontFamilyGlyphs
-                font.pixelSize: 20
+                size: Theme.iconSizeLarge
                 color: Theme.textSecondary
             }
         }
@@ -36,16 +35,14 @@ Item {
             Layout.alignment: Qt.AlignHCenter
             text: root.text
             font.pixelSize: Theme.fontSizeSmall
-            font.weight: Font.Medium
-            color: Theme.textColor
         }
 
         StyledText {
             Layout.alignment: Qt.AlignHCenter
             visible: root.hint !== ""
             text: root.hint
+            role: "secondary"
             font.pixelSize: Theme.fontSizeTiny
-            color: Theme.textSecondary
         }
     }
 }

@@ -38,8 +38,8 @@ Item {
     readonly property real imageMaxHeight: 224
     readonly property real railHeight: 4
     readonly property int collapsedLines: 2
-    readonly property int summarySize: 14
-    readonly property int bodySize: 12
+    readonly property int summarySize: Theme.fontSizeBase
+    readonly property int bodySize: Theme.fontSizeTiny
     // DMS cornerRadiusM relative to its window radius (m/l = 12/16), scaled to ours.
     readonly property real cornerRadiusM: Math.round(Theme.radiusWindow * 0.75)
     readonly property real popupRadius: Theme.radiusWindow
@@ -202,7 +202,6 @@ Item {
                     anchors.centerIn: parent
                     text: (root.notificationObject.appName || "?").charAt(0).toUpperCase()
                     font.pixelSize: Math.round(parent.width * 0.45)
-                    font.weight: Font.Medium
                     color: Theme.secondaryContainerText
                 }
             }
@@ -227,9 +226,9 @@ Item {
                     anchors.right: controls.left
                     anchors.rightMargin: 4
                     anchors.verticalCenter: parent.verticalCenter
+                    role: "secondary"
                     text: (root.notificationObject.appName || "") + " · " + root.timeStr
-                    font.pixelSize: 12
-                    color: Theme.textSecondary
+                    font.pixelSize: Theme.fontSizeTiny
                     elide: Text.ElideRight
                 }
 
@@ -244,13 +243,13 @@ Item {
                         visible: root.canExpand
                         width: root.controlSize + 8
                         backgroundColor: root.chipColor
-                        glyph: root.descriptionExpanded ? "󰅃" : "󰅀"
+                        glyph: root.descriptionExpanded ? Lucide.chevronUp : Lucide.chevronDown
                         onClicked: root.descriptionExpanded = !root.descriptionExpanded
                     }
 
                     IconButton {
                         visible: root.showClose
-                        glyph: "󰅖"
+                        glyph: Lucide.x
                         onClicked: root.closePopup()
                     }
                 }
@@ -273,8 +272,6 @@ Item {
                         visible: text.length > 0
                         text: root.notificationObject.summary || ""
                         font.pixelSize: root.summarySize
-                        font.weight: Font.Medium
-                        color: Theme.textColor
                         elide: root.descriptionExpanded ? Text.ElideNone : Text.ElideRight
                         maximumLineCount: root.descriptionExpanded ? -1 : 1
                         wrapMode: Text.WrapAtWordBoundaryOrAnywhere
@@ -287,8 +284,8 @@ Item {
                         visible: text.length > 0
                         text: root.htmlBody
                         textFormat: Text.StyledText
+                        role: "secondary"
                         font.pixelSize: root.bodySize
-                        color: Theme.textSecondary
                         wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                         maximumLineCount: root.descriptionExpanded ? -1 : root.collapsedLines
                         elide: root.descriptionExpanded ? Text.ElideNone : Text.ElideRight
@@ -457,12 +454,10 @@ Item {
         radius: root.cornerRadiusM
         color: backgroundColor
 
-        Text {
+        Icon {
             anchors.centerIn: parent
             text: iconButton.glyph
-            font.family: Theme.fontFamilyIcons
-            font.pixelSize: 16
-            color: Theme.textColor
+            size: Theme.iconSizeSmall
         }
 
         Rectangle {
@@ -508,8 +503,7 @@ Item {
             anchors.rightMargin: root.actionPadding
             horizontalAlignment: Text.AlignHCenter
             text: textButton.text
-            font.pixelSize: 14
-            font.weight: Font.Medium
+            font.pixelSize: Theme.fontSizeBase
             color: Theme.primary
             elide: Text.ElideRight
         }

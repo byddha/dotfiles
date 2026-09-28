@@ -38,13 +38,10 @@ Item {
                 anchors.margins: root.padding
                 spacing: root.padding
 
-                Text {
+                StyledText {
                     id: numberText
                     text: Math.round(root.value * 100)
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeBase + 2
-                    font.weight: Font.Medium
-                    color: Theme.textColor
+                    font.pixelSize: Theme.fontSizeLarge
                     horizontalAlignment: Text.AlignHCenter
                     Layout.fillWidth: true
                 }
@@ -88,11 +85,10 @@ Item {
             Layout.preferredWidth: root.barWidth + root.padding * 2
             Layout.preferredHeight: root.barWidth + root.padding * 2
 
-            Text {
+            Icon {
                 anchors.centerIn: parent
                 text: root.icon
-                font.family: Theme.fontFamilyIcons
-                font.pixelSize: root.barWidth
+                size: Theme.iconSizeLarge
                 color: Theme.colLayer0
             }
         }

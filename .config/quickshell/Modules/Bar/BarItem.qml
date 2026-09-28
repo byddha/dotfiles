@@ -55,7 +55,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        radius: BarLayout.itemRadius
+        radius: Theme.radiusBase
         color: root.pressed ? root.pressedFill : root.hovered || root.highlighted || root.marked ? root.hoverFill : root.fill
 
         Behavior on color {

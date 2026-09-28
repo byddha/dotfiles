@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell.Wayland
 import "../../Config"
 import "../../Services"
+import "../../Components"
 
 /**
  * Tray - The tray items in the bar, or, when the bar is short of room (level 2, or 1 on a
@@ -63,7 +64,7 @@ Item {
                 root.overflow.openFrom(chevron);
         }
 
-        BarIcon {
+        Icon {
             text: {
                 switch (BarLayout.edge) {
                 case "bottom":

@@ -48,12 +48,12 @@ QtObject {
         stdout: StdioCollector {
             onStreamFinished: backend.describedBinds = JSON.parse(text).filter(b => b.submap === "" && b.description).map(b => ({
                         description: b.description,
-                        keys: backend._keysLabel(b.modmask, b.key)
+                        keys: backend.keysLabel(b.modmask, b.key)
                     }))
         }
     }
 
-    function _keysLabel(modmask, key) {
+    function keysLabel(modmask, key) {
         // Hyprland's modifier bits, shown in this order
         const modifiers = [[64, "Super"], [4, "Ctrl"], [8, "Alt"], [1, "Shift"]].filter(([bit]) => modmask & bit).map(([, name]) => name);
         const label = key.length === 1 ? key.toUpperCase() : key.charAt(0).toUpperCase() + key.slice(1).toLowerCase();

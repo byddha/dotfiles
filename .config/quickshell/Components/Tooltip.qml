@@ -43,12 +43,11 @@ Window {
         onTriggered: tooltip._showNow()
     }
 
-    Text {
+    StyledText {
         id: tooltipText
         anchors.centerIn: parent
         text: tooltip.text
-        font.family: Theme.fontFamily
         font.pixelSize: Theme.fontSizeSmall
-        color: Theme.textColor
+        font.weight: Font.Normal
     }
 }

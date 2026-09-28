@@ -1,5 +1,6 @@
 import QtQuick
 import "../../Config"
+import "../../Components"
 
 Item {
     id: root
@@ -80,13 +81,10 @@ Item {
         width: dimensionText.implicitWidth + 20
         height: dimensionText.implicitHeight + 8
 
-        Text {
+        StyledText {
             id: dimensionText
             anchors.centerIn: parent
             color: "white"
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSizeBase
-            font.weight: Font.Medium
             // Edges rounded one by one, like the capture in _grabRegionToFile
             text: `${Math.round((root.regionX + root.regionWidth) * root.monitorScale) - Math.round(root.regionX * root.monitorScale)} × ${Math.round((root.regionY + root.regionHeight) * root.monitorScale) - Math.round(root.regionY * root.monitorScale)}`
         }

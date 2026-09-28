@@ -1,6 +1,7 @@
 import QtQuick
 import "../../Config"
 import "../../Services"
+import "../../Components"
 
 // A connected (or connecting) VPN; a click disconnects it
 BarItem {
@@ -13,10 +14,10 @@ BarItem {
 
     function lengthAt(level) {
         if (vertical)
-            return padded(BarLayout.iconSize + (level < 3 && !Vpn.busy ? BarLayout.itemGap + caption.implicitHeight : 0));
+            return padded(Theme.iconSize + (level < 3 && !Vpn.busy ? BarLayout.itemGap + caption.implicitHeight : 0));
         if (level >= 3)
             return BarLayout.itemSize;
-        const parts = [BarLayout.iconSize, level < 2 && !Vpn.busy ? name.implicitWidth : 0, detail.implicitWidth].filter(w => w > 0);
+        const parts = [Theme.iconSize, level < 2 && !Vpn.busy ? name.implicitWidth : 0, detail.implicitWidth].filter(w => w > 0);
         return padded(parts.reduce((a, b) => a + b, 0) + BarLayout.itemGap * (parts.length - 1));
     }
     tooltipTitle: mullvad ? `Mullvad${Vpn.mullvadCity ? ` (${Vpn.mullvadCity})` : ""}` : "FortiVPN"
@@ -41,37 +42,37 @@ BarItem {
     }
 
     Item {
-        implicitWidth: BarLayout.iconSize
-        implicitHeight: BarLayout.iconSize
+        implicitWidth: Theme.iconSize
+        implicitHeight: Theme.iconSize
 
-        BarSpinner {
+        Spinner {
             visible: Vpn.busy
             color: Theme.accentYellow
         }
-        BarIcon {
+        Icon {
             visible: !Vpn.busy
             text: Lucide.shieldCheck
             color: Theme.accentGreen
         }
     }
-    BarText {
+    StyledText {
         id: name
 
         visible: !root.vertical && !Vpn.busy && root.level < 2
         text: root.mullvad ? "Mullvad" : "FortiVPN"
     }
-    BarText {
+    StyledText {
         id: detail
 
         visible: !root.vertical && root.level < 3 && text !== ""
         role: !Vpn.busy && !root.mullvad ? "tertiary" : "secondary"
         text: Vpn.busy ? (Vpn.disconnecting ? "Disconnecting…" : "Connecting…") : root.mullvad ? (Vpn.mullvadCity ? `(${Vpn.mullvadCity})` : "") : Vpn.fortiUptime
     }
-    BarText {
+    StyledText {
         id: caption
 
         visible: root.vertical && !Vpn.busy && root.level < 3
-        font.pixelSize: BarLayout.captionSize
+        font.pixelSize: Theme.fontSizeTiny
         font.weight: Font.DemiBold
         text: "VPN"
     }

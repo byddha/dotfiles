@@ -6,6 +6,7 @@ import Quickshell
 import Quickshell.Wayland
 import "../../Config"
 import "../../Services"
+import "../../Components"
 
 Scope {
     id: root
@@ -27,7 +28,7 @@ Scope {
             }
 
             margins {
-                bottom: 20
+                bottom: Placement.inset("bottom", 20)
             }
 
             implicitWidth: container.width
@@ -62,56 +63,56 @@ Scope {
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.bottom: parent.bottom
 
-                width: Math.max(200, columnLayout.implicitWidth + 16)
-                height: Math.max(60, columnLayout.implicitHeight + 16)
+                width: grid.implicitWidth + Theme.spacingLarge * 2
+                height: grid.implicitHeight + Theme.spacingLarge * 2
 
                 color: Theme.colLayer0
-                border.color: Theme.colSecondary
-                border.width: 2
-                radius: 5
-                layer.enabled: true  // Force offscreen rendering to eliminate border artifacts
+                radius: Theme.radiusWindow
+                border.width: 1
+                border.color: Theme.popupBorder
 
-                visible: true
-                opacity: visible ? 1 : 0
-
-                Behavior on opacity {
-                    OpacityAnimator {
-                        duration: 150
-                        easing.type: Easing.InOutQuad
+                Connections {
+                    target: HyprWhichKeyService
+                    function onKeybindListChanged() {
+                        // Hide entire window immediately to avoid resize artifacts
+                        root.shown = false;
+                        showTimer.restart();
                     }
                 }
 
-                ColumnLayout {
-                    id: columnLayout
+                // Keys right-aligned in the first column, descriptions in the second
+                GridLayout {
+                    id: grid
+
                     anchors.centerIn: parent
+                    columns: 2
+                    rowSpacing: Theme.spacingSmall
+                    columnSpacing: Theme.spacingBase
 
-                    spacing: 2
+                    Repeater {
+                        model: HyprWhichKeyService.keybindList
 
-                    // Approximate monospace char width so every key column lines up.
-                    readonly property real maxKeyWidth: {
-                        const charWidth = Theme.whichKeyFontSize * 0.6;
-                        let maxWidth = 0;
-                        for (const bind of HyprWhichKeyService.keybindList)
-                            maxWidth = Math.max(maxWidth, HyprWhichKeyService.getRawKey(bind).length * charWidth);
-                        return maxWidth;
-                    }
+                        Keycap {
+                            required property var modelData
+                            required property int index
 
-                    Connections {
-                        target: HyprWhichKeyService
-                        function onKeybindListChanged() {
-                            // Hide entire window immediately to avoid resize artifacts
-                            root.shown = false;
-                            showTimer.restart();
+                            Layout.row: index
+                            Layout.column: 0
+                            Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                            text: modelData.keys
                         }
                     }
 
                     Repeater {
                         model: HyprWhichKeyService.keybindList
 
-                        KeybindItem {
+                        StyledText {
                             required property var modelData
-                            bind: modelData
-                            columnWidth: columnLayout.maxKeyWidth
+                            required property int index
+
+                            Layout.row: index
+                            Layout.column: 1
+                            text: modelData.description
                         }
                     }
                 }

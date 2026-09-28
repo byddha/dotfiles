@@ -23,7 +23,8 @@ Singleton {
         Compositor.logout();
     }
 
+    // Whatever locker listens for the session's Lock signal (hypridle's lock_cmd)
     function lock() {
-        SessionLock.lock();
+        Quickshell.execDetached(["loginctl", "lock-session"]);
     }
 }

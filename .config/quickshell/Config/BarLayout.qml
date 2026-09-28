@@ -24,32 +24,21 @@ Singleton {
     readonly property int thickness: vertical ? 52 : 40
     // Hit area of a bar item across the bar
     readonly property int itemSize: vertical ? 40 : 32
-    readonly property int itemRadius: 7
     // Space inside an item: at its ends on a horizontal bar, above and below its content on a vertical one
     readonly property int itemPadding: vertical ? 7 : 10
     // Between an item's icon and its text
     readonly property int itemGap: vertical ? 4 : 7
-    readonly property int iconSize: 18
     readonly property int appIconSize: 20
     readonly property int appIconGap: 6
-    readonly property int textSize: 14
     readonly property int clockSize: 15
-    // Values under icons on a vertical bar
-    readonly property int captionSize: 12
     readonly property int workspaceNumberSize: 11
-    readonly property int percentSize: 12
     readonly property int badgeSize: 14
     readonly property int badgeTextSize: 10
     readonly property int dotSize: 7
     readonly property int dividerLength: 18
     readonly property int dividerMargin: 8
-    readonly property int tooltipTextSize: 13
-    readonly property int tooltipTitleSize: 14
-    readonly property int menuTextSize: 14
 
-    // Opacities of the secondary text color
-    readonly property real secondaryOpacity: 0.78
-    readonly property real tertiaryOpacity: 0.56
+    // Opacities of textSecondary for single bar parts
     readonly property real secondsOpacity: 0.62
     readonly property real percentOpacity: 0.62
     readonly property real weatherOpacity: 0.85

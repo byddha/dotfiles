@@ -106,33 +106,27 @@ Singleton {
         }
     }
 
-    // WMO weather code -> [icon, description]
+    // WMO weather code -> description
     readonly property var wmoCodes: {
         const table = {};
-        const add = (from, to, icon, description) => {
+        const add = (from, to, description) => {
             for (let code = from; code <= to; code++)
-                table[code] = [icon, description];
+                table[code] = description;
         };
-        add(0, 0, Icons.weatherSunny, "Clear sky");
-        add(1, 1, Icons.weatherPartlyCloudy, "Mainly clear");
-        add(2, 2, Icons.weatherPartlyCloudy, "Partly cloudy");
-        add(3, 3, Icons.weatherCloudy, "Overcast");
-        add(45, 45, Icons.weatherFog, "Fog");
-        add(48, 48, Icons.weatherFog, "Fog");
-        add(51, 55, Icons.weatherRainy, "Drizzle");
-        add(56, 57, Icons.weatherRainy, "Freezing drizzle");
-        add(61, 65, Icons.weatherRainy, "Rain");
-        add(66, 67, Icons.weatherRainy, "Freezing rain");
-        add(71, 77, Icons.weatherSnowy, "Snow");
-        add(80, 82, Icons.weatherRainy, "Rain showers");
-        add(85, 86, Icons.weatherSnowy, "Snow showers");
-        add(95, 99, Icons.weatherThunderstorm, "Thunderstorm");
+        add(0, 0, "Clear sky");
+        add(1, 1, "Mainly clear");
+        add(2, 2, "Partly cloudy");
+        add(3, 3, "Overcast");
+        add(45, 48, "Fog");
+        add(51, 55, "Drizzle");
+        add(56, 57, "Freezing drizzle");
+        add(61, 65, "Rain");
+        add(66, 67, "Freezing rain");
+        add(71, 77, "Snow");
+        add(80, 82, "Rain showers");
+        add(85, 86, "Snow showers");
+        add(95, 99, "Thunderstorm");
         return table;
-    }
-
-    // Returns a Nerd Font icon - use with Theme.fontFamilyIcons
-    function weatherSymbolFromCode(code) {
-        return wmoCodes[code]?.[0] ?? Icons.weatherCloudy;
     }
 
     // Lucide glyph (Theme.fontIcons) for a WMO code
@@ -155,7 +149,7 @@ Singleton {
     }
 
     function weatherDescriptionFromCode(code) {
-        return wmoCodes[code]?.[1] ?? "Unknown";
+        return wmoCodes[code] ?? "Unknown";
     }
 
     // ========================================================================

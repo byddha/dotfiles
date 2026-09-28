@@ -12,12 +12,12 @@ Card {
 
     function volumeIcon(volume, muted) {
         if (muted || volume <= 0)
-            return Icons.volumeMuted;
+            return Lucide.volumeX;
         if (volume < 0.34)
-            return Icons.volumeLow;
+            return Lucide.volume;
         if (volume < 0.67)
-            return Icons.volumeMedium;
-        return Icons.volumeHigh;
+            return Lucide.volume1;
+        return Lucide.volume2;
     }
 
     Slider {
@@ -34,7 +34,7 @@ Card {
 
     Slider {
         Layout.fillWidth: true
-        icon: Audio.isMicMuted ? Icons.micMuted : Icons.micOn
+        icon: Audio.isMicMuted ? Lucide.micOff : Lucide.mic
         value: Audio.micVolume
         to: 1.5
         showMuteIcon: true
@@ -50,7 +50,7 @@ Card {
         visible: active
 
         sourceComponent: Slider {
-            icon: Icons.brightness
+            icon: Lucide.sun
             value: Brightness.brightness
             onMoved: newValue => Brightness.setBrightness(newValue)
         }
@@ -62,7 +62,7 @@ Card {
         visible: active
 
         sourceComponent: Slider {
-            icon: Icons.keyboard
+            icon: Lucide.keyboard
             value: KeyboardBrightness.brightness
             stepSize: KeyboardBrightness.stepSize
             snapMode: true

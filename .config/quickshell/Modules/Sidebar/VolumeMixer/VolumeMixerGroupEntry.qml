@@ -80,16 +80,14 @@ Item {
                             width: Math.min(implicitWidth, parent.width - streamCount.implicitWidth)
                             text: avatar.entry?.name || root.group.appName
                             font.pixelSize: Theme.fontSizeSmall
-                            font.weight: Font.Medium
-                            color: Theme.textColor
                             elide: Text.ElideRight
                         }
 
                         StyledText {
                             id: streamCount
                             text: ` · ${root.group.nodes.length} streams`
+                            role: "secondary"
                             font.pixelSize: Theme.fontSizeTiny
-                            color: Theme.textSecondary
                         }
                     }
 
@@ -98,8 +96,8 @@ Item {
                         implicitWidth: 24
                         implicitHeight: 24
                         radius: Theme.radiusSmall
-                        icon: root.linked ? Icons.linkVariant : Icons.linkVariantOff
-                        iconSize: 14
+                        icon: root.linked ? Lucide.link : Lucide.unlink
+                        iconSize: Theme.iconSizeSmall
                         toggled: root.linked
                         onClicked: root.linked = !root.linked
                     }

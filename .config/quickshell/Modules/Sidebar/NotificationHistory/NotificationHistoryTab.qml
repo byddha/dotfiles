@@ -25,7 +25,7 @@ ColumnLayout {
         Layout.margins: 12
         Layout.bottomMargin: 8
         visible: root.count > 0
-        icon: Icons.magnify
+        icon: Lucide.search
         placeholderText: "Search notifications…"
     }
 
@@ -45,14 +45,14 @@ ColumnLayout {
         Layout.fillHeight: true
         visible: root.count === 0
         text: "No notifications"
-        icon: Icons.bell
+        icon: Lucide.bell
     }
 
     ListFooter {
         visible: root.count > 0
         meta: searchField.text ? `${list.count} of ${root.count}` : `${root.count} notification${root.count === 1 ? "" : "s"}`
         actionText: "Clear All"
-        actionIcon: Icons.clearAll
+        actionIcon: Lucide.listX
         onActionClicked: Notifications.discardAllNotifications()
     }
 }

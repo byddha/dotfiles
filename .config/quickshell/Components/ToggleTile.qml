@@ -36,23 +36,21 @@ Rectangle {
         pressed: mouseArea.pressed
     }
 
-    Text {
+    Icon {
         anchors.centerIn: parent
         text: root.icon
-        font.family: Theme.fontFamilyGlyphs
-        font.pixelSize: 20
+        size: Theme.iconSizeLarge
         color: root.glyph
     }
 
-    Text {
+    Icon {
         visible: root.hasMenu
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         anchors.rightMargin: 6
         anchors.bottomMargin: 6
-        text: root.menuOpen ? Icons.chevronUp : Icons.chevronDown
-        font.family: Theme.fontFamilyGlyphs
-        font.pixelSize: 12
+        text: root.menuOpen ? Lucide.chevronUp : Lucide.chevronDown
+        size: Theme.iconSizeSmall
         color: root.glyph
     }
 

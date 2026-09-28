@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import "../../Config"
 import "../../Services"
+import "../../Components"
 
 BarItem {
     id: root
@@ -39,8 +40,8 @@ BarItem {
 
     function lengthAt(level) {
         if (vertical)
-            return padded((current ? BarLayout.iconSize + (level < 3 ? 2 + verticalTemperature.implicitHeight : 0) + 4 : 0) + verticalTime.implicitHeight);
-        return padded((current ? BarLayout.iconSize + (level < 3 ? BarLayout.itemGap + temperatureText.implicitWidth : 0) + BarLayout.itemGap + 3 : 0) + time.implicitWidth);
+            return padded((current ? Theme.iconSize + (level < 3 ? 2 + verticalTemperature.implicitHeight : 0) + 4 : 0) + verticalTime.implicitHeight);
+        return padded((current ? Theme.iconSize + (level < 3 ? BarLayout.itemGap + temperatureText.implicitWidth : 0) + BarLayout.itemGap + 3 : 0) + time.implicitWidth);
     }
 
     // Horizontal: weather, then the time
@@ -53,12 +54,12 @@ BarItem {
             anchors.verticalCenter: parent.verticalCenter
             spacing: BarLayout.itemGap
 
-            BarIcon {
+            Icon {
                 anchors.verticalCenter: parent.verticalCenter
                 text: root.weatherGlyph
                 color: Theme.alpha(Theme.textSecondary, BarLayout.weatherOpacity)
             }
-            BarText {
+            StyledText {
                 id: temperatureText
 
                 visible: root.level < 3
@@ -75,12 +76,12 @@ BarItem {
 
             anchors.verticalCenter: parent.verticalCenter
 
-            BarText {
+            StyledText {
                 font.pixelSize: BarLayout.clockSize
                 font.weight: Font.DemiBold
                 text: Qt.formatTime(clock.date, "hh:mm")
             }
-            BarText {
+            StyledText {
                 font.pixelSize: BarLayout.clockSize
                 font.weight: Font.Medium
                 color: Theme.alpha(Theme.textSecondary, BarLayout.secondsOpacity)
@@ -99,17 +100,17 @@ BarItem {
             anchors.horizontalCenter: parent.horizontalCenter
             spacing: 2
 
-            BarIcon {
+            Icon {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: root.weatherGlyph
                 color: Theme.alpha(Theme.textSecondary, BarLayout.weatherOpacity)
             }
-            BarText {
+            StyledText {
                 id: verticalTemperature
 
                 visible: root.level < 3
                 anchors.horizontalCenter: parent.horizontalCenter
-                font.pixelSize: BarLayout.captionSize
+                font.pixelSize: Theme.fontSizeTiny
                 font.weight: Font.DemiBold
                 color: Theme.alpha(Theme.textSecondary, BarLayout.weatherOpacity)
                 text: root.temperature
@@ -124,7 +125,7 @@ BarItem {
             Repeater {
                 model: ["hh", "mm", "ss"]
 
-                BarText {
+                StyledText {
                     required property string modelData
                     required property int index
 

@@ -5,6 +5,7 @@ import Quickshell.Io
 import "../../Config"
 import "../../Services"
 import "../../Utils"
+import "../../Components"
 
 PanelWindow {
     id: root
@@ -482,21 +483,12 @@ PanelWindow {
     }
 
     // Loading spinner shown between snip confirm and actual window dismiss.
-    Text {
+    Spinner {
         anchors.centerIn: parent
         visible: root.snipping
-        text: Icons.spinner
-        font.family: Theme.fontFamilyIcons
-        font.pixelSize: 160
+        size: 160
         color: Theme.primary
         z: 10
-        RotationAnimation on rotation {
-            from: 0
-            to: 360
-            duration: 900
-            loops: Animation.Infinite
-            running: root.snipping
-        }
     }
 
     // UI layer — sibling of screencopyView so grabToImage excludes it.

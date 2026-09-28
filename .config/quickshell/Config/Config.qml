@@ -150,7 +150,7 @@ Singleton {
             // Centralized monitor configuration
             // Keys are monitor model strings from EDID (e.g., "MO34WQC2", "0x1920")
             // Fields: workspaces ([start, end]), hdrCapable (bool), primary (bool)
-            // Exactly one monitor should set primary: true (lockscreen, notifications).
+            // Exactly one monitor should set primary: true (notifications).
             property var monitors: (
                 // Example:
                 // "MO34WQC2": { "workspaces": [1, 5], "hdrCapable": true, "primary": true },

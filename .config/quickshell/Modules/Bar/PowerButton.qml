@@ -1,5 +1,6 @@
 import QtQuick
 import "../../Services"
+import "../../Components"
 
 BarItem {
     id: root
@@ -19,7 +20,7 @@ BarItem {
             menu.openFrom(root);
     }
 
-    BarIcon {
+    Icon {
         text: Lucide.power
     }
 }

@@ -22,48 +22,6 @@ Singleton {
 
     property string currentSubmap: ""
 
-    readonly property var modKeyIcons: ({
-            "shift": "⇪",
-            "ctrl": Icons.keyCtrl,
-            "alt": "",
-            "super": Icons.keySuper,
-            "caps": Icons.keyCaps,
-            "mod2": "Num",
-            "mod3": "ScrLk",
-            "mod5": "Compose"
-        })
-
-    readonly property var extraBinds: [
-        {
-            key: "[q-r]",
-            modmask: 64,
-            submap: "",
-            hasDescription: true,
-            description: Icons.keyWorkspace + " Switch workspace [1-5]"
-        },
-        {
-            key: "[q-r]",
-            modmask: 65,
-            submap: "",
-            hasDescription: true,
-            description: Icons.keyWorkspace + " Move workspace [1-5]"
-        },
-        {
-            key: "[a-g]",
-            modmask: 64,
-            submap: "",
-            hasDescription: true,
-            description: Icons.keyWorkspace + " Switch workspace [6-10]"
-        },
-        {
-            key: "[a-g]",
-            modmask: 65,
-            submap: "",
-            hasDescription: true,
-            description: Icons.keyWorkspace + " Move workspace [6-10]"
-        }
-    ]
-
     // Process to fetch keybinds from Hyprland
     Process {
         id: bindsFetcher
@@ -108,31 +66,13 @@ Singleton {
         }
     }
 
+    // Binds of the current submap that have a description, in hyprctl's order
     function processFetchedBinds(hyprBinds) {
-        // Convert hyprctl format to our format if needed
-        const convertedBinds = hyprBinds.map(bind => ({
-                    key: bind.key,
-                    modmask: bind.modmask,
-                    submap: bind.submap || "",
-                    hasDescription: bind.description && bind.description.trim() !== "",
-                    description: bind.description,
-                    dispatcher: bind.dispatcher,
-                    arg: bind.arg
+        keybindList = hyprBinds.filter(bind => (bind.submap || "") === currentSubmap && bind.description?.trim()).map(bind => ({
+                    keys: Compositor.backend.keysLabel(bind.modmask, bind.key),
+                    description: bind.description
                 }));
-
-        // Combine extra binds with real binds, filter by current submap and description
-        let binds = [...extraBinds, ...convertedBinds].filter(bind => bind.submap === currentSubmap && bind.hasDescription).sort((a, b) => {
-            // Make non-submap dispatchers appear first (AGS logic)
-            const aIsSubmap = a.dispatcher === "submap" ? 0.5 : -0.5;
-            const bIsSubmap = b.dispatcher === "submap" ? 0.5 : -0.5;
-            return aIsSubmap - bIsSubmap;
-        });
-
-        Logger.info(`Filtered to ${binds.length} binds for submap "${currentSubmap}"`);
-
-        // Store binds as a flat list
-        keybindList = binds;
-        Logger.info(`Generated keybind list with ${binds.length} total binds`);
+        Logger.info(`${keybindList.length} keybinds for submap "${currentSubmap}"`);
     }
 
     function toggleManual() {
@@ -149,54 +89,5 @@ Singleton {
         currentSubmap = submap;
         Logger.info(`Fetching keybinds for submap "${submap}"`);
         bindsFetcher.running = true;
-    }
-
-    /**
-     * Convert modmask bitmask to modifier key strings
-     */
-    function modmaskToKeys(modmask) {
-        const modkeys = ["shift", "caps", "ctrl", "alt", "mod2", "mod3", "super", "mod5"];
-        return modkeys.filter((_, i) => (modmask >> i) & 1).map(key => `<${key}>`).reverse().join(" ");
-    }
-
-    /**
-     * Get formatted key string with modifier icons
-     */
-    function getRawKey(bind) {
-        let mod = modmaskToKeys(bind.modmask);
-        for (const [placeholder, icon] of Object.entries(modKeyIcons)) {
-            if (icon) {
-                const regex = new RegExp(`<${placeholder}>`, 'g');
-                mod = mod.replace(regex, icon);
-            }
-        }
-        return `${mod} ${bind.key}`.trim();
-    }
-
-    /**
-     * Parse description to separate glyph and text parts
-     */
-    function parseDescription(description) {
-        if (!description)
-            return {
-                glyph: "",
-                text: " No description"
-            };
-
-        // Use simpler ASCII check instead of Unicode regex
-        if (description.length > 0 && !/^[a-zA-Z0-9]/.test(description)) {
-            // Handle Unicode characters properly by using codePoint methods
-            const firstChar = description.codePointAt(0) ? String.fromCodePoint(description.codePointAt(0)) : description[0];
-            const restText = firstChar.length > 1 ? description.substring(2) : description.substring(1);
-            return {
-                glyph: " " + firstChar,
-                text: restText
-            };
-        }
-
-        return {
-            glyph: "",
-            text: " " + description
-        };
     }
 }

@@ -3,7 +3,7 @@ import QtQuick.Effects
 import QtQuick.Layouts
 import "../../Components"
 import "../../Config"
-import "../../Services/UI"
+import "../../Services"
 
 Rectangle {
     id: root
@@ -64,7 +64,7 @@ Rectangle {
                 ToolButton {
                     implicitHeight: 34
                     radius: 5
-                    icon: Icons.screenshot
+                    icon: Lucide.camera
                     toggled: !root.recordMode
                     tip: "Screenshot"
                     keys: ["S"]
@@ -73,7 +73,7 @@ Rectangle {
                 ToolButton {
                     implicitHeight: 34
                     radius: 5
-                    icon: Icons.record
+                    icon: Lucide.video
                     toggled: root.recordMode
                     tip: "Record"
                     keys: ["R"]
@@ -85,7 +85,7 @@ Rectangle {
         Separator {}
 
         ToolButton {
-            icon: Icons.fullscreen
+            icon: Lucide.monitor
             tip: "Full screen"
             keys: ["F"]
             detail: "…and open in editor"
@@ -93,7 +93,7 @@ Rectangle {
             onClicked: root.fullscreenRequested()
         }
         ToolButton {
-            icon: Icons.crop
+            icon: Lucide.crop
             active: root.adjusting
             tip: "Crop to content"
             keys: ["C"]
@@ -103,7 +103,7 @@ Rectangle {
         Separator {}
 
         ToolButton {
-            icon: Icons.lens
+            icon: Lucide.scanSearch
             active: root.adjusting
             tip: "Google Lens"
             keys: ["L"]
@@ -113,7 +113,7 @@ Rectangle {
             spacing: 1
 
             ToolButton {
-                icon: Icons.ocr
+                icon: Lucide.scanText
                 active: root.adjusting
                 rightFlat: true
                 tip: "Copy text · English"
@@ -123,8 +123,8 @@ Rectangle {
             ToolButton {
                 id: ocrChevron
                 implicitWidth: 18
-                icon: Icons.chevronUp
-                iconSize: 14
+                icon: Lucide.chevronUp
+                iconSize: Theme.iconSizeSmall
                 active: root.adjusting
                 leftFlat: true
                 toggled: root.ocrMenuOpen
@@ -144,9 +144,9 @@ Rectangle {
                 id: hint
                 anchors.centerIn: parent
                 visible: !root.adjusting
+                role: "secondary"
                 text: "Drag or click a window"
                 font.pixelSize: Theme.fontSizeSmall
-                color: Theme.textSecondary
             }
 
             RowLayout {
@@ -157,21 +157,21 @@ Rectangle {
 
                 ToolButton {
                     visible: !root.recordMode
-                    icon: Icons.edit
+                    icon: Lucide.pencil
                     tip: "Edit in Swappy"
                     keys: ["E"]
                     onClicked: root.snipRequested("edit", false, false)
                 }
                 ToolButton {
                     visible: !root.recordMode
-                    icon: Icons.save
+                    icon: Lucide.save
                     tip: "Save to Pictures"
                     keys: ["Ctrl", "S"]
                     onClicked: root.snipRequested("save", false, false)
                 }
                 ToolButton {
                     visible: root.recordMode
-                    icon: Icons.volumeHigh
+                    icon: Lucide.volume2
                     toggled: root.recordAudio
                     tip: root.recordAudio ? "System audio · on" : "System audio · off"
                     keys: ["A"]
@@ -179,7 +179,7 @@ Rectangle {
                 }
                 ToolButton {
                     visible: root.recordMode
-                    icon: Icons.microphone
+                    icon: Lucide.mic
                     toggled: root.recordMic
                     tip: root.recordMic ? "Microphone · on" : "Microphone · off"
                     keys: ["M"]
@@ -187,11 +187,11 @@ Rectangle {
                 }
                 PrimaryButton {
                     Layout.leftMargin: 4
-                    icon: root.recordMode ? Icons.recordDot : Icons.copy
+                    icon: root.recordMode ? Lucide.circleDot : Lucide.copy
                     text: root.recordMode ? "Record" : "Copy"
                     labels: ["Copy", "Record"]
                     tip: root.recordMode ? "Start recording" : "Copy to clipboard"
-                    keys: ["Space", Icons.keyReturn]
+                    keys: ["Space", "Enter"]
                     onClicked: root.snipRequested("copy", false, false)
                 }
             }
@@ -200,7 +200,7 @@ Rectangle {
         Separator {}
 
         ToolButton {
-            icon: Icons.cancel
+            icon: Lucide.x
             danger: true
             tip: "Cancel"
             keys: ["Esc"]
@@ -240,21 +240,21 @@ Rectangle {
 
             MenuRow {
                 id: ocrEnglish
-                icon: Icons.ocr
+                icon: Lucide.scanText
                 text: "Copy text · English"
                 keys: ["O"]
                 onClicked: root.snipRequested("ocr", false, false)
             }
             MenuRow {
                 id: ocrAll
-                icon: Icons.ocrAll
+                icon: Lucide.textSelect
                 text: "Copy text · all languages"
                 keys: ["Shift", "O"]
                 onClicked: root.snipRequested("ocr", true, false)
             }
             MenuRow {
                 id: ocrTranslate
-                icon: Icons.translate
+                icon: Lucide.languages
                 text: "Translate"
                 keys: ["Ctrl", "O"]
                 onClicked: root.snipRequested("ocr", true, true)
@@ -308,7 +308,6 @@ Rectangle {
                 StyledText {
                     text: tooltip.target?.tip ?? ""
                     font.pixelSize: Theme.fontSizeTiny
-                    color: Theme.textColor
                 }
                 Keycaps {
                     keys: tooltip.target?.keys ?? []
@@ -319,9 +318,9 @@ Rectangle {
                 visible: line !== ""
                 spacing: 8
                 StyledText {
+                    role: "secondary"
                     text: parent.line
                     font.pixelSize: Theme.fontSizeTiny
-                    color: Theme.textSecondary
                 }
                 Keycaps {
                     keys: tooltip.target?.active ? tooltip.target.detailKeys : []
@@ -346,22 +345,10 @@ Rectangle {
 
         Repeater {
             model: parent.keys
-            Rectangle {
+            Keycap {
                 required property string modelData
-                width: Math.max(18, capText.implicitWidth + 10)
-                height: 18
-                radius: Theme.radiusSmall
-                color: parent.onPrimary ? Theme.alpha(Theme.primaryText, 0.14) : Theme.secondaryContainer
-
-                Text {
-                    id: capText
-                    anchors.centerIn: parent
-                    text: parent.modelData
-                    font.family: parent.modelData.length === 1 && parent.modelData.charCodeAt(0) > 0xff ? Theme.fontFamilyGlyphs : Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeTiny
-                    font.weight: Font.DemiBold
-                    color: parent.parent.onPrimary ? Theme.primaryText : Theme.secondaryContainerText
-                }
+                text: modelData
+                onPrimary: parent.onPrimary
             }
         }
     }
@@ -372,7 +359,7 @@ Rectangle {
         id: button
 
         property string icon
-        property int iconSize: 20
+        property int iconSize: Theme.iconSize
         property bool active: true
         property bool toggled: false
         property bool danger: false
@@ -404,11 +391,10 @@ Rectangle {
             pressed: mouse.pressed
         }
 
-        Text {
+        Icon {
             anchors.centerIn: parent
             text: button.icon
-            font.family: Theme.fontFamilyGlyphs
-            font.pixelSize: button.iconSize
+            size: button.iconSize
             color: !button.active ? Theme.alpha(Theme.textSecondary, 0.35) : button.danger && mouse.containsMouse ? Theme.accentRed : button.toggled ? Theme.primary : mouse.containsMouse ? Theme.textColor : Theme.textSecondary
         }
 
@@ -479,12 +465,9 @@ Rectangle {
             anchors.rightMargin: primary.padRight
             spacing: primary.gap
 
-            Text {
+            Icon {
                 Layout.preferredWidth: primary.iconBox
-                horizontalAlignment: Text.AlignHCenter
                 text: primary.icon
-                font.family: Theme.fontFamilyGlyphs
-                font.pixelSize: 18
                 color: Theme.primaryText
             }
             StyledText {
@@ -498,7 +481,7 @@ Rectangle {
             }
             Keycaps {
                 id: keycap
-                keys: [Icons.keyReturn]
+                keys: ["Enter"]
                 onPrimary: true
             }
         }
@@ -545,10 +528,8 @@ Rectangle {
             anchors.rightMargin: 10
             spacing: 10
 
-            Text {
+            Icon {
                 text: row.icon
-                font.family: Theme.fontFamilyGlyphs
-                font.pixelSize: 18
                 color: Theme.textSecondary
             }
             StyledText {
@@ -556,7 +537,7 @@ Rectangle {
                 Layout.rightMargin: 14
                 text: row.text
                 font.pixelSize: Theme.fontSizeSmall
-                color: Theme.textColor
+                font.weight: Font.Normal
             }
             Keycaps {
                 keys: row.keys

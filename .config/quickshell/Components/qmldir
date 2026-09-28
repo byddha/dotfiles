@@ -5,8 +5,6 @@ Slider 1.0 Slider.qml
 StyledText 1.0 StyledText.qml
 Tooltip 1.0 Tooltip.qml
 WeatherCard 1.0 WeatherCard.qml
-M3WaveProgress 1.0 M3WaveProgress.qml
-PowerActionButton 1.0 PowerActionButton.qml
 AudioVisualizer 1.0 AudioVisualizer.qml
 MediaCard 1.0 MediaCard.qml
 FocusGrab 1.0 FocusGrab.qml
@@ -22,3 +20,6 @@ ListRow 1.0 ListRow.qml
 ScrollList 1.0 ScrollList.qml
 ToggleTile 1.0 ToggleTile.qml
 Popout 1.0 Popout.qml
+Icon 1.0 Icon.qml
+Spinner 1.0 Spinner.qml
+Keycap 1.0 Keycap.qml

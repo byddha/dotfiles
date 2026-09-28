@@ -1,6 +1,7 @@
 import QtQuick
 import "../../Config"
 import "../../Services"
+import "../../Components"
 
 BarItem {
     id: root
@@ -12,34 +13,34 @@ BarItem {
 
     function lengthAt(level) {
         if (vertical)
-            return padded(BarLayout.iconSize + (level < 3 ? BarLayout.itemGap + value.implicitHeight : 0));
-        return level >= 3 ? BarLayout.itemSize : padded(BarLayout.iconSize + BarLayout.itemGap + value.implicitWidth + (level < 2 ? sign.implicitWidth : 0));
+            return padded(Theme.iconSize + (level < 3 ? BarLayout.itemGap + value.implicitHeight : 0));
+        return level >= 3 ? BarLayout.itemSize : padded(Theme.iconSize + BarLayout.itemGap + value.implicitWidth + (level < 2 ? sign.implicitWidth : 0));
     }
     fill: Battery.isCritical ? Theme.alpha(Theme.accentRed, 0.16) : "transparent"
     hoverFill: Battery.isCritical ? Theme.alpha(Theme.accentRed, 0.26) : Theme.colLayer2
     tooltipTitle: `Battery ${Battery.percentage}%`
     tooltipDetail: Battery.getStatusText()
 
-    BarIcon {
+    Icon {
         text: Battery.charging ? Lucide.batteryCharging : Battery.isCritical ? Lucide.batteryWarning : Battery.percentage >= 80 ? Lucide.batteryFull : Battery.percentage >= 40 ? Lucide.batteryMedium : Lucide.batteryLow
         color: Battery.charging ? Theme.accentGreen : root.tint
     }
     Row {
         visible: root.level < 3
 
-        BarText {
+        StyledText {
             id: value
 
-            font.pixelSize: root.vertical ? BarLayout.captionSize : BarLayout.textSize
+            font.pixelSize: root.vertical ? Theme.fontSizeTiny : Theme.fontSizeBase
             font.weight: root.vertical ? Font.DemiBold : Font.Medium
             color: root.tint
             text: Battery.percentage
         }
-        BarText {
+        StyledText {
             id: sign
 
             visible: !root.vertical && root.level < 2
-            font.pixelSize: BarLayout.percentSize
+            font.pixelSize: Theme.fontSizeTiny
             color: root.tint
             text: "%"
         }

@@ -91,9 +91,8 @@ Item {
                 id: title
                 Layout.fillWidth: true
                 text: root.isGroupChild ? (root.node?.properties["media.name"] || "Audio stream") : (avatar.entry?.name || Audio.appNodeDisplayName(root.node))
+                role: root.isGroupChild ? "secondary" : "primary"
                 font.pixelSize: root.isGroupChild ? Theme.fontSizeTiny : Theme.fontSizeSmall
-                font.weight: root.isGroupChild ? Font.Normal : Font.Medium
-                color: root.isGroupChild ? Theme.textSecondary : Theme.textColor
                 elide: Text.ElideRight
             }
 

@@ -42,6 +42,6 @@ ScrollList {
         Layout.fillWidth: true
         visible: Peripherals.devices.length === 0
         text: "No battery devices"
-        icon: Icons.device
+        icon: Lucide.monitorSmartphone
     }
 }

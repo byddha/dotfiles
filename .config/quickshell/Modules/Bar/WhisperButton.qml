@@ -1,6 +1,7 @@
 import QtQuick
 import "../../Config"
 import "../../Services"
+import "../../Components"
 
 // Speech to text: "Listening" with the time, then a spinner until the text is ready
 BarItem {
@@ -11,20 +12,20 @@ BarItem {
     tooltipKeys: Compositor.keysFor("Transcribe speech")
 
     Item {
-        implicitWidth: BarLayout.iconSize
-        implicitHeight: BarLayout.iconSize
+        implicitWidth: Theme.iconSize
+        implicitHeight: Theme.iconSize
 
-        BarSpinner {
+        Spinner {
             visible: Whisper.transcribing
             color: Theme.accentYellow
         }
-        BarIcon {
+        Icon {
             visible: !Whisper.transcribing
             text: Lucide.audioLines
             color: Theme.primary
         }
     }
-    BarText {
+    StyledText {
         visible: !root.vertical
         role: Whisper.transcribing ? "secondary" : "primary"
         text: Whisper.transcribing ? "Transcribing…" : "Listening"
@@ -32,7 +33,7 @@ BarItem {
     ElapsedText {
         visible: Whisper.listening
         role: root.vertical ? "primary" : "secondary"
-        font.pixelSize: root.vertical ? BarLayout.captionSize : BarLayout.textSize
+        font.pixelSize: root.vertical ? Theme.fontSizeTiny : Theme.fontSizeBase
         since: Whisper.listeningSince
     }
 }

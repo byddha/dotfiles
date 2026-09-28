@@ -14,13 +14,13 @@ ScrollList {
 
     function deviceIcon(node, isOutput) {
         if (!isOutput)
-            return Icons.microphone;
+            return Lucide.mic;
         const name = (node?.name ?? "").toLowerCase();
         if (name.includes("hdmi") || name.includes("displayport"))
-            return Icons.monitor;
+            return Lucide.monitor;
         if (name.startsWith("bluez"))
-            return Icons.headphones;
-        return Icons.speaker;
+            return Lucide.headphones;
+        return Lucide.speaker;
     }
 
     SectionHeader {
@@ -45,7 +45,7 @@ ScrollList {
         Layout.fillWidth: true
         visible: Audio.groupedOutputAppNodes.length === 0
         text: "No apps playing audio"
-        icon: Icons.volumeMuted
+        icon: Lucide.volumeX
     }
 
     DeviceSection {
@@ -93,7 +93,7 @@ ScrollList {
                 leadIcon: root.deviceIcon(modelData, section.isOutput)
                 title: Audio.friendlyDeviceName(modelData)
                 selected: isCurrent
-                trailIcon: isCurrent ? Icons.check : ""
+                trailIcon: isCurrent ? Lucide.check : ""
                 onClicked: {
                     if (!isCurrent)
                         section.deviceSelected(modelData);

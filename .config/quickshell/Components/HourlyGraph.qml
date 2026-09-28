@@ -133,31 +133,29 @@ Item {
         anchors.bottom: graphCanvas.bottom
         width: 28
 
-        Text {
+        StyledText {
             text: {
                 if (root.temperatures.length === 0)
                     return "";
                 const max = Math.max(...root.temperatures);
                 return Math.round(max) + "°";
             }
-            font.family: Theme.fontFamily
+            role: "secondary"
             font.pixelSize: Theme.fontSizeTiny
-            color: Theme.textSecondary
             anchors.top: parent.top
             anchors.right: parent.right
             anchors.rightMargin: 4
         }
 
-        Text {
+        StyledText {
             text: {
                 if (root.temperatures.length === 0)
                     return "";
                 const min = Math.min(...root.temperatures);
                 return Math.round(min) + "°";
             }
-            font.family: Theme.fontFamily
+            role: "secondary"
             font.pixelSize: Theme.fontSizeTiny
-            color: Theme.textSecondary
             anchors.bottom: parent.bottom
             anchors.right: parent.right
             anchors.rightMargin: 4
@@ -175,16 +173,15 @@ Item {
         Repeater {
             model: root.times.length > 0 ? Math.min(6, root.times.length) : 0
 
-            Text {
+            StyledText {
                 width: graphCanvas.width / (Math.min(6, root.times.length) - 1 || 1)
                 text: {
                     const step = Math.floor(root.times.length / 6);
                     const idx = index * step;
                     return root.times[idx] || "";
                 }
-                font.family: Theme.fontFamily
+                role: "secondary"
                 font.pixelSize: Theme.fontSizeTiny
-                color: Theme.textSecondary
                 horizontalAlignment: index === 0 ? Text.AlignLeft : (index === Math.min(6, root.times.length) - 1 ? Text.AlignRight : Text.AlignHCenter)
             }
         }

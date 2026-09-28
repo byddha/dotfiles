@@ -1,5 +1,8 @@
 import QtQuick
+import Quickshell
+import Quickshell.Widgets
 import "../../Config"
+import "../../Components"
 
 Item {
     id: root
@@ -46,11 +49,10 @@ Item {
             color: Theme.colLayer2
             visible: coverImage.status !== Image.Ready
 
-            Text {
+            StyledText {
                 anchors.centerIn: parent
                 text: root.game?.name?.charAt(0)?.toUpperCase() ?? "?"
-                font.family: Theme.fontFamily
-                font.pixelSize: 48
+                font.pixelSize: Theme.fontSizeDisplay
                 font.weight: Font.Bold
                 color: Theme.textSecondary
             }
@@ -76,17 +78,14 @@ Item {
         }
 
         // Game title
-        Text {
+        StyledText {
             anchors.left: cardContent.left
             anchors.right: cardContent.right
             anchors.bottom: cardContent.bottom
             anchors.margins: 10
 
             text: root.game?.name ?? "Unknown"
-            font.family: Theme.fontFamily
             font.pixelSize: Theme.fontSizeSmall
-            font.weight: Font.Medium
-            color: Theme.textColor
             elide: Text.ElideRight
             maximumLineCount: 2
             wrapMode: Text.WordWrap
@@ -102,13 +101,11 @@ Item {
             radius: Theme.radiusSmall
             color: Theme.alpha(Theme.colLayer0, 0.8)
 
-            Text {
+            IconImage {
                 id: platformIcon
                 anchors.centerIn: parent
-                text: ""  // Steam icon from Nerd Font
-                font.family: Theme.fontFamilyIcons
-                font.pixelSize: 14
-                color: Theme.textColor
+                implicitSize: Theme.iconSizeSmall
+                source: Quickshell.iconPath("steam", true)
             }
         }
 

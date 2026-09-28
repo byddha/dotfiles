@@ -32,12 +32,11 @@ ListRow {
                 visible: status === Image.Ready
             }
 
-            Text {
+            Icon {
                 anchors.centerIn: parent
                 visible: logo.status !== Image.Ready
-                text: root.device?.typeIcon ?? Icons.device
-                font.family: Theme.fontFamilyGlyphs
-                font.pixelSize: 20
+                text: root.device?.typeIcon ?? Lucide.batteryMedium
+                size: Theme.iconSizeLarge
                 color: Theme.textSecondary
             }
         }
@@ -61,11 +60,10 @@ ListRow {
         RowLayout {
             spacing: 6
 
-            Text {
+            Icon {
                 visible: root.charging
-                text: Icons.lightningBolt
-                font.family: Theme.fontFamilyGlyphs
-                font.pixelSize: 16
+                text: Lucide.zap
+                size: Theme.iconSizeSmall
                 color: Theme.primary
             }
 
@@ -93,7 +91,6 @@ ListRow {
                 horizontalAlignment: Text.AlignRight
                 text: root.percentage + "%"
                 font.pixelSize: Theme.fontSizeSmall
-                font.weight: Font.Medium
                 color: root.levelColor
             }
         }

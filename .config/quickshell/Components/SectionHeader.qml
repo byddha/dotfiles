@@ -27,14 +27,13 @@ Item {
             font.pixelSize: Theme.fontSizeTiny
             font.weight: Font.DemiBold
             font.letterSpacing: 0.5
-            color: Theme.textSecondary
+            color: Theme.alpha(Theme.textSecondary, Theme.secondaryOpacity)
         }
 
-        Text {
+        Icon {
             visible: root.metaIcon !== ""
             text: root.metaIcon
-            font.family: Theme.fontFamilyGlyphs
-            font.pixelSize: 16
+            size: Theme.iconSizeSmall
             color: root.metaColor
         }
 
@@ -42,6 +41,7 @@ Item {
             visible: root.meta !== ""
             text: root.meta
             font.pixelSize: Theme.fontSizeTiny
+            font.weight: Font.Normal
             color: root.metaColor
         }
     }

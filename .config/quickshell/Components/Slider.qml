@@ -37,7 +37,6 @@ RowLayout {
     IconButton {
         visible: root.icon !== ""
         icon: root.icon
-        iconSize: 20
         danger: root.isMuted && root.showMuteIcon
         onClicked: root.iconClicked()
         onRightClicked: root.rightClicked()
@@ -156,6 +155,7 @@ RowLayout {
         horizontalAlignment: Text.AlignRight
         text: root.isMuted && root.showMuteIcon ? "Muted" : root.labelText !== "" ? root.labelText : Math.round(slider.value * 100) + "%"
         font.pixelSize: Theme.fontSizeTiny
+        font.weight: Font.Normal
         color: root.isMuted && root.showMuteIcon ? Theme.accentRed : root.boosted ? Theme.accentOrange : Theme.textSecondary
     }
 }

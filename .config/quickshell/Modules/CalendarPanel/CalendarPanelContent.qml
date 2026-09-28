@@ -47,10 +47,9 @@ Item {
                         spacing: Theme.spacingBase
 
                         // Day number (large, only show for current month)
-                        Text {
+                        StyledText {
                             text: root.now.getDate()
-                            font.family: Theme.fontFamily
-                            font.pixelSize: 48
+                            font.pixelSize: Theme.fontSizeDisplay
                             font.weight: Font.Bold
                             color: Theme.colLayer0
                             visible: calendarGrid.isCurrentMonth
@@ -61,17 +60,15 @@ Item {
                             spacing: -4
                             anchors.verticalCenter: parent.verticalCenter
 
-                            Text {
+                            StyledText {
                                 text: Qt.formatDate(new Date(calendarGrid.year, calendarGrid.month, 1), "MMMM").toUpperCase()
-                                font.family: Theme.fontFamily
-                                font.pixelSize: Theme.fontSizeBase + 4
+                                font.pixelSize: Theme.fontSizeTitle
                                 font.weight: Font.Bold
                                 color: Theme.colLayer0
                             }
 
-                            Text {
+                            StyledText {
                                 text: calendarGrid.year
-                                font.family: Theme.fontFamily
                                 font.pixelSize: Theme.fontSizeBase
                                 font.weight: Font.Bold
                                 color: Qt.alpha(Theme.colLayer0, 0.7)
@@ -80,10 +77,10 @@ Item {
                     }
 
                     // Location (from weather config)
-                    Text {
+                    StyledText {
                         text: WeatherService.location
-                        font.family: Theme.fontFamily
                         font.pixelSize: Theme.fontSizeSmall
+                        font.weight: Font.Normal
                         color: Theme.colLayer0
                         visible: text !== ""
                     }
@@ -146,7 +143,7 @@ Item {
                     }
 
                     CircleButton {
-                        icon: Icons.chevronLeft
+                        icon: Lucide.chevronLeft
                         onClicked: {
                             const newDate = new Date(calendarGrid.year, calendarGrid.month - 1, 1);
                             calendarGrid.year = newDate.getFullYear();
@@ -155,7 +152,7 @@ Item {
                     }
 
                     CircleButton {
-                        icon: Icons.today
+                        icon: Lucide.calendarCheck
                         onClicked: {
                             calendarGrid.month = root.now.getMonth();
                             calendarGrid.year = root.now.getFullYear();
@@ -163,7 +160,7 @@ Item {
                     }
 
                     CircleButton {
-                        icon: Icons.chevronRight
+                        icon: Lucide.chevronRight
                         onClicked: {
                             const newDate = new Date(calendarGrid.year, calendarGrid.month + 1, 1);
                             calendarGrid.year = newDate.getFullYear();
@@ -187,14 +184,13 @@ Item {
                             Layout.fillWidth: true
                             Layout.preferredHeight: 24
 
-                            Text {
+                            StyledText {
                                 anchors.centerIn: parent
                                 text: {
                                     const dayIndex = (calendarCard.firstDayOfWeek + index) % 7;
                                     const dayNames = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
                                     return dayNames[dayIndex];
                                 }
-                                font.family: Theme.fontFamily
                                 font.pixelSize: Theme.fontSizeSmall
                                 font.weight: Font.Bold
                                 color: Theme.primary
@@ -305,10 +301,9 @@ Item {
                                 radius: Theme.radiusBase
                                 color: modelData.today ? Theme.colSecondary : "transparent"
 
-                                Text {
+                                StyledText {
                                     anchors.centerIn: parent
                                     text: modelData.day
-                                    font.family: Theme.fontFamily
                                     font.pixelSize: Theme.fontSizeBase
                                     font.weight: modelData.today ? Font.Bold : Font.Medium
                                     color: {
@@ -335,14 +330,14 @@ Item {
                                 }
 
                                 // Cross for namedays, asterisk for observances
-                                Text {
+                                Icon {
                                     readonly property bool nameday: dayCell.eventType === "nameday"
                                     visible: dayCell.showMarker && (nameday || dayCell.eventType === "observance")
                                     anchors.horizontalCenter: parent.horizontalCenter
                                     anchors.bottom: parent.bottom
                                     anchors.bottomMargin: nameday ? -2 : -1
-                                    text: nameday ? Icons.cross : "∗"
-                                    font.pixelSize: nameday ? 12 : 10
+                                    text: nameday ? Lucide.cross : Lucide.asterisk
+                                    size: nameday ? 12 : 10
                                     color: Theme.primary
                                 }
                             }
@@ -435,12 +430,11 @@ Item {
                 anchors.margins: Theme.spacingBase
                 spacing: Theme.spacingSmall
 
-                Text {
+                StyledText {
                     text: inlineInput.targetDay + "/" + (inlineInput.targetMonth + 1)
-                    font.family: Theme.fontFamily
+                    role: "secondary"
                     font.pixelSize: Theme.fontSizeSmall
                     font.weight: Font.Bold
-                    color: Theme.textSecondary
                 }
 
                 Rectangle {
@@ -456,7 +450,7 @@ Item {
                         anchors.fill: parent
                         anchors.margins: 8
                         verticalAlignment: TextInput.AlignVCenter
-                        font.family: Theme.fontFamily
+                        font.family: Theme.fontUi
                         font.pixelSize: Theme.fontSizeBase
                         color: Theme.textColor
                         clip: true
@@ -467,7 +461,7 @@ Item {
                 }
 
                 InputAction {
-                    glyph: "✓"
+                    glyph: Lucide.check
                     glyphColor: Theme.primaryText
                     baseColor: Theme.primary
                     hoverColor: Qt.darker(Theme.primary, 1.1)
@@ -475,7 +469,7 @@ Item {
                 }
 
                 InputAction {
-                    glyph: "✕"
+                    glyph: Lucide.x
                     glyphColor: Theme.textColor
                     baseColor: Theme.colLayer1
                     hoverColor: Theme.colLayer2
@@ -506,11 +500,10 @@ Item {
         border.width: 1
         border.color: Theme.colLayer0Border
 
-        Text {
+        Icon {
             anchors.centerIn: parent
             text: circleButton.icon
-            font.family: Theme.fontFamilyIcons
-            font.pixelSize: 14
+            size: Theme.iconSizeSmall
             color: circleMouse.containsMouse ? Theme.primary : Theme.textColor
         }
 
@@ -538,10 +531,10 @@ Item {
         radius: Theme.radiusSmall
         color: actionMouse.containsMouse ? hoverColor : baseColor
 
-        Text {
+        Icon {
             anchors.centerIn: parent
             text: inputAction.glyph
-            font.pixelSize: 16
+            size: Theme.iconSizeSmall
             color: inputAction.glyphColor
         }
 

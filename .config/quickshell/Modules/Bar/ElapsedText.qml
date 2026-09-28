@@ -1,7 +1,8 @@
 import QtQuick
+import "../../Components"
 
 // mm:ss since a moment (ms since epoch), ticking while visible
-BarText {
+StyledText {
     id: root
 
     property double since: 0

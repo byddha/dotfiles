@@ -45,7 +45,6 @@ Rectangle {
         visible: icon.status !== Image.Ready
         text: (root.name || root.binary || "?").charAt(0).toUpperCase()
         font.pixelSize: Theme.fontSizeSmall
-        font.weight: Font.Medium
         color: Theme.secondaryContainerText
     }
 }

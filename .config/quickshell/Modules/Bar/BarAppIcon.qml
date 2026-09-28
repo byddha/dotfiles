@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import "../../Config"
 import "../../Services"
+import "../../Components"
 
 // An app's real icon from its .desktop entry; a generic window glyph when it has none
 Item {
@@ -27,11 +28,11 @@ Item {
         visible: status === Image.Ready
     }
 
-    BarIcon {
+    Icon {
         anchors.centerIn: parent
         visible: image.status !== Image.Ready
         size: root.size
         text: Lucide.appWindow
-        color: Theme.alpha(Theme.textSecondary, BarLayout.secondaryOpacity)
+        color: Theme.alpha(Theme.textSecondary, Theme.secondaryOpacity)
     }
 }

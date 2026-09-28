@@ -41,17 +41,6 @@ Singleton {
     readonly property bool isLow: available && !charging && percentage <= lowThreshold
     readonly property bool isCritical: available && !charging && percentage <= criticalThreshold
 
-    // Get appropriate icon based on state
-    function getIcon(): string {
-        if (!available)
-            return Icons.batteryAlert;
-
-        // 10% steps, rounded to the nearest step: 95+ is full, below 15 is the lowest glyph
-        const step = Math.min(10, Math.max(1, Math.floor((percentage + 5) / 10)));
-        const icons = charging ? [Icons.batteryCharging10, Icons.batteryCharging20, Icons.batteryCharging30, Icons.batteryCharging40, Icons.batteryCharging50, Icons.batteryCharging60, Icons.batteryCharging70, Icons.batteryCharging80, Icons.batteryCharging90, Icons.batteryCharging100] : [Icons.battery10, Icons.battery20, Icons.battery30, Icons.battery40, Icons.battery50, Icons.battery60, Icons.battery70, Icons.battery80, Icons.battery90, Icons.battery100];
-        return icons[step - 1];
-    }
-
     // Format time as "Xh Ym"
     function formatTime(seconds: int): string {
         if (seconds <= 0)

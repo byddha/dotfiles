@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Effects
 import QtQuick.Layouts
 import "../../Config"
+import "../../Components"
 
 // A card with a title, an optional keyboard shortcut and detail lines, shown after a short hover
 BarAnchoredPopup {
@@ -58,22 +59,22 @@ BarAnchoredPopup {
             RowLayout {
                 spacing: 8
 
-                BarText {
+                StyledText {
                     text: root.title
-                    font.pixelSize: BarLayout.tooltipTitleSize
+                    font.pixelSize: Theme.fontSizeBase
                     font.weight: Font.DemiBold
                 }
-                BarKeycap {
+                Keycap {
                     visible: root.keys !== ""
                     text: root.keys
                 }
             }
 
-            BarText {
+            StyledText {
                 visible: root.detail !== ""
                 role: "secondary"
                 text: root.detail
-                font.pixelSize: BarLayout.tooltipTextSize
+                font.pixelSize: Theme.fontSizeSmall
                 lineHeight: 1.35
             }
         }

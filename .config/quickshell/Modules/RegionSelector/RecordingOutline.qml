@@ -4,6 +4,7 @@ import Quickshell
 import Quickshell.Wayland
 import "../../Config"
 import "../../Services"
+import "../../Components"
 
 // Viewfinder corners, a timer and a light dim around the area being recorded, all kept a gap
 // outside it so the recording never contains them. Takes no input: clicks and keys go to whatever is under it.
@@ -134,34 +135,29 @@ Scope {
                         color: Theme.accentRed
                     }
 
-                    Text {
+                    StyledText {
                         anchors.verticalCenter: parent.verticalCenter
                         color: "white"
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSizeBase
-                        font.weight: Font.Medium
                         text: {
                             const m = Math.floor(timerPill.elapsed / 60);
                             return `${String(m).padStart(2, "0")}:${String(timerPill.elapsed % 60).padStart(2, "0")}`;
                         }
                     }
 
-                    Text {
+                    Icon {
                         visible: Recording.hasAudio
                         anchors.verticalCenter: parent.verticalCenter
+                        size: Theme.iconSizeSmall
                         color: "white"
-                        font.family: Theme.fontFamilyGlyphs
-                        font.pixelSize: Theme.fontSizeBase
-                        text: Icons.volumeHigh
+                        text: Lucide.volume2
                     }
 
-                    Text {
+                    Icon {
                         visible: Recording.hasMic
                         anchors.verticalCenter: parent.verticalCenter
+                        size: Theme.iconSizeSmall
                         color: "white"
-                        font.family: Theme.fontFamilyGlyphs
-                        font.pixelSize: Theme.fontSizeBase
-                        text: Icons.microphone
+                        text: Lucide.mic
                     }
                 }
             }

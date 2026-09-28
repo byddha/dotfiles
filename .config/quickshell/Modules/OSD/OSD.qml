@@ -119,7 +119,7 @@ Scope {
                     id: volumeIndicator
                     OsdValueIndicator {
                         value: Audio.volume
-                        icon: Audio.isMuted ? Icons.volumeMuted : Icons.volumeHigh
+                        icon: Audio.isMuted ? Lucide.volumeX : Lucide.volume2
                     }
                 }
 
@@ -127,7 +127,7 @@ Scope {
                     id: microphoneIndicator
                     OsdValueIndicator {
                         value: Audio.micVolume
-                        icon: Audio.isMicMuted ? Icons.micMuted : Icons.micOn
+                        icon: Audio.isMicMuted ? Lucide.micOff : Lucide.mic
                     }
                 }
 
@@ -135,7 +135,7 @@ Scope {
                     id: brightnessIndicator
                     OsdValueIndicator {
                         value: Brightness.brightness
-                        icon: Icons.brightness
+                        icon: Lucide.sun
                     }
                 }
             }

@@ -5,6 +5,7 @@ import Quickshell
 import Quickshell.Wayland
 import "../../Config"
 import "../../Services"
+import "../../Components"
 
 Scope {
     id: root
@@ -76,21 +77,17 @@ Scope {
                     anchors.centerIn: parent
                     spacing: Theme.spacingBase
 
-                    Text {
+                    StyledText {
                         Layout.alignment: Qt.AlignHCenter
                         text: `Shutting down in ${root.remaining}s`
-                        color: Theme.textColor
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSizeBase + 4
-                        font.weight: Font.Black
+                        font.pixelSize: Theme.fontSizeTitle
+                        font.weight: Font.DemiBold
                     }
 
-                    Text {
+                    StyledText {
                         Layout.alignment: Qt.AlignHCenter
+                        role: "secondary"
                         text: "Consider plugging in:"
-                        color: Theme.textSecondary
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSizeBase
                     }
 
                     Repeater {
@@ -106,27 +103,20 @@ Scope {
                             property bool isLow: !isCritical && percentage <= PeripheralBatteries.lowThreshold
                             property color accent: isCritical ? Theme.accentRed : (isLow ? Theme.accentOrange : Theme.primary)
 
-                            Text {
+                            Icon {
                                 text: modelData?.icon ?? ""
                                 color: parent.accent
-                                font.family: Theme.fontFamilyIcons
-                                font.pixelSize: Theme.fontSizeBase + 2
                             }
 
-                            Text {
+                            StyledText {
                                 Layout.fillWidth: true
                                 text: modelData?.label ?? "Device"
-                                color: Theme.textColor
-                                font.family: Theme.fontFamily
-                                font.pixelSize: Theme.fontSizeBase
                             }
 
-                            Text {
+                            StyledText {
                                 text: `${parent.percentage}%`
                                 color: parent.accent
-                                font.family: Theme.fontFamily
-                                font.pixelSize: Theme.fontSizeBase
-                                font.weight: Font.Black
+                                font.weight: Font.DemiBold
                             }
                         }
                     }

@@ -28,11 +28,9 @@ Rectangle {
         anchors.centerIn: parent
         spacing: Theme.spacingBase
 
-        Text {
+        Icon {
             visible: root.icon !== ""
             text: root.icon
-            font.family: Theme.fontFamilyGlyphs
-            font.pixelSize: 16
             color: Theme.primaryText
         }
 
@@ -40,7 +38,6 @@ Rectangle {
             visible: !root.iconOnly
             text: root.text
             font.pixelSize: Theme.fontSizeSmall
-            font.weight: Font.Medium
             color: Theme.primaryText
         }
     }

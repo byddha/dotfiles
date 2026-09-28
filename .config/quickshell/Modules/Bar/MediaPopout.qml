@@ -50,8 +50,6 @@ BarAnchoredPopup {
         y: root.padTop
         width: 280
         height: 100
-        showControls: false
-        showVisualizer: true
         visualizerValues: root.visualizerValues
         radius: Theme.radiusWindow
         border.color: Theme.outlineVariant

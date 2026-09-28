@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import Quickshell.Widgets
 import "../../Config"
 import "../../Services"
+import "../../Components"
 
 // One row of a menu that opens from the bar (power, tray)
 Rectangle {
@@ -24,7 +25,7 @@ Rectangle {
     Layout.fillWidth: true
     implicitWidth: content.implicitWidth + 20
     implicitHeight: 34
-    radius: BarLayout.itemRadius
+    radius: Theme.radiusBase
     clip: true
     opacity: enabled ? 1 : 0.45
     color: area.pressed ? (danger ? Qt.darker(Theme.accentRed, 1.15) : Theme.colLayer3) : lit ? (danger ? Theme.accentRed : Theme.colLayer2) : "transparent"
@@ -44,29 +45,29 @@ Rectangle {
         anchors.rightMargin: 10
         spacing: 10
 
-        BarIcon {
+        Icon {
             visible: row.icon !== ""
             text: row.icon
-            color: row.danger ? (row.lit ? Theme.textColor : Theme.accentRed) : Theme.alpha(Theme.textSecondary, BarLayout.secondaryOpacity)
+            color: row.danger ? (row.lit ? Theme.textColor : Theme.accentRed) : Theme.alpha(Theme.textSecondary, Theme.secondaryOpacity)
         }
         IconImage {
             visible: row.icon === "" && row.iconSource !== ""
-            implicitSize: BarLayout.iconSize
+            implicitSize: Theme.iconSize
             source: row.iconSource
         }
-        BarText {
+        StyledText {
             Layout.fillWidth: true
             text: row.label
             elide: Text.ElideRight
         }
-        BarKeycap {
+        Keycap {
             visible: row.keys !== ""
             text: row.keys
         }
-        BarIcon {
+        Icon {
             visible: row.submenu
             text: Lucide.chevronRight
-            color: Theme.alpha(Theme.textSecondary, BarLayout.secondaryOpacity)
+            color: Theme.alpha(Theme.textSecondary, Theme.secondaryOpacity)
         }
     }
 

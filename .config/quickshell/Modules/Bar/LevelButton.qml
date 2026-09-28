@@ -1,5 +1,6 @@
 import QtQuick
 import "../../Config"
+import "../../Components"
 
 /**
  * LevelButton - A level with its mute state (volume, microphone). Wheel changes the level,
@@ -46,14 +47,14 @@ BarItem {
 
     function lengthAt(level) {
         if (vertical)
-            return padded(BarLayout.iconSize + (level < 3 && !muted ? BarLayout.itemGap + caption.implicitHeight : 0));
+            return padded(Theme.iconSize + (level < 3 && !muted ? BarLayout.itemGap + caption.implicitHeight : 0));
         if (level >= 3)
             return BarLayout.itemSize;
         const text = muted ? mutedLabel.implicitWidth : value.implicitWidth + (level < 2 ? 1 + sign.implicitWidth : 0);
-        return padded(BarLayout.iconSize + BarLayout.itemGap + text);
+        return padded(Theme.iconSize + BarLayout.itemGap + text);
     }
 
-    BarIcon {
+    Icon {
         text: root.muted ? root.mutedGlyph : root.glyph
         color: root.muted ? Theme.accentRed : Theme.textColor
     }
@@ -64,37 +65,37 @@ BarItem {
         implicitWidth: root.muted ? mutedLabel.implicitWidth : value.implicitWidth + (sign.visible ? 1 + sign.implicitWidth : 0)
         implicitHeight: value.implicitHeight
 
-        BarText {
+        StyledText {
             id: mutedLabel
 
             visible: root.muted
             text: "Muted"
         }
-        BarText {
+        StyledText {
             id: value
 
             visible: !root.muted
             text: root.percent
         }
-        BarText {
+        StyledText {
             id: sign
 
             visible: !root.muted && root.level < 2
             x: value.implicitWidth + 1
             anchors.baseline: value.baseline
             role: "secondary"
-            font.pixelSize: BarLayout.percentSize
+            font.pixelSize: Theme.fontSizeTiny
             color: Theme.alpha(Theme.textSecondary, BarLayout.percentOpacity)
             text: "%"
         }
     }
 
     // Vertical: the number as a caption under the icon
-    BarText {
+    StyledText {
         id: caption
 
         visible: root.vertical && !root.muted && root.level < 3
-        font.pixelSize: BarLayout.captionSize
+        font.pixelSize: Theme.fontSizeTiny
         font.weight: Font.DemiBold
         text: root.percent
     }

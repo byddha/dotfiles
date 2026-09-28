@@ -3,6 +3,7 @@ import QtQuick
 import Quickshell
 import "../../Config"
 import "../../Services"
+import "../../Components"
 
 /**
  * Workspaces - One slot per workspace this screen shows, with the apps open on it.
@@ -102,7 +103,7 @@ Grid {
             }
             onWheel: wheel => root.step(wheel)
 
-            BarText {
+            StyledText {
                 id: label
 
                 font.pixelSize: BarLayout.workspaceNumberSize
@@ -147,7 +148,7 @@ Grid {
                         border.width: ring
                         border.color: slot.hovered || slot.marked ? Theme.colLayer2 : Theme.colLayer0
 
-                        BarText {
+                        StyledText {
                             id: count
 
                             anchors.centerIn: parent

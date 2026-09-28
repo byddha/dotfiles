@@ -1,6 +1,7 @@
 import QtQuick
 import "../../Config"
 import "../../Services"
+import "../../Components"
 
 BarItem {
     id: root
@@ -11,8 +12,8 @@ BarItem {
 
     function lengthAt(level) {
         if (vertical)
-            return padded(BarLayout.iconSize + (count > 0 && level < 3 ? BarLayout.itemGap + countText.implicitHeight : 0));
-        return count === 0 || level >= 3 ? BarLayout.itemSize : padded(BarLayout.iconSize + BarLayout.itemGap + countText.implicitWidth);
+            return padded(Theme.iconSize + (count > 0 && level < 3 ? BarLayout.itemGap + countText.implicitHeight : 0));
+        return count === 0 || level >= 3 ? BarLayout.itemSize : padded(Theme.iconSize + BarLayout.itemGap + countText.implicitWidth);
     }
     tooltipTitle: "Notifications"
     tooltipDetail: count === 0 ? "None" : `${count} unread`
@@ -25,10 +26,10 @@ BarItem {
     }
 
     Item {
-        implicitWidth: BarLayout.iconSize
-        implicitHeight: BarLayout.iconSize
+        implicitWidth: Theme.iconSize
+        implicitHeight: Theme.iconSize
 
-        BarIcon {
+        Icon {
             text: Lucide.bell
         }
 
@@ -45,11 +46,11 @@ BarItem {
             border.color: root.hovered ? Theme.colLayer2 : Theme.colLayer0
         }
     }
-    BarText {
+    StyledText {
         id: countText
 
         visible: root.count > 0 && root.level < 3
-        font.pixelSize: root.vertical ? BarLayout.captionSize : BarLayout.textSize
+        font.pixelSize: root.vertical ? Theme.fontSizeTiny : Theme.fontSizeBase
         font.weight: root.vertical ? Font.DemiBold : Font.Medium
         text: root.count
     }

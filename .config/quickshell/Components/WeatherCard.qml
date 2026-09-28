@@ -46,15 +46,12 @@ Rectangle {
                 Layout.fillWidth: true
 
                 // Weather icon
-                Text {
+                Icon {
                     Layout.alignment: Qt.AlignVCenter
                     Layout.preferredWidth: 64
                     Layout.preferredHeight: 64
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    text: weatherReady ? WeatherService.weatherSymbolFromCode(WeatherService.data.weather.current.weather_code) : ""
-                    font.family: Theme.fontFamilyIcons
-                    font.pointSize: 40
+                    text: weatherReady ? WeatherService.glyphFromCode(WeatherService.data.weather.current.weather_code, WeatherService.data.weather.current.is_day === 1) : ""
+                    size: 44
                     color: Theme.primary
                 }
 
@@ -63,10 +60,9 @@ Rectangle {
                     spacing: 2
 
                     // Location name
-                    Text {
+                    StyledText {
                         text: weatherReady ? WeatherService.location : ""
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSizeBase + 2
+                        font.pixelSize: Theme.fontSizeLarge
                         font.weight: Font.Bold
                         color: Theme.textColor
                     }
@@ -75,31 +71,28 @@ Rectangle {
                     RowLayout {
                         spacing: 4
 
-                        Text {
+                        StyledText {
                             visible: weatherReady
                             text: weatherReady ? Math.round(WeatherService.data.weather.current.temperature_2m) + "°C" : ""
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSizeBase + 4
+                            font.pixelSize: Theme.fontSizeTitle
                             font.weight: Font.Bold
                             color: Theme.textColor
                         }
 
-                        Text {
+                        StyledText {
                             text: weatherReady && WeatherService.data.weather.timezone_abbreviation ? "(" + WeatherService.data.weather.timezone_abbreviation + ")" : ""
-                            font.family: Theme.fontFamily
+                            role: "secondary"
                             font.pixelSize: Theme.fontSizeTiny
-                            color: Theme.textSecondary
                             visible: weatherReady
                         }
                     }
 
                     // Weather description
-                    Text {
+                    StyledText {
                         visible: weatherReady
                         text: weatherReady ? WeatherService.weatherDescriptionFromCode(WeatherService.data.weather.current.weather_code) : ""
-                        font.family: Theme.fontFamily
+                        role: "secondary"
                         font.pixelSize: Theme.fontSizeSmall
-                        color: Theme.textSecondary
                     }
 
                     // Weather details row with icons
@@ -108,7 +101,7 @@ Rectangle {
                         spacing: Theme.spacingBase
 
                         WeatherDetail {
-                            icon: Icons.thermometer
+                            icon: Lucide.thermometer
                             label: {
                                 if (!weatherReady)
                                     return "";
@@ -118,17 +111,17 @@ Rectangle {
                         }
 
                         WeatherDetail {
-                            icon: Icons.humidity
+                            icon: Lucide.droplets
                             label: weatherReady ? (WeatherService.data.weather.current?.relative_humidity_2m ?? 0) + "%" : ""
                         }
 
                         WeatherDetail {
-                            icon: Icons.wind
+                            icon: Lucide.wind
                             label: weatherReady ? Math.round(WeatherService.data.weather.current.wind_speed_10m) + "km/h" : ""
                         }
 
                         WeatherDetail {
-                            icon: Icons.rain
+                            icon: Lucide.umbrella
                             label: {
                                 if (!weatherReady)
                                     return "";
@@ -211,42 +204,38 @@ Rectangle {
                     }
 
                     // Day name
-                    Text {
+                    StyledText {
                         Layout.alignment: Qt.AlignHCenter
                         text: {
                             const dateStr = WeatherService.data.weather.daily.time[index];
                             const date = new Date(dateStr.replace(/-/g, "/"));
                             return Qt.formatDate(date, "ddd");
                         }
-                        font.family: Theme.fontFamily
                         font.pixelSize: Theme.fontSizeSmall
+                        font.weight: Font.Normal
                         color: Theme.textColor
                     }
 
                     // Weather icon
-                    Text {
+                    Icon {
                         Layout.alignment: Qt.AlignHCenter
                         Layout.preferredWidth: 40
                         Layout.preferredHeight: 40
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                        text: WeatherService.weatherSymbolFromCode(WeatherService.data.weather.daily.weather_code[index])
-                        font.family: Theme.fontFamilyIcons
-                        font.pointSize: 28
+                        text: WeatherService.glyphFromCode(WeatherService.data.weather.daily.weather_code[index], true)
+                        size: 28
                         color: Theme.primary
                     }
 
                     // High/Low temps
-                    Text {
+                    StyledText {
                         Layout.alignment: Qt.AlignHCenter
                         text: {
                             const max = WeatherService.data.weather.daily.temperature_2m_max[index];
                             const min = WeatherService.data.weather.daily.temperature_2m_min[index];
                             return Math.round(max) + "°/" + Math.round(min) + "°";
                         }
-                        font.family: Theme.fontFamily
+                        role: "secondary"
                         font.pixelSize: Theme.fontSizeTiny
-                        color: Theme.textSecondary
                     }
                 }
             }
@@ -263,26 +252,15 @@ Rectangle {
                 anchors.centerIn: parent
                 spacing: Theme.spacingBase
 
-                Text {
-                    text: Icons.spinner  // spinner icon
-                    font.family: Theme.fontFamilyIcons
-                    font.pixelSize: Theme.fontSizeBase
+                Spinner {
+                    size: Theme.iconSizeSmall
                     color: Theme.textSecondary
-
-                    RotationAnimation on rotation {
-                        from: 0
-                        to: 360
-                        duration: 1000
-                        loops: Animation.Infinite
-                        running: !weatherReady
-                    }
                 }
 
-                Text {
+                StyledText {
                     text: "Loading weather..."
-                    font.family: Theme.fontFamily
+                    role: "secondary"
                     font.pixelSize: Theme.fontSizeSmall
-                    color: Theme.textSecondary
                 }
             }
         }
@@ -296,18 +274,16 @@ Rectangle {
 
         spacing: 3
 
-        Text {
+        Icon {
             text: detail.icon
-            font.family: Theme.fontFamilyIcons
-            font.pixelSize: Theme.fontSizeSmall
+            size: Theme.iconSizeSmall
             color: Theme.textSecondary
         }
 
-        Text {
+        StyledText {
             text: detail.label
-            font.family: Theme.fontFamily
+            role: "secondary"
             font.pixelSize: Theme.fontSizeSmall
-            color: Theme.textSecondary
         }
     }
 }

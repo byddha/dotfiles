@@ -18,30 +18,26 @@ ListRow {
 
     lead: Component {
         Item {
-            implicitWidth: 20
-            implicitHeight: 20
+            implicitWidth: Theme.iconSizeLarge
+            implicitHeight: Theme.iconSizeLarge
 
             // Unfilled arcs under the filled ones
-            Text {
-                anchors.centerIn: parent
-                text: Icons.wifiStrengthOutline
-                font.family: Theme.fontFamilyGlyphs
-                font.pixelSize: 20
+            Icon {
+                text: Lucide.wifi
+                size: Theme.iconSizeLarge
                 color: Theme.alpha(Theme.textSecondary, 0.3)
             }
 
-            Text {
-                anchors.centerIn: parent
-                text: [Icons.wifiStrength1, Icons.wifiStrength2, Icons.wifiStrength3, Icons.wifiStrength4][root.bars - 1]
-                font.family: Theme.fontFamilyGlyphs
-                font.pixelSize: 20
+            Icon {
+                text: [Lucide.wifiZero, Lucide.wifiLow, Lucide.wifiHigh, Lucide.wifi][root.bars - 1]
+                size: Theme.iconSizeLarge
                 color: root.selected ? Theme.primary : Theme.textSecondary
             }
         }
     }
     title: network?.ssid ?? "Unknown network"
     subtitle: network?.active ? "Connected" : network?.isSecure ? "Secured" : "Open"
-    subtitleIcon: !network?.active && network?.isSecure ? Icons.lock : ""
+    subtitleIcon: !network?.active && network?.isSecure ? Lucide.lock : ""
     selected: network?.active ?? false
     expandable: true
     body: network?.active ? disconnectBody : network?.askingPassword ? passwordBody : connectBody
@@ -91,7 +87,7 @@ ListRow {
                     id: passwordField
                     Layout.fillWidth: true
                     inRow: true
-                    icon: Icons.lock
+                    icon: Lucide.lock
                     placeholderText: "Password"
                     echoMode: TextInput.Password
                     consumeEscape: true
@@ -108,16 +104,16 @@ ListRow {
                 }
 
                 FilledButton {
-                    icon: Icons.arrowRight
+                    icon: Lucide.arrowRight
                     onClicked: passwordField.submit()
                 }
             }
 
             StyledText {
                 Layout.topMargin: 6
+                role: "secondary"
                 text: "Enter to connect"
                 font.pixelSize: Theme.fontSizeTiny
-                color: Theme.textSecondary
             }
         }
     }

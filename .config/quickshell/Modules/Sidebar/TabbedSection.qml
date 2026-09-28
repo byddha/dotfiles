@@ -19,27 +19,27 @@ Card {
 
     readonly property var tabModel: [
         {
-            icon: Icons.volumeHigh,
+            icon: Lucide.volume2,
             name: "Volume",
             label: "Volume"
         },
         {
-            icon: Icons.bell,
+            icon: Lucide.bell,
             name: "Notifications",
             label: "Notifs"
         },
         {
-            icon: Icons.bluetoothOn,
+            icon: Lucide.bluetooth,
             name: "Bluetooth",
             label: "Bluetooth"
         },
         {
-            icon: Icons.wifiOn,
+            icon: Lucide.wifi,
             name: "Network",
             label: "Network"
         },
         {
-            icon: Icons.device,
+            icon: Lucide.monitorSmartphone,
             name: "Peripherals",
             label: "Devices"
         }
@@ -79,18 +79,16 @@ Card {
                     anchors.centerIn: parent
                     spacing: 2
 
-                    Text {
+                    Icon {
                         Layout.alignment: Qt.AlignHCenter
                         text: tab.modelData.icon
-                        font.family: Theme.fontFamilyGlyphs
-                        font.pixelSize: 20
                         color: tab.foreground
                     }
 
                     StyledText {
                         Layout.alignment: Qt.AlignHCenter
                         text: tab.modelData.label
-                        font.pixelSize: 11
+                        font.pixelSize: Theme.fontSizeTiny
                         font.weight: tab.active ? Font.Medium : Font.Normal
                         color: tab.foreground
                     }

@@ -15,19 +15,19 @@ Card {
 
         // Row 1: connectivity
         Tile {
-            icon: Network.wifiEnabled ? Icons.wifiOn : Icons.wifiOff
+            icon: Network.wifiEnabled ? Lucide.wifi : Lucide.wifiOff
             label: "Wi-Fi"
             active: Network.wifiEnabled
             onClicked: Network.toggleWifi()
         }
         Tile {
-            icon: Bluetooth.enabled ? Icons.bluetoothOn : Icons.bluetoothOff
+            icon: Bluetooth.enabled ? Lucide.bluetooth : Lucide.bluetoothOff
             label: "Bluetooth"
             active: Bluetooth.enabled
             onClicked: Bluetooth.toggleEnabled()
         }
         Tile {
-            icon: Icons.shieldLock
+            icon: Lucide.shieldLock
             label: "VPN"
             active: Vpn.anyConnected
             hasMenu: true
@@ -35,13 +35,13 @@ Card {
             onClicked: vpnSelector.expanded = !vpnSelector.expanded
         }
         Tile {
-            icon: Icons.airplaneOn
+            icon: Lucide.plane
             label: "Airplane Mode"
             active: AirplaneMode.enabled
             onClicked: AirplaneMode.toggle()
         }
         Tile {
-            icon: Icons.bellOff
+            icon: Lucide.bellOff
             label: "Do Not Disturb"
             active: Notifications.dnd
             onClicked: Notifications.toggleDnd()
@@ -49,28 +49,28 @@ Card {
 
         // Row 2: display and tools
         Tile {
-            icon: Icons.hdrOn
+            icon: Lucide.hdr
             label: "HDR"
             active: Hdr.enabled
             onClicked: Hdr.toggle()
         }
         Tile {
-            icon: Icons.coffee
+            icon: Lucide.coffee
             label: "Idle Inhibitor"
             active: Idle.inhibit
             onClicked: Idle.toggleInhibit()
         }
         Tile {
-            icon: Icons.crop
+            icon: Lucide.crop
             label: "Screen Snip"
         }
         Tile {
-            icon: Icons.eyedropper
+            icon: Lucide.pipette
             label: "Color Picker"
             onClicked: Actions.launchColorPicker()
         }
         Tile {
-            icon: Icons.recordRec
+            icon: Lucide.circleDot
             label: "Recording"
             danger: true
         }

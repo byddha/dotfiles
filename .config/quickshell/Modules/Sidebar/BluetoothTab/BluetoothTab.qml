@@ -27,7 +27,7 @@ ColumnLayout {
         Layout.fillHeight: true
         visible: !Bluetooth.enabled
         text: "Bluetooth disabled"
-        icon: Icons.bluetoothOff
+        icon: Lucide.bluetoothOff
     }
 
     ScrollList {
@@ -77,14 +77,14 @@ ColumnLayout {
             Layout.fillWidth: true
             visible: Bluetooth.deviceList.length === 0
             text: "No paired devices"
-            icon: Icons.bluetoothOn
+            icon: Lucide.bluetooth
         }
     }
 
     ListFooter {
         meta: `${Bluetooth.deviceList.length} device${Bluetooth.deviceList.length === 1 ? "" : "s"}`
         actionText: "Advanced Settings"
-        actionIcon: Icons.tune
+        actionIcon: Lucide.slidersHorizontal
         onActionClicked: Quickshell.execDetached(["blueman-manager"])
     }
 }

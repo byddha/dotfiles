@@ -86,20 +86,20 @@ Singleton {
     // Icon helper based on device type
     function getDeviceIcon(iconName: string): string {
         if (!iconName)
-            return Icons.bluetoothOn;
+            return Lucide.bluetooth;
         if (iconName.includes("headset") || iconName.includes("headphones") || iconName.includes("audio"))
-            return Icons.headphones;
+            return Lucide.headphones;
         if (iconName.includes("phone"))
-            return Icons.phone;
+            return Lucide.smartphone;
         if (iconName.includes("mouse"))
-            return Icons.mouse;
+            return Lucide.mouse;
         if (iconName.includes("keyboard"))
-            return Icons.keyboard;
+            return Lucide.keyboard;
         if (iconName.includes("computer") || iconName.includes("laptop"))
-            return Icons.laptop;
+            return Lucide.laptop;
         if (iconName.includes("gaming"))
-            return Icons.controller;
-        return Icons.bluetoothOn;
+            return Lucide.gamepad2;
+        return Lucide.bluetooth;
     }
 
     onEnabledChanged: refresh()

@@ -2,34 +2,13 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import "../../Config"
 import "../../Services"
+import "../../Components"
 
 // Every peripheral's battery in one item; the tooltip names them
 BarItem {
     id: root
 
     readonly property var devices: PeripheralBatteries.devices
-
-    function glyphFor(type) {
-        switch (type) {
-        case "mouse":
-            return Lucide.mouse;
-        case "keyboard":
-            return Lucide.keyboard;
-        case "trackpad":
-            return Lucide.touchpad;
-        case "headphones":
-        case "headset":
-            return Lucide.headphones;
-        case "speakers":
-            return Lucide.speaker;
-        case "gamepad":
-            return Lucide.gamepad2;
-        case "phone":
-            return Lucide.smartphone;
-        default:
-            return Lucide.batteryMedium;
-        }
-    }
 
     function colorFor(device) {
         if (device.charging)
@@ -64,7 +43,7 @@ BarItem {
             const device = repeater.itemAt(i);
             if (!device || (collapsedThen && i !== lowest))
                 continue;
-            lengths.push(vertical ? BarLayout.iconSize + (level < 3 ? 4 + device.captionHeight : 0) : BarLayout.iconSize + 4 + device.captionWidth);
+            lengths.push(vertical ? Theme.iconSize + (level < 3 ? 4 + device.captionHeight : 0) : Theme.iconSize + 4 + device.captionWidth);
         }
         if (collapsedThen)
             lengths.push(vertical ? (level < 3 ? more.implicitHeight : 0) : more.implicitWidth);
@@ -92,15 +71,15 @@ BarItem {
             horizontalItemAlignment: Grid.AlignHCenter
             verticalItemAlignment: Grid.AlignVCenter
 
-            BarIcon {
-                text: root.glyphFor(device.modelData.type)
+            Icon {
+                text: PeripheralBatteries.getIconForType(device.modelData.type)
                 color: device.modelData.charging ? Theme.accentGreen : device.tint
             }
-            BarText {
+            StyledText {
                 id: caption
 
                 visible: !root.vertical || root.level < 3
-                font.pixelSize: root.vertical ? BarLayout.captionSize : BarLayout.textSize
+                font.pixelSize: root.vertical ? Theme.fontSizeTiny : Theme.fontSizeBase
                 font.weight: root.vertical ? Font.DemiBold : Font.Medium
                 color: device.modelData.charging ? Theme.textColor : device.tint
                 text: device.modelData.percentage
@@ -108,12 +87,12 @@ BarItem {
         }
     }
 
-    BarText {
+    StyledText {
         id: more
 
         visible: root.collapsed && (!root.vertical || root.level < 3)
         role: "secondary"
-        font.pixelSize: BarLayout.percentSize
+        font.pixelSize: Theme.fontSizeTiny
         text: `+${root.devices.length - 1}`
     }
 }

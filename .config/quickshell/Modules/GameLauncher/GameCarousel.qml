@@ -1,6 +1,7 @@
 import QtQuick
 import "../../Config"
 import "../../Services"
+import "../../Components"
 
 Item {
     id: root
@@ -95,12 +96,10 @@ Item {
         }
 
         // Empty state
-        Text {
+        StyledText {
             anchors.centerIn: parent
+            role: "secondary"
             text: GameService.isLoading ? "Loading games..." : GameService.searchQuery ? "No games found" : GameService.games.length === 0 ? "No Steam games detected" : ""
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSizeBase
-            color: Theme.textSecondary
             visible: carousel.count === 0
         }
     }

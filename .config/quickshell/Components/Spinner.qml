@@ -1,7 +1,7 @@
 import QtQuick
-import "../../Services"
+import "../Services"
 
-BarIcon {
+Icon {
     id: root
 
     text: Lucide.loaderCircle

@@ -42,11 +42,10 @@ Rectangle {
         anchors.rightMargin: 10
         spacing: Theme.spacingBase
 
-        Text {
+        Icon {
             visible: root.icon !== ""
             text: root.icon
-            font.family: Theme.fontFamilyGlyphs
-            font.pixelSize: 16
+            size: Theme.iconSizeSmall
             color: Theme.textSecondary
         }
 
@@ -57,7 +56,7 @@ Rectangle {
             leftPadding: 0
             rightPadding: 0
             verticalAlignment: TextInput.AlignVCenter
-            font.family: Theme.fontFamily
+            font.family: Theme.fontUi
             font.pixelSize: Theme.fontSizeSmall
             color: Theme.textColor
             placeholderTextColor: Theme.alpha(Theme.textSecondary, 0.6)

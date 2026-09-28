@@ -71,23 +71,23 @@ Singleton {
     function getIconForType(type: string): string {
         switch (type) {
         case "trackpad":
-            return Icons.trackpad;
+            return Lucide.touchpad;
         case "mouse":
-            return Icons.mouse;
+            return Lucide.mouse;
         case "keyboard":
-            return Icons.keyboard;
+            return Lucide.keyboard;
         case "headphones":
-            return Icons.headphones;
+            return Lucide.headphones;
         case "headset":
-            return Icons.headset;
+            return Lucide.headset;
         case "speakers":
-            return Icons.speaker;
+            return Lucide.speaker;
         case "gamepad":
-            return Icons.controller;
+            return Lucide.gamepad2;
         case "phone":
-            return Icons.phone;
+            return Lucide.smartphone;
         default:
-            return Icons.device;
+            return Lucide.batteryMedium;
         }
     }
 

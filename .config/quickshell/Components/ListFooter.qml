@@ -32,9 +32,9 @@ Item {
 
         StyledText {
             Layout.fillWidth: true
+            role: "secondary"
             text: root.meta
             font.pixelSize: Theme.fontSizeTiny
-            color: Theme.textSecondary
         }
 
         TextButton {

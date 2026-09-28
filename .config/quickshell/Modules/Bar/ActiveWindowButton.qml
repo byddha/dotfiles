@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell.Wayland
 import "../../Config"
 import "../../Services"
+import "../../Components"
 
 BarItem {
     id: root
@@ -20,7 +21,7 @@ BarItem {
     BarAppIcon {
         appClass: root.appClass
     }
-    BarText {
+    StyledText {
         id: name
 
         visible: !root.vertical && root.level < 2

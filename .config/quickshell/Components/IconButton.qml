@@ -5,7 +5,7 @@ Rectangle {
     id: root
 
     property string icon: ""
-    property int iconSize: 16
+    property int iconSize: Theme.iconSize
     property bool toggled: false
     property bool danger: false
     property color iconColor: danger ? Theme.accentRed : toggled ? Theme.primary : Theme.textSecondary
@@ -29,11 +29,10 @@ Rectangle {
         pressed: mouseArea.pressed
     }
 
-    Text {
+    Icon {
         anchors.centerIn: parent
         text: root.icon
-        font.family: Theme.fontFamilyGlyphs
-        font.pixelSize: root.iconSize
+        size: root.iconSize
         color: root.iconColor
 
         Behavior on color {

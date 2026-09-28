@@ -59,13 +59,8 @@ Singleton {
     // TYPOGRAPHY
     // ========================================================================
 
-    property string fontFamily: "JetBrainsMono Nerd Font Mono"
-    property string fontFamilyIcons: "CaskaydiaCove Nerd Font Mono"
-    // Full-size glyphs: the Mono font shrinks wide glyphs to one cell
-    property string fontFamilyGlyphs: "Symbols Nerd Font"
-
     // Bundled, so the shell never depends on what the system has installed and Lucide's
-    // codepoints stay pinned to the version Icons maps them from
+    // codepoints stay pinned to the version Lucide.qml maps them from
     readonly property string fontUi: geistLoader.name
     readonly property string fontIcons: lucideLoader.name
 
@@ -76,29 +71,34 @@ Singleton {
         source: Quickshell.shellPath("assets/fonts/lucide/lucide.ttf")
     }
 
-    property int fontSizeTiny: 12
-    property int fontSizeSmall: 13
-    property int fontSizeBase: 14
+    readonly property int fontSizeTiny: 12
+    readonly property int fontSizeSmall: 13
+    readonly property int fontSizeBase: 14
+    readonly property int fontSizeLarge: 16
+    readonly property int fontSizeTitle: 20
+    readonly property int fontSizeDisplay: 48
+
+    readonly property int iconSizeSmall: 14
+    readonly property int iconSize: 18
+    readonly property int iconSizeLarge: 22
+
+    // Opacities of textSecondary for the "secondary" and "tertiary" text roles
+    readonly property real secondaryOpacity: 0.78
+    readonly property real tertiaryOpacity: 0.56
 
     // ========================================================================
     // SPACING & LAYOUT
     // ========================================================================
 
-    property int spacingBase: 8
+    readonly property int spacingSmall: 4
+    readonly property int spacingBase: 8
+    readonly property int spacingLarge: 16
     readonly property int sidebarWidth: 400
-    readonly property int whichKeyFontSize: 24
-    property int spacingLarge: 16
-    property int spacingSmall: 4
 
-    property int radiusBase: 6
+    readonly property int radiusSmall: 4
+    readonly property int radiusBase: 7
     // Matches Hyprland decoration:rounding, as DankMaterialShell's windowRadius does
     readonly property int radiusWindow: 10
-    property int radiusSmall: 4
-
-    property int iconSize: 20
-
-    property int roundingScreen: 23
-    property int roundingWindow: 10
 
     property real elevationMargin: 10
 

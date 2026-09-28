@@ -83,12 +83,11 @@ Rectangle {
                 Layout.preferredWidth: 32
                 Layout.preferredHeight: 32
 
-                Text {
+                Icon {
                     anchors.centerIn: parent
                     visible: root.lead === null
                     text: root.leadIcon
-                    font.family: Theme.fontFamilyGlyphs
-                    font.pixelSize: 20
+                    size: Theme.iconSizeLarge
                     color: root.leadColor
 
                     Behavior on color {
@@ -113,8 +112,6 @@ Rectangle {
                     Layout.fillWidth: true
                     text: root.title
                     font.pixelSize: Theme.fontSizeSmall
-                    font.weight: Font.Medium
-                    color: Theme.textColor
                     elide: Text.ElideRight
                 }
 
@@ -123,11 +120,10 @@ Rectangle {
                     Layout.fillWidth: true
                     spacing: Theme.spacingSmall
 
-                    Text {
+                    Icon {
                         visible: root.subtitleIcon !== ""
                         text: root.subtitleIcon
-                        font.family: Theme.fontFamilyGlyphs
-                        font.pixelSize: Theme.fontSizeTiny
+                        size: Theme.iconSizeSmall
                         color: root.subtitleColor
                     }
 
@@ -135,6 +131,7 @@ Rectangle {
                         Layout.fillWidth: true
                         text: root.subtitle
                         font.pixelSize: Theme.fontSizeTiny
+                        font.weight: Font.Normal
                         color: root.subtitleColor
                         elide: Text.ElideRight
                     }
@@ -145,14 +142,13 @@ Rectangle {
                 visible: root.trail === null && root.trailText !== ""
                 text: root.trailText
                 font.pixelSize: Theme.fontSizeTiny
+                font.weight: Font.Normal
                 color: root.trailColor
             }
 
-            Text {
+            Icon {
                 visible: root.trail === null && (root.trailIcon !== "" || root.expandable)
-                text: root.trailIcon !== "" ? root.trailIcon : root.expanded ? Icons.chevronUp : Icons.chevronDown
-                font.family: Theme.fontFamilyGlyphs
-                font.pixelSize: root.trailIcon !== "" ? 16 : 20
+                text: root.trailIcon !== "" ? root.trailIcon : root.expanded ? Lucide.chevronUp : Lucide.chevronDown
                 color: root.selected ? Theme.primary : Theme.textSecondary
             }
 

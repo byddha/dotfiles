@@ -121,7 +121,7 @@ ColumnLayout {
                         id: passwordField
                         Layout.fillWidth: true
                         inRow: true
-                        icon: Icons.lock
+                        icon: Lucide.lock
                         placeholderText: "Password"
                         echoMode: TextInput.Password
                         error: Vpn.fortiConnectionFailed
@@ -139,16 +139,16 @@ ColumnLayout {
                     }
 
                     FilledButton {
-                        icon: Icons.arrowRight
+                        icon: Lucide.arrowRight
                         onClicked: passwordField.submit()
                     }
                 }
 
                 StyledText {
                     Layout.topMargin: 6
+                    role: "secondary"
                     text: "Enter to connect · Esc to cancel"
                     font.pixelSize: Theme.fontSizeTiny
-                    color: Theme.textSecondary
                 }
             }
         }
