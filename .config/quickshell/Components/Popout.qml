@@ -48,6 +48,19 @@ PanelWindow {
 
     property bool contentWarm: false
     property bool presented: false
+    // 0 hidden, 1 shown. Only this is animated and the panel's place comes from it, so a geometry change
+    // (the window gets its size on the first open) moves the panel at once instead of sliding it. On close
+    // it snaps back, as the window is already hidden.
+    property real slideProgress: slideFrom === "" || presented ? 1 : 0
+
+    Behavior on slideProgress {
+        enabled: root.slideFrom !== "" && root.visible
+        NumberAnimation {
+            duration: Theme.animation.elementMoveEnter.duration
+            easing.type: Theme.animation.elementMoveEnter.type
+            easing.bezierCurve: Theme.animation.elementMoveEnter.bezierCurve
+        }
+    }
     default property alias content: contentHolder.data
     readonly property size panelSize: Qt.size(panel.width, panel.height)
     readonly property Item contentItem: contentHolder.children[0] ?? null
@@ -179,7 +192,9 @@ PanelWindow {
                 }
             }
             // Past the clip edge: the panel's width, its gap to that edge and room for its shadow
-            readonly property real hiddenOffset: root.slideFrom === "left" ? -(x + width + root.shadowBlur) : slideArea.width - x + root.shadowBlur
+            // From the screen, not from this window: the window is 0 wide until the compositor sizes it,
+            // which on the first open can be after the slide starts
+            readonly property real hiddenOffset: root.slideFrom === "left" ? -(x + width + root.shadowBlur) : (root.targetScreen?.width ?? 0) - root.slideClip - x + root.shadowBlur
 
             x: root.popupX - slideArea.x
             y: root.popupY
@@ -188,7 +203,7 @@ PanelWindow {
             opacity: root.slideFrom === "" || root.presented ? 1 : 0
 
             Behavior on opacity {
-                enabled: root.slideFrom !== ""
+                enabled: root.slideFrom !== "" && root.visible
                 NumberAnimation {
                     duration: Theme.animation.elementMoveFast.duration
                     easing.type: Theme.animation.elementMoveFast.type
@@ -197,16 +212,7 @@ PanelWindow {
             }
 
             transform: Translate {
-                x: root.slideFrom === "" || root.presented ? 0 : wrapper.hiddenOffset
-
-                Behavior on x {
-                    enabled: root.slideFrom !== ""
-                    NumberAnimation {
-                        duration: Theme.animation.elementMoveEnter.duration
-                        easing.type: Theme.animation.elementMoveEnter.type
-                        easing.bezierCurve: Theme.animation.elementMoveEnter.bezierCurve
-                    }
-                }
+                x: (1 - root.slideProgress) * wrapper.hiddenOffset
             }
 
             // Swallows clicks on the panel so they don't reach the close-on-click area
