@@ -38,6 +38,15 @@ for name, codepoint in CODEPOINTS.items():
             table.cmap[codepoint] = glyph_name
 
 font.setGlyphOrder(order)
+
+# Lucide's font stores 0 as every glyph's xMin, which matched its left side bearings of 0. Saving
+# recalculates xMin from the outlines, and FreeType then shifts each outline left by the difference,
+# so each bearing has to match the outline again.
+glyf = font["glyf"]
+for name in order:
+    glyph = glyf[name]
+    glyph.recalcBounds(glyf)
+    font["hmtx"][name] = (font["hmtx"][name][0], getattr(glyph, "xMin", 0))
 # A running shell reads the font file mapped in memory: writing it in place crashes FreeType there,
 # a new file moved over it leaves the old one intact for whoever still has it open
 temp_path = font_path.with_suffix(".ttf.tmp")
