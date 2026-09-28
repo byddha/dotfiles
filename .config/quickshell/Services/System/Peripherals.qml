@@ -53,6 +53,9 @@ Singleton {
         function onBrandResolved() {
             root._requestRebuild();
         }
+        function onReadyChanged() {
+            root._requestRebuild();
+        }
     }
 
     function _findBlueZMatch(name) {
@@ -68,19 +71,21 @@ Singleton {
         return null;
     }
 
+    // The MAC's vendor wins over a brand guessed from the name: a Bluetooth device can be listed
+    // before BlueZ reports it, and then only its name is known
     function _resolveBrand(id, name, macSource) {
         const cached = BrandLogoService.getCachedDeviceBrand(id);
-        if (cached)
-            return cached;
-
         if (macSource) {
             BrandLogoService.lookupBrandFromMac(macSource, function (vendor) {
-                if (vendor && !BrandLogoService.getCachedDeviceBrand(id)) {
+                if (vendor && vendor !== BrandLogoService.getCachedDeviceBrand(id)) {
                     BrandLogoService.setCachedDeviceBrand(id, vendor);
                     root._requestRebuild();
                 }
             });
-        } else if (name) {
+        }
+        if (cached)
+            return cached;
+        if (!macSource && name) {
             // Custom devices with no MAC — use device name for domain search
             BrandLogoService.setCachedDeviceBrand(id, name);
             return name;
@@ -105,6 +110,8 @@ Singleton {
     }
 
     function _rebuild() {
+        if (!BrandLogoService.ready)
+            return;
         const result = [];
         const seen = new Set();
         const configDevices = Config.options.peripheralBatteries?.devices ?? [];
