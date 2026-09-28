@@ -138,6 +138,13 @@ Singleton {
                 property bool traceLogging: false
             }
 
+            property var bar: JsonObject {
+                // "top", "bottom", "left" or "right"
+                property string position: "top"
+                // Away from the screen edges, with rounded corners and a shadow
+                property bool floating: false
+            }
+
             // Centralized monitor configuration
             // Keys are monitor model strings from EDID (e.g., "MO34WQC2", "0x1920")
             // Fields: workspaces ([start, end]), hdrCapable (bool), primary (bool)

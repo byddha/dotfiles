@@ -74,6 +74,10 @@ Singleton {
     function activeWorkspaceIdForScreen(screen) {
         return backend ? backend.activeWorkspaceIdForScreen(screen) : 1;
     }
+    // A fullscreen window covers what the screen shows now
+    function hasFullscreenOnScreen(screen) {
+        return backend ? backend.hasFullscreenOnScreen(screen) : false;
+    }
 
     function getCursorPosition(callback) {
         if (backend)

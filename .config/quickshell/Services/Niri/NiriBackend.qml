@@ -342,6 +342,11 @@ QtObject {
         return mon?.activeWorkspaceId ?? 1;
     }
 
+    // The window data this backend reads has no fullscreen state (see _normalizeWindow)
+    function hasFullscreenOnScreen(screen) {
+        return false;
+    }
+
     function getCursorPosition(callback) {
         // Not available via Niri IPC
     }
