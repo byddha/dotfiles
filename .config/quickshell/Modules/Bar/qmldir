@@ -1,2 +1,14 @@
 Bar 1.0 Bar.qml
 BarWindow 1.0 BarWindow.qml
+BarExclusion 1.0 BarExclusion.qml
+BarItem 1.0 BarItem.qml
+BarText 1.0 BarText.qml
+BarIcon 1.0 BarIcon.qml
+BarSpinner 1.0 BarSpinner.qml
+BarDivider 1.0 BarDivider.qml
+BarKeycap 1.0 BarKeycap.qml
+BarTooltip 1.0 BarTooltip.qml
+BarPopout 1.0 BarPopout.qml
+BarContent 1.0 BarContent.qml
+PowerButton 1.0 PowerButton.qml
+PowerMenu 1.0 PowerMenu.qml

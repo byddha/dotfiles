@@ -32,6 +32,11 @@ PanelWindow {
     property real maxPanelHeight: Infinity
     property int padding: 0
     property color panelColor: Theme.colLayer0
+    property color panelBorderColor: Theme.popupBorder
+    // Values from DankMaterialShell's elevationLevel2 (Common/Theme.qml)
+    property real shadowBlur: 8
+    property real shadowOffset: 4
+    property color shadowColor: Qt.rgba(0, 0, 0, 0.25)
     property bool slideFromRight: false
     // false: the owner closes it (e.g. binds visible) when dismissed() fires
     property bool closeOnDismiss: true
@@ -40,6 +45,7 @@ PanelWindow {
     property bool contentWarm: false
     property bool presented: false
     default property alias content: contentHolder.data
+    readonly property size panelSize: Qt.size(panel.width, panel.height)
     readonly property Item contentItem: contentHolder.children[0] ?? null
 
     signal panelOpened(window: var)
@@ -195,13 +201,12 @@ PanelWindow {
             onPressed: mouse => mouse.accepted = true
         }
 
-        // Values from DankMaterialShell's elevationLevel2 (Common/Theme.qml)
         RectangularShadow {
             anchors.fill: panel
             radius: Theme.radiusWindow
-            blur: 8
-            offset: Qt.vector2d(0, 4)
-            color: Qt.rgba(0, 0, 0, 0.25)
+            blur: root.shadowBlur
+            offset: Qt.vector2d(0, root.shadowOffset)
+            color: root.shadowColor
         }
 
         Rectangle {
@@ -211,7 +216,7 @@ PanelWindow {
             color: root.panelColor
             radius: Theme.radiusWindow
             border.width: 1
-            border.color: Theme.popupBorder
+            border.color: root.panelBorderColor
 
             onWidthChanged: Qt.callLater(root.updatePosition)
             onHeightChanged: Qt.callLater(root.updatePosition)

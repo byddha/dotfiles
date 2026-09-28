@@ -30,8 +30,8 @@ PanelWindow {
 
     WlrLayershell.namespace: "bidshell:bar"
     WlrLayershell.layer: WlrLayer.Top
-    WlrLayershell.exclusionMode: ExclusionMode.Normal
-    exclusiveZone: BarLayout.reserved
+    // BarExclusion reserves the space; ignoring other zones keeps this window at the screen edge
+    WlrLayershell.exclusionMode: ExclusionMode.Ignore
 
     anchors {
         top: edge !== "bottom"
@@ -109,6 +109,10 @@ PanelWindow {
                 width: root.vertical ? 1 : parent.width
                 height: root.vertical ? parent.height : 1
                 color: Theme.outlineVariant
+            }
+
+            BarContent {
+                anchors.fill: parent
             }
         }
     }
