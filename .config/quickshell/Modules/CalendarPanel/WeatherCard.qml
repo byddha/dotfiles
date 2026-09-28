@@ -184,7 +184,7 @@ Card {
                         Layout.fillWidth: true
                         implicitHeight: 4
                         radius: 2
-                        color: Theme.colLayer3
+                        color: Theme.chipSurfaceNested
 
                         Rectangle {
                             readonly property real span: Math.max(1, root.weekMax - root.weekMin)
@@ -231,7 +231,7 @@ Card {
         implicitWidth: chipContent.implicitWidth + 16
         implicitHeight: 28
         radius: Theme.radiusBase
-        color: Theme.colLayer2
+        color: Theme.chipSurface
 
         Row {
             id: chipContent

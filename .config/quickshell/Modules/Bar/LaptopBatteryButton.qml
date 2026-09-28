@@ -17,7 +17,7 @@ BarItem {
         return level >= 3 ? BarLayout.itemSize : padded(Theme.iconSize + BarLayout.itemGap + value.implicitWidth + (level < 2 ? sign.implicitWidth : 0));
     }
     fill: Battery.isCritical ? Theme.alpha(Theme.accentRed, 0.16) : "transparent"
-    hoverFill: Battery.isCritical ? Theme.alpha(Theme.accentRed, 0.26) : Theme.colLayer2
+    hoverFill: Battery.isCritical ? Theme.alpha(Theme.accentRed, 0.26) : Theme.chipSurface
     tooltipTitle: `Battery ${Battery.percentage}%`
     tooltipDetail: Battery.getStatusText()
 

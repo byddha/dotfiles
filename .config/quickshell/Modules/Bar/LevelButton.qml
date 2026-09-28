@@ -24,7 +24,7 @@ BarItem {
     signal lower
 
     fill: muted ? Theme.alpha(Theme.accentRed, 0.16) : "transparent"
-    hoverFill: muted ? Theme.alpha(Theme.accentRed, 0.26) : Theme.colLayer2
+    hoverFill: muted ? Theme.alpha(Theme.accentRed, 0.26) : Theme.chipSurface
     tooltipTitle: muted ? `${name} muted` : `${name} ${percent}%`
     tooltipDetail: `Scroll to adjust · Right-click to ${muted ? "unmute" : "mute"}` + (device ? `\n${deviceLabel}: ${device}` : "")
 

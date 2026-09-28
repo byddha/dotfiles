@@ -55,7 +55,7 @@ Rectangle {
         visible: root.targeted
         anchors.centerIn: parent
         radius: Theme.radiusBase
-        color: Theme.colLayer0
+        color: Theme.hostSurface
         border.color: Theme.primary
         border.width: 2
         width: labelRow.width + 24

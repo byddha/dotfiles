@@ -9,7 +9,7 @@ Rectangle {
     implicitWidth: Math.max(implicitHeight, label.implicitWidth + 10)
     implicitHeight: label.implicitHeight + 4
     radius: Theme.radiusSmall
-    color: onPrimary ? Theme.alpha(Theme.primaryText, 0.14) : Theme.colLayer3
+    color: onPrimary ? Theme.alpha(Theme.primaryText, 0.14) : Theme.chipSurfaceNested
 
     Text {
         id: label

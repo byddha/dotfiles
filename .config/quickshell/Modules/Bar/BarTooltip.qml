@@ -45,9 +45,9 @@ BarAnchoredPopup {
         implicitWidth: lines.implicitWidth + 24
         implicitHeight: lines.implicitHeight + 20
         radius: 8
-        color: Theme.colLayer2
+        color: Theme.chipSurface
         border.width: 1
-        border.color: Theme.colLayer3
+        border.color: Theme.chipSurfaceNested
 
         ColumnLayout {
             id: lines

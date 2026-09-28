@@ -69,7 +69,7 @@ PanelWindow {
         width: root.vertical ? BarLayout.thickness : parent.width - BarLayout.gap * 2
         height: root.vertical ? parent.height - BarLayout.gap * 2 : BarLayout.thickness
         radius: BarLayout.radius
-        color: BarLayout.floating ? Theme.alpha(Theme.colLayer0, 0.96) : Theme.colLayer0
+        color: BarLayout.floating ? Theme.alpha(Theme.hostSurface, 0.96) : Theme.hostSurface
         border.width: BarLayout.floating ? 1 : 0
         border.color: Theme.outlineVariant
 

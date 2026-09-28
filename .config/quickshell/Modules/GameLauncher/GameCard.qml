@@ -28,7 +28,7 @@ Item {
             anchors.fill: parent
             anchors.margins: isSelected ? 3 : 0
             radius: Theme.radiusBase - 2
-            color: Theme.colLayer1
+            color: Theme.cardSurface
             clip: true
         }
 
@@ -46,7 +46,7 @@ Item {
         // Fallback placeholder
         Rectangle {
             anchors.fill: cardContent
-            color: Theme.colLayer2
+            color: Theme.chipSurface
             visible: coverImage.status !== Image.Ready
 
             StyledText {
@@ -72,7 +72,7 @@ Item {
                 }
                 GradientStop {
                     position: 1.0
-                    color: Theme.alpha(Theme.colLayer0, 0.9)
+                    color: Theme.alpha(Theme.hostSurface, 0.9)
                 }
             }
         }
@@ -99,7 +99,7 @@ Item {
             width: platformIcon.width + 12
             height: platformIcon.height + 8
             radius: Theme.radiusSmall
-            color: Theme.alpha(Theme.colLayer0, 0.8)
+            color: Theme.alpha(Theme.hostSurface, 0.8)
 
             IconImage {
                 id: platformIcon

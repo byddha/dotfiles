@@ -31,7 +31,7 @@ PanelWindow {
     property real panelWidth: 0
     property real maxPanelHeight: Infinity
     property int padding: 0
-    property color panelColor: Theme.colLayer0
+    property color panelColor: Theme.hostSurface
     property color panelBorderColor: Theme.popupBorder
     // Values from DankMaterialShell's elevationLevel2 (Common/Theme.qml)
     property real shadowBlur: 8

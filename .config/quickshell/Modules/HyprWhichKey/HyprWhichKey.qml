@@ -66,7 +66,7 @@ Scope {
                 width: grid.implicitWidth + Theme.spacingLarge * 2
                 height: grid.implicitHeight + Theme.spacingLarge * 2
 
-                color: Theme.colLayer0
+                color: Theme.hostSurface
                 radius: Theme.radiusWindow
                 border.width: 1
                 border.color: Theme.popupBorder

@@ -144,9 +144,9 @@ Grid {
                         width: Math.max(height, count.implicitWidth + 8 + ring * 2)
                         height: BarLayout.badgeSize + ring * 2
                         radius: height / 2
-                        color: Theme.colLayer3
+                        color: Theme.chipSurfaceNested
                         border.width: ring
-                        border.color: slot.hovered || slot.marked ? Theme.colLayer2 : Theme.colLayer0
+                        border.color: slot.hovered || slot.marked ? Theme.chipSurface : Theme.hostSurface
 
                         StyledText {
                             id: count

@@ -69,7 +69,7 @@ RowLayout {
             Rectangle {
                 anchors.fill: parent
                 radius: 3
-                color: Theme.colLayer2
+                color: Theme.chipSurface
             }
 
             // Boost zone
@@ -140,7 +140,7 @@ RowLayout {
             radius: 8
             color: root.accent
             border.width: 3
-            border.color: Theme.colLayer1
+            border.color: Theme.cardSurface
 
             Behavior on color {
                 ColorAnimation {

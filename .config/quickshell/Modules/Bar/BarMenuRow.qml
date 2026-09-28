@@ -28,7 +28,7 @@ Rectangle {
     radius: Theme.radiusBase
     clip: true
     opacity: enabled ? 1 : 0.45
-    color: area.pressed ? (danger ? Qt.darker(Theme.accentRed, 1.15) : Theme.colLayer3) : lit ? (danger ? Theme.accentRed : Theme.colLayer2) : "transparent"
+    color: area.pressed ? (danger ? Qt.darker(Theme.accentRed, 1.15) : Theme.chipSurfaceNested) : lit ? (danger ? Theme.accentRed : Theme.chipSurface) : "transparent"
 
     Behavior on color {
         ColorAnimation {

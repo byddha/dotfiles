@@ -23,9 +23,9 @@ Item {
 
         Rectangle {
             id: topSection
-            color: Theme.alpha(Theme.colLayer0, 0.95)
+            color: Theme.alpha(Theme.hostSurface, 0.95)
             border.width: 1
-            border.color: Theme.colLayer2
+            border.color: Theme.chipSurface
 
             topLeftRadius: Theme.radiusBase
             topRightRadius: Theme.radiusBase
@@ -51,7 +51,7 @@ Item {
                     Layout.preferredWidth: 12
                     Layout.fillHeight: true
                     Layout.alignment: Qt.AlignHCenter
-                    color: Theme.colLayer2
+                    color: Theme.chipSurface
                     radius: 6
 
                     Rectangle {
@@ -89,7 +89,7 @@ Item {
                 anchors.centerIn: parent
                 text: root.icon
                 size: Theme.iconSizeLarge
-                color: Theme.colLayer0
+                color: Theme.hostSurface
             }
         }
     }

@@ -26,7 +26,7 @@ Rectangle {
     implicitHeight: 36
     Layout.minimumHeight: implicitHeight
     radius: Theme.radiusBase
-    color: inRow ? Theme.colLayer0 : Theme.colLayer2
+    color: inRow ? Theme.hostSurface : Theme.chipSurface
     border.width: 1
     border.color: error ? Theme.accentRed : field.activeFocus ? Theme.primary : "transparent"
 

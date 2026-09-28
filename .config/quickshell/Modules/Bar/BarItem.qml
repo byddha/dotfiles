@@ -21,8 +21,8 @@ Item {
     // An accent line on the side that faces the windows
     property bool marked: false
     property color fill: "transparent"
-    property color hoverFill: Theme.colLayer2
-    property color pressedFill: Theme.colLayer3
+    property color hoverFill: Theme.chipSurface
+    property color pressedFill: Theme.chipSurfaceNested
 
     property alias tooltipTitle: tooltip.title
     property alias tooltipKeys: tooltip.keys

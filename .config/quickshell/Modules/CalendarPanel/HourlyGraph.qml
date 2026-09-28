@@ -80,7 +80,7 @@ Item {
             ctx.fillStyle = Theme.primary;
             ctx.fill();
             ctx.lineWidth = 2;
-            ctx.strokeStyle = Theme.colLayer1;
+            ctx.strokeStyle = Theme.cardSurface;
             ctx.stroke();
         }
 

@@ -15,7 +15,7 @@ Rectangle {
     // Plain items have a minimum height of 0 in layouts; a card keeps its natural height unless told otherwise
     Layout.minimumHeight: implicitHeight
     radius: Theme.radiusWindow
-    color: Theme.colLayer1
+    color: Theme.cardSurface
     border.width: 1
     border.color: Theme.outlineVariant
 

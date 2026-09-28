@@ -30,7 +30,7 @@ Scope {
             WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
 
             exclusiveZone: 0
-            color: Theme.colLayer0
+            color: Theme.hostSurface
 
             // Click-outside-to-close using HyprlandFocusGrab
             FocusGrab {

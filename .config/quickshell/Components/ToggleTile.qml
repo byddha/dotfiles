@@ -14,7 +14,7 @@ Rectangle {
     property bool hasMenu: false
     property bool menuOpen: false
 
-    readonly property color fill: !active ? Theme.colLayer2 : danger ? Theme.accentRed : Theme.primary
+    readonly property color fill: !active ? Theme.chipSurface : danger ? Theme.accentRed : Theme.primary
     readonly property color glyph: !active ? Theme.textSecondary : danger ? Theme.accentRedText : Theme.primaryText
 
     signal clicked

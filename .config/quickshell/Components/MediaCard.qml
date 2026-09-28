@@ -13,7 +13,7 @@ Rectangle {
     readonly property string timeText: formatTime(player?.position) + " / " + formatTime(MprisController.stableTrackLength)
 
     radius: Theme.radiusBase
-    color: Theme.colLayer1
+    color: Theme.cardSurface
     clip: true
 
     implicitHeight: 80
@@ -37,7 +37,7 @@ Rectangle {
     // Overlay for readability (always visible)
     Rectangle {
         anchors.fill: parent
-        color: Theme.alpha(Theme.colLayer1, 0.75)
+        color: Theme.alpha(Theme.cardSurface, 0.75)
     }
 
     RowLayout {
@@ -50,7 +50,7 @@ Rectangle {
             Layout.fillHeight: true
             Layout.preferredWidth: height
             radius: Theme.radiusBase - 2
-            color: Theme.colLayer2
+            color: Theme.chipSurface
             clip: true
 
             Image {

@@ -39,7 +39,7 @@ Rectangle {
     opacity: disabled ? Theme.stateDisabled : 1
     color: {
         if (showBody)
-            return selected ? Theme.alpha(Theme.primary, Theme.stateSelected) : Theme.colLayer2;
+            return selected ? Theme.alpha(Theme.primary, Theme.stateSelected) : Theme.chipSurface;
         if (selected)
             return Theme.alpha(Theme.primary, mouseArea.containsMouse && !disabled ? 0.18 : Theme.stateSelected);
         return "transparent";

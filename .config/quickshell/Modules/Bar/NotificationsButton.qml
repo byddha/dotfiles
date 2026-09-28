@@ -43,7 +43,7 @@ BarItem {
             radius: width / 2
             color: Theme.primary
             border.width: 2
-            border.color: root.hovered ? Theme.colLayer2 : Theme.colLayer0
+            border.color: root.hovered ? Theme.chipSurface : Theme.hostSurface
         }
     }
     StyledText {

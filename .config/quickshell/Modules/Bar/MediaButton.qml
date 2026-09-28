@@ -128,7 +128,7 @@ BarItem {
         implicitHeight: 26
         radius: 5
         opacity: enabled ? 1 : 0.4
-        color: tap.pressed ? Theme.colLayer3 : hover.hovered ? Theme.alpha(Theme.textColor, 0.08) : "transparent"
+        color: tap.pressed ? Theme.chipSurfaceNested : hover.hovered ? Theme.alpha(Theme.textColor, 0.08) : "transparent"
 
         Icon {
             anchors.centerIn: parent

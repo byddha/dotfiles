@@ -134,7 +134,7 @@ Card {
             implicitWidth: todayLabel.implicitWidth + 20
             implicitHeight: 28
             radius: Theme.radiusBase
-            color: root.onTodaysMonth ? "transparent" : todayArea.containsMouse ? Theme.colLayer3 : Theme.colLayer2
+            color: root.onTodaysMonth ? "transparent" : todayArea.containsMouse ? Theme.chipSurfaceNested : Theme.chipSurface
 
             StyledText {
                 id: todayLabel
@@ -210,7 +210,7 @@ Card {
             anchors.fill: parent
             visible: root.editedDay === null
             radius: Theme.radiusBase
-            color: Theme.colLayer2
+            color: Theme.chipSurface
 
             RowLayout {
                 id: dayLine
@@ -287,7 +287,7 @@ Card {
                 Layout.fillWidth: true
                 implicitHeight: 32
                 radius: Theme.radiusBase
-                color: Theme.colLayer2
+                color: Theme.chipSurface
                 border.width: 1
                 border.color: Theme.primary
 
@@ -345,7 +345,7 @@ Card {
             }
             ActionButton {
                 icon: Lucide.x
-                fill: Theme.colLayer2
+                fill: Theme.chipSurface
                 glyph: Theme.textColor
                 onClicked: root.closeEdit()
             }
@@ -371,7 +371,7 @@ Card {
             width: 30
             height: 26
             radius: Theme.radiusBase
-            color: cell.modelData.today ? Theme.primary : area.containsMouse ? Theme.colLayer2 : "transparent"
+            color: cell.modelData.today ? Theme.primary : area.containsMouse ? Theme.chipSurface : "transparent"
             border.width: root.sameDay(root.editedDay, cell.modelData) ? 1 : 0
             border.color: Theme.outline
 
@@ -469,7 +469,7 @@ Card {
         implicitWidth: 28
         implicitHeight: 28
         radius: Theme.radiusBase
-        color: navArea.containsMouse ? Theme.colLayer3 : Theme.colLayer2
+        color: navArea.containsMouse ? Theme.chipSurfaceNested : Theme.chipSurface
 
         Icon {
             anchors.centerIn: parent

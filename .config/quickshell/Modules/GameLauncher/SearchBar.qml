@@ -13,9 +13,9 @@ Rectangle {
 
     height: 36
     radius: Theme.radiusBase
-    color: Theme.colLayer1
+    color: Theme.cardSurface
     border.width: searchInput.activeFocus ? 2 : 1
-    border.color: searchInput.activeFocus ? Theme.primary : Theme.colLayer2
+    border.color: searchInput.activeFocus ? Theme.primary : Theme.chipSurface
 
     Behavior on border.color {
         ColorAnimation {

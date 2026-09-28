@@ -21,7 +21,7 @@ Item {
             implicitWidth: 48
             implicitHeight: 48
             radius: 24
-            color: Theme.colLayer2
+            color: Theme.chipSurface
 
             Icon {
                 anchors.centerIn: parent

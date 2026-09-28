@@ -67,9 +67,9 @@ Scope {
                 anchors.centerIn: parent
                 implicitWidth: contentLayout.implicitWidth + Theme.spacingLarge * 2
                 implicitHeight: contentLayout.implicitHeight + Theme.spacingLarge * 2
-                color: Theme.colLayer0
+                color: Theme.hostSurface
                 radius: Theme.radiusBase
-                border.color: Theme.colLayer0Border
+                border.color: Theme.popupBorder
                 border.width: 1
 
                 ColumnLayout {

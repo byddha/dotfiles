@@ -29,7 +29,7 @@ Rectangle {
     implicitWidth: content.implicitWidth + 14
     implicitHeight: content.implicitHeight + 14
     radius: Theme.radiusWindow
-    color: Theme.surface
+    color: Theme.cardSurface
     border.width: 1
     border.color: Theme.popupBorder
 
@@ -54,7 +54,7 @@ Rectangle {
             implicitWidth: modeRow.implicitWidth + 6
             implicitHeight: 40
             radius: 8
-            color: Theme.colLayer2
+            color: Theme.chipSurface
 
             Row {
                 id: modeRow
@@ -220,7 +220,7 @@ Rectangle {
         width: Math.max(ocrEnglish.implicitWidth, ocrAll.implicitWidth, ocrTranslate.implicitWidth) + 8
         height: menuColumn.implicitHeight + 8
         radius: Theme.radiusWindow
-        color: Theme.surface
+        color: Theme.cardSurface
         border.width: 1
         border.color: Theme.popupBorder
 
@@ -285,7 +285,7 @@ Rectangle {
         width: tipColumn.implicitWidth + 16
         height: tipColumn.implicitHeight + 12
         radius: Theme.radiusBase
-        color: Theme.colLayer2
+        color: Theme.chipSurface
         border.width: 1
         border.color: Theme.popupBorder
 

@@ -9,7 +9,7 @@ Window {
     property bool pending: false
 
     flags: Qt.ToolTip | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
-    color: Theme.surface
+    color: Theme.cardSurface
     visible: false
 
     width: tooltipText.width + Theme.spacingBase * 2

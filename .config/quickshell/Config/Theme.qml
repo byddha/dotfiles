@@ -2,14 +2,12 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
-import "../Utils"
 import "../Services"
 
 /**
- * Theme - Semantic base16 color theme system
+ * Theme - The colors, type, sizes and animations every part of the shell uses.
  *
- * Maps base16 color palette to semantic UI colors.
- * All colors are reactive and update when ThemeService loads a new theme.
+ * Colors come from ThemeService (the palette theme-set generates) and follow it live.
  */
 Singleton {
     id: root
@@ -18,16 +16,21 @@ Singleton {
     // SEMANTIC COLOR MAPPING
     // ========================================================================
 
-    // Background layers (darkest to lightest)
-    property color colLayer0: ThemeService.background            // Default background
-    property color colLayer1: ThemeService.surfaceContainer      // Lighter background (surfaces)
-    property color colLayer2: ThemeService.surfaceContainerHigh  // Selection/hover background
-    property color colLayer3: ThemeService.surfaceContainerHighest
+    // Surfaces, named after DankMaterialShell's roles (Common/Theme.qml). The generated palette is
+    // shifted one step down, so surfaceContainer is the theme's own surface: a card can be lighter or
+    // darker than the panel it sits on, or the same, as the theme chose.
+    // Panels and popouts
+    property color hostSurface: ThemeService.background
+    // Cards on a panel
+    property color cardSurface: ThemeService.surfaceContainer
+    // Buttons, chips and rows on a card; hover on a card
+    property color chipSurface: ThemeService.surfaceContainerHigh
+    // Keycaps and hover on a chip
+    property color chipSurfaceNested: ThemeService.surfaceContainerHighest
 
     // Foreground colors
     property color textColor: ThemeService.surfaceText             // Default text
     property color textSecondary: ThemeService.surfaceVariantText  // Muted text
-    property color colOnLayer1: ThemeService.surfaceVariantText    // Text on layer1 surfaces
 
     // Accent colors
     property color primary: ThemeService.primary                 // Primary accent
@@ -41,9 +44,7 @@ Singleton {
     property color accentYellow: ThemeService.base0A
     property color accentGreen: ThemeService.base0B
 
-    // Surface and border colors
-    property color surface: ThemeService.surfaceContainer        // Surface background
-    property color colLayer0Border: ColorUtils.mix(ThemeService.surfaceContainerHigh, ThemeService.background, 0.4)
+    // Border colors
     // DankMaterialShell's popup border: outline at 35% (BlurService.borderColor)
     property color popupBorder: alpha(ThemeService.outline, 0.35)
     property color outline: ThemeService.outline
