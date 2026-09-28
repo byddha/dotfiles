@@ -2,8 +2,6 @@ Card 1.0 Card.qml
 Slider 1.0 Slider.qml
 StyledText 1.0 StyledText.qml
 Tooltip 1.0 Tooltip.qml
-AudioVisualizer 1.0 AudioVisualizer.qml
-MediaCard 1.0 MediaCard.qml
 FocusGrab 1.0 FocusGrab.qml
 EmptyState 1.0 EmptyState.qml
 StateLayer 1.0 StateLayer.qml

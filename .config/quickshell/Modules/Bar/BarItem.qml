@@ -27,6 +27,7 @@ Item {
     property alias tooltipTitle: tooltip.title
     property alias tooltipKeys: tooltip.keys
     property alias tooltipDetail: tooltip.detail
+    property alias tooltipImage: tooltip.image
 
     property alias acceptedButtons: pointer.acceptedButtons
     // The handler also sees the pointer over controls inside the item, which take it from the area

@@ -24,7 +24,6 @@ DeviceBatteriesButton 1.0 DeviceBatteriesButton.qml
 LaptopBatteryButton 1.0 LaptopBatteryButton.qml
 NotificationsButton 1.0 NotificationsButton.qml
 BarAnchoredPopup 1.0 BarAnchoredPopup.qml
-MediaPopout 1.0 MediaPopout.qml
 MediaButton 1.0 MediaButton.qml
 ElapsedText 1.0 ElapsedText.qml
 RecordingButton 1.0 RecordingButton.qml

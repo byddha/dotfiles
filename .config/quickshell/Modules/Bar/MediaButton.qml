@@ -9,8 +9,9 @@ import "../../Components"
 /**
  * MediaButton - The playing track: round art in a progress ring, the title and the artist. Hover
  * turns the second line into the time and brings in previous / play-pause / next, widening the item
- * away from the clock. A click opens the media popout; the wheel switches between players. On a
- * vertical bar, and at level 3, only the ring shows until hovered. Level 1 shortens the title.
+ * away from the clock; its tooltip shows the cover, the whole title and the track's length. The
+ * wheel switches between players. On a vertical bar, and at level 3, only the ring (and on a
+ * vertical bar the time) shows until hovered. Level 1 shortens the title.
  */
 BarItem {
     id: root
@@ -25,7 +26,6 @@ BarItem {
     readonly property int slotLead: vertical ? 0 : 6
     // Three 28 px buttons, 2 apart
     readonly property int controlsLength: 3 * 28 + 2 * 2
-    property bool popupOpen: false
 
     function formatTime(seconds) {
         const s = Math.floor(seconds);
@@ -38,7 +38,7 @@ BarItem {
     // while hidden, which would tie the length to the hover.
     function lengthAt(level) {
         if (vertical)
-            return padded(ringSize + (Media.length > 0 ? spacing + verticalTime.implicitHeight : 0));
+            return padded(ringSize + spacing + verticalTime.implicitHeight);
         const textWidth = Math.max(title.implicitWidth, artist.implicitWidth, position.implicitWidth + duration.implicitWidth);
         const text = level >= 3 ? 0 : spacing + Math.min(textWidth, level >= 1 ? 190 : 260);
         return padded(ringSize + text + spacing + slotLead + controlsLength);
@@ -46,28 +46,15 @@ BarItem {
 
     visible: Media.hasTrack
     spacing: vertical ? 4 : 10
-    highlighted: popupOpen
-    tooltipTitle: ringOnly && !popupOpen ? Media.title : ""
-    tooltipDetail: ringOnly && !popupOpen ? Media.artist : ""
+    tooltipTitle: Media.title
+    tooltipDetail: [Media.artist, Media.length > 0 ? formatTime(Media.length) : ""].filter(line => line).join("\n")
+    tooltipImage: Media.artUrl
 
-    onHoveredChanged: {
-        if (!hovered)
-            popupOpen = false;
-    }
-    onClicked: mouse => {
-        if (mouse.button === Qt.LeftButton)
-            popupOpen = !popupOpen;
-    }
     onWheel: wheel => {
         if (wheel.angleDelta.y > 0)
             Media.cycle(-1);
         else if (wheel.angleDelta.y < 0)
             Media.cycle(1);
-    }
-
-    MediaPopout {
-        target: root
-        shown: root.popupOpen
     }
 
     // Revealed on hover at the far end from the clock: the item grows that way, so the ring and the
@@ -121,15 +108,20 @@ BarItem {
         }
     }
 
-    // Always there on a vertical bar, between the controls and the ring, so it never moves on hover
+    // Always there on a vertical bar, between the controls and the ring, so it never moves on hover.
+    // Its room is kept even when the player gives no length, so the item never jumps; then it is
+    // empty, or a dash while hovered.
     StyledText {
         id: verticalTime
 
-        visible: root.vertical && Media.length > 0
-        role: "secondary"
+        readonly property bool known: Media.length > 0
+
+        visible: root.vertical
+        opacity: known || root.hovered ? 1 : 0
+        role: known ? "secondary" : "tertiary"
         font.pixelSize: BarLayout.badgeTextSize
         font.weight: Font.Medium
-        text: root.formatTime(Media.position)
+        text: known ? root.formatTime(Media.position) : "–:––"
     }
 
     Item {
