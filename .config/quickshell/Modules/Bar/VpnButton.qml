@@ -20,7 +20,16 @@ BarItem {
         return padded(parts.reduce((a, b) => a + b, 0) + 6 * (parts.length - 1));
     }
     tooltipTitle: mullvad ? `Mullvad${Vpn.mullvadCity ? ` (${Vpn.mullvadCity})` : ""}` : "FortiVPN"
-    tooltipDetail: Vpn.busy ? (Vpn.disconnecting ? "Disconnecting…" : "Connecting…") : mullvad ? `${Vpn.mullvadCountry || "Connected"}\nClick to disconnect` : `Up ${Vpn.fortiUptime}\nClick to disconnect`
+    tooltipDetail: {
+        if (Vpn.busy)
+            return Vpn.disconnecting ? "Disconnecting…" : "Connecting…";
+        if (mullvad)
+            return `${Vpn.mullvadCountry || "Connected"}\nClick to disconnect`;
+        // The status is read every 5 s, so the seconds move in steps
+        const s = Vpn.fortiUptimeSeconds;
+        const clock = `${Math.floor(s / 3600)}:${String(Math.floor(s % 3600 / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+        return `Up ${clock}\nClick to disconnect`;
+    }
 
     onClicked: mouse => {
         if (mouse.button !== Qt.LeftButton || Vpn.busy)
