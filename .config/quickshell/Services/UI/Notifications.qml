@@ -144,6 +144,10 @@ Singleton {
     // Storage path
     readonly property string cacheDir: StandardPaths.standardLocations(StandardPaths.CacheLocation)[0] + "/bidshell"
     readonly property string filePath: cacheDir + "/notifications.json"
+    // Copies of the icon and image files notifications point to, one folder per notification.
+    // Apps such as Chromium send files from a temporary folder they delete later, and the history
+    // outlives them; as in DMS NotificationService (notification_images).
+    readonly property string imageDir: cacheDir.toString().replace("file://", "") + "/notification-images"
 
     // State
     property bool dnd: false  // Do Not Disturb mode
@@ -226,6 +230,57 @@ Singleton {
         Notif {}
     }
 
+    Component {
+        id: copyComponent
+
+        Process {
+            property var done
+
+            onExited: code => {
+                if (code === 0)
+                    done(command[command.length - 1]);
+                else
+                    Logger.warn(`Could not keep a copy of ${command[command.length - 2]}`);
+                destroy();
+            }
+        }
+    }
+
+    // A file on this machine, "" for icon names, web URLs and image data
+    function _localFile(value) {
+        const path = _iconFromImage(value) || value || "";
+        if (path.startsWith("file://"))
+            return decodeURIComponent(path.substring(7));
+        return path.startsWith("/") ? path : "";
+    }
+
+    // The copy keeps the file name: the themed icon of an app is found by it (_themedAppIcon)
+    function _keepImages(notif) {
+        const keep = (source, kind, apply) => {
+            const copy = `${imageDir}/${notif.notificationId}/${kind}/${source.substring(source.lastIndexOf("/") + 1)}`;
+            const process = copyComponent.createObject(root, {
+                "command": ["install", "-D", "-m", "644", source, copy],
+                "done": path => {
+                    if (!root.list.includes(notif))
+                        return;
+                    apply(path);
+                    notifFileView.setText(stringifyList(root.list));
+                }
+            });
+            process.running = true;
+        };
+        const appIcon = _localFile(notif.appIcon);
+        if (appIcon)
+            keep(appIcon, "app-icon", path => notif.appIcon = path);
+        const image = _localFile(notif.image);
+        if (image)
+            keep(image, "image", path => notif.image = "image://icon/" + path);
+    }
+
+    function _deleteImages(ids) {
+        Quickshell.execDetached(["rm", "-rf", ...ids.map(id => `${imageDir}/${id}`)]);
+    }
+
     function stringifyList(list) {
         return JSON.stringify(list.map(notif => notifToJSON(notif)), null, 2);
     }
@@ -265,6 +320,7 @@ Singleton {
                 root.enqueuePopup(newNotifObject);
             Logger.info(`New notification from ${newNotifObject.appName}: ${newNotifObject.summary}`);
             notifFileView.setText(stringifyList(root.list));
+            root._keepImages(newNotifObject);
         }
     }
 
@@ -274,6 +330,7 @@ Singleton {
         const index = root.list.findIndex(notif => notif.notificationId === id);
         const notifServerIndex = notifServer.trackedNotifications.values.findIndex(notif => notif.id + root.idOffset === id);
         if (index !== -1) {
+            root._deleteImages([id]);
             root.list[index].timer.stop();
             root.list.splice(index, 1);
             notifFileView.setText(stringifyList(root.list));
@@ -285,6 +342,7 @@ Singleton {
     }
 
     function discardAllNotifications() {
+        root._deleteImages(root.list.map(n => n.notificationId));
         root.popupQueue = [];
         root.list = [];
         triggerListChange();
