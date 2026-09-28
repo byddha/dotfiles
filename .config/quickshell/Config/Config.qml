@@ -103,7 +103,7 @@ Singleton {
         JsonAdapter {
             id: adapter
 
-            property var notifications: JsonObject {
+            property JsonObject notifications: JsonObject {
                 // "top-left", "top-center", "top-right", "bottom-left", "bottom-center" or "bottom-right"
                 property string position: "bottom-right"
 
@@ -135,23 +135,23 @@ Singleton {
                 property var rules: ([])
             }
 
-            property var general: JsonObject {
+            property JsonObject general: JsonObject {
                 property string base16Theme: "tokyo-night-dark"
                 property bool debugLogging: false
                 property bool traceLogging: false
             }
 
-            property var sidebar: JsonObject {
+            property JsonObject sidebar: JsonObject {
                 // "left" or "right": the screen side it opens on
                 property string side: "right"
             }
 
-            property var osd: JsonObject {
+            property JsonObject osd: JsonObject {
                 // "left" or "right", vertically centered
                 property string position: "right"
             }
 
-            property var bar: JsonObject {
+            property JsonObject bar: JsonObject {
                 // "top", "bottom", "left" or "right"
                 property string position: "top"
                 // Away from the screen edges, with rounded corners and a shadow
@@ -177,7 +177,7 @@ Singleton {
                     devices: []
                 })
 
-            property var brandLogos: JsonObject {
+            property JsonObject brandLogos: JsonObject {
                 property string apiKey: ""      // logo.dev publishable key (for logo images)
                 property string secretKey: ""   // logo.dev secret key (for brand search)
             }
@@ -188,7 +188,7 @@ Singleton {
             // whitelist: string array of case-insensitive substrings matched against item title;
             //            absent/empty passes everything through
             // format: parser key, default "rss"
-            property var rssFeedNotifier: JsonObject {
+            property JsonObject rssFeedNotifier: JsonObject {
                 property var feeds: ([])
             }
         }

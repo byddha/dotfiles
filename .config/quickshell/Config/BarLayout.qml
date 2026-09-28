@@ -14,11 +14,11 @@ Singleton {
     id: root
 
     readonly property string edge: {
-        const position = Config.options.bar?.position;
+        const position = Config.options.bar.position;
         return ["top", "bottom", "left", "right"].includes(position) ? position : "top";
     }
     readonly property bool vertical: edge === "left" || edge === "right"
-    readonly property bool floating: Config.options.bar?.floating === true
+    readonly property bool floating: Config.options.bar.floating
 
     readonly property int thickness: vertical ? 44 : 36
     // Hit area of a bar item across the bar
