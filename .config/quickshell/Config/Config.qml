@@ -141,6 +141,11 @@ Singleton {
                 property bool traceLogging: false
             }
 
+            // App icons the shell shows instead of the icon theme's, by desktop entry id (the .desktop file
+            // name): an absolute path or another themed icon name. Tray icons come from the apps themselves.
+            // Example: { "zen": "/usr/share/icons/hicolor/128x128/apps/zen-browser.png" }
+            property var iconOverrides: ({})
+
             property JsonObject sidebar: JsonObject {
                 // "left" or "right": the screen side it opens on
                 property string side: "right"

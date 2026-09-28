@@ -142,6 +142,9 @@ Singleton {
     // Icon for the app icon box: explicit path, themed icon name, or the desktop entry's icon.
     function appIconSource(notif) {
         const entry = notif?.desktopEntry ? DesktopEntries.heuristicLookup(notif.desktopEntry) : null;
+        const override = AppIcons.overrideFor(entry?.id ?? "");
+        if (override)
+            return override;
         const appIcon = notif?.appIcon || entry?.icon || "";
         const themed = _themedAppIcon(appIcon);
         if (themed)

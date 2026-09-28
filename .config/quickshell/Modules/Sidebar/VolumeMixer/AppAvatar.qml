@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import "../../../Config"
 import "../../../Components"
+import "../../../Services"
 
 // Real app icon (and `entry` for its real name) from the app's .desktop entry; the name's initial when there is none.
 // PipeWire's application.icon-name is often missing or wrong (Vesktop reports Chromium): try the portal app id, then the binary, then the name.
@@ -21,7 +22,7 @@ Rectangle {
         const appId = props["pipewire.access.portal.app_id"] ?? "";
         return (appId && DesktopEntries.byId(appId)) || (binary && DesktopEntries.heuristicLookup(binary)) || (name && DesktopEntries.heuristicLookup(name)) || null;
     }
-    readonly property string iconSource: entry?.icon ? Quickshell.iconPath(entry.icon, true) : ""
+    readonly property string iconSource: AppIcons.overrideFor(entry?.id ?? "") || (entry?.icon ? Quickshell.iconPath(entry.icon, true) : "")
 
     implicitWidth: 32
     implicitHeight: 32

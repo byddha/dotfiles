@@ -2,6 +2,7 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
+import "../../Config"
 
 QtObject {
     id: root
@@ -192,7 +193,15 @@ QtObject {
         if (!className || DesktopEntries.applications.values.length === 0)
             return "";
         const entry = DesktopEntries.byId(className) || DesktopEntries.heuristicLookup(className);
-        return entry?.icon ? Quickshell.iconPath(entry.icon, true) : "";
+        return overrideFor(entry?.id ?? "") || (entry?.icon ? Quickshell.iconPath(entry.icon, true) : "");
+    }
+
+    // The config's iconOverrides icon for a desktop entry id, "" when it has none
+    function overrideFor(entryId) {
+        const override = Config.options.iconOverrides[entryId];
+        if (!override)
+            return "";
+        return override.startsWith("/") ? `file://${override}` : Quickshell.iconPath(override, true);
     }
 
     function getIcon(className, title, xdgTag) {
