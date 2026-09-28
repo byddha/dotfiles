@@ -156,7 +156,8 @@ Singleton {
     Process {
         id: subscriber
         running: true
-        command: ["nmcli", "monitor"]
+        // setpriv: the kernel ends it with qs, also when qs dies without cleaning up (SIGTERM, crash)
+        command: ["setpriv", "--pdeathsig", "TERM", "--", "nmcli", "monitor"]
         stdout: SplitParser {
             onRead: root.update()
         }

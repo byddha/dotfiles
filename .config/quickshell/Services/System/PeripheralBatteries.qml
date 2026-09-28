@@ -200,7 +200,8 @@ Singleton {
     Process {
         id: hidrawMonitor
         running: true
-        command: ["udevadm", "monitor", "--subsystem-match=hidraw", "--udev"]
+        // setpriv: the kernel ends it with qs, also when qs dies without cleaning up (SIGTERM, crash)
+        command: ["setpriv", "--pdeathsig", "TERM", "--", "udevadm", "monitor", "--subsystem-match=hidraw", "--udev"]
         stdout: SplitParser {
             onRead: hidrawDebounce.restart()
         }

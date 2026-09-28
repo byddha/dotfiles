@@ -29,7 +29,8 @@ BarAnchoredPopup {
 
     Process {
         running: root.visible
-        command: ["cava", "-p", Qt.resolvedUrl("../../scripts/cava_config.txt").toString().replace("file://", "")]
+        // setpriv: the kernel ends it with qs, also when qs dies without cleaning up (SIGTERM, crash)
+        command: ["setpriv", "--pdeathsig", "TERM", "--", "cava", "-p", Qt.resolvedUrl("../../scripts/cava_config.txt").toString().replace("file://", "")]
         stdout: SplitParser {
             onRead: data => root.visualizerValues = data.split(";").map(p => parseFloat(p.trim())).filter(p => !isNaN(p))
         }

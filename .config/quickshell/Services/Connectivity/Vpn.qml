@@ -59,7 +59,8 @@ Singleton {
     // Prints the current state at start, then one JSON line per change
     Process {
         id: mullvadListenProc
-        command: ["mullvad", "status", "-j", "listen"]
+        // setpriv: the kernel ends it with qs, also when qs dies without cleaning up (SIGTERM, crash)
+        command: ["setpriv", "--pdeathsig", "TERM", "--", "mullvad", "status", "-j", "listen"]
         running: true
 
         stdout: SplitParser {
