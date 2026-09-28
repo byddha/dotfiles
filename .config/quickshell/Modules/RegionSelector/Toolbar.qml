@@ -11,6 +11,8 @@ Rectangle {
     required property int action
     required property bool adjusting
     property bool ocrMenuOpen: false
+    property bool recordAudio: false
+    property bool recordMic: false
     readonly property bool recordMode: action === RegionSelector.SnipAction.Record
 
     signal dismiss
@@ -18,6 +20,8 @@ Rectangle {
     signal fullscreenRequested
     signal cropRequested
     signal snipRequested(string mode, bool allLangs, bool translate)
+    signal audioToggled
+    signal micToggled
 
     property Item tipTarget: null
     property bool tipShown: false
@@ -165,10 +169,27 @@ Rectangle {
                     keys: ["Ctrl", "S"]
                     onClicked: root.snipRequested("save", false, false)
                 }
+                ToolButton {
+                    visible: root.recordMode
+                    icon: Icons.volumeHigh
+                    toggled: root.recordAudio
+                    tip: root.recordAudio ? "System audio · on" : "System audio · off"
+                    keys: ["A"]
+                    onClicked: root.audioToggled()
+                }
+                ToolButton {
+                    visible: root.recordMode
+                    icon: Icons.microphone
+                    toggled: root.recordMic
+                    tip: root.recordMic ? "Microphone · on" : "Microphone · off"
+                    keys: ["M"]
+                    onClicked: root.micToggled()
+                }
                 PrimaryButton {
-                    Layout.leftMargin: root.recordMode ? 0 : 4
+                    Layout.leftMargin: 4
                     icon: root.recordMode ? Icons.recordDot : Icons.copy
                     text: root.recordMode ? "Record" : "Copy"
+                    labels: ["Copy", "Record"]
                     tip: root.recordMode ? "Start recording" : "Copy to clipboard"
                     keys: ["Space", Icons.keyReturn]
                     onClicked: root.snipRequested("copy", false, false)
@@ -407,23 +428,44 @@ Rectangle {
         }
     }
 
+    // [icon] [label] [↵]: icon and keycap sit at fixed spots, the label is centered between them. The width
+    // comes from the longest of `labels`, so swapping Copy / Record never moves anything.
     component PrimaryButton: Rectangle {
         id: primary
 
         property string icon
         property string text
+        property var labels: []
         property string tip
         property var keys: []
         readonly property bool active: true
         readonly property string detail: ""
         readonly property var detailKeys: []
+        readonly property int padLeft: 10
+        readonly property int padRight: 8
+        readonly property int iconBox: 20
+        readonly property int gap: 8
 
         signal clicked
 
-        implicitWidth: primaryRow.implicitWidth + 18
+        implicitWidth: padLeft + iconBox + gap + widestLabel.implicitWidth + gap + keycap.implicitWidth + padRight
         implicitHeight: 40
         radius: Theme.radiusBase
         color: Theme.primary
+
+        // Measures the longest label; never shown
+        Column {
+            id: widestLabel
+            visible: false
+            Repeater {
+                model: primary.labels
+                StyledText {
+                    required property string modelData
+                    text: modelData
+                    font: primaryLabel.font
+                }
+            }
+        }
 
         StateLayer {
             primaryFill: true
@@ -432,24 +474,30 @@ Rectangle {
         }
 
         RowLayout {
-            id: primaryRow
-            anchors.verticalCenter: parent.verticalCenter
-            x: 10
-            spacing: 8
+            anchors.fill: parent
+            anchors.leftMargin: primary.padLeft
+            anchors.rightMargin: primary.padRight
+            spacing: primary.gap
 
             Text {
+                Layout.preferredWidth: primary.iconBox
+                horizontalAlignment: Text.AlignHCenter
                 text: primary.icon
                 font.family: Theme.fontFamilyGlyphs
                 font.pixelSize: 18
                 color: Theme.primaryText
             }
             StyledText {
+                id: primaryLabel
+                Layout.fillWidth: true
+                horizontalAlignment: Text.AlignHCenter
                 text: primary.text
                 font.pixelSize: Theme.fontSizeBase
                 font.weight: Font.DemiBold
                 color: Theme.primaryText
             }
             Keycaps {
+                id: keycap
                 keys: [Icons.keyReturn]
                 onPrimary: true
             }

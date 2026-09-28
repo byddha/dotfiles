@@ -145,6 +145,24 @@ Scope {
                             return `${String(m).padStart(2, "0")}:${String(timerPill.elapsed % 60).padStart(2, "0")}`;
                         }
                     }
+
+                    Text {
+                        visible: Recording.hasAudio
+                        anchors.verticalCenter: parent.verticalCenter
+                        color: "white"
+                        font.family: Theme.fontFamilyGlyphs
+                        font.pixelSize: Theme.fontSizeBase
+                        text: Icons.volumeHigh
+                    }
+
+                    Text {
+                        visible: Recording.hasMic
+                        anchors.verticalCenter: parent.verticalCenter
+                        color: "white"
+                        font.family: Theme.fontFamilyGlyphs
+                        font.pixelSize: Theme.fontSizeBase
+                        text: Icons.microphone
+                    }
                 }
             }
         }

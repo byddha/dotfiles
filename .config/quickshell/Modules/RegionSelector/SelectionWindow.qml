@@ -10,8 +10,12 @@ PanelWindow {
     id: root
 
     property int action: RegionSelector.SnipAction.Copy
+    property bool recordAudio: false
+    property bool recordMic: false
     signal dismiss
     signal actionChangeRequested(int newAction)
+    signal audioToggleRequested
+    signal micToggleRequested
 
     visible: true
     color: "transparent"
@@ -429,7 +433,7 @@ PanelWindow {
         // Record mode: the recorder captures live, no file grab needed. Lens, OCR, Edit and Save
         // still take a screenshot of the region.
         if (root.action === RegionSelector.SnipAction.Record && root.snipMode === "copy") {
-            Recording.start(Math.round(root.regionX + root.monitorOffsetX), Math.round(root.regionY + root.monitorOffsetY), Math.round(root.regionWidth), Math.round(root.regionHeight));
+            Recording.start(Math.round(root.regionX + root.monitorOffsetX), Math.round(root.regionY + root.monitorOffsetY), Math.round(root.regionWidth), Math.round(root.regionHeight), root.recordAudio, root.recordMic);
             root.dismiss();
             return;
         }
@@ -533,6 +537,14 @@ PanelWindow {
                 break;
             case Qt.Key_R:
                 root.actionChangeRequested(RegionSelector.SnipAction.Record);
+                break;
+            case Qt.Key_A:
+                if (root.action === RegionSelector.SnipAction.Record)
+                    root.audioToggleRequested();
+                break;
+            case Qt.Key_M:
+                if (root.action === RegionSelector.SnipAction.Record)
+                    root.micToggleRequested();
                 break;
             case Qt.Key_F:
                 // Shift+F = edit in swappy
@@ -747,6 +759,10 @@ PanelWindow {
                 height: implicitHeight
                 action: root.action
                 adjusting: root.adjusting
+                recordAudio: root.recordAudio
+                recordMic: root.recordMic
+                onAudioToggled: root.audioToggleRequested()
+                onMicToggled: root.micToggleRequested()
                 onDismiss: root.dismiss()
                 onFullscreenRequested: root.snipFullscreen("copy")
                 onCropRequested: root.shrinkToContent()
