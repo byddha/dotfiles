@@ -21,7 +21,7 @@ BarItem {
     }
 
     // Collapsed: only the device with the lowest battery, and how many more there are
-    readonly property bool collapsed: devices.length > 1 && level >= (vertical ? 2 : 1)
+    readonly property bool collapsed: devices.length > 1 && level >= 1
     readonly property int lowest: {
         let index = 0;
         for (let i = 1; i < devices.length; i++)
@@ -36,7 +36,7 @@ BarItem {
     tooltipDetail: devices.map(d => `${d.name} · ${d.percentage}%` + (d.charging ? " · charging" : d.percentage <= PeripheralBatteries.lowThreshold ? " · low" : "")).join("\n")
 
     function lengthAt(level) {
-        const collapsedThen = devices.length > 1 && level >= (vertical ? 2 : 1);
+        const collapsedThen = devices.length > 1 && level >= 1;
         const lengths = [];
         // repeater.count, not devices.length: the binding must also wait for the delegates
         for (let i = 0; i < repeater.count; i++) {
