@@ -51,18 +51,6 @@ Item {
             return `Sidebar ${Settings.sidebarVisible ? "shown" : "hidden"}`;
         }
 
-        function show(): string {
-            Logger.info("IPC: sidebar.show");
-            Settings.sidebarVisible = true;
-            return "Sidebar shown";
-        }
-
-        function hide(): string {
-            Logger.info("IPC: sidebar.hide");
-            Settings.sidebarVisible = false;
-            return "Sidebar hidden";
-        }
-
         function status(): string {
             Logger.debug("IPC: sidebar.status →", Settings.sidebarVisible ? "visible" : "hidden");
             return `Sidebar is ${Settings.sidebarVisible ? "visible" : "hidden"}`;
@@ -76,18 +64,6 @@ Item {
             Settings.gameLauncherVisible = !Settings.gameLauncherVisible;
             Logger.info("IPC: games.toggle →", Settings.gameLauncherVisible ? "shown" : "hidden");
             return `Game Launcher ${Settings.gameLauncherVisible ? "shown" : "hidden"}`;
-        }
-
-        function show(): string {
-            Logger.info("IPC: games.show");
-            Settings.gameLauncherVisible = true;
-            return "Game Launcher shown";
-        }
-
-        function hide(): string {
-            Logger.info("IPC: games.hide");
-            Settings.gameLauncherVisible = false;
-            return "Game Launcher hidden";
         }
 
         function refresh(): string {
