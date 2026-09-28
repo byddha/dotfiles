@@ -26,7 +26,6 @@ Singleton {
     // ==================
     readonly property string wifiOn: "󰤨"
     readonly property string wifiOff: "󰤭"
-    readonly property string network: "󰖩"
     // ==================
     // Bluetooth Icons
     // ==================
@@ -47,18 +46,8 @@ Singleton {
     // ==================
     // Quick Toggle Icons
     // ==================
-    readonly property string vpnOn: "󰦝"
-    readonly property string vpnOff: "󰦞"
     readonly property string hdrOn: "󰵽"
-    readonly property string hdrOff: "󰵾"
-    readonly property string idleOn: "󰒲" // sleep icon - idle mode is on, system can sleep
-    readonly property string idleOff: "󰒳" // no-sleep icon - idle mode is off, system stays awake
-    readonly property string screenSnip: "󰹑"
-    readonly property string colorPicker: "󰈊"
-    readonly property string recordOn: "󰑋"
-    readonly property string recordOff: "󰑊"
     readonly property string airplaneOn: "󰀝"
-    readonly property string airplaneOff: "󰀞"
     // ==================
     // Media Icons
     // ==================
@@ -66,12 +55,10 @@ Singleton {
     readonly property string pause: "󰏤"
     readonly property string skipPrevious: "󰒮"
     readonly property string skipNext: "󰒭"
-    readonly property string music: "󰌳"
     readonly property string musicAlt: "󰎈"
     // ==================
     // Power/System Icons
     // ==================
-    readonly property string power: "󰣇"
     readonly property string battery10: "󰁺"
     readonly property string battery20: "󰁻"
     readonly property string battery30: "󰁼"
@@ -82,7 +69,6 @@ Singleton {
     readonly property string battery80: "󰂁"
     readonly property string battery90: "󰂂"
     readonly property string battery100: "󰁹"
-    readonly property string batteryCharging: "󰂄"
     readonly property string batteryCharging10: "󰢜"
     readonly property string batteryCharging20: "󰂆"
     readonly property string batteryCharging30: "󰂇"
@@ -102,7 +88,6 @@ Singleton {
     // Modifier Key Icons
     // ==================
     readonly property string keyCtrl: "󰘴"
-    readonly property string keyShift: "󰘶"
     readonly property string keySuper: "󰣇"
     readonly property string keyCaps: "󰪛"
     readonly property string keyWorkspace: "󰆾"
@@ -153,14 +138,10 @@ Singleton {
     // ==================
     // Link Icons
     // ==================
-    readonly property string link: "󰌷"
-    readonly property string linkOff: "󰌹"
     // ==================
     // Misc Icons
     // ==================
-    readonly property string workspace: ""
     readonly property string device: "󰒔"
-    readonly property string checkmark: ""
     readonly property string cross: "✝"
     // ==================
     // Sidebar Icons (nf-md)
@@ -171,7 +152,6 @@ Singleton {
     readonly property string wifiStrength4: "󰤨"
     readonly property string wifiStrengthOutline: "󰤯"
     readonly property string shieldLock: "󰦝"
-    readonly property string bellSleep: "󰂠"
     readonly property string coffee: "󰅶"
     readonly property string eyedropper: "󰈊"
     readonly property string recordRec: "󰑋"
@@ -186,8 +166,6 @@ Singleton {
     readonly property string arrowRight: "󰁔"
     readonly property string clearAll: "󰎟"
     readonly property string monitor: "󰍹"
-    readonly property string gamepad: "󰊗"
-    readonly property string cellphone: "󰄜"
     readonly property string lightningBolt: "󱐋"
     readonly property string microphone: "󰍬"
     readonly property string linkVariant: "󰌹"

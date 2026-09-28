@@ -95,7 +95,6 @@ Singleton {
     readonly property int radiusWindow: 10
     property int radiusSmall: 4
 
-    property int barHeight: 32
     property int iconSize: 20
 
     property int roundingScreen: 23

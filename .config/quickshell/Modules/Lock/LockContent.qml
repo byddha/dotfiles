@@ -7,7 +7,6 @@ import "../../Components"
 import "../../Config"
 import "../../Services"
 import "../Sidebar"
-import "../OldBar"
 
 FocusScope {
     id: root
@@ -81,7 +80,24 @@ FocusScope {
         spacing: Theme.spacingBase
         opacity: 0.92
 
-        BatteryButton {}
+        Row {
+            visible: Battery.available
+            spacing: Theme.spacingBase
+
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                color: Battery.isCritical ? Theme.accentRed : "white"
+                font.family: Theme.fontIcons
+                font.pixelSize: 16
+                text: Battery.charging ? Lucide.batteryCharging : Battery.isCritical ? Lucide.batteryWarning : Battery.percentage >= 80 ? Lucide.batteryFull : Battery.percentage >= 40 ? Lucide.batteryMedium : Lucide.batteryLow
+            }
+            StyledText {
+                anchors.verticalCenter: parent.verticalCenter
+                color: "white"
+                font.pixelSize: Theme.fontSizeSmall
+                text: `${Battery.percentage}%`
+            }
+        }
 
         StyledText {
             id: uptimeText
