@@ -62,6 +62,18 @@ Singleton {
     // Full-size glyphs: the Mono font shrinks wide glyphs to one cell
     property string fontFamilyGlyphs: "Symbols Nerd Font"
 
+    // Bundled, so the shell never depends on what the system has installed and Lucide's
+    // codepoints stay pinned to the version Icons maps them from
+    readonly property string fontUi: geistLoader.name
+    readonly property string fontIcons: lucideLoader.name
+
+    readonly property FontLoader geistLoader: FontLoader {
+        source: Quickshell.shellPath("assets/fonts/geist/Geist-Variable.ttf")
+    }
+    readonly property FontLoader lucideLoader: FontLoader {
+        source: Quickshell.shellPath("assets/fonts/lucide/lucide.ttf")
+    }
+
     property int fontSizeTiny: 12
     property int fontSizeSmall: 13
     property int fontSizeBase: 14
