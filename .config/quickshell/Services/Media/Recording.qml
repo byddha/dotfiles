@@ -8,9 +8,10 @@ import "../../Utils"
 /**
  * Recording - screen recording with gpu-screen-recorder
  *
- * The recorder runs detached so a recording survives shell reloads; its state comes from pgrep.
- * starting / stopping cover the gap between a request and the process really starting or
- * finishing its file, and poll fast so the bar follows within a quarter second.
+ * The recorder runs detached so a recording survives shell reloads; its state comes from pgrep,
+ * read at startup (a recording from before a shell restart) and polled only while one runs or is
+ * requested. starting / stopping cover the gap between a request and the process really starting
+ * or finishing its file, and poll fast so the bar follows within a quarter second.
  */
 Singleton {
     id: root
@@ -52,7 +53,7 @@ Singleton {
 
     Timer {
         interval: root.starting || root.stopping ? 250 : 2000
-        running: true
+        running: root.recording || root.starting || root.stopping
         repeat: true
         onTriggered: statusProc.running = true
     }

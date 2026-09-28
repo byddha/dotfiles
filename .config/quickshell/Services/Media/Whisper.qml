@@ -9,8 +9,9 @@ import Quickshell.Io
  *
  * listening: pw-record is capturing the microphone.
  * transcribing: recording stopped, the script is still running whisper-cli and pasting.
- * The script calls `qs ipc call whisper refresh` on each change, so the bar reacts at once;
- * the poll is only a fallback (fast while active, to catch the end).
+ * The script calls `qs ipc call whisper refresh` on each change, so the bar reacts at once. The
+ * state is also read at startup, to pick up a run that began before a shell restart, and polled
+ * while active only, in case the script dies before its last call.
  */
 Singleton {
     id: root
@@ -25,13 +26,21 @@ Singleton {
 
     function refresh() {
         statusProc.running = true;
+        // The script calls right after starting pw-record, which may not be up yet
+        followUp.restart();
     }
 
     Timer {
-        interval: root.active ? 500 : 2000
-        running: true
+        id: followUp
+
+        interval: 2000
+    }
+
+    Timer {
+        interval: 1000
+        running: root.active || followUp.running
         repeat: true
-        onTriggered: root.refresh()
+        onTriggered: statusProc.running = true
     }
 
     // [p] / [w]: keeps the patterns from matching this bash command line itself
@@ -47,5 +56,5 @@ Singleton {
         }
     }
 
-    Component.onCompleted: refresh()
+    Component.onCompleted: statusProc.running = true
 }
