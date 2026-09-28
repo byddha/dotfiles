@@ -16,16 +16,12 @@ Item {
             // theme-set recolors the whole desktop and rewrites the palette
             // files; ThemeService is watching those and repaints the shell.
             ThemeService.setTheme(themeName, false);
-            Config.options.general.base16Theme = themeName;
-            Config.saveConfig();
             return `Theme switched to: ${themeName}`;
         }
 
         function setLightTheme(themeName: string): string {
             Logger.info("IPC: theme.setLightTheme called with:", themeName);
             ThemeService.setTheme(themeName, true);
-            Config.options.general.base16Theme = themeName;
-            Config.saveConfig();
             return `Theme switched to: ${themeName} (light)`;
         }
 

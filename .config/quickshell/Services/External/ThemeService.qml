@@ -187,11 +187,6 @@ Singleton {
      * Re-read the generated palette. Switching themes goes through setTheme();
      * this only picks up a file written by someone else.
      */
-    function loadTheme(name) {
-        colorsFile.reload();
-        stateFile.reload();
-    }
-
     /**
      * List all available themes
      * @param callback - Function to call with array of theme names

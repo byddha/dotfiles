@@ -5,7 +5,6 @@ import Quickshell
 import Quickshell.Io
 import QtCore
 import "../Utils"
-import "../Services"
 
 Singleton {
     id: config
@@ -19,7 +18,6 @@ Singleton {
 
     property bool configLoaded: false
     property alias options: adapter
-    property string lastLoadedTheme: ""
 
     readonly property string primaryMonitor: {
         const monitors = adapter.monitors || {};
@@ -56,8 +54,6 @@ Singleton {
                 Logger.info("Config directory created, saving defaults...");
                 config.configLoaded = true;
                 fileView.writeAdapter();
-                ThemeService.loadTheme(adapter.general.base16Theme);
-                config.lastLoadedTheme = adapter.general.base16Theme;
             } else {
                 Logger.error("Failed to create config directory");
                 config.configLoaded = true;
@@ -83,17 +79,6 @@ Singleton {
 
         onLoaded: {
             Logger.info("Config loaded from:", config.configFile);
-            const newTheme = adapter.general.base16Theme;
-
-            // Load theme on first load or if theme changed
-            if (!config.configLoaded || config.lastLoadedTheme !== newTheme) {
-                Logger.info(`Theme ${config.configLoaded ? "changed to" : "loaded"}:`, newTheme);
-                ThemeService.loadTheme(newTheme);
-                config.lastLoadedTheme = newTheme;
-            } else {
-                Logger.debug("Theme unchanged, skipping reload");
-            }
-
             config.configLoaded = true;
             Logger.debugEnabled = adapter.general.debugLogging;
             Logger.traceEnabled = adapter.general.traceLogging;
@@ -136,7 +121,6 @@ Singleton {
             }
 
             property JsonObject general: JsonObject {
-                property string base16Theme: "tokyo-night-dark"
                 property bool debugLogging: false
                 property bool traceLogging: false
             }
