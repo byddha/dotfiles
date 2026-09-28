@@ -22,6 +22,8 @@ Peripheral brand lookup: `hwdata`
 
 Game launcher: `steam`
 
+Fonts: none to install; Geist and Lucide are bundled in `assets/fonts`
+
 Fill monitors in ~/.config/bidshell/config.json. Keys are the monitor `model` from EDID (check with `hyprctl monitors` → `model:` line), for example:
 
 
@@ -39,3 +41,16 @@ Fill monitors in ~/.config/bidshell/config.json. Keys are the monitor `model` fr
     },
 
 ```
+
+Placement, in the same file. Everything keeps clear of the bar on whichever side it is:
+
+```json
+    "bar": { "position": "top", "floating": false },
+    "notifications": { "position": "bottom-right" },
+    "sidebar": { "side": "right" },
+    "osd": { "position": "right" },
+```
+
+- `bar.position`: `top`, `bottom`, `left`, `right`; `floating` keeps it off the screen edges
+- `notifications.position`: `top-left`, `top-center`, `top-right`, `bottom-left`, `bottom-center`, `bottom-right`
+- `sidebar.side`, `osd.position`: `left`, `right`
