@@ -1,63 +1,79 @@
-pragma ComponentBehavior: Bound
 import QtQuick
-import Quickshell
-import Quickshell.Services.SystemTray
-import Quickshell.Widgets
+import Quickshell.Wayland
 import "../../Config"
+import "../../Services"
 
 /**
- * Tray - Status notifier items. Left click activates (or opens the menu when the item only has
- * a menu), middle click is the item's secondary action, right click opens its menu.
+ * Tray - The tray items in the bar, or, when the bar is short of room (level 2, or 1 on a
+ * vertical bar), one chevron that opens them in a popout.
  */
-Grid {
+Item {
     id: root
 
+    property int level: 0
+    readonly property bool folded: items.count > 1 && level >= (BarLayout.vertical ? 1 : 2)
+
     property TrayMenu menu: TrayMenu {}
+    property BarPopout overflow: BarPopout {
+        WlrLayershell.namespace: "bidshell:tray-overflow"
+        padding: 6
 
-    columns: BarLayout.vertical ? 1 : Math.max(1, children.length)
-    spacing: 2
+        TrayItems {
+            anchors.fill: parent
+            menu: root.menu
+            inPopout: true
+        }
+    }
 
-    Repeater {
-        model: SystemTray.items
+    function lengthAt(level) {
+        const foldedThen = items.count > 1 && level >= (BarLayout.vertical ? 1 : 2);
+        if (foldedThen)
+            return BarLayout.itemSize;
+        return items.count * BarLayout.itemSize + items.spacing * Math.max(0, items.count - 1);
+    }
 
-        BarItem {
-            id: trayButton
+    visible: items.count > 0
+    implicitWidth: folded ? chevron.implicitWidth : items.implicitWidth
+    implicitHeight: folded ? chevron.implicitHeight : items.implicitHeight
 
-            required property SystemTrayItem modelData
+    onFoldedChanged: if (!folded)
+        overflow.hidePanel()
 
-            iconOnly: true
-            highlighted: root.menu.visible && root.menu.menu === modelData.menu
-            tooltipTitle: highlighted ? "" : modelData.tooltipTitle || modelData.title || modelData.id
+    TrayItems {
+        id: items
 
-            onClicked: mouse => {
-                const item = modelData;
-                if (mouse.button === Qt.MiddleButton)
-                    item.secondaryActivate();
-                else if (mouse.button === Qt.RightButton || item.onlyMenu)
-                    openMenu();
-                else
-                    item.activate();
-            }
+        visible: !root.folded
+        menu: root.menu
+    }
 
-            function openMenu() {
-                if (!modelData.hasMenu)
-                    return;
-                if (highlighted)
-                    root.menu.hidePanel();
-                else
-                    root.menu.openMenu(modelData.menu, trayButton);
-            }
+    BarItem {
+        id: chevron
 
-            IconImage {
-                implicitSize: 16
-                source: {
-                    const icon = trayButton.modelData.icon;
-                    // Some apps send "name?path=/dir" for an icon outside the theme
-                    if (icon.includes("?path=")) {
-                        const [name, dir] = icon.split("?path=");
-                        return `file://${dir}/${name.substring(name.lastIndexOf("/") + 1)}`;
-                    }
-                    return icon;
+        visible: root.folded
+        iconOnly: true
+        highlighted: root.overflow.visible
+        tooltipTitle: root.overflow.visible ? "" : `${items.count} tray apps`
+
+        onClicked: mouse => {
+            if (mouse.button !== Qt.LeftButton)
+                return;
+            if (root.overflow.visible)
+                root.overflow.hidePanel();
+            else
+                root.overflow.openFrom(chevron);
+        }
+
+        BarIcon {
+            text: {
+                switch (BarLayout.edge) {
+                case "bottom":
+                    return Lucide.chevronUp;
+                case "left":
+                    return Lucide.chevronRight;
+                case "right":
+                    return Lucide.chevronLeft;
+                default:
+                    return Lucide.chevronDown;
                 }
             }
         }

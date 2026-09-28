@@ -22,6 +22,7 @@ LevelButton 1.0 LevelButton.qml
 VolumeButton 1.0 VolumeButton.qml
 MicButton 1.0 MicButton.qml
 Tray 1.0 Tray.qml
+TrayItems 1.0 TrayItems.qml
 TrayMenu 1.0 TrayMenu.qml
 DeviceBatteriesButton 1.0 DeviceBatteriesButton.qml
 LaptopBatteryButton 1.0 LaptopBatteryButton.qml

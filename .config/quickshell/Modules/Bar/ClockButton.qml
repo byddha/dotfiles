@@ -37,6 +37,12 @@ BarItem {
         precision: SystemClock.Seconds
     }
 
+    function lengthAt(level) {
+        if (vertical)
+            return padded((current ? 16 + (level < 3 ? 2 + verticalTemperature.implicitHeight : 0) + 4 : 0) + verticalTime.implicitHeight);
+        return padded((current ? 16 + (level < 3 ? 6 + temperatureText.implicitWidth : 0) + 10 : 0) + time.implicitWidth);
+    }
+
     // Horizontal: weather, then the time
     Row {
         visible: !root.vertical
@@ -53,6 +59,9 @@ BarItem {
                 color: Theme.alpha(Theme.textSecondary, 0.66)
             }
             BarText {
+                id: temperatureText
+
+                visible: root.level < 3
                 anchors.verticalCenter: parent.verticalCenter
                 role: "secondary"
                 text: root.temperature
@@ -60,6 +69,8 @@ BarItem {
         }
 
         BarText {
+            id: time
+
             anchors.verticalCenter: parent.verticalCenter
             font.pixelSize: 14
             font.weight: Font.DemiBold
@@ -84,6 +95,9 @@ BarItem {
                 color: Theme.alpha(Theme.textSecondary, 0.66)
             }
             BarText {
+                id: verticalTemperature
+
+                visible: root.level < 3
                 anchors.horizontalCenter: parent.horizontalCenter
                 role: "secondary"
                 font.pixelSize: 11
@@ -92,6 +106,8 @@ BarItem {
         }
 
         Column {
+            id: verticalTime
+
             anchors.horizontalCenter: parent.horizontalCenter
 
             Repeater {

@@ -5,7 +5,7 @@ LevelButton {
     name: "Microphone"
     glyph: Lucide.mic
     mutedGlyph: Lucide.micOff
-    level: Audio.micVolume
+    amount: Audio.micVolume
     muted: Audio.isMicMuted
     deviceLabel: "Input"
     device: Audio.source ? Audio.friendlyDeviceName(Audio.source) : ""

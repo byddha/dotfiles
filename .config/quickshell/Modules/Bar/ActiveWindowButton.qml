@@ -10,13 +10,20 @@ BarItem {
     readonly property string appClass: toplevel?.appId ?? ""
 
     visible: toplevel !== null
+    iconOnly: !vertical && level >= 2
     tooltipTitle: toplevel?.title ?? ""
+
+    function lengthAt(level) {
+        return vertical ? padded(16) : level >= 2 ? BarLayout.itemSize : padded(16 + 6 + name.implicitWidth);
+    }
 
     BarAppIcon {
         appClass: root.appClass
     }
     BarText {
-        visible: !root.vertical
+        id: name
+
+        visible: !root.vertical && root.level < 2
         text: AppIcons.getDisplayName(root.appClass, root.toplevel?.title ?? "", "")
     }
 }

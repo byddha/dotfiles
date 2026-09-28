@@ -16,13 +16,13 @@ BarPopout {
     WlrLayershell.namespace: "bidshell:tray-menu"
     padding: 6
 
-    function openMenu(trayMenu, opener) {
+    function openMenu(trayMenu, opener, fromPopout) {
         menu = trayMenu;
         stack.clear();
         stack.push(levelComponent, {
             handle: trayMenu
         });
-        openFrom(opener);
+        openFrom(opener, fromPopout);
     }
 
     StackView {

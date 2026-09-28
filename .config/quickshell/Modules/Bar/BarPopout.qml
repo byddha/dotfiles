@@ -22,9 +22,10 @@ Popout {
     panelX: position.x
     panelY: position.y
 
-    function openFrom(opener) {
+    // The opener is in the bar window, or, with fromPopout, in another popout (whose window covers the screen)
+    function openFrom(opener, fromPopout) {
         const barScreen = opener.QsWindow.window.screen;
-        const origin = BarLayout.windowOrigin(barScreen);
+        const origin = fromPopout ? Qt.point(0, 0) : BarLayout.windowOrigin(barScreen);
         const local = opener.mapToItem(null, 0, 0);
         openerRect = Qt.rect(origin.x + local.x, origin.y + local.y, opener.width, opener.height);
         targetScreen = barScreen;

@@ -33,8 +33,22 @@ Item {
     readonly property bool hovered: pointer.containsMouse || hover.hovered
     readonly property alias pressed: pointer.pressed
 
+    // How far the bar has had to shrink its content, 0 (all of it) to 3 (the least); set by BarContent
+    property int level: 0
+
     signal clicked(var mouse)
     signal wheel(var wheel)
+
+    // Length along the bar at a level. Items that shrink redefine it from their parts' implicit
+    // sizes, which never depend on the level, so BarContent can choose one without a binding loop.
+    function lengthAt(level) {
+        return vertical ? implicitHeight : implicitWidth;
+    }
+
+    // The item's length around content of the given length
+    function padded(contentLength) {
+        return vertical ? Math.max(BarLayout.itemSize, contentLength + 14) : contentLength + 16;
+    }
 
     implicitWidth: vertical ? BarLayout.itemSize : iconOnly ? BarLayout.itemSize : box.implicitWidth + 16
     implicitHeight: vertical ? Math.max(BarLayout.itemSize, box.implicitHeight + 14) : BarLayout.itemSize

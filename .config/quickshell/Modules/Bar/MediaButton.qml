@@ -6,8 +6,9 @@ import "../../Services"
 
 /**
  * MediaButton - The playing track. Hover swaps the artist for previous / play-pause / next and
- * opens the media popout; the wheel switches between players. On a vertical bar it is only
- * the app's icon, and a click plays or pauses.
+ * opens the media popout; the wheel switches between players. On a vertical bar, and at level 3,
+ * it is only the app's icon, and a click plays or pauses. Level 1 shortens the title and drops
+ * the artist; the controls keep their place.
  */
 BarItem {
     id: root
@@ -15,10 +16,23 @@ BarItem {
     readonly property MprisPlayer player: MprisController.activePlayer
     readonly property bool playing: player?.playbackState === MprisPlaybackState.Playing
 
+    readonly property bool iconView: vertical || level >= 3
+    readonly property int titleCap: level >= 1 ? 190 : 260
+
     visible: MprisController.stableHasPlayer && player !== null
+    iconOnly: iconView && !vertical
+
+    function lengthAt(level) {
+        if (vertical)
+            return padded(16);
+        if (level >= 3)
+            return BarLayout.itemSize;
+        const slot = level >= 1 ? controls.implicitWidth : Math.max(artist.implicitCapped, controls.implicitWidth);
+        return padded(16 + 6 + Math.min(title.implicitWidth, level >= 1 ? 190 : 260) + 6 + slot);
+    }
 
     onClicked: mouse => {
-        if (vertical && mouse.button === Qt.LeftButton)
+        if (iconView && mouse.button === Qt.LeftButton)
             player.togglePlaying();
     }
     onWheel: wheel => {
@@ -51,8 +65,10 @@ BarItem {
     }
 
     BarText {
-        visible: !root.vertical
-        width: Math.min(implicitWidth, 260)
+        id: title
+
+        visible: !root.iconView
+        width: Math.min(implicitWidth, root.titleCap)
         elide: Text.ElideRight
         text: MprisController.stableTrackTitle
     }
@@ -60,14 +76,16 @@ BarItem {
     // The artist, or on hover the controls, in one slot as wide as the wider of the two:
     // the item keeps its size, so nothing moves out from under the pointer
     Item {
-        visible: !root.vertical
-        implicitWidth: Math.max(artist.width, controls.implicitWidth)
+        visible: !root.iconView
+        implicitWidth: root.level >= 1 ? controls.implicitWidth : Math.max(artist.implicitCapped, controls.implicitWidth)
         implicitHeight: controls.implicitHeight
 
         BarText {
             id: artist
 
-            visible: !root.hovered
+            readonly property real implicitCapped: Math.min(implicitWidth, 160)
+
+            visible: !root.hovered && root.level < 1
             anchors.verticalCenter: parent.verticalCenter
             width: Math.min(implicitWidth, 160)
             elide: Text.ElideRight

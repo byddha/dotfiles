@@ -11,12 +11,12 @@ BarItem {
     property string name
     property string glyph
     property string mutedGlyph
-    property real level
+    property real amount
     property bool muted
     property string deviceLabel
     property string device
 
-    readonly property int percent: Math.round(level * 100)
+    readonly property int percent: Math.round(amount * 100)
 
     signal toggleMute
     signal raise
@@ -42,6 +42,17 @@ BarItem {
             lower();
     }
 
+    iconOnly: !vertical && level >= 3
+
+    function lengthAt(level) {
+        if (vertical)
+            return padded(16 + (level < 3 && !muted ? 4 + caption.implicitHeight : 0));
+        if (level >= 3)
+            return BarLayout.itemSize;
+        const text = muted ? mutedLabel.implicitWidth : value.implicitWidth + (level < 2 ? 1 + sign.implicitWidth : 0);
+        return padded(16 + 6 + text);
+    }
+
     BarIcon {
         text: root.muted ? root.mutedGlyph : root.glyph
         color: root.muted ? Theme.accentRed : Theme.textColor
@@ -49,8 +60,8 @@ BarItem {
 
     // Horizontal: "48%" with a small percent sign, or "Muted"
     Item {
-        visible: !root.vertical
-        implicitWidth: root.muted ? mutedLabel.implicitWidth : value.implicitWidth + 1 + sign.implicitWidth
+        visible: !root.vertical && root.level < 3
+        implicitWidth: root.muted ? mutedLabel.implicitWidth : value.implicitWidth + (sign.visible ? 1 + sign.implicitWidth : 0)
         implicitHeight: value.implicitHeight
 
         BarText {
@@ -68,7 +79,7 @@ BarItem {
         BarText {
             id: sign
 
-            visible: !root.muted
+            visible: !root.muted && root.level < 2
             x: value.implicitWidth + 1
             anchors.baseline: value.baseline
             role: "secondary"
@@ -80,7 +91,9 @@ BarItem {
 
     // Vertical: the number as a caption under the icon
     BarText {
-        visible: root.vertical && !root.muted
+        id: caption
+
+        visible: root.vertical && !root.muted && root.level < 3
         font.pixelSize: 11
         font.weight: Font.DemiBold
         text: root.percent

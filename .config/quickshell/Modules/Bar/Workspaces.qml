@@ -38,6 +38,16 @@ Grid {
     columns: vertical ? 1 : Math.max(1, children.length)
     spacing: 2
 
+    // Set by BarContent. At level 3 a horizontal slot shows only its first app, with "+n" for the rest.
+    property int level: 0
+
+    function lengthAt(level) {
+        let total = 0;
+        for (let i = 0; i < slots.count; i++)
+            total += slots.itemAt(i)?.lengthAt(level) ?? 0;
+        return total + spacing * Math.max(0, slots.count - 1);
+    }
+
     // Wheel up: the next occupied workspace, wrapping around; down: the previous one
     function step(wheel) {
         const direction = wheel.angleDelta.y > 0 ? 1 : wheel.angleDelta.y < 0 ? -1 : 0;
@@ -56,6 +66,8 @@ Grid {
     }
 
     Repeater {
+        id: slots
+
         model: root.workspaces
 
         BarItem {
@@ -65,8 +77,18 @@ Grid {
             readonly property var apps: Compositor.getWorkspaceApps(modelData.id)
             readonly property bool current: modelData.id === root.activeId
 
+            readonly property bool firstAppOnly: !root.vertical && root.level >= 3
+
+            level: root.level
             marked: current
             spacing: root.vertical ? 6 : 5
+
+            function lengthAt(level) {
+                if (root.vertical)
+                    return implicitHeight;
+                const shown = level >= 3 ? Math.min(1, apps.length) : apps.length;
+                return padded(label.implicitWidth + shown * (16 + spacing));
+            }
             tooltipTitle: `Workspace ${modelData.label}`
             tooltipDetail: apps.length === 0 ? "Empty" : apps.map(app => {
                 const name = AppIcons.getDisplayName(app.class, app.title, app.xdgTag);
@@ -80,6 +102,8 @@ Grid {
             onWheel: wheel => root.step(wheel)
 
             BarText {
+                id: label
+
                 font.pixelSize: 11
                 font.weight: Font.DemiBold
                 horizontalAlignment: Text.AlignHCenter
@@ -94,7 +118,11 @@ Grid {
                     id: app
 
                     required property var modelData
+                    required property int index
+                    // The first app stands for the whole workspace when only it is shown
+                    readonly property string badge: slot.firstAppOnly && slot.apps.length > 1 ? `+${slot.apps.length - 1}` : modelData.count > 1 ? String(modelData.count) : ""
 
+                    visible: !slot.firstAppOnly || index === 0
                     implicitWidth: 16
                     implicitHeight: 16
 
@@ -105,7 +133,7 @@ Grid {
 
                     // Window count, on the corner away from the active marker
                     Rectangle {
-                        visible: app.modelData.count > 1
+                        visible: app.badge !== ""
                         x: root.vertical && BarLayout.edge === "left" ? -8 : parent.width - width + 8
                         y: BarLayout.edge === "bottom" ? parent.height - height + 7 : -7
                         width: Math.max(16, count.implicitWidth + 10)
@@ -121,7 +149,7 @@ Grid {
                             anchors.centerIn: parent
                             font.pixelSize: 9
                             font.weight: Font.DemiBold
-                            text: app.modelData.count
+                            text: app.badge
                         }
                     }
                 }

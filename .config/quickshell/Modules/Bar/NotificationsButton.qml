@@ -7,7 +7,13 @@ BarItem {
 
     readonly property int count: Notifications.list.length
 
-    iconOnly: count === 0
+    iconOnly: count === 0 || (!vertical && level >= 3)
+
+    function lengthAt(level) {
+        if (vertical)
+            return padded(16 + (count > 0 && level < 3 ? 4 + countText.implicitHeight : 0));
+        return count === 0 || level >= 3 ? BarLayout.itemSize : padded(16 + 6 + countText.implicitWidth);
+    }
     tooltipTitle: "Notifications"
     tooltipDetail: count === 0 ? "None" : `${count} unread`
 
@@ -40,7 +46,9 @@ BarItem {
         }
     }
     BarText {
-        visible: root.count > 0
+        id: countText
+
+        visible: root.count > 0 && root.level < 3
         font.pixelSize: root.vertical ? 11 : 13
         font.weight: root.vertical ? Font.DemiBold : Font.Medium
         text: root.count

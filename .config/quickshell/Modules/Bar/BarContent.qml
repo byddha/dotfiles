@@ -6,6 +6,11 @@ import "../../Config"
  *
  * The clock sits exactly in the middle of the bar; what comes before and after it in the
  * center hugs it, so it never moves when media starts or a VPN connects.
+ *
+ * When the content does not fit, the whole bar steps down a level (see BarItem.level): the
+ * lowest level at which each half, start + center group + half the clock, fits in half the bar.
+ * Every length comes from lengthAt(), which does not depend on the level shown, so choosing
+ * one never feeds back into itself.
  */
 Item {
     id: root
@@ -14,6 +19,24 @@ Item {
     readonly property int padding: 6
     // Between the clock and the center groups next to it
     readonly property int centerSpacing: 2
+    // Least room between a side section and the center groups
+    readonly property int minGap: 12
+
+    readonly property int level: {
+        for (let level = 0; level < 3; level++) {
+            if (fits(level))
+                return level;
+        }
+        return 3;
+    }
+
+    function fits(level) {
+        const half = (vertical ? height : width) / 2;
+        const center = clock.lengthAt(level) / 2 + centerSpacing;
+        const start = padding + startSection.lengthAt(level) + minGap + beforeClock.lengthAt(level) + center;
+        const end = padding + endSection.lengthAt(level) + minGap + afterClock.lengthAt(level) + center;
+        return start <= half && end <= half;
+    }
 
     // Position along the bar / across it, whole pixels
     function along(item, pos) {
@@ -28,12 +51,16 @@ Item {
         x: pos.x
         y: pos.y
 
-        Workspaces {}
+        Workspaces {
+            level: root.level
+        }
         BarDivider {
             visible: activeWindow.visible
         }
         ActiveWindowButton {
             id: activeWindow
+
+            level: root.level
         }
     }
 
@@ -47,6 +74,8 @@ Item {
 
         MediaButton {
             id: media
+
+            level: root.level
         }
         BarDivider {
             visible: media.visible
@@ -58,6 +87,7 @@ Item {
 
         readonly property point pos: root.along(this, ((root.vertical ? root.height : root.width) - (root.vertical ? height : width)) / 2)
 
+        level: root.level
         x: pos.x
         y: pos.y
     }
@@ -78,6 +108,8 @@ Item {
         }
         VpnButton {
             id: vpn
+
+            level: root.level
         }
         RecordingButton {
             id: recording
@@ -94,23 +126,35 @@ Item {
 
         Tray {
             id: tray
+
+            level: root.level
         }
         BarDivider {
-            visible: tray.visibleChildren.length > 1
+            visible: tray.visible
         }
-        MicButton {}
-        VolumeButton {}
+        MicButton {
+            level: root.level
+        }
+        VolumeButton {
+            level: root.level
+        }
         BarDivider {
             visible: batteries.visible || laptopBattery.visible
         }
         DeviceBatteriesButton {
             id: batteries
+
+            level: root.level
         }
         LaptopBatteryButton {
             id: laptopBattery
+
+            level: root.level
         }
         BarDivider {}
-        NotificationsButton {}
+        NotificationsButton {
+            level: root.level
+        }
         PowerButton {}
     }
 
@@ -120,5 +164,18 @@ Item {
         spacing: 2
         horizontalItemAlignment: Grid.AlignHCenter
         verticalItemAlignment: Grid.AlignVCenter
+
+        // Visible children at that level, with the spacing between them
+        function lengthAt(level) {
+            let total = 0;
+            let count = 0;
+            for (const child of children) {
+                if (!child.visible)
+                    continue;
+                total += child.lengthAt ? child.lengthAt(level) : (root.vertical ? child.implicitHeight : child.implicitWidth);
+                count++;
+            }
+            return total + spacing * Math.max(0, count - 1);
+        }
     }
 }
