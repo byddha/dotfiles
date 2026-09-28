@@ -9,7 +9,7 @@ BarItem {
     property CalendarPopout calendar: CalendarPopout {}
 
     readonly property var current: WeatherService.data.weather?.current ?? null
-    readonly property string weatherGlyph: current ? WeatherService.glyphFromCode(current.weather_code, current.is_day !== 0) : ""
+    readonly property string weatherGlyph: current ? WeatherService.glyphFromCode(current.weather_code, current.is_day === 1) : ""
     readonly property string temperature: current ? `${Math.round(current.temperature_2m)}°` : ""
 
     highlighted: calendar.visible
