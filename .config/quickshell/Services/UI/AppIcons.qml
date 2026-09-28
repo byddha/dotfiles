@@ -192,8 +192,14 @@ QtObject {
         // Entries load after startup: reading the list makes a binding that calls this update then
         if (!className || DesktopEntries.applications.values.length === 0)
             return "";
-        const entry = DesktopEntries.byId(className) || DesktopEntries.heuristicLookup(className);
-        return overrideFor(entry?.id ?? "") || (entry?.icon ? Quickshell.iconPath(entry.icon, true) : "");
+        return iconForEntry(DesktopEntries.byId(className) || DesktopEntries.heuristicLookup(className));
+    }
+
+    // The icon to show for an app's desktop entry: the config's override, else the entry's themed icon
+    function iconForEntry(entry) {
+        if (!entry)
+            return "";
+        return overrideFor(entry.id) || (entry.icon ? Quickshell.iconPath(entry.icon, true) : "");
     }
 
     // The config's iconOverrides icon for a desktop entry id, "" when it has none

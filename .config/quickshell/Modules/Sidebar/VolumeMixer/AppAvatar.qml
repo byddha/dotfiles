@@ -22,7 +22,7 @@ Rectangle {
         const appId = props["pipewire.access.portal.app_id"] ?? "";
         return (appId && DesktopEntries.byId(appId)) || (binary && DesktopEntries.heuristicLookup(binary)) || (name && DesktopEntries.heuristicLookup(name)) || null;
     }
-    readonly property string iconSource: AppIcons.overrideFor(entry?.id ?? "") || (entry?.icon ? Quickshell.iconPath(entry.icon, true) : "")
+    readonly property string iconSource: AppIcons.iconForEntry(entry)
 
     implicitWidth: 32
     implicitHeight: 32
