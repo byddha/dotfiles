@@ -23,6 +23,7 @@ singleton Recording 1.0 Media/Recording.qml
 singleton Whisper 1.0 Media/Whisper.qml
 
 singleton Icons 1.0 UI/Icons.qml
+singleton Lucide 1.0 UI/Lucide.qml
 singleton AppIcons 1.0 UI/AppIcons.qml
 singleton Notifications 1.0 UI/Notifications.qml
 singleton Actions 1.0 UI/Actions.qml
