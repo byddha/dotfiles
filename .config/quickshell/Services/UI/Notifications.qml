@@ -35,7 +35,7 @@ Singleton {
             const entry = notification.desktopEntry ? DesktopEntries.heuristicLookup(notification.desktopEntry) : null;
             return entry?.name?.toLowerCase() || "app";
         }
-        property string body: notification?.body ?? ""
+        property string body: root.messageBody(notification?.body ?? "", notification?.appName ?? "")
         property string image: notification?.image ?? ""
         property string summary: notification?.summary ?? ""
         property double time
@@ -402,6 +402,18 @@ Singleton {
         return cur;
     }
 
+    // Chromium-based browsers put the site's link before a web app's message ("<a href=...>site</a>\n\n<message>").
+    // Cards, the history search and copy show the message; rules still see the whole body, where the site is
+    // what tells two web apps apart.
+    function messageBody(body, appName) {
+        const browsers = ["brave", "chrome", "chromium", "vivaldi", "opera", "microsoft edge"];
+        const app = appName.toLowerCase();
+        const paragraphs = body.split("\n\n");
+        if (paragraphs.length > 1 && /^<a [^>]*>[^<]*<\/a>$/.test(paragraphs[0]) && browsers.some(browser => app.includes(browser)))
+            return paragraphs.slice(1).join("\n\n");
+        return body;
+    }
+
     function _notifView(notification) {
         return {
             "appName": notification.appName ?? "",
@@ -506,7 +518,7 @@ Singleton {
                     "actions": (notif.actions || []).filter(a => typeof a?.identifier === "string" && a.identifier.startsWith("open:")),
                     "appIcon": notif.appIcon,
                     "appName": notif.appName,
-                    "body": notif.body,
+                    "body": root.messageBody(notif.body ?? "", notif.appName ?? ""),
                     "image": notif.image,
                     "summary": notif.summary,
                     "time": notif.time,
