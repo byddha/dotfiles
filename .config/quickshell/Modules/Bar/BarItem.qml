@@ -29,7 +29,8 @@ Item {
     property alias tooltipDetail: tooltip.detail
 
     property alias acceptedButtons: pointer.acceptedButtons
-    readonly property alias hovered: pointer.containsMouse
+    // The handler also sees the pointer over controls inside the item, which take it from the area
+    readonly property bool hovered: pointer.containsMouse || hover.hovered
     readonly property alias pressed: pointer.pressed
 
     signal clicked(var mouse)
@@ -90,6 +91,10 @@ Item {
         acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
         onClicked: mouse => root.clicked(mouse)
         onWheel: wheel => root.wheel(wheel)
+    }
+
+    HoverHandler {
+        id: hover
     }
 
     BarTooltip {

@@ -57,31 +57,44 @@ BarItem {
         text: MprisController.stableTrackTitle
     }
 
-    BarText {
-        visible: !root.vertical && !root.hovered && text !== ""
-        width: Math.min(implicitWidth, 160)
-        elide: Text.ElideRight
-        role: "secondary"
-        text: MprisController.stableTrackArtist ? `· ${MprisController.stableTrackArtist}` : ""
-    }
+    // The artist, or on hover the controls, in one slot as wide as the wider of the two:
+    // the item keeps its size, so nothing moves out from under the pointer
+    Item {
+        visible: !root.vertical
+        implicitWidth: Math.max(artist.width, controls.implicitWidth)
+        implicitHeight: controls.implicitHeight
 
-    Row {
-        visible: !root.vertical && root.hovered
-        spacing: 2
+        BarText {
+            id: artist
 
-        Control {
-            glyph: Lucide.skipBack
-            enabled: MprisController.stableCanGoPrevious
-            onTapped: root.player.previous()
+            visible: !root.hovered
+            anchors.verticalCenter: parent.verticalCenter
+            width: Math.min(implicitWidth, 160)
+            elide: Text.ElideRight
+            role: "secondary"
+            text: MprisController.stableTrackArtist ? `· ${MprisController.stableTrackArtist}` : ""
         }
-        Control {
-            glyph: root.playing ? Lucide.pause : Lucide.play
-            onTapped: root.player.togglePlaying()
-        }
-        Control {
-            glyph: Lucide.skipForward
-            enabled: MprisController.stableCanGoNext
-            onTapped: root.player.next()
+
+        Row {
+            id: controls
+
+            visible: root.hovered
+            spacing: 2
+
+            Control {
+                glyph: Lucide.skipBack
+                enabled: MprisController.stableCanGoPrevious
+                onTapped: root.player.previous()
+            }
+            Control {
+                glyph: root.playing ? Lucide.pause : Lucide.play
+                onTapped: root.player.togglePlaying()
+            }
+            Control {
+                glyph: Lucide.skipForward
+                enabled: MprisController.stableCanGoNext
+                onTapped: root.player.next()
+            }
         }
     }
 
