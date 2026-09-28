@@ -57,4 +57,8 @@ Singleton {
     readonly property string snowflake: "\ue165"
     readonly property string wind: "\ue1b0"
     readonly property string appWindow: "\ue426"
+    readonly property string square: "\ue167"
+    readonly property string squareCheck: "\ue559"
+    readonly property string circle: "\ue076"
+    readonly property string circleDot: "\ue345"
 }

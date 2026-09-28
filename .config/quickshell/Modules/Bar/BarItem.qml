@@ -75,6 +75,9 @@ Item {
     MouseArea {
         id: pointer
 
+        // Under the content, so controls inside an item (media) take their own clicks
+        z: -1
+
         readonly property real rest: (BarLayout.thickness - BarLayout.itemSize) / 2
 
         anchors.fill: parent

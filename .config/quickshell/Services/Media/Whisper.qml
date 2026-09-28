@@ -18,6 +18,10 @@ Singleton {
     property bool listening: false
     property bool transcribing: false
     readonly property bool active: listening || transcribing
+    // When the current listening started (ms since epoch), 0 when not listening
+    property double listeningSince: 0
+
+    onListeningChanged: listeningSince = listening ? Date.now() : 0
 
     function refresh() {
         statusProc.running = true;

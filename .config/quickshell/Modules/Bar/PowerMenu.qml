@@ -43,22 +43,22 @@ BarPopout {
         anchors.fill: parent
         spacing: 1
 
-        MenuRow {
+        BarMenuRow {
             icon: Lucide.lock
             label: "Lock"
             onActivated: root.run(PowerActions.lock)
         }
-        MenuRow {
+        BarMenuRow {
             icon: Lucide.moon
             label: "Suspend"
             onActivated: root.run(PowerActions.suspend)
         }
-        MenuRow {
+        BarMenuRow {
             icon: Lucide.logOut
             label: "Log out"
             onActivated: root.run(PowerActions.logout)
         }
-        MenuRow {
+        BarMenuRow {
             icon: Lucide.rotateCcw
             label: "Reboot"
             onActivated: root.run(PowerActions.reboot)
@@ -74,7 +74,7 @@ BarPopout {
             color: Theme.outlineVariant
         }
 
-        MenuRow {
+        BarMenuRow {
             id: shutdownRow
 
             danger: true
@@ -103,62 +103,6 @@ BarPopout {
                     duration: disarm.interval
                 }
             }
-        }
-    }
-
-    component MenuRow: Rectangle {
-        id: row
-
-        property string icon
-        property string label
-        property string keys: ""
-        property bool danger: false
-        // Shown as hovered, e.g. the armed Shut down
-        property bool filled: false
-        readonly property bool lit: area.containsMouse || filled
-
-        signal activated
-
-        Layout.fillWidth: true
-        implicitHeight: 34
-        radius: 6
-        clip: true
-        color: area.pressed ? (danger ? Qt.darker(Theme.accentRed, 1.15) : Theme.colLayer3) : lit ? (danger ? Theme.accentRed : Theme.colLayer2) : "transparent"
-
-        Behavior on color {
-            ColorAnimation {
-                duration: 120
-                easing.type: Easing.OutCubic
-            }
-        }
-
-        RowLayout {
-            anchors.fill: parent
-            anchors.leftMargin: 10
-            anchors.rightMargin: 10
-            spacing: 10
-
-            BarIcon {
-                text: row.icon
-                color: row.danger ? (row.lit ? Theme.textColor : Theme.accentRed) : Theme.alpha(Theme.textSecondary, 0.66)
-            }
-            BarText {
-                Layout.fillWidth: true
-                text: row.label
-                elide: Text.ElideRight
-            }
-            BarKeycap {
-                visible: row.keys !== ""
-                text: row.keys
-            }
-        }
-
-        MouseArea {
-            id: area
-
-            anchors.fill: parent
-            hoverEnabled: true
-            onClicked: row.activated()
         }
     }
 }

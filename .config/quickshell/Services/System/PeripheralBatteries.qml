@@ -23,6 +23,25 @@ Singleton {
     // Custom device state for the UI — rebuilt on each poll
     property var customDevices: []
 
+    // Every peripheral with a battery, from UPower and from the config's custom sources:
+    // { name, type (a getIconForType() name), percentage, charging }
+    readonly property var devices: {
+        const configDevices = Config.options.peripheralBatteries?.devices ?? [];
+        const fromUPower = UPower.devices.values.filter(d => isPeripheral(d, configDevices)).map(d => ({
+                    name: getDeviceLabel(d),
+                    type: upowerTypeName(d.type),
+                    percentage: Math.round(d.percentage * 100),
+                    charging: d.state === UPowerDeviceState.Charging
+                }));
+        const fromConfig = customDevices.map((d, i) => d?.present ? {
+                name: d.name,
+                type: configDevices[i]?.type ?? "",
+                percentage: d.percentage,
+                charging: d.charging
+            } : null).filter(d => d !== null);
+        return fromUPower.concat(fromConfig);
+    }
+
     function _isReplaced(device): bool {
         if (!device?.model)
             return false;

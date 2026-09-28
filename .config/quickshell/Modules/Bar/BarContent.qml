@@ -44,6 +44,13 @@ Item {
 
         x: pos.x
         y: pos.y
+
+        MediaButton {
+            id: media
+        }
+        BarDivider {
+            visible: media.visible
+        }
     }
 
     ClockButton {
@@ -62,6 +69,19 @@ Item {
 
         x: pos.x
         y: pos.y
+
+        BarDivider {
+            visible: whisper.visible || vpn.visible || recording.visible
+        }
+        WhisperButton {
+            id: whisper
+        }
+        VpnButton {
+            id: vpn
+        }
+        RecordingButton {
+            id: recording
+        }
     }
 
     Section {
@@ -72,6 +92,25 @@ Item {
         x: pos.x
         y: pos.y
 
+        Tray {
+            id: tray
+        }
+        BarDivider {
+            visible: tray.visibleChildren.length > 1
+        }
+        MicButton {}
+        VolumeButton {}
+        BarDivider {
+            visible: batteries.visible || laptopBattery.visible
+        }
+        DeviceBatteriesButton {
+            id: batteries
+        }
+        LaptopBatteryButton {
+            id: laptopBattery
+        }
+        BarDivider {}
+        NotificationsButton {}
         PowerButton {}
     }
 
