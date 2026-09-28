@@ -1,16 +1,15 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Effects
-import Quickshell.Services.Mpris
 import "../Config"
 import "../Services"
 
 Rectangle {
     id: root
 
-    property MprisPlayer player: MprisController.activePlayer
     property list<real> visualizerValues: []
-    readonly property string timeText: formatTime(player?.position) + " / " + formatTime(MprisController.stableTrackLength)
+    // Browsers often leave the length out
+    readonly property string timeText: Media.length > 0 ? `${formatTime(Media.position)} / ${formatTime(Media.length)}` : formatTime(Media.position)
 
     radius: Theme.radiusBase
     color: Theme.cardSurface
@@ -22,7 +21,7 @@ Rectangle {
     Image {
         id: blurredBg
         anchors.fill: parent
-        source: MprisController.stableTrackArtUrl
+        source: Media.artUrl
         fillMode: Image.PreserveAspectCrop
         asynchronous: true
 
@@ -56,7 +55,7 @@ Rectangle {
             Image {
                 id: albumArt
                 anchors.fill: parent
-                source: MprisController.stableTrackArtUrl
+                source: Media.artUrl
                 fillMode: Image.PreserveAspectCrop
                 asynchronous: true
                 cache: true
@@ -82,7 +81,7 @@ Rectangle {
             // Track title
             StyledText {
                 Layout.fillWidth: true
-                text: root.player?.trackTitle ?? "No track"
+                text: Media.title
                 font.weight: Font.DemiBold
                 elide: Text.ElideRight
             }
@@ -91,7 +90,7 @@ Rectangle {
             StyledText {
                 Layout.fillWidth: true
                 role: "secondary"
-                text: root.player?.trackArtist ?? ""
+                text: Media.artist
                 font.pixelSize: Theme.fontSizeSmall
                 elide: Text.ElideRight
                 visible: text.length > 0
@@ -112,7 +111,7 @@ Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 24
                 values: root.visualizerValues
-                live: root.player?.playbackState === MprisPlaybackState.Playing
+                live: Media.playing
             }
         }
     }

@@ -17,7 +17,7 @@ singleton Bluetooth 1.0 Connectivity/Bluetooth.qml
 singleton Vpn 1.0 Connectivity/Vpn.qml
 
 singleton Audio 1.0 Media/Audio.qml
-singleton MprisController 1.0 Media/MprisController.qml
+singleton Media 1.0 Media/Media.qml
 singleton Recording 1.0 Media/Recording.qml
 singleton Whisper 1.0 Media/Whisper.qml
 

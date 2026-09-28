@@ -1,6 +1,5 @@
 pragma ComponentBehavior: Bound
 import QtQuick
-import Quickshell.Services.Mpris
 import "../../Config"
 import "../../Services"
 import "../../Components"
@@ -14,13 +13,12 @@ import "../../Components"
 BarItem {
     id: root
 
-    readonly property MprisPlayer player: MprisController.activePlayer
-    readonly property bool playing: player?.playbackState === MprisPlaybackState.Playing
+    readonly property bool playing: Media.playing
 
     readonly property bool iconView: vertical || level >= 3
     readonly property int titleCap: level >= 1 ? 190 : 260
 
-    visible: MprisController.stableHasPlayer && player !== null
+    visible: Media.hasTrack
     iconOnly: iconView && !vertical
 
     function lengthAt(level) {
@@ -34,13 +32,13 @@ BarItem {
 
     onClicked: mouse => {
         if (iconView && mouse.button === Qt.LeftButton)
-            player.togglePlaying();
+            Media.togglePlaying();
     }
     onWheel: wheel => {
         if (wheel.angleDelta.y > 0)
-            MprisController.previousPlayer();
+            Media.cycle(-1);
         else if (wheel.angleDelta.y < 0)
-            MprisController.nextPlayer();
+            Media.cycle(1);
     }
 
     MediaPopout {
@@ -56,7 +54,7 @@ BarItem {
         BarAppIcon {
             anchors.fill: parent
             visible: root.playing
-            appClass: root.player?.desktopEntry ?? ""
+            appClass: Media.player?.desktopEntry ?? ""
         }
         Icon {
             visible: !root.playing
@@ -71,7 +69,7 @@ BarItem {
         visible: !root.iconView
         width: Math.min(implicitWidth, root.titleCap)
         elide: Text.ElideRight
-        text: MprisController.stableTrackTitle
+        text: Media.title
     }
 
     // The artist, or on hover the controls, in one slot as wide as the wider of the two:
@@ -91,7 +89,7 @@ BarItem {
             width: Math.min(implicitWidth, 160)
             elide: Text.ElideRight
             role: "secondary"
-            text: MprisController.stableTrackArtist ? `· ${MprisController.stableTrackArtist}` : ""
+            text: Media.artist ? `· ${Media.artist}` : ""
         }
 
         Row {
@@ -102,17 +100,17 @@ BarItem {
 
             Control {
                 glyph: Lucide.skipBack
-                enabled: MprisController.stableCanGoPrevious
-                onTapped: root.player.previous()
+                enabled: Media.canPrevious
+                onTapped: Media.previous()
             }
             Control {
                 glyph: root.playing ? Lucide.pause : Lucide.play
-                onTapped: root.player.togglePlaying()
+                onTapped: Media.togglePlaying()
             }
             Control {
                 glyph: Lucide.skipForward
-                enabled: MprisController.stableCanGoNext
-                onTapped: root.player.next()
+                enabled: Media.canNext
+                onTapped: Media.next()
             }
         }
     }
