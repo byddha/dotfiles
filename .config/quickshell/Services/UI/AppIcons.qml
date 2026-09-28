@@ -1,6 +1,7 @@
 pragma Singleton
 
 import QtQuick
+import Quickshell
 
 QtObject {
     id: root
@@ -180,6 +181,18 @@ QtObject {
             icon: entry[0],
             name: entry[1]
         };
+    }
+
+    // The app's icon file from its .desktop entry, "" when it has none. Proton games use the icon Steam installs.
+    function iconSourceFor(className) {
+        const steamApp = /^steam_app_(\d+)$/.exec(className ?? "");
+        if (steamApp)
+            return Quickshell.iconPath(`steam_icon_${steamApp[1]}`, true);
+        // Entries load after startup: reading the list makes a binding that calls this update then
+        if (!className || DesktopEntries.applications.values.length === 0)
+            return "";
+        const entry = DesktopEntries.byId(className) || DesktopEntries.heuristicLookup(className);
+        return entry?.icon ? Quickshell.iconPath(entry.icon, true) : "";
     }
 
     function getIcon(className, title, xdgTag) {

@@ -1,25 +1,83 @@
 import QtQuick
 import "../../Config"
 
-// The bar's sections: start (left or top), center and end (right or bottom)
+/**
+ * BarContent - The bar's sections: start (left or top), center and end (right or bottom).
+ *
+ * The clock sits exactly in the middle of the bar; what comes before and after it in the
+ * center hugs it, so it never moves when media starts or a VPN connects.
+ */
 Item {
     id: root
 
     readonly property bool vertical: BarLayout.vertical
     readonly property int padding: 6
+    // Between the clock and the center groups next to it
+    readonly property int centerSpacing: 2
+
+    // Position along the bar / across it, whole pixels
+    function along(item, pos) {
+        return vertical ? Qt.point(Math.round((width - item.width) / 2), Math.round(pos)) : Qt.point(Math.round(pos), Math.round((height - item.height) / 2));
+    }
+
+    Section {
+        id: startSection
+
+        readonly property point pos: root.along(this, root.padding)
+
+        x: pos.x
+        y: pos.y
+
+        Workspaces {}
+        BarDivider {
+            visible: activeWindow.visible
+        }
+        ActiveWindowButton {
+            id: activeWindow
+        }
+    }
+
+    Section {
+        id: beforeClock
+
+        readonly property point pos: root.along(this, (root.vertical ? clock.y : clock.x) - root.centerSpacing - (root.vertical ? height : width))
+
+        x: pos.x
+        y: pos.y
+    }
+
+    ClockButton {
+        id: clock
+
+        readonly property point pos: root.along(this, ((root.vertical ? root.height : root.width) - (root.vertical ? height : width)) / 2)
+
+        x: pos.x
+        y: pos.y
+    }
+
+    Section {
+        id: afterClock
+
+        readonly property point pos: root.along(this, (root.vertical ? clock.y + clock.height : clock.x + clock.width) + root.centerSpacing)
+
+        x: pos.x
+        y: pos.y
+    }
 
     Section {
         id: endSection
 
-        x: root.vertical ? Math.round((root.width - width) / 2) : root.width - width - root.padding
-        y: root.vertical ? root.height - height - root.padding : Math.round((root.height - height) / 2)
+        readonly property point pos: root.along(this, (root.vertical ? root.height - height : root.width - width) - root.padding)
+
+        x: pos.x
+        y: pos.y
 
         PowerButton {}
     }
 
     component Section: Grid {
-        columns: root.vertical ? 1 : -1
-        rows: root.vertical ? -1 : 1
+        // One binding for the shape, so switching orientation never passes through a 1x1 grid
+        columns: root.vertical ? 1 : Math.max(1, children.length)
         spacing: 2
         horizontalItemAlignment: Grid.AlignHCenter
         verticalItemAlignment: Grid.AlignVCenter

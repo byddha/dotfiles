@@ -135,6 +135,25 @@ Singleton {
         return wmoCodes[code]?.[0] ?? Icons.weatherCloudy;
     }
 
+    // Lucide glyph (Theme.fontIcons) for a WMO code
+    function glyphFromCode(code, isDay) {
+        if (code === 0)
+            return isDay ? Lucide.sun : Lucide.moon;
+        if (code <= 2)
+            return isDay ? Lucide.cloudSun : Lucide.cloudMoon;
+        if (code === 3)
+            return Lucide.cloud;
+        if (code <= 48)
+            return Lucide.cloudFog;
+        if (code <= 57)
+            return Lucide.cloudDrizzle;
+        if (code <= 67 || (code >= 80 && code <= 82))
+            return Lucide.cloudRain;
+        if (code <= 86)
+            return Lucide.cloudSnow;
+        return Lucide.cloudLightning;
+    }
+
     function weatherDescriptionFromCode(code) {
         return wmoCodes[code]?.[1] ?? "Unknown";
     }
@@ -191,7 +210,7 @@ Singleton {
     }
 
     function fetchWeather(latitude, longitude) {
-        const url = "https://api.open-meteo.com/v1/forecast?" + "latitude=" + latitude + "&longitude=" + longitude + "&current=temperature_2m,apparent_temperature,relative_humidity_2m,precipitation,weather_code,wind_speed_10m" + "&hourly=temperature_2m,weather_code,precipitation_probability" + "&daily=temperature_2m_max,temperature_2m_min,weather_code" + "&timezone=auto";
+        const url = "https://api.open-meteo.com/v1/forecast?" + "latitude=" + latitude + "&longitude=" + longitude + "&current=temperature_2m,apparent_temperature,is_day,relative_humidity_2m,precipitation,weather_code,wind_speed_10m" + "&hourly=temperature_2m,weather_code,precipitation_probability" + "&daily=temperature_2m_max,temperature_2m_min,weather_code" + "&timezone=auto";
 
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = function () {

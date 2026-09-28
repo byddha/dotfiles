@@ -15,6 +15,7 @@ Item {
     readonly property bool vertical: BarLayout.vertical
 
     property bool iconOnly: false
+    property int spacing: vertical ? 4 : 6
     // Filled as on hover, e.g. while its popout is open
     property bool highlighted: false
     // An accent line on the side that faces the windows
@@ -64,9 +65,9 @@ Item {
         id: box
 
         anchors.centerIn: parent
-        columns: root.vertical ? 1 : -1
-        rows: root.vertical ? -1 : 1
-        spacing: root.vertical ? 4 : 6
+        // One binding for the shape, so switching orientation never passes through a 1x1 grid
+        columns: root.vertical ? 1 : Math.max(1, children.length)
+        spacing: root.spacing
         horizontalItemAlignment: Grid.AlignHCenter
         verticalItemAlignment: Grid.AlignVCenter
     }

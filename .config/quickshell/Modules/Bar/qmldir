@@ -12,3 +12,8 @@ BarPopout 1.0 BarPopout.qml
 BarContent 1.0 BarContent.qml
 PowerButton 1.0 PowerButton.qml
 PowerMenu 1.0 PowerMenu.qml
+CalendarPopout 1.0 CalendarPopout.qml
+ClockButton 1.0 ClockButton.qml
+BarAppIcon 1.0 BarAppIcon.qml
+ActiveWindowButton 1.0 ActiveWindowButton.qml
+Workspaces 1.0 Workspaces.qml

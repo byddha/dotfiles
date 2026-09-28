@@ -56,4 +56,5 @@ Singleton {
     readonly property string cloudHail: "\ue08b"
     readonly property string snowflake: "\ue165"
     readonly property string wind: "\ue1b0"
+    readonly property string appWindow: "\ue426"
 }
