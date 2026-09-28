@@ -86,21 +86,6 @@ Singleton {
         };
     }
 
-    // History entries were saved with urgency as a string ("1", "2", or "low"/"normal"/"critical").
-    function normalizeUrgency(value) {
-        const n = parseInt(value);
-        if (!isNaN(n))
-            return Math.max(NotificationUrgency.Low, Math.min(NotificationUrgency.Critical, n));
-        switch (String(value).toLowerCase()) {
-        case "low":
-            return NotificationUrgency.Low;
-        case "critical":
-            return NotificationUrgency.Critical;
-        default:
-            return NotificationUrgency.Normal;
-        }
-    }
-
     // --- Icons and images, following DMS NotificationService ---
 
     function _iconFromImage(image) {
@@ -390,7 +375,7 @@ Singleton {
         }
         // Rules match urgency by name ("low" / "normal" / "critical"), as documented in Config.qml.
         if (path === "urgency" && obj.urgency !== undefined)
-            return ["low", "normal", "critical"][root.normalizeUrgency(obj.urgency)];
+            return ["low", "normal", "critical"][obj.urgency];
         // Direct top-level key first (handles names containing dots like "desktop-entry")
         if (obj[path] !== undefined)
             return obj[path];
@@ -525,7 +510,7 @@ Singleton {
                     "image": notif.image,
                     "summary": notif.summary,
                     "time": notif.time,
-                    "urgency": root.normalizeUrgency(notif.urgency),
+                    "urgency": notif.urgency,
                     "desktopEntry": notif.desktopEntry ?? ""
                 });
             });
