@@ -4,28 +4,16 @@ import Quickshell.Io
 import "../../Config"
 import "../../Components"
 
-// The playing track with a visualizer, shown while the media item is hovered
+// The playing track with a visualizer, opened by a click on the media item
 BarAnchoredPopup {
     id: root
 
     property bool shown: false
     property list<real> visualizerValues: []
 
-    visible: shown && delay.done
+    visible: shown
     implicitWidth: 280 + padLeft + padRight
     implicitHeight: 100 + padTop + padBottom
-
-    Timer {
-        id: delay
-
-        property bool done: false
-
-        interval: 400
-        running: root.shown
-        onRunningChanged: if (running)
-            done = false
-        onTriggered: done = true
-    }
 
     Process {
         running: root.visible

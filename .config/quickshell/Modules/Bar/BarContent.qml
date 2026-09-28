@@ -40,10 +40,11 @@ Item {
 
     // The clock's start along the bar: exactly in the middle while the center groups fit on both
     // sides of it; when even level 3 does not fit, the whole center block in the middle of the room
-    // the side sections leave, so it never covers them
+    // the side sections leave, so it never covers them. From the lengths the level is chosen by,
+    // not the shown sizes: an item that grows on hover (media) must not move the clock.
     readonly property real clockStart: {
         const length = vertical ? height : width;
-        const size = item => vertical ? item.height : item.width;
+        const size = item => item.lengthAt(level);
         const ideal = (length - size(clock)) / 2;
         const lowest = padding + size(startSection) + minGap + size(beforeClock) + centerSpacing;
         const highest = length - padding - size(endSection) - minGap - size(afterClock) - centerSpacing - size(clock);
