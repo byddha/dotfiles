@@ -7,7 +7,7 @@ import "../../Components"
 import "../../Config"
 import "../../Services"
 import "../Sidebar"
-import "../Bar"
+import "../OldBar"
 
 FocusScope {
     id: root
