@@ -64,7 +64,7 @@ BarItem {
             const device = repeater.itemAt(i);
             if (!device || (collapsedThen && i !== lowest))
                 continue;
-            lengths.push(vertical ? 16 + (level < 3 ? 4 + device.captionHeight : 0) : 16 + 4 + device.captionWidth);
+            lengths.push(vertical ? BarLayout.iconSize + (level < 3 ? 4 + device.captionHeight : 0) : BarLayout.iconSize + 4 + device.captionWidth);
         }
         if (collapsedThen)
             lengths.push(vertical ? (level < 3 ? more.implicitHeight : 0) : more.implicitWidth);
@@ -100,7 +100,7 @@ BarItem {
                 id: caption
 
                 visible: !root.vertical || root.level < 3
-                font.pixelSize: root.vertical ? 11 : 13
+                font.pixelSize: root.vertical ? BarLayout.captionSize : BarLayout.textSize
                 font.weight: root.vertical ? Font.DemiBold : Font.Medium
                 color: device.modelData.charging ? Theme.textColor : device.tint
                 text: device.modelData.percentage
@@ -113,7 +113,7 @@ BarItem {
 
         visible: root.collapsed && (!root.vertical || root.level < 3)
         role: "secondary"
-        font.pixelSize: 11
+        font.pixelSize: BarLayout.percentSize
         text: `+${root.devices.length - 1}`
     }
 }

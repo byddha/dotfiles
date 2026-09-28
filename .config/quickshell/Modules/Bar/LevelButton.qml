@@ -46,11 +46,11 @@ BarItem {
 
     function lengthAt(level) {
         if (vertical)
-            return padded(16 + (level < 3 && !muted ? 4 + caption.implicitHeight : 0));
+            return padded(BarLayout.iconSize + (level < 3 && !muted ? BarLayout.itemGap + caption.implicitHeight : 0));
         if (level >= 3)
             return BarLayout.itemSize;
         const text = muted ? mutedLabel.implicitWidth : value.implicitWidth + (level < 2 ? 1 + sign.implicitWidth : 0);
-        return padded(16 + 6 + text);
+        return padded(BarLayout.iconSize + BarLayout.itemGap + text);
     }
 
     BarIcon {
@@ -83,8 +83,8 @@ BarItem {
             x: value.implicitWidth + 1
             anchors.baseline: value.baseline
             role: "secondary"
-            font.pixelSize: 11
-            color: Theme.alpha(Theme.textSecondary, 0.55)
+            font.pixelSize: BarLayout.percentSize
+            color: Theme.alpha(Theme.textSecondary, BarLayout.percentOpacity)
             text: "%"
         }
     }
@@ -94,7 +94,7 @@ BarItem {
         id: caption
 
         visible: root.vertical && !root.muted && root.level < 3
-        font.pixelSize: 11
+        font.pixelSize: BarLayout.captionSize
         font.weight: Font.DemiBold
         text: root.percent
     }

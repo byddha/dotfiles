@@ -18,8 +18,8 @@ BarItem {
     }
 
     Item {
-        implicitWidth: 16
-        implicitHeight: 16
+        implicitWidth: BarLayout.iconSize
+        implicitHeight: BarLayout.iconSize
 
         BarSpinner {
             visible: root.busy
@@ -49,7 +49,7 @@ BarItem {
     }
     ElapsedText {
         visible: !root.busy
-        font.pixelSize: root.vertical ? 11 : 13
+        font.pixelSize: root.vertical ? BarLayout.captionSize : BarLayout.textSize
         font.weight: root.vertical ? Font.DemiBold : Font.Medium
         since: Recording.startedAt
     }

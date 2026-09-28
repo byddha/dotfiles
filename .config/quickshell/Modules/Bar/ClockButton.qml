@@ -39,43 +39,53 @@ BarItem {
 
     function lengthAt(level) {
         if (vertical)
-            return padded((current ? 16 + (level < 3 ? 2 + verticalTemperature.implicitHeight : 0) + 4 : 0) + verticalTime.implicitHeight);
-        return padded((current ? 16 + (level < 3 ? 6 + temperatureText.implicitWidth : 0) + 10 : 0) + time.implicitWidth);
+            return padded((current ? BarLayout.iconSize + (level < 3 ? 2 + verticalTemperature.implicitHeight : 0) + 4 : 0) + verticalTime.implicitHeight);
+        return padded((current ? BarLayout.iconSize + (level < 3 ? BarLayout.itemGap + temperatureText.implicitWidth : 0) + BarLayout.itemGap + 3 : 0) + time.implicitWidth);
     }
 
     // Horizontal: weather, then the time
     Row {
         visible: !root.vertical
-        spacing: 10
+        spacing: BarLayout.itemGap + 3
 
         Row {
             visible: root.current !== null
             anchors.verticalCenter: parent.verticalCenter
-            spacing: 6
+            spacing: BarLayout.itemGap
 
             BarIcon {
                 anchors.verticalCenter: parent.verticalCenter
                 text: root.weatherGlyph
-                color: Theme.alpha(Theme.textSecondary, 0.66)
+                color: Theme.alpha(Theme.textSecondary, BarLayout.weatherOpacity)
             }
             BarText {
                 id: temperatureText
 
                 visible: root.level < 3
                 anchors.verticalCenter: parent.verticalCenter
-                role: "secondary"
+                font.weight: Font.Medium
+                color: Theme.alpha(Theme.textSecondary, BarLayout.weatherOpacity)
                 text: root.temperature
             }
         }
 
-        BarText {
+        // The seconds are lighter, in weight and in color
+        Row {
             id: time
 
             anchors.verticalCenter: parent.verticalCenter
-            font.pixelSize: 14
-            font.weight: Font.DemiBold
-            textFormat: Text.StyledText
-            text: `${Qt.formatTime(clock.date, "hh:mm")}<font color="${Theme.alpha(Theme.textSecondary, 0.55)}">:${Qt.formatTime(clock.date, "ss")}</font>`
+
+            BarText {
+                font.pixelSize: BarLayout.clockSize
+                font.weight: Font.DemiBold
+                text: Qt.formatTime(clock.date, "hh:mm")
+            }
+            BarText {
+                font.pixelSize: BarLayout.clockSize
+                font.weight: Font.Medium
+                color: Theme.alpha(Theme.textSecondary, BarLayout.secondsOpacity)
+                text: `:${Qt.formatTime(clock.date, "ss")}`
+            }
         }
     }
 
@@ -92,15 +102,16 @@ BarItem {
             BarIcon {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: root.weatherGlyph
-                color: Theme.alpha(Theme.textSecondary, 0.66)
+                color: Theme.alpha(Theme.textSecondary, BarLayout.weatherOpacity)
             }
             BarText {
                 id: verticalTemperature
 
                 visible: root.level < 3
                 anchors.horizontalCenter: parent.horizontalCenter
-                role: "secondary"
-                font.pixelSize: 11
+                font.pixelSize: BarLayout.captionSize
+                font.weight: Font.DemiBold
+                color: Theme.alpha(Theme.textSecondary, BarLayout.weatherOpacity)
                 text: root.temperature
             }
         }
@@ -118,9 +129,10 @@ BarItem {
                     required property int index
 
                     anchors.horizontalCenter: parent.horizontalCenter
-                    font.weight: Font.DemiBold
+                    font.pixelSize: BarLayout.clockSize
+                    font.weight: index === 2 ? Font.Medium : Font.DemiBold
                     lineHeight: 1.2
-                    color: index === 2 ? Theme.alpha(Theme.textSecondary, 0.55) : Theme.textColor
+                    color: index === 2 ? Theme.alpha(Theme.textSecondary, BarLayout.secondsOpacity) : Theme.textColor
                     text: Qt.formatTime(clock.date, modelData)
                 }
             }

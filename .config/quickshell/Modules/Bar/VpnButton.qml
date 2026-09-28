@@ -13,11 +13,11 @@ BarItem {
 
     function lengthAt(level) {
         if (vertical)
-            return padded(16 + (level < 3 && !Vpn.busy ? 4 + caption.implicitHeight : 0));
+            return padded(BarLayout.iconSize + (level < 3 && !Vpn.busy ? BarLayout.itemGap + caption.implicitHeight : 0));
         if (level >= 3)
             return BarLayout.itemSize;
-        const parts = [16, level < 2 && !Vpn.busy ? name.implicitWidth : 0, detail.implicitWidth].filter(w => w > 0);
-        return padded(parts.reduce((a, b) => a + b, 0) + 6 * (parts.length - 1));
+        const parts = [BarLayout.iconSize, level < 2 && !Vpn.busy ? name.implicitWidth : 0, detail.implicitWidth].filter(w => w > 0);
+        return padded(parts.reduce((a, b) => a + b, 0) + BarLayout.itemGap * (parts.length - 1));
     }
     tooltipTitle: mullvad ? `Mullvad${Vpn.mullvadCity ? ` (${Vpn.mullvadCity})` : ""}` : "FortiVPN"
     tooltipDetail: {
@@ -41,8 +41,8 @@ BarItem {
     }
 
     Item {
-        implicitWidth: 16
-        implicitHeight: 16
+        implicitWidth: BarLayout.iconSize
+        implicitHeight: BarLayout.iconSize
 
         BarSpinner {
             visible: Vpn.busy
@@ -64,14 +64,14 @@ BarItem {
         id: detail
 
         visible: !root.vertical && root.level < 3 && text !== ""
-        role: "secondary"
+        role: !Vpn.busy && !root.mullvad ? "tertiary" : "secondary"
         text: Vpn.busy ? (Vpn.disconnecting ? "Disconnecting…" : "Connecting…") : root.mullvad ? (Vpn.mullvadCity ? `(${Vpn.mullvadCity})` : "") : Vpn.fortiUptime
     }
     BarText {
         id: caption
 
         visible: root.vertical && !Vpn.busy && root.level < 3
-        font.pixelSize: 11
+        font.pixelSize: BarLayout.captionSize
         font.weight: Font.DemiBold
         text: "VPN"
     }

@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell
 import "../../Config"
 import "../../Services"
 
@@ -7,7 +8,9 @@ Item {
     id: root
 
     property string appClass: ""
-    property int size: 16
+    property int size: BarLayout.appIconSize
+    // Rasterized at the size it is drawn on this screen, so it is never scaled down (and blurred)
+    readonly property real scale: Compositor.monitorForScreen(QsWindow.window?.screen)?.scale ?? 1
 
     implicitWidth: size
     implicitHeight: size
@@ -17,8 +20,8 @@ Item {
 
         anchors.fill: parent
         source: AppIcons.iconSourceFor(root.appClass)
-        sourceSize.width: root.size * 2
-        sourceSize.height: root.size * 2
+        sourceSize.width: Math.ceil(root.size * root.scale)
+        sourceSize.height: Math.ceil(root.size * root.scale)
         fillMode: Image.PreserveAspectFit
         smooth: true
         visible: status === Image.Ready
@@ -29,6 +32,6 @@ Item {
         visible: image.status !== Image.Ready
         size: root.size
         text: Lucide.appWindow
-        color: Theme.alpha(Theme.textSecondary, 0.66)
+        color: Theme.alpha(Theme.textSecondary, BarLayout.secondaryOpacity)
     }
 }

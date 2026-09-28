@@ -15,7 +15,7 @@ Item {
     readonly property bool vertical: BarLayout.vertical
 
     property bool iconOnly: false
-    property int spacing: vertical ? 4 : 6
+    property int spacing: BarLayout.itemGap
     // Filled as on hover, e.g. while its popout is open
     property bool highlighted: false
     // An accent line on the side that faces the windows
@@ -47,15 +47,15 @@ Item {
 
     // The item's length around content of the given length
     function padded(contentLength) {
-        return vertical ? Math.max(BarLayout.itemSize, contentLength + 14) : contentLength + 16;
+        return vertical ? Math.max(BarLayout.itemSize, contentLength + BarLayout.itemPadding * 2) : contentLength + BarLayout.itemPadding * 2;
     }
 
-    implicitWidth: vertical ? BarLayout.itemSize : iconOnly ? BarLayout.itemSize : box.implicitWidth + 16
-    implicitHeight: vertical ? Math.max(BarLayout.itemSize, box.implicitHeight + 14) : BarLayout.itemSize
+    implicitWidth: vertical || iconOnly ? BarLayout.itemSize : box.implicitWidth + BarLayout.itemPadding * 2
+    implicitHeight: vertical ? Math.max(BarLayout.itemSize, box.implicitHeight + BarLayout.itemPadding * 2) : BarLayout.itemSize
 
     Rectangle {
         anchors.fill: parent
-        radius: 6
+        radius: BarLayout.itemRadius
         color: root.pressed ? root.pressedFill : root.hovered || root.highlighted || root.marked ? root.hoverFill : root.fill
 
         Behavior on color {

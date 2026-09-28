@@ -14,7 +14,7 @@ BarItem {
     tooltipTitle: toplevel?.title ?? ""
 
     function lengthAt(level) {
-        return vertical ? padded(16) : level >= 2 ? BarLayout.itemSize : padded(16 + 6 + name.implicitWidth);
+        return vertical ? padded(BarLayout.appIconSize) : level >= 2 ? BarLayout.itemSize : padded(BarLayout.appIconSize + BarLayout.itemGap + name.implicitWidth);
     }
 
     BarAppIcon {

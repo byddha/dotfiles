@@ -52,7 +52,7 @@ Grid {
             }
 
             IconImage {
-                implicitSize: 16
+                implicitSize: BarLayout.appIconSize
                 source: {
                     const icon = trayButton.modelData.icon;
                     // Some apps send "name?path=/dir" for an icon outside the theme

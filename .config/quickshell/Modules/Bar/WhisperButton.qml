@@ -11,8 +11,8 @@ BarItem {
     tooltipKeys: Compositor.keysFor("Transcribe speech")
 
     Item {
-        implicitWidth: 16
-        implicitHeight: 16
+        implicitWidth: BarLayout.iconSize
+        implicitHeight: BarLayout.iconSize
 
         BarSpinner {
             visible: Whisper.transcribing
@@ -32,7 +32,7 @@ BarItem {
     ElapsedText {
         visible: Whisper.listening
         role: root.vertical ? "primary" : "secondary"
-        font.pixelSize: root.vertical ? 11 : 13
+        font.pixelSize: root.vertical ? BarLayout.captionSize : BarLayout.textSize
         since: Whisper.listeningSince
     }
 }

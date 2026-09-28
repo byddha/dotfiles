@@ -81,13 +81,13 @@ Grid {
 
             level: root.level
             marked: current
-            spacing: root.vertical ? 6 : 5
+            spacing: BarLayout.appIconGap
 
             function lengthAt(level) {
                 if (root.vertical)
                     return implicitHeight;
                 const shown = level >= 3 ? Math.min(1, apps.length) : apps.length;
-                return padded(label.implicitWidth + shown * (16 + spacing));
+                return padded(label.implicitWidth + shown * (BarLayout.appIconSize + spacing));
             }
             tooltipTitle: `Workspace ${modelData.label}`
             tooltipKeys: Compositor.keysFor(`Workspace ${modelData.id}`)
@@ -105,10 +105,10 @@ Grid {
             BarText {
                 id: label
 
-                font.pixelSize: 11
+                font.pixelSize: BarLayout.workspaceNumberSize
                 font.weight: Font.DemiBold
                 horizontalAlignment: Text.AlignHCenter
-                color: slot.current ? Theme.primary : Theme.alpha(Theme.textSecondary, slot.apps.length === 0 ? 0.34 : 0.4)
+                color: slot.current ? Theme.primary : Theme.alpha(Theme.textSecondary, slot.apps.length === 0 ? 0.4 : BarLayout.workspaceNumberOpacity)
                 text: slot.modelData.label
             }
 
@@ -124,32 +124,35 @@ Grid {
                     readonly property string badge: slot.firstAppOnly && slot.apps.length > 1 ? `+${slot.apps.length - 1}` : modelData.count > 1 ? String(modelData.count) : ""
 
                     visible: !slot.firstAppOnly || index === 0
-                    implicitWidth: 16
-                    implicitHeight: 16
+                    implicitWidth: BarLayout.appIconSize
+                    implicitHeight: BarLayout.appIconSize
 
                     BarAppIcon {
                         anchors.fill: parent
                         appClass: app.modelData.class
                     }
 
-                    // Window count, on the corner away from the active marker
+                    // Window count, on the corner away from the active marker; the border is a ring in the
+                    // item's color around the pill
                     Rectangle {
+                        readonly property int ring: 2
+
                         visible: app.badge !== ""
-                        x: root.vertical && BarLayout.edge === "left" ? -8 : parent.width - width + 8
-                        y: BarLayout.edge === "bottom" ? parent.height - height + 7 : -7
-                        width: Math.max(16, count.implicitWidth + 10)
-                        height: 16
-                        radius: 8
+                        x: root.vertical && BarLayout.edge === "left" ? -7 - ring : parent.width - width + 7 + ring
+                        y: BarLayout.edge === "bottom" ? parent.height - height + 6 + ring : -6 - ring
+                        width: Math.max(height, count.implicitWidth + 8 + ring * 2)
+                        height: BarLayout.badgeSize + ring * 2
+                        radius: height / 2
                         color: Theme.colLayer3
-                        border.width: 2
+                        border.width: ring
                         border.color: slot.hovered || slot.marked ? Theme.colLayer2 : Theme.colLayer0
 
                         BarText {
                             id: count
 
                             anchors.centerIn: parent
-                            font.pixelSize: 9
-                            font.weight: Font.DemiBold
+                            font.pixelSize: BarLayout.badgeTextSize
+                            font.weight: Font.Bold
                             text: app.badge
                         }
                     }

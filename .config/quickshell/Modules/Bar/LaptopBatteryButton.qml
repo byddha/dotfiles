@@ -12,8 +12,8 @@ BarItem {
 
     function lengthAt(level) {
         if (vertical)
-            return padded(16 + (level < 3 ? 4 + value.implicitHeight : 0));
-        return level >= 3 ? BarLayout.itemSize : padded(16 + 6 + value.implicitWidth + (level < 2 ? sign.implicitWidth : 0));
+            return padded(BarLayout.iconSize + (level < 3 ? BarLayout.itemGap + value.implicitHeight : 0));
+        return level >= 3 ? BarLayout.itemSize : padded(BarLayout.iconSize + BarLayout.itemGap + value.implicitWidth + (level < 2 ? sign.implicitWidth : 0));
     }
     fill: Battery.isCritical ? Theme.alpha(Theme.accentRed, 0.16) : "transparent"
     hoverFill: Battery.isCritical ? Theme.alpha(Theme.accentRed, 0.26) : Theme.colLayer2
@@ -30,7 +30,7 @@ BarItem {
         BarText {
             id: value
 
-            font.pixelSize: root.vertical ? 11 : 13
+            font.pixelSize: root.vertical ? BarLayout.captionSize : BarLayout.textSize
             font.weight: root.vertical ? Font.DemiBold : Font.Medium
             color: root.tint
             text: Battery.percentage
@@ -39,7 +39,7 @@ BarItem {
             id: sign
 
             visible: !root.vertical && root.level < 2
-            font.pixelSize: 13
+            font.pixelSize: BarLayout.percentSize
             color: root.tint
             text: "%"
         }

@@ -24,11 +24,11 @@ BarItem {
 
     function lengthAt(level) {
         if (vertical)
-            return padded(16);
+            return padded(BarLayout.appIconSize);
         if (level >= 3)
             return BarLayout.itemSize;
         const slot = level >= 1 ? controls.implicitWidth : Math.max(artist.implicitCapped, controls.implicitWidth);
-        return padded(16 + 6 + Math.min(title.implicitWidth, level >= 1 ? 190 : 260) + 6 + slot);
+        return padded(BarLayout.appIconSize + BarLayout.itemGap + Math.min(title.implicitWidth, level >= 1 ? 190 : 260) + BarLayout.itemGap + slot);
     }
 
     onClicked: mouse => {
@@ -49,8 +49,8 @@ BarItem {
 
     // Paused: a pause glyph where the app's icon was
     Item {
-        implicitWidth: 16
-        implicitHeight: 16
+        implicitWidth: BarLayout.appIconSize
+        implicitHeight: BarLayout.appIconSize
 
         BarAppIcon {
             anchors.fill: parent
@@ -60,7 +60,7 @@ BarItem {
         BarIcon {
             visible: !root.playing
             text: Lucide.pause
-            color: Theme.alpha(Theme.textSecondary, 0.66)
+            color: Theme.alpha(Theme.textSecondary, BarLayout.secondaryOpacity)
         }
     }
 
@@ -123,15 +123,15 @@ BarItem {
 
         signal tapped
 
-        implicitWidth: 22
-        implicitHeight: 22
+        implicitWidth: 26
+        implicitHeight: 26
         radius: 5
         opacity: enabled ? 1 : 0.4
         color: tap.pressed ? Theme.colLayer3 : hover.hovered ? Theme.alpha(Theme.textColor, 0.08) : "transparent"
 
         BarIcon {
             anchors.centerIn: parent
-            size: 14
+            size: 16
             text: control.glyph
         }
 

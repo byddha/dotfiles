@@ -41,8 +41,8 @@ BarAnchoredPopup {
 
         x: root.padLeft
         y: root.padTop
-        implicitWidth: lines.implicitWidth + 20
-        implicitHeight: lines.implicitHeight + 16
+        implicitWidth: lines.implicitWidth + 24
+        implicitHeight: lines.implicitHeight + 20
         radius: 8
         color: Theme.colLayer2
         border.width: 1
@@ -51,8 +51,8 @@ BarAnchoredPopup {
         ColumnLayout {
             id: lines
 
-            x: 10
-            y: 8
+            x: 12
+            y: 10
             spacing: 2
 
             RowLayout {
@@ -60,7 +60,7 @@ BarAnchoredPopup {
 
                 BarText {
                     text: root.title
-                    font.pixelSize: 12
+                    font.pixelSize: BarLayout.tooltipTitleSize
                     font.weight: Font.DemiBold
                 }
                 BarKeycap {
@@ -73,7 +73,7 @@ BarAnchoredPopup {
                 visible: root.detail !== ""
                 role: "secondary"
                 text: root.detail
-                font.pixelSize: 12
+                font.pixelSize: BarLayout.tooltipTextSize
                 lineHeight: 1.35
             }
         }

@@ -24,7 +24,7 @@ Rectangle {
     Layout.fillWidth: true
     implicitWidth: content.implicitWidth + 20
     implicitHeight: 34
-    radius: 6
+    radius: BarLayout.itemRadius
     clip: true
     opacity: enabled ? 1 : 0.45
     color: area.pressed ? (danger ? Qt.darker(Theme.accentRed, 1.15) : Theme.colLayer3) : lit ? (danger ? Theme.accentRed : Theme.colLayer2) : "transparent"
@@ -47,11 +47,11 @@ Rectangle {
         BarIcon {
             visible: row.icon !== ""
             text: row.icon
-            color: row.danger ? (row.lit ? Theme.textColor : Theme.accentRed) : Theme.alpha(Theme.textSecondary, 0.66)
+            color: row.danger ? (row.lit ? Theme.textColor : Theme.accentRed) : Theme.alpha(Theme.textSecondary, BarLayout.secondaryOpacity)
         }
         IconImage {
             visible: row.icon === "" && row.iconSource !== ""
-            implicitSize: 16
+            implicitSize: BarLayout.iconSize
             source: row.iconSource
         }
         BarText {
@@ -66,7 +66,7 @@ Rectangle {
         BarIcon {
             visible: row.submenu
             text: Lucide.chevronRight
-            color: Theme.alpha(Theme.textSecondary, 0.66)
+            color: Theme.alpha(Theme.textSecondary, BarLayout.secondaryOpacity)
         }
     }
 

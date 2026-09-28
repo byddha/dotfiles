@@ -3,7 +3,7 @@ import "../../Config"
 
 // A Lucide glyph (see Lucide) in a fixed square, so icons never change an item's size
 Text {
-    property int size: 16
+    property int size: BarLayout.iconSize
 
     width: size
     height: size
