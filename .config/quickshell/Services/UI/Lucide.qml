@@ -69,8 +69,6 @@ Singleton {
     readonly property string headset: "\ue5bd"
     readonly property string plane: "\ue1de"
     readonly property string music: "\ue122"
-    readonly property string calendarCheck: "\ue2b7"
-    readonly property string thermometer: "\ue186"
     readonly property string droplets: "\ue0b5"
     readonly property string umbrella: "\ue199"
     readonly property string camera: "\ue064"
@@ -86,7 +84,6 @@ Singleton {
     readonly property string pencil: "\ue1f9"
     readonly property string save: "\ue14d"
     readonly property string monitorSmartphone: "\ue3a2"
-    readonly property string cross: "\ue1e5"
     readonly property string coffee: "\ue096"
     readonly property string pipette: "\ue13b"
     readonly property string check: "\ue06c"
@@ -104,4 +101,5 @@ Singleton {
     readonly property string shieldLock: "\ue731"
     // U+F0000, from Tabler
     readonly property string hdr: "\udb80\udc00"
+    readonly property string mapPin: "\ue111"
 }

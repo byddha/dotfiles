@@ -1,10 +1,7 @@
 Card 1.0 Card.qml
-HourlyGraph 1.0 HourlyGraph.qml
-MiniClock 1.0 MiniClock.qml
 Slider 1.0 Slider.qml
 StyledText 1.0 StyledText.qml
 Tooltip 1.0 Tooltip.qml
-WeatherCard 1.0 WeatherCard.qml
 AudioVisualizer 1.0 AudioVisualizer.qml
 MediaCard 1.0 MediaCard.qml
 FocusGrab 1.0 FocusGrab.qml
