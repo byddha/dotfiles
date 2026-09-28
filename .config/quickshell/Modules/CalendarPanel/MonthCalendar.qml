@@ -200,10 +200,11 @@ Card {
         }
     }
 
+    // Always as tall as two lines of a long name, so hovering never moves anything
     Item {
         Layout.fillWidth: true
         Layout.topMargin: Theme.spacingBase
-        implicitHeight: 36
+        implicitHeight: 44
 
         Rectangle {
             anchors.fill: parent
@@ -212,24 +213,46 @@ Card {
             color: Theme.colLayer2
 
             RowLayout {
+                id: dayLine
+
                 anchors.fill: parent
                 anchors.leftMargin: 10
                 anchors.rightMargin: 10
                 spacing: 6
 
                 Marker {
+                    id: lineMarker
+
                     visible: type !== ""
                     type: root.shownDay.event?.type ?? ""
                 }
                 StyledText {
+                    id: dayName
+
+                    // What the rest of the line leaves. A layout item without fillWidth keeps exactly its
+                    // preferred width, so this is what a long name (a name day lists all its names) gets.
+                    readonly property real room: dayLine.width - (lineMarker.visible ? lineMarker.implicitWidth + dayLine.spacing : 0) - kind.implicitWidth - lineEnd.implicitWidth - dayLine.spacing * 3
+                    readonly property bool wraps: oneLine.width > room
+
                     text: root.shownDay.event?.name ?? (root.shownDay.today ? "Today" : Qt.formatDate(root.dateOf(root.shownDay), "ddd d MMM"))
-                    font.pixelSize: Theme.fontSizeSmall
+                    font.pixelSize: wraps ? Theme.fontSizeTiny : Theme.fontSizeSmall
+                    wrapMode: Text.WordWrap
+                    maximumLineCount: 2
                     elide: Text.ElideRight
-                    // Its own width while the line has room; only a long holiday name gets shortened
-                    Layout.preferredWidth: implicitWidth
-                    Layout.minimumWidth: 0
+                    Layout.preferredWidth: Math.min(implicitWidth, room)
+
+                    TextMetrics {
+                        id: oneLine
+
+                        font.family: Theme.fontUi
+                        font.pixelSize: Theme.fontSizeSmall
+                        font.weight: Font.Medium
+                        text: dayName.text
+                    }
                 }
                 StyledText {
+                    id: kind
+
                     role: "tertiary"
                     text: `· ${root.shownDay.event ? root.kindNames[root.shownDay.event.type] : "no events"}`
                     font.pixelSize: Theme.fontSizeSmall
@@ -238,6 +261,8 @@ Card {
                     Layout.fillWidth: true
                 }
                 StyledText {
+                    id: lineEnd
+
                     role: "tertiary"
                     text: root.shownDay.event ? (root.shownDay.today ? "Today" : Qt.formatDate(root.dateOf(root.shownDay), "ddd d MMM")) : root.shownDay.today ? "Right-click a day to add" : "Right-click to add"
                     font.pixelSize: Theme.fontSizeTiny
