@@ -37,6 +37,29 @@ QtObject {
     // Compositor.qml only loads this backend when HYPRLAND_INSTANCE_SIGNATURE is set.
     Component.onCompleted: workspaces = Hyprland.workspaces.values
 
+    // Main-map binds that have a description, as { description, keys } with keys ready to show
+    // ("Super Shift Q"). With a Lua config the dispatcher reads "__lua <n>", so the description is
+    // the only way to tell what a bind does. Read again when the config reloads.
+    property var describedBinds: []
+
+    property var _bindsReader: Process {
+        command: ["hyprctl", "binds", "-j"]
+        running: true
+        stdout: StdioCollector {
+            onStreamFinished: backend.describedBinds = JSON.parse(text).filter(b => b.submap === "" && b.description).map(b => ({
+                        description: b.description,
+                        keys: backend._keysLabel(b.modmask, b.key)
+                    }))
+        }
+    }
+
+    function _keysLabel(modmask, key) {
+        // Hyprland's modifier bits, shown in this order
+        const modifiers = [[64, "Super"], [4, "Ctrl"], [8, "Alt"], [1, "Shift"]].filter(([bit]) => modmask & bit).map(([, name]) => name);
+        const label = key.length === 1 ? key.toUpperCase() : key.charAt(0).toUpperCase() + key.slice(1).toLowerCase();
+        return [...modifiers, label].join(" ");
+    }
+
     // --- Data query functions ---
 
     function getWorkspaceApps(workspaceId) {
@@ -164,6 +187,8 @@ QtObject {
         }
 
         function onRawEvent(event) {
+            if (event.name === "configreloaded")
+                backend._bindsReader.running = true;
             const isMonitorEvent = backend._monitorEvents.includes(event.name);
             if (!isMonitorEvent && !backend._toplevelEvents.includes(event.name))
                 return;

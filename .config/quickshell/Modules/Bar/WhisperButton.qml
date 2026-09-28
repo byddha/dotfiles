@@ -8,6 +8,7 @@ BarItem {
 
     visible: Whisper.active
     tooltipTitle: Whisper.transcribing ? "Transcribing" : "Listening"
+    tooltipKeys: Compositor.keysFor("Transcribe speech")
 
     Item {
         implicitWidth: 16

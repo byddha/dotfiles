@@ -90,6 +90,7 @@ Grid {
                 return padded(label.implicitWidth + shown * (16 + spacing));
             }
             tooltipTitle: `Workspace ${modelData.label}`
+            tooltipKeys: Compositor.keysFor(`Workspace ${modelData.id}`)
             tooltipDetail: apps.length === 0 ? "Empty" : apps.map(app => {
                 const name = AppIcons.getDisplayName(app.class, app.title, app.xdgTag);
                 return app.count > 1 ? `${name} ×${app.count}` : name;

@@ -75,6 +75,11 @@ Singleton {
         return backend ? backend.activeWorkspaceIdForScreen(screen) : 1;
     }
 
+    // The keys of the compositor bind with this description, ready to show ("Super Q"); "" when there is none
+    function keysFor(description) {
+        return (backend?.describedBinds ?? []).find(bind => bind.description === description)?.keys ?? "";
+    }
+
     function getCursorPosition(callback) {
         if (backend)
             backend.getCursorPosition(callback);

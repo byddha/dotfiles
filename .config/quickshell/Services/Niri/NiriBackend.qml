@@ -342,6 +342,9 @@ QtObject {
         return mon?.activeWorkspaceId ?? 1;
     }
 
+    // Niri's IPC does not list binds, so no bar item shows keys there
+    readonly property var describedBinds: []
+
     function getCursorPosition(callback) {
         // Not available via Niri IPC
     }

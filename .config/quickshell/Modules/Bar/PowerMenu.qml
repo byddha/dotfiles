@@ -46,21 +46,25 @@ BarPopout {
         BarMenuRow {
             icon: Lucide.lock
             label: "Lock"
+            keys: Compositor.keysFor("Lock")
             onActivated: root.run(PowerActions.lock)
         }
         BarMenuRow {
             icon: Lucide.moon
             label: "Suspend"
+            keys: Compositor.keysFor("Suspend")
             onActivated: root.run(PowerActions.suspend)
         }
         BarMenuRow {
             icon: Lucide.logOut
             label: "Log out"
+            keys: Compositor.keysFor("Log out")
             onActivated: root.run(PowerActions.logout)
         }
         BarMenuRow {
             icon: Lucide.rotateCcw
             label: "Reboot"
+            keys: Compositor.keysFor("Reboot")
             onActivated: root.run(PowerActions.reboot)
         }
 
@@ -81,6 +85,7 @@ BarPopout {
             filled: root.shutdownArmed
             icon: Lucide.power
             label: root.shutdownArmed ? "Click again to shut down" : "Shut down"
+            keys: Compositor.keysFor("Shut down")
             onActivated: {
                 if (root.shutdownArmed)
                     root.shutDown();
