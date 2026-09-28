@@ -22,7 +22,7 @@ Peripheral brand lookup: `hwdata`
 
 Game launcher: `steam`
 
-Fonts: none to install; Geist and Lucide are bundled in `assets/fonts`
+Fonts: none to install; Geist and Lucide are bundled in `assets/fonts`. Icons Lucide lacks (HDR, from Tabler) are added to the bundled `lucide.ttf` by `assets/fonts/lucide/extra/add-icons.py`; rerun it after updating Lucide
 
 Fill monitors in ~/.config/bidshell/config.json. Keys are the monitor `model` from EDID (check with `hyprctl monitors` → `model:` line), for example:
 
