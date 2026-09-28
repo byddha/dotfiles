@@ -72,7 +72,6 @@ PanelWindow {
             }
         }
 
-        // The bar plus the gap between it and the screen edge
         Item {
             id: inputArea
 
@@ -103,7 +102,6 @@ PanelWindow {
             border.width: BarLayout.floating ? 1 : 0
             border.color: Theme.outlineVariant
 
-            // Flush: a hairline on the side that faces the windows
             Rectangle {
                 visible: !BarLayout.floating
                 x: root.edge === "left" ? parent.width - 1 : 0
