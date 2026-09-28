@@ -91,16 +91,6 @@ QtObject {
         return mon?.activeWorkspaceId ?? 1;
     }
 
-    function hasFullscreenOnScreen(screen) {
-        const mon = backend.monitors.find(m => m.name === screen?.name);
-        if (!mon)
-            return false;
-        // An open special workspace is shown over the regular one (its id is 0 when none is open)
-        const workspaceId = mon.specialWorkspace?.id || mon.activeWorkspace?.id;
-        // fullscreen is a bit mask: 1 maximized, 2 fullscreen
-        return backend.windowList.some(w => (w.fullscreen & 2) && w.mapped && !w.hidden && w.workspace?.id === workspaceId);
-    }
-
     function getCursorPosition(callback) {
         const proc = cursorPosComponent.createObject(backend, {
             callback: callback
