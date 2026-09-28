@@ -5,14 +5,14 @@ import "../../Services"
 import "../../Components"
 
 /**
- * Tray - The tray items in the bar, or, when the bar is short of room (level 2, or 1 on a
- * vertical bar), one chevron that opens them in a popout.
+ * Tray - The tray items in the bar, or, when the bar is short of room (level 1, with the device
+ * batteries), one chevron that opens them in a popout.
  */
 Item {
     id: root
 
     property int level: 0
-    readonly property bool folded: items.count > 1 && level >= (BarLayout.vertical ? 1 : 2)
+    readonly property bool folded: items.count > 1 && level >= 1
 
     property TrayMenu menu: TrayMenu {}
     property BarPopout overflow: BarPopout {
@@ -27,7 +27,7 @@ Item {
     }
 
     function lengthAt(level) {
-        const foldedThen = items.count > 1 && level >= (BarLayout.vertical ? 1 : 2);
+        const foldedThen = items.count > 1 && level >= 1;
         if (foldedThen)
             return BarLayout.itemSize;
         return items.count * BarLayout.itemSize + items.spacing * Math.max(0, items.count - 1);
