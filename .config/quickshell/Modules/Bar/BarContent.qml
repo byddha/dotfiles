@@ -38,6 +38,20 @@ Item {
         return start <= half && end <= half;
     }
 
+    // The clock's start along the bar: exactly in the middle while the center groups fit on both
+    // sides of it; when even level 3 does not fit, the whole center block in the middle of the room
+    // the side sections leave, so it never covers them
+    readonly property real clockStart: {
+        const length = vertical ? height : width;
+        const size = item => vertical ? item.height : item.width;
+        const ideal = (length - size(clock)) / 2;
+        const lowest = padding + size(startSection) + minGap + size(beforeClock) + centerSpacing;
+        const highest = length - padding - size(endSection) - minGap - size(afterClock) - centerSpacing - size(clock);
+        if (lowest <= highest)
+            return Math.max(lowest, Math.min(highest, ideal));
+        return (lowest + highest) / 2;
+    }
+
     // Position along the bar / across it, whole pixels
     function along(item, pos) {
         return vertical ? Qt.point(Math.round((width - item.width) / 2), Math.round(pos)) : Qt.point(Math.round(pos), Math.round((height - item.height) / 2));
@@ -85,7 +99,7 @@ Item {
     ClockButton {
         id: clock
 
-        readonly property point pos: root.along(this, ((root.vertical ? root.height : root.width) - (root.vertical ? height : width)) / 2)
+        readonly property point pos: root.along(this, root.clockStart)
 
         level: root.level
         x: pos.x
