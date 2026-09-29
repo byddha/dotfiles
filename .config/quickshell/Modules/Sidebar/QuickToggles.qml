@@ -7,6 +7,8 @@ import "../../Services"
 Card {
     id: root
 
+    reversed: Placement.sidebarReversed
+
     GridLayout {
         Layout.fillWidth: true
         columns: 5
@@ -74,6 +76,16 @@ Card {
             label: "Recording"
             danger: true
         }
+    }
+
+    // Between the tiles and the VPN list, whichever way the card runs; the wider gap faces the tiles
+    Rectangle {
+        Layout.fillWidth: true
+        Layout.topMargin: root.reversed ? 8 : 12
+        Layout.bottomMargin: root.reversed ? 12 : 8
+        visible: vpnSelector.expanded
+        implicitHeight: 1
+        color: Theme.outlineVariant
     }
 
     VpnSelector {

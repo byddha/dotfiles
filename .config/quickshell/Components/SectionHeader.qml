@@ -9,10 +9,8 @@ Item {
     property string meta: ""
     property string metaIcon: ""
     property color metaColor: Theme.textSecondary
-    property bool first: false
 
     Layout.fillWidth: true
-    Layout.topMargin: first ? 0 : 12
     implicitHeight: 28
 
     RowLayout {

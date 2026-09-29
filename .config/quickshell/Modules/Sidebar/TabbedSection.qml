@@ -46,6 +46,7 @@ Card {
     ]
 
     padding: 0
+    reversed: Placement.sidebarReversed
 
     RowLayout {
         Layout.fillWidth: true

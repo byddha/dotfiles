@@ -1,4 +1,5 @@
 Card 1.0 Card.qml
+ReversibleGrid 1.0 ReversibleGrid.qml
 Slider 1.0 Slider.qml
 StyledText 1.0 StyledText.qml
 Tooltip 1.0 Tooltip.qml

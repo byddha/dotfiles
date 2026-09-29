@@ -5,13 +5,13 @@ import "../../../Components"
 import "../../../Components/Notifications"
 import "../../../Services"
 
-ColumnLayout {
+ReversibleGrid {
     id: root
 
     property bool shown: false
     readonly property int count: Notifications.list.length
 
-    spacing: 0
+    reversed: Placement.sidebarReversed
 
     // The tab stays loaded, so start each visit with an empty search
     onShownChanged: {
@@ -23,7 +23,9 @@ ColumnLayout {
         id: searchField
         Layout.fillWidth: true
         Layout.margins: 12
-        Layout.bottomMargin: 8
+        // The smaller gap faces the list
+        Layout.topMargin: root.reversed ? 8 : 12
+        Layout.bottomMargin: root.reversed ? 12 : 8
         visible: root.count > 0
         icon: Lucide.search
         placeholderText: "Search notifications…"
@@ -35,9 +37,11 @@ ColumnLayout {
         Layout.fillHeight: true
         Layout.leftMargin: 12
         Layout.rightMargin: 12
-        Layout.bottomMargin: 12
+        Layout.topMargin: root.reversed ? 12 : 0
+        Layout.bottomMargin: root.reversed ? 0 : 12
         visible: root.count > 0
         searchText: searchField.text
+        reversed: root.reversed
     }
 
     EmptyState {

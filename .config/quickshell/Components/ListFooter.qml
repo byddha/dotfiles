@@ -2,7 +2,8 @@ import QtQuick
 import QtQuick.Layouts
 import "../Config"
 
-// Bottom bar of a tab: a count on the left, one action on the right
+// Bottom bar of a tab: a count on the left, one action on the right. In a tab that runs bottom to
+// top it is the top bar, with its line on the side that faces the list.
 Item {
     id: root
 
@@ -17,8 +18,10 @@ Item {
     Layout.minimumHeight: implicitHeight
     implicitHeight: 44
 
+    readonly property bool reversed: parent?.reversed ?? false
+
     Rectangle {
-        anchors.top: parent.top
+        y: root.reversed ? parent.height - height : 0
         width: parent.width
         height: 1
         color: Theme.outlineVariant

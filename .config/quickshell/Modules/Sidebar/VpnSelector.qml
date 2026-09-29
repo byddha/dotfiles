@@ -4,7 +4,8 @@ import "../../Config"
 import "../../Components"
 import "../../Services"
 
-// VPN list under the toggle grid; only one VPN can be connected at a time
+// VPN list under the toggle grid (over it when the sidebar runs bottom to top); only one VPN can be
+// connected at a time
 ColumnLayout {
     id: root
 
@@ -28,14 +29,6 @@ ColumnLayout {
             if (Vpn.mullvadConnected)
                 root.expanded = false;
         }
-    }
-
-    Rectangle {
-        Layout.fillWidth: true
-        Layout.topMargin: 12
-        Layout.bottomMargin: 6
-        implicitHeight: 1
-        color: Theme.outlineVariant
     }
 
     ListRow {

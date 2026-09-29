@@ -132,6 +132,9 @@ Singleton {
             property JsonObject sidebar: JsonObject {
                 // "left" or "right": the screen side it opens on
                 property string side: "right"
+                // "top": hangs from the top and grows down; "bottom": stands on the bottom and grows
+                // up, with everything in it in the reverse order (the toggles lowest)
+                property string anchor: "top"
             }
 
             property JsonObject osd: JsonObject {

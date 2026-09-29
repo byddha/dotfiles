@@ -17,6 +17,7 @@ Singleton {
         return ["left", "center", "right"].includes(side) ? side : "right";
     }
     readonly property string sidebarSide: Config.options.sidebar.side === "left" ? "left" : "right"
+    readonly property bool sidebarReversed: Config.options.sidebar.anchor === "bottom"
     readonly property string osdSide: Config.options.osd.position === "left" ? "left" : "right"
 
     // Distance from a screen edge that keeps a surface `gap` away from the bar, or from the edge

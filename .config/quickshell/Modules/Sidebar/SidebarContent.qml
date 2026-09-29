@@ -1,14 +1,16 @@
 import QtQuick
 import QtQuick.Layouts
 import "../../Config"
+import "../../Components"
 
-ColumnLayout {
+ReversibleGrid {
     id: root
 
     // Sidebar is open; tabs refresh their data when shown
     property bool shown: false
 
-    spacing: 8
+    rowSpacing: 8
+    reversed: Placement.sidebarReversed
 
     QuickToggles {
         Layout.fillWidth: true

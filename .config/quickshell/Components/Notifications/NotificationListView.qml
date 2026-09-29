@@ -10,6 +10,16 @@ ListView {
     id: root
 
     property string searchText: ""
+    // Newest nearest the bottom, next to the search, for a sidebar that runs bottom to top
+    property bool reversed: false
+    // Reversed, while the newest are in view the list keeps them there when its height or content
+    // changes (the panel gives it less room, a notification arrives), as a chat does
+    property bool followsNewest: true
+
+    function keepNewest() {
+        if (reversed && followsNewest)
+            positionViewAtBeginning();
+    }
     // DMS expressiveDurations.fast at the default 250 ms animation base (0.4x), and its 3% add stagger.
     readonly property int fastDuration: 100
     readonly property int staggerMs: 8
@@ -24,6 +34,13 @@ ListView {
     }
 
     clip: true
+    verticalLayoutDirection: reversed ? ListView.BottomToTop : ListView.TopToBottom
+    // The old position means nothing once the direction flips (the config changed while loaded)
+    onVerticalLayoutDirectionChanged: positionViewAtBeginning()
+    // Bottom to top, the newest end is the bottom of the content
+    onMovementEnded: followsNewest = atYEnd
+    onHeightChanged: keepNewest()
+    onContentHeightChanged: keepNewest()
     // Natural height is the whole list; a layout that gives it less makes it scroll
     implicitHeight: contentHeight
     // DMS groupedListGap: history cards form one grouped list.
@@ -58,8 +75,9 @@ ListView {
         required property int index
         width: ListView.view.width
         notificationObject: modelData
-        firstInGroup: index === 0
-        lastInGroup: index === root.count - 1
+        // The group's rounded ends go to the cards at the top and the bottom, whichever way it runs
+        firstInGroup: index === (root.reversed ? root.count - 1 : 0)
+        lastInGroup: index === (root.reversed ? 0 : root.count - 1)
     }
 
     add: Transition {

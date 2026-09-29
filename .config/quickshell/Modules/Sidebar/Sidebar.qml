@@ -29,11 +29,12 @@ Scope {
             slideFrom: Placement.sidebarSide
             slideClip: BarLayout.reservedAt(Placement.sidebarSide)
             padding: 12
-            // As tall as its content, down to the gap above the bottom (or the bottom bar); then the open tab scrolls
+            // As tall as its content, up to the gaps at both ends (or the bar there); then the open tab
+            // scrolls. Anchored to the bottom it stands on its bottom gap and grows up.
             panelWidth: Theme.sidebarWidth
             maxPanelHeight: modelData.height - Placement.inset("top", gap) - Placement.inset("bottom", gap)
             panelX: Placement.sidebarSide === "left" ? Placement.inset("left", gap) : modelData.width - Placement.inset("right", gap) - Theme.sidebarWidth
-            panelY: Placement.inset("top", gap)
+            panelY: Placement.sidebarReversed ? modelData.height - Placement.inset("bottom", gap) - panelSize.height : Placement.inset("top", gap)
 
             onDismissed: Settings.sidebarVisible = false
             onVisibleChanged: {

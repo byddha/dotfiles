@@ -12,6 +12,11 @@ ScrollList {
 
     property bool shown: false
 
+    // Whole sections are the list's children, so reversed they swap places but each still reads top
+    // to bottom; the gap between sections is the list's
+    reversed: Placement.sidebarReversed
+    spacing: 14
+
     function deviceIcon(node, isOutput) {
         if (!isOutput)
             return Lucide.mic;
@@ -23,29 +28,33 @@ ScrollList {
         return Lucide.speaker;
     }
 
-    SectionHeader {
-        first: true
-        text: "Apps"
-        meta: Audio.groupedOutputAppNodes.length > 0 ? `${Audio.groupedOutputAppNodes.length} playing` : ""
-    }
-
-    Repeater {
-        model: ScriptModel {
-            values: Audio.groupedOutputAppNodes
-        }
-
-        VolumeMixerGroupEntry {
-            required property var modelData
-            Layout.fillWidth: true
-            group: modelData
-        }
-    }
-
-    EmptyState {
+    ColumnLayout {
         Layout.fillWidth: true
-        visible: Audio.groupedOutputAppNodes.length === 0
-        text: "No apps playing audio"
-        icon: Lucide.volumeX
+        spacing: 2
+
+        SectionHeader {
+            text: "Apps"
+            meta: Audio.groupedOutputAppNodes.length > 0 ? `${Audio.groupedOutputAppNodes.length} playing` : ""
+        }
+
+        Repeater {
+            model: ScriptModel {
+                values: Audio.groupedOutputAppNodes
+            }
+
+            VolumeMixerGroupEntry {
+                required property var modelData
+                Layout.fillWidth: true
+                group: modelData
+            }
+        }
+
+        EmptyState {
+            Layout.fillWidth: true
+            visible: Audio.groupedOutputAppNodes.length === 0
+            text: "No apps playing audio"
+            icon: Lucide.volumeX
+        }
     }
 
     DeviceSection {

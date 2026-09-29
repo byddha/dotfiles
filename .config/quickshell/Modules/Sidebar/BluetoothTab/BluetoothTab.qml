@@ -5,12 +5,12 @@ import "../../../Config"
 import "../../../Components"
 import "../../../Services"
 
-ColumnLayout {
+ReversibleGrid {
     id: root
 
     property bool shown: false
 
-    spacing: 0
+    reversed: Placement.sidebarReversed
 
     // Tabs stay loaded, so refresh each time this tab is shown
     onShownChanged: {
@@ -33,44 +33,19 @@ ColumnLayout {
     ScrollList {
         Layout.fillWidth: true
         Layout.fillHeight: true
+        // Whole sections swap places when reversed; each still reads top to bottom
+        reversed: root.reversed
+        spacing: 14
         visible: Bluetooth.enabled
 
-        SectionHeader {
-            first: true
-            visible: Bluetooth.connectedDevices.length > 0
-            text: "Connected"
-            meta: Bluetooth.connectedDevices.length
+        DeviceGroup {
+            title: "Connected"
+            devices: Bluetooth.connectedDevices
         }
 
-        Repeater {
-            model: ScriptModel {
-                values: Bluetooth.connectedDevices
-            }
-
-            BluetoothDeviceItem {
-                required property var modelData
-                Layout.fillWidth: true
-                device: modelData
-            }
-        }
-
-        SectionHeader {
-            first: Bluetooth.connectedDevices.length === 0
-            visible: Bluetooth.pairedDevices.length > 0
-            text: "Paired devices"
-            meta: Bluetooth.pairedDevices.length
-        }
-
-        Repeater {
-            model: ScriptModel {
-                values: Bluetooth.pairedDevices
-            }
-
-            BluetoothDeviceItem {
-                required property var modelData
-                Layout.fillWidth: true
-                device: modelData
-            }
+        DeviceGroup {
+            title: "Paired devices"
+            devices: Bluetooth.pairedDevices
         }
 
         EmptyState {
@@ -86,5 +61,33 @@ ColumnLayout {
         actionText: "Advanced Settings"
         actionIcon: Lucide.slidersHorizontal
         onActionClicked: Quickshell.execDetached(["blueman-manager"])
+    }
+
+    component DeviceGroup: ColumnLayout {
+        id: group
+
+        property string title
+        property var devices
+
+        Layout.fillWidth: true
+        visible: devices.length > 0
+        spacing: 2
+
+        SectionHeader {
+            text: group.title
+            meta: group.devices.length
+        }
+
+        Repeater {
+            model: ScriptModel {
+                values: group.devices
+            }
+
+            BluetoothDeviceItem {
+                required property var modelData
+                Layout.fillWidth: true
+                device: modelData
+            }
+        }
     }
 }
