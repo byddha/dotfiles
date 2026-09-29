@@ -28,7 +28,7 @@ Singleton {
     readonly property int itemPadding: vertical ? 7 : 10
     // Between an item's icon and its text
     readonly property int itemGap: vertical ? 4 : 7
-    readonly property int appIconSize: 20
+    readonly property int appIconSize: 26
     readonly property int appIconGap: 6
     readonly property int clockSize: 15
     readonly property int workspaceNumberSize: 11

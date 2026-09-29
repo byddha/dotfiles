@@ -67,12 +67,16 @@ Item {
         }
     }
 
+    // Centred in the bar's free room past the item, so it never touches the content
     Rectangle {
+        readonly property real rest: (BarLayout.thickness - BarLayout.itemSize) / 2
+        readonly property real inset: (rest - 2) / 2
+
         visible: root.marked
         color: Theme.primary
         radius: 1
-        x: root.vertical ? (BarLayout.edge === "left" ? parent.width - 4 : 2) : 8
-        y: root.vertical ? 8 : (BarLayout.edge === "top" ? parent.height - 4 : 2)
+        x: root.vertical ? (BarLayout.edge === "left" ? parent.width + inset : -inset - 2) : 8
+        y: root.vertical ? 8 : (BarLayout.edge === "top" ? parent.height + inset : -inset - 2)
         width: root.vertical ? 2 : parent.width - 16
         height: root.vertical ? parent.height - 16 : 2
     }
