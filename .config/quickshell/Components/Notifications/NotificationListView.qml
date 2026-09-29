@@ -78,6 +78,7 @@ ListView {
         // The group's rounded ends go to the cards at the top and the bottom, whichever way it runs
         firstInGroup: index === (root.reversed ? root.count - 1 : 0)
         lastInGroup: index === (root.reversed ? 0 : root.count - 1)
+        growsUp: root.reversed
     }
 
     add: Transition {

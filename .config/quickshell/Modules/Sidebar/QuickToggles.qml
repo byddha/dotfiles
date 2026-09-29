@@ -34,6 +34,7 @@ Card {
             active: Vpn.anyConnected
             hasMenu: true
             menuOpen: vpnSelector.expanded
+            menuAbove: Placement.sidebarReversed
             onClicked: vpnSelector.expanded = !vpnSelector.expanded
         }
         Tile {

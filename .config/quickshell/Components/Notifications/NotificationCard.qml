@@ -56,6 +56,8 @@ Item {
     }
 
     property bool descriptionExpanded: false
+    // Standing on its bottom (a list that runs bottom to top), the card grows up when expanded
+    property bool growsUp: false
     readonly property bool hasMoreText: bodyText.truncated || summaryText.truncated
     readonly property bool hasContentImage: imagePreview.visible
     readonly property bool canExpand: hasMoreText || hasContentImage || descriptionExpanded
@@ -243,7 +245,7 @@ Item {
                         visible: root.canExpand
                         width: root.controlSize + 8
                         backgroundColor: root.chipColor
-                        glyph: root.descriptionExpanded ? Lucide.chevronUp : Lucide.chevronDown
+                        glyph: root.descriptionExpanded !== root.growsUp ? Lucide.chevronUp : Lucide.chevronDown
                         onClicked: root.descriptionExpanded = !root.descriptionExpanded
                     }
 

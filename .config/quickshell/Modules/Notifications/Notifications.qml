@@ -170,6 +170,7 @@ Scope {
 
                             notificationObject: modelData
                             popup: true
+                            growsUp: !notificationPopup.atTop
                             width: stack.width
                             y: notificationPopup.atTop ? offset : stack.height - offset - height
                             opacity: progress

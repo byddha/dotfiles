@@ -10,9 +10,11 @@ Rectangle {
     property bool active: false
     // A live capture uses the error fill so it does not look like a normal toggle
     property bool danger: false
-    // Tiles that open something carry a chevron; it points up while the thing is open
+    // Tiles that open something carry a chevron: it points to where the thing opens, and back while
+    // it is open
     property bool hasMenu: false
     property bool menuOpen: false
+    property bool menuAbove: false
 
     readonly property color fill: !active ? Theme.chipSurface : danger ? Theme.accentRed : Theme.primary
     readonly property color glyph: !active ? Theme.textSecondary : danger ? Theme.accentRedText : Theme.primaryText
@@ -49,7 +51,7 @@ Rectangle {
         anchors.bottom: parent.bottom
         anchors.rightMargin: 6
         anchors.bottomMargin: 6
-        text: root.menuOpen ? Lucide.chevronUp : Lucide.chevronDown
+        text: root.menuOpen !== root.menuAbove ? Lucide.chevronUp : Lucide.chevronDown
         size: Theme.iconSizeSmall
         color: root.glyph
     }
