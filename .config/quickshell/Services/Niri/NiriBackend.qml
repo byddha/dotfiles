@@ -7,6 +7,8 @@ QtObject {
     id: backend
 
     property string type: "niri"
+    // Its windows have no positions yet (see _normalizeWindow)
+    readonly property bool hasWindowGeometry: false
 
     property var workspaces: []
     property string focusedMonitorName: ""
@@ -315,6 +317,14 @@ QtObject {
         const appList = Object.values(classMap);
         appList.sort((a, b) => b.count - a.count);
         return appList;
+    }
+
+    function toplevelFor(address) {
+        return null;
+    }
+
+    function shownWindows(workspaceId) {
+        return backend.windowList.filter(w => w.workspace?.id === workspaceId);
     }
 
     function monitorForScreen(screen) {

@@ -42,6 +42,8 @@ Singleton {
     property string focusedMonitorName: backend?.focusedMonitorName ?? ""
 
     property var windowList: backend?.windowList ?? []
+    // Whether windows carry real positions (`at`, `size`), so a map of a workspace can be drawn
+    readonly property bool hasWindowGeometry: backend?.hasWindowGeometry ?? false
     property var monitors: backend?.monitors ?? []
 
     // --- Signals ---
@@ -67,6 +69,14 @@ Singleton {
 
     function getWorkspaceApps(workspaceId) {
         return backend ? backend.getWorkspaceApps(workspaceId) : [];
+    }
+    // The Wayland toplevel of a window, for a ScreencopyView; null when the backend has none
+    function toplevelFor(address) {
+        return backend ? backend.toplevelFor(address) : null;
+    }
+    // The windows on a workspace that are drawn there (not unmapped, not a hidden group member)
+    function shownWindows(workspaceId) {
+        return backend ? backend.shownWindows(workspaceId) : [];
     }
     function monitorForScreen(screen) {
         return backend ? backend.monitorForScreen(screen) : null;

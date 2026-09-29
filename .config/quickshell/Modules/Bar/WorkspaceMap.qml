@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Effects
 import Quickshell
+import Quickshell.Wayland
 import "../../Config"
 import "../../Services"
 import "../../Components"
@@ -22,7 +23,7 @@ BarAnchoredPopup {
     readonly property real screenWidth: (monitor?.width ?? 1) / (monitor?.scale ?? 1)
     readonly property real screenHeight: (monitor?.height ?? 1) / (monitor?.scale ?? 1)
     // Floating ones last, so they are drawn and found on top
-    readonly property var windows: Compositor.windowList.filter(w => w.workspace?.id === workspaceId && w.mapped && !w.hidden).sort((a, b) => a.floating - b.floating)
+    readonly property var windows: Compositor.shownWindows(workspaceId).sort((a, b) => a.floating - b.floating)
     // The screen and every window on the workspace (a scrolling layout reaches past the screen),
     // relative to the screen's top left
     readonly property rect bounds: {
@@ -80,7 +81,8 @@ BarAnchoredPopup {
 
         x: root.padLeft
         y: root.padTop
-        implicitWidth: Math.max(map.width, title.implicitWidth) + 2 * padding
+        // As wide as the map: a long title is elided, never widens the card
+        implicitWidth: map.width + 2 * padding
         // One 16 px line with padding on both sides, which the app and title lines share
         implicitHeight: map.height + 16 + 3 * padding
         radius: 8
@@ -130,14 +132,28 @@ BarAnchoredPopup {
                     border.width: lit ? 2 : 1
                     border.color: lit ? Theme.primary : Theme.chipSurfaceNested
 
+                    // One frame, taken as the map opens: it is up only while the button is held
+                    ScreencopyView {
+                        id: preview
+
+                        anchors.fill: parent
+                        anchors.margins: 1
+                        captureSource: Compositor.toplevelFor(tile.modelData.address)
+                        live: false
+                        constraintSize: Qt.size(width, height)
+                    }
+
+                    // In a corner over the preview; centred and larger until there is one
                     BarAppIcon {
                         // Thin tiles (a stacked column) keep less margin, so their icons still fit;
                         // below 14 px an icon is only a dot
                         readonly property int margin: Math.min(tile.width, tile.height) < 36 ? 2 : 4
+                        readonly property int fullSize: Math.floor(Math.min(32, tile.width - 2 * margin, tile.height - 2 * margin))
 
-                        anchors.centerIn: parent
+                        x: preview.hasContent ? tile.width - width - margin : (tile.width - width) / 2
+                        y: preview.hasContent ? tile.height - height - margin : (tile.height - height) / 2
                         appClass: tile.modelData.class
-                        size: Math.floor(Math.min(32, tile.width - 2 * margin, tile.height - 2 * margin))
+                        size: preview.hasContent ? Math.min(20, fullSize) : fullSize
                         visible: size >= 14
                     }
                 }

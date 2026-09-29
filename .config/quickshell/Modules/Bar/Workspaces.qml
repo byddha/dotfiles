@@ -99,12 +99,12 @@ Grid {
 
             // Held or dragged, the map of the workspace opens; letting go on a window there goes to it,
             // on the rest of the map or back on this slot to the workspace (the click below), anywhere
-            // else nowhere. Hyprland only: Niri gives no window positions.
+            // else nowhere. Only where the compositor gives window positions.
             property point pressPoint
             property bool mapOpen: false
 
             function openMap() {
-                if (mapOpen || !Compositor.isHyprland)
+                if (mapOpen || !Compositor.hasWindowGeometry)
                     return;
                 Compositor.refreshWindows();
                 mapOpen = true;

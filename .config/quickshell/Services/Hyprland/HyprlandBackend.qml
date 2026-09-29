@@ -8,6 +8,7 @@ QtObject {
     id: backend
 
     property string type: "hyprland"
+    readonly property bool hasWindowGeometry: true
 
     property var workspaces: []
     property string focusedMonitorName: Hyprland.focusedMonitor?.name ?? ""
@@ -87,6 +88,14 @@ QtObject {
         appList.sort((a, b) => b.count - a.count);
 
         return appList;
+    }
+
+    function toplevelFor(address) {
+        return Hyprland.toplevels.values.find(t => `0x${t.address}` === address)?.wayland ?? null;
+    }
+
+    function shownWindows(workspaceId) {
+        return backend.windowList.filter(w => w.workspace?.id === workspaceId && w.mapped && !w.hidden);
     }
 
     function monitorForScreen(screen) {
