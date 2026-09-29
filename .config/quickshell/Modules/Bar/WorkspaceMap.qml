@@ -1,0 +1,187 @@
+pragma ComponentBehavior: Bound
+import QtQuick
+import QtQuick.Effects
+import Quickshell
+import "../../Config"
+import "../../Services"
+import "../../Components"
+
+// The windows of one workspace where they really are, scaled down, with the app icons; the one
+// under the pointer is lit and its title shown. It takes no pointer input itself: the workspace
+// slot that opened it holds the pointer while its button is down and tells it where the pointer is
+// through `pointer` (in the window's coordinates, from windowPoint()).
+BarAnchoredPopup {
+    id: root
+
+    required property int workspaceId
+    // Where the pointer is, in this window's coordinates; null while it is not over the map
+    property var pointer: null
+    readonly property var hoveredWindow: pointer ? windowAt(pointer) : null
+
+    readonly property var monitor: Compositor.monitors.find(m => m.name === (target.QsWindow.window?.screen?.name ?? "")) ?? null
+    readonly property real screenWidth: (monitor?.width ?? 1) / (monitor?.scale ?? 1)
+    readonly property real screenHeight: (monitor?.height ?? 1) / (monitor?.scale ?? 1)
+    // Floating ones last, so they are drawn and found on top
+    readonly property var windows: Compositor.windowList.filter(w => w.workspace?.id === workspaceId && w.mapped && !w.hidden).sort((a, b) => a.floating - b.floating)
+    // The screen and every window on the workspace (a scrolling layout reaches past the screen),
+    // relative to the screen's top left
+    readonly property rect bounds: {
+        let left = 0, top = 0, right = screenWidth, bottom = screenHeight;
+        for (const w of windows) {
+            left = Math.min(left, w.at[0] - monitor.x);
+            top = Math.min(top, w.at[1] - monitor.y);
+            right = Math.max(right, w.at[0] - monitor.x + w.size[0]);
+            bottom = Math.max(bottom, w.at[1] - monitor.y + w.size[1]);
+        }
+        return Qt.rect(left, top, right - left, bottom - top);
+    }
+    readonly property int mapHeight: 120
+    readonly property real mapScale: Math.min(mapHeight / bounds.height, (monitor ? screenWidth * 0.6 : 1) / bounds.width)
+
+    // A point in the window's coordinates from one in the bar item's
+    function windowPoint(itemPoint) {
+        const global = target.mapToGlobal(itemPoint.x, itemPoint.y);
+        return map.mapFromGlobal(global.x, global.y);
+    }
+
+    function containsPoint(point) {
+        return point !== null && point.x >= 0 && point.y >= 0 && point.x < map.width && point.y < map.height;
+    }
+
+    // The topmost window under a point in the map's coordinates, or null
+    function windowAt(point) {
+        if (!containsPoint(point))
+            return null;
+        for (let i = windows.length - 1; i >= 0; i--) {
+            const w = windows[i];
+            const x = (w.at[0] - monitor.x - bounds.x) * mapScale;
+            const y = (w.at[1] - monitor.y - bounds.y) * mapScale;
+            if (point.x >= x && point.y >= y && point.x < x + w.size[0] * mapScale && point.y < y + w.size[1] * mapScale)
+                return w;
+        }
+        return null;
+    }
+
+    implicitWidth: card.implicitWidth + padLeft + padRight
+    implicitHeight: card.implicitHeight + padTop + padBottom
+
+    RectangularShadow {
+        anchors.fill: card
+        radius: card.radius
+        blur: 24
+        offset: Qt.vector2d(0, 8)
+        color: Qt.rgba(0, 0, 0, 0.45)
+    }
+
+    Rectangle {
+        id: card
+
+        readonly property int padding: 10
+
+        x: root.padLeft
+        y: root.padTop
+        implicitWidth: Math.max(map.width, title.implicitWidth) + 2 * padding
+        // One 16 px line with padding on both sides, which the app and title lines share
+        implicitHeight: map.height + 16 + 3 * padding
+        radius: 8
+        color: Theme.chipSurface
+        border.width: 1
+        border.color: Theme.chipSurfaceNested
+
+        Item {
+            id: map
+
+            x: (card.width - width) / 2
+            y: card.padding
+            width: Math.round(root.bounds.width * root.mapScale)
+            height: Math.round(root.bounds.height * root.mapScale)
+
+            // The screen, under the windows
+            Rectangle {
+                x: -root.bounds.x * root.mapScale
+                y: -root.bounds.y * root.mapScale
+                width: root.screenWidth * root.mapScale
+                height: root.screenHeight * root.mapScale
+                radius: Theme.radiusSmall
+                color: Theme.hostSurface
+            }
+
+            Repeater {
+                model: root.windows
+
+                Rectangle {
+                    id: tile
+
+                    required property var modelData
+                    readonly property bool lit: root.hoveredWindow?.address === modelData.address
+
+                    // Whole-pixel edges, so the tiles of one column come out the same size
+                    readonly property int x0: Math.round((modelData.at[0] - root.monitor.x - root.bounds.x) * root.mapScale)
+                    readonly property int y0: Math.round((modelData.at[1] - root.monitor.y - root.bounds.y) * root.mapScale)
+                    readonly property int x1: Math.round((modelData.at[0] + modelData.size[0] - root.monitor.x - root.bounds.x) * root.mapScale)
+                    readonly property int y1: Math.round((modelData.at[1] + modelData.size[1] - root.monitor.y - root.bounds.y) * root.mapScale)
+
+                    x: x0 + 1
+                    y: y0 + 1
+                    width: Math.max(2, x1 - x0 - 2)
+                    height: Math.max(2, y1 - y0 - 2)
+                    radius: Theme.radiusSmall
+                    color: lit ? Theme.chipSurfaceNested : Theme.cardSurface
+                    border.width: lit ? 2 : 1
+                    border.color: lit ? Theme.primary : Theme.chipSurfaceNested
+
+                    BarAppIcon {
+                        // Thin tiles (a stacked column) keep less margin, so their icons still fit;
+                        // below 14 px an icon is only a dot
+                        readonly property int margin: Math.min(tile.width, tile.height) < 36 ? 2 : 4
+
+                        anchors.centerIn: parent
+                        appClass: tile.modelData.class
+                        size: Math.floor(Math.min(32, tile.width - 2 * margin, tile.height - 2 * margin))
+                        visible: size >= 14
+                    }
+                }
+            }
+
+            // What the screen shows of a workspace that reaches past it
+            Rectangle {
+                visible: root.bounds.width > root.screenWidth + 1 || root.bounds.height > root.screenHeight + 1
+                x: -root.bounds.x * root.mapScale - 2
+                y: -root.bounds.y * root.mapScale - 2
+                width: root.screenWidth * root.mapScale + 4
+                height: root.screenHeight * root.mapScale + 4
+                radius: Theme.radiusBase
+                color: "transparent"
+                border.width: 1
+                border.color: Theme.alpha(Theme.textColor, 0.6)
+            }
+        }
+
+        // The app over the title, in the room one line with its padding took
+        Column {
+            x: card.padding
+            y: map.y + map.height + 3
+            width: card.width - 2 * card.padding
+
+            StyledText {
+                width: parent.width
+                height: 14
+                horizontalAlignment: Text.AlignHCenter
+                elide: Text.ElideRight
+                role: "tertiary"
+                font.pixelSize: Theme.fontSizeTiny
+                text: root.hoveredWindow ? AppIcons.getDisplayName(root.hoveredWindow.class, root.hoveredWindow.title, root.hoveredWindow.xdgTag) : ""
+            }
+            StyledText {
+                id: title
+
+                width: parent.width
+                height: 16
+                horizontalAlignment: Text.AlignHCenter
+                elide: Text.ElideRight
+                font.pixelSize: Theme.fontSizeSmall
+                text: root.hoveredWindow?.title ?? ""
+            }
+        }
+    }
+}

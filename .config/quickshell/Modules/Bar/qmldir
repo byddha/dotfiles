@@ -29,3 +29,4 @@ ElapsedText 1.0 ElapsedText.qml
 RecordingButton 1.0 RecordingButton.qml
 WhisperButton 1.0 WhisperButton.qml
 VpnButton 1.0 VpnButton.qml
+WorkspaceMap 1.0 WorkspaceMap.qml

@@ -97,11 +97,70 @@ Grid {
                 return app.count > 1 ? `${name} ×${app.count}` : name;
             }).join(" · ")
 
+            // Held or dragged, the map of the workspace opens; letting go on a window there goes to it,
+            // on the rest of the map or back on this slot to the workspace (the click below), anywhere
+            // else nowhere. Hyprland only: Niri gives no window positions.
+            property point pressPoint
+            property bool mapOpen: false
+
+            function openMap() {
+                if (mapOpen || !Compositor.isHyprland)
+                    return;
+                Compositor.refreshWindows();
+                mapOpen = true;
+            }
+
             onClicked: mouse => {
                 if (mouse.button === Qt.LeftButton && !current)
                     Compositor.switchWorkspace(modelData.id);
             }
+            onLeftPressed: position => {
+                pressPoint = position;
+                hold.restart();
+            }
+            onLeftMoved: position => {
+                // Past a small drag, so a click with a shaky hand stays a click
+                if (Math.hypot(position.x - pressPoint.x, position.y - pressPoint.y) > 6)
+                    openMap();
+                if (map.item) {
+                    const point = map.item.windowPoint(position);
+                    map.item.pointer = map.item.containsPoint(point) ? point : null;
+                }
+            }
+            onLeftReleased: position => {
+                hold.stop();
+                if (map.item) {
+                    const point = map.item.windowPoint(position);
+                    if (map.item.containsPoint(point)) {
+                        const window = map.item.windowAt(point);
+                        if (window)
+                            Compositor.focusWindow(window.address);
+                        else if (!current)
+                            Compositor.switchWorkspace(modelData.id);
+                    }
+                }
+                mapOpen = false;
+            }
             onWheel: wheel => root.step(wheel)
+
+            Timer {
+                id: hold
+
+                interval: 250
+                onTriggered: slot.openMap()
+            }
+
+            LazyLoader {
+                id: map
+
+                active: slot.mapOpen
+
+                WorkspaceMap {
+                    target: slot
+                    workspaceId: slot.modelData.id
+                    visible: true
+                }
+            }
 
             StyledText {
                 id: label

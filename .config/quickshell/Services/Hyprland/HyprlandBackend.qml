@@ -206,6 +206,14 @@ QtObject {
         Hyprland.dispatch(`hl.dsp.focus({ workspace = ${id} })`);
     }
 
+    function focusWindow(address) {
+        Hyprland.dispatch(`hl.dsp.focus({ window = "address:${address}" })`);
+    }
+
+    function refreshWindows() {
+        Hyprland.refreshToplevels();
+    }
+
     function logout() {
         Hyprland.dispatch("hl.dsp.exit()");
     }

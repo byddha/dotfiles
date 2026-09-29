@@ -366,6 +366,16 @@ QtObject {
         }).running = true;
     }
 
+    function focusWindow(address) {
+        actionComponent.createObject(backend, {
+            command: ["niri", "msg", "action", "focus-window", "--id", address.replace("niri-", "")]
+        }).running = true;
+    }
+
+    // The event stream keeps the windows current
+    function refreshWindows() {
+    }
+
     function logout() {
         actionComponent.createObject(backend, {
             command: ["niri", "msg", "action", "quit"]

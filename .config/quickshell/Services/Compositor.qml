@@ -93,6 +93,15 @@ Singleton {
         if (backend)
             backend.switchWorkspace(id);
     }
+    function focusWindow(address) {
+        if (backend)
+            backend.focusWindow(address);
+    }
+    // Re-reads the windows now: Hyprland sends no event when a layout moves or resizes them
+    function refreshWindows() {
+        if (backend)
+            backend.refreshWindows();
+    }
     function logout() {
         if (backend)
             backend.logout();
