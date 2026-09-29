@@ -21,8 +21,7 @@ BarItem {
     onClicked: mouse => {
         if (mouse.button !== Qt.LeftButton)
             return;
-        Settings.sidebarSelectedTab = 1;
-        Settings.sidebarVisible = true;
+        Settings.toggleSidebarTab(1);
     }
 
     Item {

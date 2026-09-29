@@ -35,6 +35,12 @@ BarItem {
     tooltipTitle: "Device batteries"
     tooltipDetail: devices.map(d => `${d.name} · ${d.percentage}%` + (d.charging ? " · charging" : d.percentage <= PeripheralBatteries.lowThreshold ? " · low" : "")).join("\n")
 
+    onClicked: mouse => {
+        if (mouse.button !== Qt.LeftButton)
+            return;
+        Settings.toggleSidebarTab(4);
+    }
+
     function lengthAt(level) {
         const collapsedThen = devices.length > 1 && level >= 1;
         const lengths = [];

@@ -32,8 +32,7 @@ BarItem {
         if (mouse.button === Qt.RightButton) {
             toggleMute();
         } else if (mouse.button === Qt.LeftButton) {
-            Settings.sidebarSelectedTab = 0;
-            Settings.sidebarVisible = true;
+            Settings.toggleSidebarTab(0);
         }
     }
     onWheel: wheel => {
