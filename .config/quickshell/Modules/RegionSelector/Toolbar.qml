@@ -10,6 +10,7 @@ Rectangle {
 
     required property int action
     required property bool adjusting
+    property bool fullscreen: false
     property bool ocrMenuOpen: false
     property bool recordAudio: false
     property bool recordMic: false
@@ -86,10 +87,9 @@ Rectangle {
 
         ToolButton {
             icon: Lucide.monitor
-            tip: "Full screen"
+            toggled: root.fullscreen
+            tip: root.fullscreen ? "Clear the full screen selection" : "Select the full screen"
             keys: ["F"]
-            detail: "…and open in editor"
-            detailKeys: ["Shift", "F"]
             onClicked: root.fullscreenRequested()
         }
         ToolButton {

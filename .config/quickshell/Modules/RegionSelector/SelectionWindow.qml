@@ -402,6 +402,27 @@ PanelWindow {
     }
 
     readonly property bool canSnip: adjusting && regionWidth > 0 && regionHeight > 0 && cursorOnThisMonitor
+    readonly property bool fullscreenSelected: adjusting && regionX === 0 && regionY === 0 && regionWidth === width && regionHeight === height
+
+    function clearSelection() {
+        root.adjusting = false;
+        root.regionWidth = 0;
+        root.regionHeight = 0;
+    }
+
+    // The whole monitor becomes the selection, so every output and the record options work on it,
+    // and the handles can still trim it; again clears it
+    function toggleFullscreen() {
+        if (root.fullscreenSelected) {
+            root.clearSelection();
+            return;
+        }
+        root.regionX = 0;
+        root.regionY = 0;
+        root.regionWidth = root.width;
+        root.regionHeight = root.height;
+        root.adjusting = true;
+    }
 
     function snipAs(mode, allLangs = false, translate = false) {
         root.snipping = true;
@@ -409,14 +430,6 @@ PanelWindow {
         root.ocrAllLangs = allLangs;
         root.ocrTranslate = translate;
         root.snip();
-    }
-
-    function snipFullscreen(mode) {
-        root.regionX = 0;
-        root.regionY = 0;
-        root.regionWidth = root.width;
-        root.regionHeight = root.height;
-        root.snipAs(mode);
     }
 
     function snip() {
@@ -539,9 +552,8 @@ PanelWindow {
                     root.micToggleRequested();
                 break;
             case Qt.Key_F:
-                // Shift+F = edit in swappy
                 if (root.cursorOnThisMonitor)
-                    root.snipFullscreen((event.modifiers & Qt.ShiftModifier) ? "edit" : "copy");
+                    root.toggleFullscreen();
                 break;
             case Qt.Key_C:
                 // Shrink selection to content bounds
@@ -600,9 +612,7 @@ PanelWindow {
                         root.adjustStartRegionH = root.regionHeight;
                     } else {
                         // Clicked outside - start new selection
-                        root.adjusting = false;
-                        root.regionWidth = 0;
-                        root.regionHeight = 0;
+                        root.clearSelection();
                         root.dragStartX = mouse.x;
                         root.dragStartY = mouse.y;
                         root.draggingX = mouse.x;
@@ -751,12 +761,13 @@ PanelWindow {
                 height: implicitHeight
                 action: root.action
                 adjusting: root.adjusting
+                fullscreen: root.fullscreenSelected
                 recordAudio: root.recordAudio
                 recordMic: root.recordMic
                 onAudioToggled: root.audioToggleRequested()
                 onMicToggled: root.micToggleRequested()
                 onDismiss: root.dismiss()
-                onFullscreenRequested: root.snipFullscreen("copy")
+                onFullscreenRequested: root.toggleFullscreen()
                 onCropRequested: root.shrinkToContent()
                 onSnipRequested: (mode, allLangs, translate) => root.snipAs(mode, allLangs, translate)
                 onActionRequested: newAction => root.actionChangeRequested(newAction)
