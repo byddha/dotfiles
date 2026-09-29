@@ -4,11 +4,11 @@ import "../../Config"
 /**
  * BarContent - The bar's sections: start (left or top), center and end (right or bottom).
  *
- * The clock sits exactly in the middle of the bar; what comes before and after it in the
- * center hugs it, so it never moves when media starts or a VPN connects.
+ * The workspaces sit exactly in the middle of the bar; the active window before them hugs
+ * them, so they never move when the window title changes.
  *
  * When the content does not fit, the whole bar steps down a level (see BarItem.level): the
- * lowest level at which each half, start + center group + half the clock, fits in half the bar.
+ * lowest level at which each half, start + center group + half the workspaces, fits in half the bar.
  * Every length comes from lengthAt(), which does not depend on the level shown, so choosing
  * one never feeds back into itself.
  */
@@ -17,7 +17,7 @@ Item {
 
     readonly property bool vertical: BarLayout.vertical
     readonly property int padding: 6
-    // Between the clock and the center groups next to it
+    // Between the workspaces and the active window next to them
     readonly property int centerSpacing: 2
     // Least room between a side section and the center groups
     readonly property int minGap: 12
@@ -32,22 +32,22 @@ Item {
 
     function fits(level) {
         const half = (vertical ? height : width) / 2;
-        const center = clock.lengthAt(level) / 2 + centerSpacing;
-        const start = padding + startSection.lengthAt(level) + minGap + beforeClock.lengthAt(level) + center;
-        const end = padding + endSection.lengthAt(level) + minGap + afterClock.lengthAt(level) + center;
+        const center = workspaces.lengthAt(level) / 2 + centerSpacing;
+        const start = padding + startSection.lengthAt(level) + minGap + beforeWorkspaces.lengthAt(level) + center;
+        const end = padding + endSection.lengthAt(level) + minGap + center;
         return start <= half && end <= half;
     }
 
-    // The clock's start along the bar: exactly in the middle while the center groups fit on both
-    // sides of it; when even level 3 does not fit, the whole center block in the middle of the room
+    // The workspaces' start along the bar: exactly in the middle while the center group fits on
+    // both sides of them; when even level 3 does not fit, the whole center block in the middle of the room
     // the side sections leave, so it never covers them. From the lengths the level is chosen by,
-    // not the shown sizes: an item that grows on hover (media) must not move the clock.
-    readonly property real clockStart: {
+    // not the shown sizes: an item that grows on hover (media) must not move the workspaces.
+    readonly property real workspacesStart: {
         const length = vertical ? height : width;
         const size = item => item.lengthAt(level);
-        const ideal = (length - size(clock)) / 2;
-        const lowest = padding + size(startSection) + minGap + size(beforeClock) + centerSpacing;
-        const highest = length - padding - size(endSection) - minGap - size(afterClock) - centerSpacing - size(clock);
+        const ideal = (length - size(workspaces)) / 2;
+        const lowest = padding + size(startSection) + minGap + size(beforeWorkspaces) + centerSpacing;
+        const highest = length - padding - size(endSection) - minGap - centerSpacing - size(workspaces);
         if (lowest <= highest)
             return Math.max(lowest, Math.min(highest, ideal));
         return (lowest + highest) / 2;
@@ -66,55 +66,17 @@ Item {
         x: pos.x
         y: pos.y
 
-        Workspaces {
-            level: root.level
-        }
-        BarDivider {
-            visible: activeWindow.visible
-        }
-        ActiveWindowButton {
-            id: activeWindow
-
-            level: root.level
-        }
-    }
-
-    Section {
-        id: beforeClock
-
-        readonly property point pos: root.along(this, (root.vertical ? clock.y : clock.x) - root.centerSpacing - (root.vertical ? height : width))
-
-        x: pos.x
-        y: pos.y
-
-        MediaButton {
-            id: media
-
+        ClockButton {
             level: root.level
         }
         BarDivider {
             visible: media.visible
         }
-    }
+        MediaButton {
+            id: media
 
-    ClockButton {
-        id: clock
-
-        readonly property point pos: root.along(this, root.clockStart)
-
-        level: root.level
-        x: pos.x
-        y: pos.y
-    }
-
-    Section {
-        id: afterClock
-
-        readonly property point pos: root.along(this, (root.vertical ? clock.y + clock.height : clock.x + clock.width) + root.centerSpacing)
-
-        x: pos.x
-        y: pos.y
-
+            level: root.level
+        }
         BarDivider {
             visible: whisper.visible || vpn.visible || recording.visible
         }
@@ -129,6 +91,34 @@ Item {
         RecordingButton {
             id: recording
         }
+    }
+
+    Section {
+        id: beforeWorkspaces
+
+        readonly property point pos: root.along(this, (root.vertical ? workspaces.y : workspaces.x) - root.centerSpacing - (root.vertical ? height : width))
+
+        x: pos.x
+        y: pos.y
+
+        ActiveWindowButton {
+            id: activeWindow
+
+            level: root.level
+        }
+        BarDivider {
+            visible: activeWindow.visible
+        }
+    }
+
+    Workspaces {
+        id: workspaces
+
+        readonly property point pos: root.along(this, root.workspacesStart)
+
+        level: root.level
+        x: pos.x
+        y: pos.y
     }
 
     Section {

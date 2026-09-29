@@ -9,7 +9,7 @@ import "../../Components"
 /**
  * MediaButton - The playing track: round art in a progress ring, the title and the artist. Hover
  * turns the second line into the time and brings in previous / play-pause / next, widening the item
- * away from the clock; its tooltip shows the cover, the whole title and the track's length. The
+ * toward the bar's end; its tooltip shows the cover, the whole title and the track's length. The
  * wheel switches between players. On a vertical bar, and at level 3, only the ring (and on a
  * vertical bar the time) shows until hovered. Level 1 shortens the title.
  */
@@ -22,7 +22,7 @@ BarItem {
     readonly property int ringStroke: 3
     // Light enough that what is left of the track reads at a glance
     readonly property color ringTrack: Theme.alpha(Theme.textSecondary, 0.3)
-    // The controls' slot ends 6 past the item's spacing, so buttons and ring sit 16 apart
+    // The controls' slot starts 6 past the item's spacing, so the text and the buttons sit 16 apart
     readonly property int slotLead: vertical ? 0 : 6
     // Three 28 px buttons, 2 apart
     readonly property int controlsLength: 3 * 28 + 2 * 2
@@ -34,7 +34,7 @@ BarItem {
 
     // Horizontally the hovered length at every level, so widening never runs into the neighbours.
     // Vertically only the ring and the time: the bar is short there, and the controls grow over the
-    // gap (or the last workspaces) while hovered. Only text and fixed sizes: positioners report 0
+    // gap after the start section while hovered. Only text and fixed sizes: positioners report 0
     // while hidden, which would tie the length to the hover.
     function lengthAt(level) {
         if (vertical)
@@ -57,58 +57,7 @@ BarItem {
             Media.cycle(1);
     }
 
-    // Revealed on hover at the far end from the clock: the item grows that way, so the ring and the
-    // title stay under the pointer and a click meant for them never lands on a button
-    Item {
-        implicitWidth: root.vertical ? 28 : (root.hovered ? root.slotLead + root.controlsLength : 0)
-        implicitHeight: root.vertical ? (root.hovered ? root.controlsLength : 0) : 28
-        visible: implicitWidth > 0.5 && implicitHeight > 0.5
-        clip: true
-
-        Behavior on implicitWidth {
-            NumberAnimation {
-                duration: 160
-                easing.type: Easing.OutCubic
-            }
-        }
-        Behavior on implicitHeight {
-            NumberAnimation {
-                duration: 160
-                easing.type: Easing.OutCubic
-            }
-        }
-
-        Grid {
-            id: hoverParts
-
-            anchors.left: parent.left
-            anchors.top: parent.top
-            columns: root.vertical ? 1 : 4
-            spacing: 2
-            horizontalItemAlignment: Grid.AlignHCenter
-            verticalItemAlignment: Grid.AlignVCenter
-
-            Control {
-                glyph: Lucide.skipBack
-                glyphSize: 16
-                enabled: Media.canPrevious
-                onTapped: Media.previous()
-            }
-            Control {
-                glyph: Media.playing ? Lucide.pause : Lucide.play
-                glyphSize: 20
-                onTapped: Media.togglePlaying()
-            }
-            Control {
-                glyph: Lucide.skipForward
-                glyphSize: 16
-                enabled: Media.canNext
-                onTapped: Media.next()
-            }
-        }
-    }
-
-    // Always there on a vertical bar, between the controls and the ring, so it never moves on hover.
+    // Always there on a vertical bar, above the ring, so it never moves on hover.
     // Its room is kept even when the player gives no length, so the item never jumps; then it is
     // empty, or a dash while hovered.
     StyledText {
@@ -253,6 +202,58 @@ BarItem {
                     font.pixelSize: Theme.fontSizeTiny
                     text: ` / ${root.formatTime(Media.length)}`
                 }
+            }
+        }
+    }
+
+    // Revealed on hover at the far end: the item grows toward the bar's end, so the ring and the
+    // title stay under the pointer and a click meant for them never lands on a button
+    Item {
+        implicitWidth: root.vertical ? 28 : (root.hovered ? root.slotLead + root.controlsLength : 0)
+        implicitHeight: root.vertical ? (root.hovered ? root.controlsLength : 0) : 28
+        visible: implicitWidth > 0.5 && implicitHeight > 0.5
+        clip: true
+
+        Behavior on implicitWidth {
+            NumberAnimation {
+                duration: 160
+                easing.type: Easing.OutCubic
+            }
+        }
+        Behavior on implicitHeight {
+            NumberAnimation {
+                duration: 160
+                easing.type: Easing.OutCubic
+            }
+        }
+
+        Grid {
+            id: hoverParts
+
+            // The slot's lead is the gap before the buttons
+            anchors.right: parent.right
+            anchors.top: parent.top
+            columns: root.vertical ? 1 : 4
+            spacing: 2
+            horizontalItemAlignment: Grid.AlignHCenter
+            verticalItemAlignment: Grid.AlignVCenter
+
+            Control {
+                glyph: Lucide.skipBack
+                glyphSize: 16
+                enabled: Media.canPrevious
+                onTapped: Media.previous()
+            }
+            Control {
+                glyph: Media.playing ? Lucide.pause : Lucide.play
+                glyphSize: 20
+                onTapped: Media.togglePlaying()
+            }
+            Control {
+                glyph: Lucide.skipForward
+                glyphSize: 16
+                enabled: Media.canNext
+                onTapped: Media.next()
             }
         }
     }
