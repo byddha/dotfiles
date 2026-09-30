@@ -74,27 +74,36 @@ PanelWindow {
     property real adjustStartRegionW: 0
     property real adjustStartRegionH: 0
 
-    // Window regions on this workspace, sorted for proper z-order (floating above tiled)
+    // Window regions on this workspace, sorted for proper z-order (floating above tiled); each is
+    // the part on this screen, as a scrolling layout puts windows past it
     readonly property var windowRegions: {
         const workspaceWindows = Compositor.windowList.filter(w => w.workspace.id === root.effectiveWorkspaceId);
-        const toRegion = w => ({
-                    at: [w.at[0] - root.monitorOffsetX, w.at[1] - root.monitorOffsetY],
-                    size: w.size,
-                    class: w.class,
-                    title: w.title,
-                    floating: w.floating
-                });
+        const toRegion = w => {
+            const left = Math.max(0, w.at[0] - root.monitorOffsetX);
+            const top = Math.max(0, w.at[1] - root.monitorOffsetY);
+            const right = Math.min(root.width, w.at[0] - root.monitorOffsetX + w.size[0]);
+            const bottom = Math.min(root.height, w.at[1] - root.monitorOffsetY + w.size[1]);
+            return {
+                at: [left, top],
+                size: [right - left, bottom - top],
+                class: w.class,
+                title: w.title,
+                floating: w.floating
+            };
+        };
+        const onScreen = region => region.size[0] > 0 && region.size[1] > 0;
 
-        // If any window is fullscreen or maximized, only show that window (others are occluded)
-        // fullscreen: 1 = real fullscreen, 2 = maximized
-        const fullscreenWindow = workspaceWindows.find(w => w.fullscreen > 0);
+        // A fullscreen or maximized window (1 = maximized, 2 = fullscreen) hides the others when
+        // Hyprland's default handler draws it; a layout that handles it (scrolling) keeps it a
+        // column beside the others
+        const fullscreenWindow = workspaceWindows.find(w => w.fullscreen > 0 && w.fullscreenHandler === "default");
         if (fullscreenWindow)
-            return [toRegion(fullscreenWindow)];
+            return [toRegion(fullscreenWindow)].filter(onScreen);
 
         // Floating windows first (higher z-order), and among them smaller ones first
         // (easier to target, likely on top)
         const area = w => w.size[0] * w.size[1];
-        return workspaceWindows.sort((a, b) => (!!b.floating - !!a.floating) || (a.floating ? area(a) - area(b) : 0)).map(toRegion);
+        return workspaceWindows.sort((a, b) => (!!b.floating - !!a.floating) || (a.floating ? area(a) - area(b) : 0)).map(toRegion).filter(onScreen);
     }
 
     // Floating windows only (for computing cutouts in tiled windows)
