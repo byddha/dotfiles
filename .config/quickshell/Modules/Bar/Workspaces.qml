@@ -101,7 +101,15 @@ Grid {
             // on the rest of the map or back on this slot to the workspace (the click below), anywhere
             // else nowhere. Only where the compositor gives window positions.
             property point pressPoint
+            property point pointer
             property bool mapOpen: false
+
+            // A point in the item's coordinates on the screen: the bar window spans its whole edge
+            function screenPoint(point) {
+                const window = QsWindow.window;
+                const inWindow = mapToItem(null, point.x, point.y);
+                return Qt.point(inWindow.x + (BarLayout.edge === "right" ? window.screen.width - window.width : 0), inWindow.y + (BarLayout.edge === "bottom" ? window.screen.height - window.height : 0));
+            }
 
             function openMap() {
                 if (mapOpen || !Compositor.hasWindowGeometry)
@@ -116,28 +124,24 @@ Grid {
             }
             onLeftPressed: position => {
                 pressPoint = position;
+                pointer = position;
                 hold.restart();
             }
             onLeftMoved: position => {
+                pointer = position;
                 // Past a small drag, so a click with a shaky hand stays a click
                 if (Math.hypot(position.x - pressPoint.x, position.y - pressPoint.y) > 6)
                     openMap();
-                if (map.item) {
-                    const point = map.item.windowPoint(position);
-                    map.item.pointer = map.item.containsPoint(point) ? point : null;
-                }
             }
             onLeftReleased: position => {
                 hold.stop();
-                if (map.item) {
-                    const point = map.item.windowPoint(position);
-                    if (map.item.containsPoint(point)) {
-                        const window = map.item.windowAt(point);
-                        if (window)
-                            Compositor.focusWindow(window.address);
-                        else if (!current)
-                            Compositor.switchWorkspace(modelData.id);
-                    }
+                pointer = position;
+                if (map.item?.onMap(screenPoint(position))) {
+                    const window = map.item.hoveredWindow;
+                    if (window)
+                        Compositor.focusWindow(window.address);
+                    else if (!current)
+                        Compositor.switchWorkspace(modelData.id);
                 }
                 mapOpen = false;
             }
@@ -156,8 +160,14 @@ Grid {
                 active: slot.mapOpen
 
                 WorkspaceMap {
-                    target: slot
+                    screen: slot.QsWindow.window?.screen ?? null
                     workspaceId: slot.modelData.id
+                    anchorRect: {
+                        const topLeft = slot.screenPoint(Qt.point(0, 0));
+                        return Qt.rect(topLeft.x, topLeft.y, slot.width, slot.height);
+                    }
+                    start: slot.screenPoint(slot.pressPoint)
+                    end: slot.screenPoint(slot.pointer)
                     visible: true
                 }
             }

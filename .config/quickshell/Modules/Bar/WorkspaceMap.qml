@@ -1,25 +1,31 @@
 pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Effects
+import QtQuick.Shapes
 import Quickshell
 import Quickshell.Wayland
 import "../../Config"
 import "../../Services"
 import "../../Components"
 
-// The windows of one workspace where they really are, scaled down, with the app icons; the one
-// under the pointer is lit and its title shown. It takes no pointer input itself: the workspace
-// slot that opened it holds the pointer while its button is down and tells it where the pointer is
-// through `pointer` (in the window's coordinates, from windowPoint()).
-BarAnchoredPopup {
+// The windows of one workspace where they really are, scaled down, with previews and app icons,
+// next to the bar item that opened it; the one under the pointer is lit and named. A line joins
+// where the drag started to the pointer. One layer over the whole screen, taking no input, so the
+// line can run from the bar over the map: the workspace slot keeps the pointer while its button is
+// down and tells this where it started and where it is, in the screen's coordinates.
+PanelWindow {
     id: root
 
     required property int workspaceId
-    // Where the pointer is, in this window's coordinates; null while it is not over the map
-    property var pointer: null
-    readonly property var hoveredWindow: pointer ? windowAt(pointer) : null
+    // The item that opened it, in the screen's coordinates
+    required property rect anchorRect
+    required property point start
+    required property point end
+    // The end in the map's coordinates, and the window under it
+    readonly property point mapPoint: map.mapFromItem(null, end.x, end.y)
+    readonly property var hoveredWindow: windowAt(mapPoint)
 
-    readonly property var monitor: Compositor.monitors.find(m => m.name === (target.QsWindow.window?.screen?.name ?? "")) ?? null
+    readonly property var monitor: Compositor.monitors.find(m => m.name === (screen?.name ?? "")) ?? null
     readonly property real screenWidth: (monitor?.width ?? 1) / (monitor?.scale ?? 1)
     readonly property real screenHeight: (monitor?.height ?? 1) / (monitor?.scale ?? 1)
     // Floating ones last, so they are drawn and found on top
@@ -39,14 +45,13 @@ BarAnchoredPopup {
     readonly property int mapHeight: 120
     readonly property real mapScale: Math.min(mapHeight / bounds.height, (monitor ? screenWidth * 0.6 : 1) / bounds.width)
 
-    // A point in the window's coordinates from one in the bar item's
-    function windowPoint(itemPoint) {
-        const global = target.mapToGlobal(itemPoint.x, itemPoint.y);
-        return map.mapFromGlobal(global.x, global.y);
+    function containsPoint(point) {
+        return point.x >= 0 && point.y >= 0 && point.x < map.width && point.y < map.height;
     }
 
-    function containsPoint(point) {
-        return point !== null && point.x >= 0 && point.y >= 0 && point.x < map.width && point.y < map.height;
+    // Whether a point on the screen is over the map
+    function onMap(screenPoint) {
+        return containsPoint(map.mapFromItem(null, screenPoint.x, screenPoint.y));
     }
 
     // The topmost window under a point in the map's coordinates, or null
@@ -63,8 +68,20 @@ BarAnchoredPopup {
         return null;
     }
 
-    implicitWidth: card.implicitWidth + padLeft + padRight
-    implicitHeight: card.implicitHeight + padTop + padBottom
+    color: "transparent"
+    mask: Region {}
+
+    WlrLayershell.namespace: "bidshell:workspace-map"
+    WlrLayershell.layer: WlrLayer.Overlay
+    WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+    WlrLayershell.exclusionMode: ExclusionMode.Ignore
+
+    anchors {
+        top: true
+        bottom: true
+        left: true
+        right: true
+    }
 
     RectangularShadow {
         anchors.fill: card
@@ -79,8 +96,31 @@ BarAnchoredPopup {
 
         readonly property int padding: 10
 
-        x: root.padLeft
-        y: root.padTop
+        readonly property int margin: 8
+        // Past the bar's inner edge, centred on the item and kept on the screen
+        readonly property real along: BarLayout.vertical ? root.anchorRect.y + root.anchorRect.height / 2 - height / 2 : root.anchorRect.x + root.anchorRect.width / 2 - width / 2
+        readonly property real inset: BarLayout.reserved + BarLayout.popoutGap
+
+        x: {
+            switch (BarLayout.edge) {
+            case "left":
+                return inset;
+            case "right":
+                return root.width - inset - width;
+            default:
+                return Math.max(margin, Math.min(root.width - margin - width, along));
+            }
+        }
+        y: {
+            switch (BarLayout.edge) {
+            case "top":
+                return inset;
+            case "bottom":
+                return root.height - inset - height;
+            default:
+                return Math.max(margin, Math.min(root.height - margin - height, along));
+            }
+        }
         // As wide as the map: a long title is elided, never widens the card
         implicitWidth: map.width + 2 * padding
         // One 16 px line with padding on both sides, which the app and title lines share
@@ -199,5 +239,45 @@ BarAnchoredPopup {
                 text: root.hoveredWindow?.title ?? ""
             }
         }
+    }
+
+    // Over the map, from where the drag started to the pointer
+    Shape {
+        anchors.fill: parent
+        preferredRendererType: Shape.CurveRenderer
+
+        ShapePath {
+            strokeColor: Theme.alpha(Theme.primary, 0.6)
+            strokeWidth: 2
+            fillColor: "transparent"
+            capStyle: ShapePath.RoundCap
+            startX: root.start.x
+            startY: root.start.y
+
+            PathLine {
+                x: root.end.x
+                y: root.end.y
+            }
+        }
+    }
+
+    Rectangle {
+        x: root.start.x - width / 2
+        y: root.start.y - height / 2
+        width: 8
+        height: 8
+        radius: 4
+        color: Theme.primary
+    }
+
+    Rectangle {
+        x: root.end.x - width / 2
+        y: root.end.y - height / 2
+        width: 16
+        height: 16
+        radius: 8
+        color: "transparent"
+        border.width: 2
+        border.color: Theme.primary
     }
 }
