@@ -246,6 +246,85 @@ PanelWindow {
         id: snipProc
     }
 
+    // OCR stays on screen: the lines found appear over the frozen region, each fills in as it is
+    // read, and the window closes once the text is copied. Esc cancels.
+    ListModel {
+        id: ocrLines
+    }
+
+    function readText(file) {
+        ocrLines.clear();
+        ocrProc.file = file;
+        ocrProc.text = "";
+        ocrProc.cancelled = false;
+        // The script's venv: without it (not set up yet, or broken by a Python upgrade) bash exits 127
+        ocrProc.command = ["bash", "-c", 'exec "${XDG_DATA_HOME:-$HOME/.local/share}/bidshell/ocr/venv/bin/python" "$0" "$1"', Qt.resolvedUrl("../../scripts/ocr/ocr.py").toString().replace("file://", ""), file];
+        ocrProc.running = true;
+    }
+
+    function cancelReading() {
+        ocrProc.cancelled = true;
+        ocrProc.running = false;
+    }
+
+    Process {
+        id: ocrProc
+
+        property string file
+        property string text
+        property bool cancelled
+
+        stdout: SplitParser {
+            onRead: line => {
+                let message;
+                try {
+                    message = JSON.parse(line);
+                } catch (e) {
+                    Logger.error("OCR output:", line);
+                    return;
+                }
+                if (message.boxes) {
+                    // Image pixels of the grabbed region to this window's logical coordinates
+                    for (const [x, y, w, h] of message.boxes)
+                        ocrLines.append({
+                            lineX: regionCrop.grabX + x / regionCrop.grabScale,
+                            lineY: regionCrop.grabY + y / regionCrop.grabScale,
+                            lineWidth: w / regionCrop.grabScale,
+                            lineHeight: h / regionCrop.grabScale,
+                            read: false
+                        });
+                } else if (message.read) {
+                    for (const i of message.read)
+                        ocrLines.setProperty(i, "read", true);
+                } else if (message.text !== undefined) {
+                    ocrProc.text = message.text;
+                }
+            }
+        }
+        stderr: StdioCollector {
+            id: ocrErrors
+        }
+
+        onExited: code => {
+            Quickshell.execDetached(["rm", "-f", file]);
+            if (cancelled) {
+                root.dismiss();
+                return;
+            }
+            if (code === 127) {
+                Quickshell.execDetached(["notify-send", "-a", "OCR", "OCR is not set up", "Run: qs ipc call setup ocr"]);
+            } else if (code !== 0) {
+                Logger.error("OCR failed:", ocrErrors.text);
+                Quickshell.execDetached(["notify-send", "-a", "OCR", "OCR failed", ocrErrors.text.trim().split("\n").pop() ?? ""]);
+            } else if (text !== "") {
+                Quickshell.execDetached(["wl-copy", "--", text]);
+                if (root.ocrTranslate)
+                    Quickshell.execDetached(["xdg-open", `https://translate.kagi.com/?from=auto&to=&text=${encodeURIComponent(text)}`]);
+            }
+            root.dismiss();
+        }
+    }
+
     // Shrink-to-content process. The file at screenshotPath is now the cropped
     // region (not the full screen), so the python script receives (0, 0, w, h)
     // and we add cropOffset{X,Y} back to its output to convert crop-local
@@ -476,11 +555,8 @@ PanelWindow {
             } else if (root.snipMode === "lens") {
                 cmd = `imageLink=$(curl -sF files[]=@'${f}' 'https://uguu.se/upload' | jq -r '.files[0].url') && xdg-open "https://lens.google.com/uploadbyurl?url=\${imageLink}" && ${cleanup}`;
             } else if (root.snipMode === "ocr") {
-                // Without the venv (not set up yet, or broken by a Python upgrade) it says what to run
-                const script = Qt.resolvedUrl("../../scripts/ocr/ocr.py").toString().replace("file://", "");
-                const read = `text=$("\${XDG_DATA_HOME:-$HOME/.local/share}/bidshell/ocr/venv/bin/python" '${script}' '${f}') || { notify-send -a OCR "OCR is not set up" "Run: qs ipc call setup ocr"; ${cleanup}; exit; }`;
-                const copy = `printf '%s' "$text" | wl-copy`;
-                cmd = root.ocrTranslate ? `${read}; ${copy} && xdg-open "https://translate.kagi.com/?from=auto&to=&text=$(printf '%s' "$text" | jq -sRr @uri)" && ${cleanup}` : `${read}; ${copy} && ${cleanup}`;
+                root.readText(f);
+                return;
             } else if (root.snipMode === "edit") {
                 cmd = `swappy -f '${f}' && ${cleanup}`;
             } else {
@@ -511,6 +587,40 @@ PanelWindow {
         size: 160
         color: Theme.primary
         z: 10
+    }
+
+    // The lines OCR found, over the frozen region; each fills in once read
+    Item {
+        anchors.fill: parent
+        visible: ocrLines.count > 0
+        focus: ocrProc.running
+        z: 5
+
+        Keys.onEscapePressed: root.cancelReading()
+
+        Repeater {
+            model: ocrLines
+
+            Rectangle {
+                required property var model
+
+                // A little room around the glyphs
+                x: model.lineX - 2
+                y: model.lineY - 2
+                width: model.lineWidth + 4
+                height: model.lineHeight + 4
+                radius: 3
+                color: model.read ? Theme.alpha(Theme.primary, 0.3) : "transparent"
+                border.width: 1
+                border.color: Theme.alpha(Theme.primary, 0.8)
+
+                Behavior on color {
+                    ColorAnimation {
+                        duration: 150
+                    }
+                }
+            }
+        }
     }
 
     // UI layer — sibling of screencopyView so grabToImage excludes it.
