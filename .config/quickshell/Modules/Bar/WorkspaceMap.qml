@@ -43,6 +43,9 @@ BarAnchoredPopup {
 
     signal chosen
 
+    // For the workspaces' aim check, which places it from the bar's side
+    readonly property size cardSize: Qt.size(card.width, card.height)
+
     // The topmost window under a point in the map's coordinates, or null
     function windowAt(point) {
         for (let i = windows.length - 1; i >= 0; i--) {

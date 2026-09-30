@@ -78,19 +78,91 @@ Grid {
     // After a click, until the pointer leaves that workspace
     property Item quietSlot: null
 
+    // Crossing another workspace on the way to the open map must not swap it ("menu aim", as
+    // macOS submenus): while the pointer heads into the triangle between where it was and the
+    // map's near edge, the swap waits until it rests there or turns away. In this item's
+    // coordinates: Wayland gives windows no screen position, so the map's edge is worked out from
+    // where the popup opens (centred on its workspace, past the bar's inner edge).
+    property Item aimSlot: null
+    property point trailPoint
+    property point pointerPoint
+    readonly property point hoverPosition: pointerTracker.point.position
+
+    onHoverPositionChanged: {
+        const point = hoverPosition;
+        // A few pixels of travel, so the heading is not just jitter
+        if (Math.hypot(point.x - pointerPoint.x, point.y - pointerPoint.y) < 6)
+            return;
+        trailPoint = pointerPoint;
+        pointerPoint = point;
+        if (!aimSlot)
+            return;
+        if (aimingAtMap())
+            aimTimer.restart();
+        else
+            swapTo(aimSlot);
+    }
+
+    function aimingAtMap() {
+        const size = mapLoader.item?.cardSize;
+        if (!size || !mapSlot)
+            return false;
+        const slot = mapSlot.mapToItem(root, 0, 0);
+        const reach = (BarLayout.thickness - BarLayout.itemSize) / 2 + BarLayout.popoutGap;
+        const edge = BarLayout.edge;
+        // Near a screen end the compositor slides the popup back on: the bar window spans its
+        // whole edge, so its coordinates along the bar are the screen's
+        const offset = vertical ? mapToItem(null, 0, 0).y : mapToItem(null, 0, 0).x;
+        const screenLength = vertical ? QsWindow.window.height : QsWindow.window.width;
+        // The window slides with its shadow room, which is the same on both ends along the bar
+        const pad = mapLoader.item.shadowRoom;
+        const length = vertical ? size.height : size.width;
+        const middle = vertical ? slot.y + mapSlot.height / 2 : slot.x + mapSlot.width / 2;
+        const start = pad + Math.max(-offset, Math.min(screenLength - offset - length - 2 * pad, middle - length / 2 - pad));
+        let a, b;
+        if (vertical) {
+            const x = edge === "left" ? slot.x + mapSlot.width + reach : slot.x - reach;
+            a = Qt.point(x, start);
+            b = Qt.point(x, start + length);
+        } else {
+            const y = edge === "top" ? slot.y + mapSlot.height + reach : slot.y - reach;
+            a = Qt.point(start, y);
+            b = Qt.point(start + length, y);
+        }
+        const side = (p, q, r) => (q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x);
+        const d1 = side(trailPoint, a, pointerPoint);
+        const d2 = side(a, b, pointerPoint);
+        const d3 = side(b, trailPoint, pointerPoint);
+        return !((d1 < 0 || d2 < 0 || d3 < 0) && (d1 > 0 || d2 > 0 || d3 > 0));
+    }
+
+    function swapTo(slot) {
+        aimTimer.stop();
+        aimSlot = null;
+        if (mapSlot && hoveredSlot === slot)
+            mapSlot = slot;
+    }
+
     function slotHovered(slot, hovered) {
         if (hovered) {
             hoveredSlot = slot;
             if (slot === quietSlot)
                 return;
-            if (mapSlot)
-                mapSlot = slot;
-            else
+            if (!mapSlot) {
                 showTimer.restart();
+            } else if (slot !== mapSlot) {
+                // The pointer's position comes after this, so its next move decides
+                aimSlot = slot;
+                aimTimer.restart();
+            }
         } else if (hoveredSlot === slot) {
             hoveredSlot = null;
             if (quietSlot === slot)
                 quietSlot = null;
+            if (aimSlot === slot) {
+                aimTimer.stop();
+                aimSlot = null;
+            }
         }
     }
 
@@ -98,6 +170,18 @@ Grid {
         showTimer.stop();
         quietSlot = hoveredSlot;
         mapSlot = null;
+    }
+
+    HoverHandler {
+        id: pointerTracker
+    }
+
+    // Resting on the crossed workspace means it is the one wanted
+    Timer {
+        id: aimTimer
+
+        interval: 150
+        onTriggered: root.swapTo(root.aimSlot)
     }
 
     Timer {
