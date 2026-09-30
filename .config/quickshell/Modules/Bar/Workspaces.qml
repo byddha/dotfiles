@@ -66,6 +66,75 @@ Grid {
         }
     }
 
+    // The map of the hovered workspace, as a taskbar shows its thumbnails: it opens after a short
+    // hover, follows the pointer to another workspace at once, and closes a moment after the pointer
+    // has left both the workspaces and the map, so the way over to it never closes it
+    property Item hoveredSlot: null
+    property Item mapSlot: null
+    // The last one shown: the map keeps it while it closes, so its bindings never see null
+    property Item shownSlot: null
+    onMapSlotChanged: if (mapSlot)
+        shownSlot = mapSlot
+    // After a click, until the pointer leaves that workspace
+    property Item quietSlot: null
+
+    function slotHovered(slot, hovered) {
+        if (hovered) {
+            hoveredSlot = slot;
+            if (slot === quietSlot)
+                return;
+            if (mapSlot)
+                mapSlot = slot;
+            else
+                showTimer.restart();
+        } else if (hoveredSlot === slot) {
+            hoveredSlot = null;
+            if (quietSlot === slot)
+                quietSlot = null;
+        }
+    }
+
+    function closeMap() {
+        showTimer.stop();
+        quietSlot = hoveredSlot;
+        mapSlot = null;
+    }
+
+    Timer {
+        id: showTimer
+
+        interval: 300
+        onTriggered: {
+            if (!root.hoveredSlot || !Compositor.hasWindowGeometry)
+                return;
+            Compositor.refreshWindows();
+            root.mapSlot = root.hoveredSlot;
+        }
+    }
+
+    Timer {
+        interval: 300
+        running: root.mapSlot !== null && root.hoveredSlot === null && !(mapLoader.item?.hovered ?? false)
+        onTriggered: root.mapSlot = null
+    }
+
+    LazyLoader {
+        id: mapLoader
+
+        active: root.mapSlot !== null
+
+        WorkspaceMap {
+            target: root.shownSlot
+            workspaceId: root.shownSlot?.modelData.id ?? 0
+            workspaceTitle: root.shownSlot?.workspaceTitle ?? ""
+            keys: root.shownSlot?.keys ?? ""
+            detail: root.shownSlot?.detail ?? ""
+            visible: true
+            onTargetChanged: anchor.updateAnchor()
+            onChosen: root.closeMap()
+        }
+    }
+
     Repeater {
         id: slots
 
@@ -90,87 +159,27 @@ Grid {
                 const shown = level >= 3 ? Math.min(1, apps.length) : apps.length;
                 return padded(label.implicitWidth + shown * (BarLayout.appIconSize + spacing));
             }
-            tooltipTitle: `Workspace ${modelData.label}`
-            tooltipKeys: Compositor.keysFor(`Workspace ${modelData.id}`)
-            tooltipDetail: apps.length === 0 ? "Empty" : apps.map(app => {
+            readonly property string workspaceTitle: `Workspace ${modelData.label}`
+            readonly property string keys: Compositor.keysFor(`Workspace ${modelData.id}`)
+            readonly property string detail: apps.length === 0 ? "Empty" : apps.map(app => {
                 const name = AppIcons.getDisplayName(app.class, app.title, app.xdgTag);
                 return app.count > 1 ? `${name} ×${app.count}` : name;
             }).join(" · ")
 
-            // Held or dragged, the map of the workspace opens; letting go on a window there goes to it,
-            // on the rest of the map or back on this slot to the workspace (the click below), anywhere
-            // else nowhere. Only where the compositor gives window positions.
-            property point pressPoint
-            property point pointer
-            property bool mapOpen: false
+            // The map shows the same, where there is one
+            tooltipTitle: Compositor.hasWindowGeometry ? "" : workspaceTitle
+            tooltipKeys: keys
+            tooltipDetail: detail
 
-            // A point in the item's coordinates on the screen: the bar window spans its whole edge
-            function screenPoint(point) {
-                const window = QsWindow.window;
-                const inWindow = mapToItem(null, point.x, point.y);
-                return Qt.point(inWindow.x + (BarLayout.edge === "right" ? window.screen.width - window.width : 0), inWindow.y + (BarLayout.edge === "bottom" ? window.screen.height - window.height : 0));
-            }
-
-            function openMap() {
-                if (mapOpen || !Compositor.hasWindowGeometry)
-                    return;
-                Compositor.refreshWindows();
-                mapOpen = true;
-            }
-
+            onHoveredChanged: root.slotHovered(slot, hovered)
             onClicked: mouse => {
-                if (mouse.button === Qt.LeftButton && !current)
+                if (mouse.button !== Qt.LeftButton)
+                    return;
+                root.closeMap();
+                if (!current)
                     Compositor.switchWorkspace(modelData.id);
             }
-            onLeftPressed: position => {
-                pressPoint = position;
-                pointer = position;
-                hold.restart();
-            }
-            onLeftMoved: position => {
-                pointer = position;
-                // Past a small drag, so a click with a shaky hand stays a click
-                if (Math.hypot(position.x - pressPoint.x, position.y - pressPoint.y) > 6)
-                    openMap();
-            }
-            onLeftReleased: position => {
-                hold.stop();
-                pointer = position;
-                if (map.item?.onMap(screenPoint(position))) {
-                    const window = map.item.hoveredWindow;
-                    if (window)
-                        Compositor.focusWindow(window.address);
-                    else if (!current)
-                        Compositor.switchWorkspace(modelData.id);
-                }
-                mapOpen = false;
-            }
             onWheel: wheel => root.step(wheel)
-
-            Timer {
-                id: hold
-
-                interval: 250
-                onTriggered: slot.openMap()
-            }
-
-            LazyLoader {
-                id: map
-
-                active: slot.mapOpen
-
-                WorkspaceMap {
-                    screen: slot.QsWindow.window?.screen ?? null
-                    workspaceId: slot.modelData.id
-                    anchorRect: {
-                        const topLeft = slot.screenPoint(Qt.point(0, 0));
-                        return Qt.rect(topLeft.x, topLeft.y, slot.width, slot.height);
-                    }
-                    start: slot.screenPoint(slot.pressPoint)
-                    end: slot.screenPoint(slot.pointer)
-                    visible: true
-                }
-            }
 
             StyledText {
                 id: label

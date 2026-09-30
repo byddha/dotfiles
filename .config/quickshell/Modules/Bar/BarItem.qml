@@ -39,11 +39,6 @@ Item {
 
     signal clicked(var mouse)
     signal wheel(var wheel)
-    // Left button, in the item's coordinates. While it is held the item keeps getting the pointer,
-    // also past its edges and over popups (an implicit grab), until it is released
-    signal leftPressed(point position)
-    signal leftMoved(point position)
-    signal leftReleased(point position)
 
     // Length along the bar at a level. Items that shrink redefine it from their parts' implicit
     // sizes, which never depend on the level, so BarContent can choose one without a binding loop.
@@ -115,18 +110,6 @@ Item {
         acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
         onClicked: mouse => root.clicked(mouse)
         onWheel: wheel => root.wheel(wheel)
-        onPressed: mouse => {
-            if (mouse.button === Qt.LeftButton)
-                root.leftPressed(mapToItem(root, mouse.x, mouse.y));
-        }
-        onPositionChanged: mouse => {
-            if (mouse.buttons & Qt.LeftButton)
-                root.leftMoved(mapToItem(root, mouse.x, mouse.y));
-        }
-        onReleased: mouse => {
-            if (mouse.button === Qt.LeftButton)
-                root.leftReleased(mapToItem(root, mouse.x, mouse.y));
-        }
     }
 
     HoverHandler {
