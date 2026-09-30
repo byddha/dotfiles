@@ -20,7 +20,7 @@ Rectangle {
     signal actionRequested(int newAction)
     signal fullscreenRequested
     signal cropRequested
-    signal snipRequested(string mode, bool allLangs, bool translate)
+    signal snipRequested(string mode, bool translate)
     signal audioToggled
     signal micToggled
 
@@ -107,7 +107,7 @@ Rectangle {
             active: root.adjusting
             tip: "Google Lens"
             keys: ["L"]
-            onClicked: root.snipRequested("lens", false, false)
+            onClicked: root.snipRequested("lens", false)
         }
         RowLayout {
             spacing: 1
@@ -116,9 +116,9 @@ Rectangle {
                 icon: Lucide.scanText
                 active: root.adjusting
                 rightFlat: true
-                tip: "Copy text · English"
+                tip: "Copy text"
                 keys: ["O"]
-                onClicked: root.snipRequested("ocr", false, false)
+                onClicked: root.snipRequested("ocr", false)
             }
             ToolButton {
                 id: ocrChevron
@@ -160,14 +160,14 @@ Rectangle {
                     icon: Lucide.pencil
                     tip: "Edit in Swappy"
                     keys: ["E"]
-                    onClicked: root.snipRequested("edit", false, false)
+                    onClicked: root.snipRequested("edit", false)
                 }
                 ToolButton {
                     visible: !root.recordMode
                     icon: Lucide.save
                     tip: "Save to Pictures"
                     keys: ["Ctrl", "S"]
-                    onClicked: root.snipRequested("save", false, false)
+                    onClicked: root.snipRequested("save", false)
                 }
                 ToolButton {
                     visible: root.recordMode
@@ -192,7 +192,7 @@ Rectangle {
                     labels: ["Copy", "Record"]
                     tip: root.recordMode ? "Start recording" : "Copy to clipboard"
                     keys: ["Space", "Enter"]
-                    onClicked: root.snipRequested("copy", false, false)
+                    onClicked: root.snipRequested("copy", false)
                 }
             }
         }
@@ -217,7 +217,7 @@ Rectangle {
             return Math.min(ocrChevron.parent.mapToItem(root, 0, 0).x, root.width - width);
         }
         y: -height - 6
-        width: Math.max(ocrEnglish.implicitWidth, ocrAll.implicitWidth, ocrTranslate.implicitWidth) + 8
+        width: Math.max(ocrCopy.implicitWidth, ocrTranslate.implicitWidth) + 8
         height: menuColumn.implicitHeight + 8
         radius: Theme.radiusWindow
         color: Theme.cardSurface
@@ -239,25 +239,18 @@ Rectangle {
             anchors.margins: 4
 
             MenuRow {
-                id: ocrEnglish
+                id: ocrCopy
                 icon: Lucide.scanText
-                text: "Copy text · English"
+                text: "Copy text"
                 keys: ["O"]
-                onClicked: root.snipRequested("ocr", false, false)
-            }
-            MenuRow {
-                id: ocrAll
-                icon: Lucide.textSelect
-                text: "Copy text · all languages"
-                keys: ["Shift", "O"]
-                onClicked: root.snipRequested("ocr", true, false)
+                onClicked: root.snipRequested("ocr", false)
             }
             MenuRow {
                 id: ocrTranslate
                 icon: Lucide.languages
                 text: "Translate"
                 keys: ["Ctrl", "O"]
-                onClicked: root.snipRequested("ocr", true, true)
+                onClicked: root.snipRequested("ocr", true)
             }
         }
     }

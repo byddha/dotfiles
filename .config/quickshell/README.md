@@ -14,7 +14,9 @@ Vpn: `mullvad`, `openfortivpn` (run through `sudo`)
 
 Laptop screen / keyboard brightness: `brightnessctl`
 
-Screenshots and recording: `wl-clipboard`, `swappy`, `tesseract` (+ language data), `curl`, `jq`, `xdg-utils`, `python-pillow`, `gpu-screen-recorder`, `hyprpicker`
+Screenshots and recording: `wl-clipboard`, `swappy`, `curl`, `jq`, `xdg-utils`, `python-pillow`, `gpu-screen-recorder`, `hyprpicker`
+
+OCR (copy text from a region): run `qs ipc call setup ocr` once. It installs RapidOCR with the PP-OCRv6 medium models (50 languages in one model) in `~/.local/share/bidshell/ocr`; run it again if a Python upgrade breaks it
 
 Peripheral brand lookup: `hwdata`
 

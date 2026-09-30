@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell
 import Quickshell.Io
 import "../../Config"
 import "../../Services"
@@ -39,6 +40,18 @@ Item {
                 Logger.info("Available themes:", themes.join(", "));
             });
             return "Listing themes...";
+        }
+    }
+
+    IpcHandler {
+        target: "setup"
+
+        // Installs the region selector's OCR (a venv and models, a few hundred MB) in the background;
+        // notifications say when it starts and ends
+        function ocr(): string {
+            Logger.info("IPC: setup.ocr");
+            Quickshell.execDetached(["bash", Qt.resolvedUrl("../../scripts/ocr/setup.sh").toString().replace("file://", "")]);
+            return "OCR setup started; a notification says when it is done";
         }
     }
 

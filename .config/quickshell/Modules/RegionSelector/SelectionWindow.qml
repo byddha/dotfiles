@@ -63,9 +63,8 @@ PanelWindow {
     // Adjustment mode (after initial drag, before confirming)
     property bool adjusting: false
     // What snip() does with the grabbed region: "copy" (clipboard), "edit" (Swappy),
-    // "save" (~/Pictures/Screenshots), "lens" (Google Lens) or "ocr" (Tesseract)
+    // "save" (~/Pictures/Screenshots), "lens" (Google Lens) or "ocr" (scripts/ocr, set up by `qs ipc call setup ocr`)
     property string snipMode: "copy"
-    property bool ocrAllLangs: false // When true, use all installed languages; otherwise English only
     property bool ocrTranslate: false // When true, open OCR result in Kagi Translate
     property string adjustHandle: ""  // Which handle is being dragged: "", "move", "nw", "ne", "sw", "se", "n", "s", "e", "w"
     property real adjustStartX: 0
@@ -424,10 +423,9 @@ PanelWindow {
         root.adjusting = true;
     }
 
-    function snipAs(mode, allLangs = false, translate = false) {
+    function snipAs(mode, translate = false) {
         root.snipping = true;
         root.snipMode = mode;
-        root.ocrAllLangs = allLangs;
         root.ocrTranslate = translate;
         root.snip();
     }
@@ -469,9 +467,11 @@ PanelWindow {
             } else if (root.snipMode === "lens") {
                 cmd = `imageLink=$(curl -sF files[]=@'${f}' 'https://uguu.se/upload' | jq -r '.files[0].url') && xdg-open "https://lens.google.com/uploadbyurl?url=\${imageLink}" && ${cleanup}`;
             } else if (root.snipMode === "ocr") {
-                const langFlag = root.ocrAllLangs ? `$(tesseract --list-langs 2>/dev/null | tail -n +2 | paste -sd+)` : "eng";
-                const base = `tesseract '${f}' stdout -l ${langFlag}`;
-                cmd = root.ocrTranslate ? `text=$(${base}) && printf '%s' "$text" | wl-copy && xdg-open "https://translate.kagi.com/?from=auto&to=&text=$(printf '%s' "$text" | jq -sRr @uri)" && ${cleanup}` : `${base} | wl-copy && ${cleanup}`;
+                // Without the venv (not set up yet, or broken by a Python upgrade) it says what to run
+                const script = Qt.resolvedUrl("../../scripts/ocr/ocr.py").toString().replace("file://", "");
+                const read = `text=$("\${XDG_DATA_HOME:-$HOME/.local/share}/bidshell/ocr/venv/bin/python" '${script}' '${f}') || { notify-send -a OCR "OCR is not set up" "Run: qs ipc call setup ocr"; ${cleanup}; exit; }`;
+                const copy = `printf '%s' "$text" | wl-copy`;
+                cmd = root.ocrTranslate ? `${read}; ${copy} && xdg-open "https://translate.kagi.com/?from=auto&to=&text=$(printf '%s' "$text" | jq -sRr @uri)" && ${cleanup}` : `${read}; ${copy} && ${cleanup}`;
             } else if (root.snipMode === "edit") {
                 cmd = `swappy -f '${f}' && ${cleanup}`;
             } else {
@@ -566,11 +566,9 @@ PanelWindow {
                     root.snipAs("lens");
                 break;
             case Qt.Key_O:
-                // O = English, Shift+O = all languages, Ctrl+O = all languages + Kagi Translate
-                if (root.canSnip) {
-                    const translate = !!(event.modifiers & Qt.ControlModifier);
-                    root.snipAs("ocr", !!(event.modifiers & Qt.ShiftModifier) || translate, translate);
-                }
+                // O = copy the text, Ctrl+O = also open it in Kagi Translate
+                if (root.canSnip && !(event.modifiers & Qt.ShiftModifier))
+                    root.snipAs("ocr", !!(event.modifiers & Qt.ControlModifier));
                 break;
             }
         }
@@ -769,7 +767,7 @@ PanelWindow {
                 onDismiss: root.dismiss()
                 onFullscreenRequested: root.toggleFullscreen()
                 onCropRequested: root.shrinkToContent()
-                onSnipRequested: (mode, allLangs, translate) => root.snipAs(mode, allLangs, translate)
+                onSnipRequested: (mode, translate) => root.snipAs(mode, translate)
                 onActionRequested: newAction => root.actionChangeRequested(newAction)
             }
         }
