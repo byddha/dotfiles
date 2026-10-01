@@ -6,7 +6,7 @@ through the DMS matugen templates, and patches adw-gtk3.
 ```
 theme-set catppuccin --flavor mocha --accent blue
 theme-set --list      # themes + their flavors/accents/variants
-theme-set --menu      # rows for the walker/elephant picker
+theme-set --menu      # rows for the vicinae theme picker
 theme-set --update    # git pull the registry
 ```
 
@@ -42,7 +42,7 @@ Templates are inert until step 3 — the file just sits there.
 |---|---|
 | `hyprland.sh` | DMS calls `hl.config()` directly, ours returns a table for `appearance.lua`; both would set `general.col.active_border` |
 | `zen.sh` | ours covers 56 CSS variables vs their 13, including `about:preferences` and newtab |
-| `btop.sh` `konsole.sh` `walker.sh` | DMS has no template for these |
+| `btop.sh` `konsole.sh` | DMS has no template for these |
 
 ## Flatpak
 

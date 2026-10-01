@@ -237,7 +237,7 @@ def label_for(entry, fallback_id):
 
 
 def cmd_menu():
-    """Tab separated 'args<TAB>label<TAB>icon' for the walker/elephant picker.
+    """Tab separated 'args<TAB>label<TAB>icon' for the vicinae theme picker.
     One row per selectable combination, since each has its own preview."""
     for tid, theme, tdir in iter_themes():
         name = label_for(theme, tid)
