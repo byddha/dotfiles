@@ -1,0 +1,8 @@
+{
+    "KPackageStructure": "Plasma/Shell",
+    "KPlugin": {
+        "Id": "org.bidshell.plasmoidhost",
+        "Name": "bidshell plasmoid host",
+        "License": "LGPL-2.1-or-later"
+    }
+}
