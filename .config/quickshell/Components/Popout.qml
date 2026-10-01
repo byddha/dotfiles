@@ -4,14 +4,13 @@ import QtQuick.Effects
 import Quickshell
 import Quickshell.Wayland
 import "../Config"
-import "../Utils"
 import "../Services"
 
 /**
  * Popout - Base for every panel that opens over the desktop (bar popups, sidebar).
  *
  * A full-screen transparent layer window, so outside clicks (also on Niri) close it; Esc closes it too.
- * The panel sits next to anchorItem (bar popups) or at panelX / panelY when there is no anchor.
+ * The panel sits at panelX / panelY, bound so it moves in the same frame its size changes.
  * It holds exactly one content child, which fills it: the panel takes that child's implicit size
  * (height clamped to maxPanelHeight), and the child gets the real size back. Sizes only flow one way.
  * As DankMaterialShell's DankPopoutHost (_contentWarm / _surfaceFrameReady): contentWarm stays true after
@@ -21,10 +20,7 @@ import "../Services"
 PanelWindow {
     id: root
 
-    property Item anchorItem: null
     property var targetScreen: null
-    property real offsetX: anchorItem ? (anchorItem.width / 2) - (panel.width / 2) : 0
-    property real offsetY: anchorItem ? anchorItem.height : 0
     property real panelX: 0
     property real panelY: 0
     // A width <= 0 follows the content
@@ -92,43 +88,12 @@ PanelWindow {
         wrapper.escapePressed = false;
         if (visible) {
             contentWarm = true;
-            Qt.callLater(updatePosition);
             // The grab must be switched on after the window is mapped, never bound to visible
             Qt.callLater(() => focusGrab.active = root.useFocusGrab && Compositor.useHyprlandFocusGrab);
         } else {
             focusGrab.active = false;
             panelClosed();
         }
-    }
-
-    function updatePosition() {
-        if (!anchorItem || !targetScreen) {
-            popupX = panelX;
-            popupY = panelY;
-            return;
-        }
-        const pos = anchorItem.mapToGlobal(0, 0);
-        const screenX = targetScreen.x || 0;
-        const screenY = targetScreen.y || 0;
-        popupX = Math.max(8, Math.min((targetScreen.width || width) - panel.width - 8, pos.x - screenX + offsetX));
-        popupY = Math.max(8, Math.min((targetScreen.height || height) - panel.height - 8, pos.y - screenY + offsetY));
-    }
-
-    property real popupX: panelX
-    property real popupY: panelY
-
-    function showPanel(item, panelScreen) {
-        if (!item) {
-            Logger.warn("anchorItem is undefined, won't show panel.");
-            return;
-        }
-        anchorItem = item;
-        targetScreen = panelScreen ?? item.QsWindow?.window?.screen ?? null;
-        // Place the panel before it is shown, so the first frame is already in the right place
-        updatePosition();
-        visible = true;
-        panelOpened(root);
-        Qt.callLater(updatePosition);
     }
 
     function hidePanel() {
@@ -196,8 +161,8 @@ PanelWindow {
             // which on the first open can be after the slide starts
             readonly property real hiddenOffset: root.slideFrom === "left" ? -(x + width + root.shadowBlur) : (root.targetScreen?.width ?? 0) - root.slideClip - x + root.shadowBlur
 
-            x: root.popupX - slideArea.x
-            y: root.popupY
+            x: root.panelX - slideArea.x
+            y: root.panelY
             width: panel.width
             height: panel.height
             opacity: root.slideFrom === "" || root.presented ? 1 : 0
@@ -238,9 +203,6 @@ PanelWindow {
                 radius: Theme.radiusWindow
                 border.width: 1
                 border.color: root.panelBorderColor
-
-                onWidthChanged: Qt.callLater(root.updatePosition)
-                onHeightChanged: Qt.callLater(root.updatePosition)
 
                 Item {
                     id: contentHolder
