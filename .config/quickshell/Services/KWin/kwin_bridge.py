@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Runs bidshell's KWin script and relays it for KWinBackend.qml.
 
-The script sends KWin's state over D-Bus; each change goes out as one JSON line on stdout, with each
-output's config key added. Actions come in as JSON lines on stdin and run as one-shot KWin scripts.
-Exits when stdin closes or the parent dies, and unloads its scripts then.
+Prints one JSON line per message on stdout: {"state": ...} on every change the script sends over D-Bus,
+with each output's config key added; {"cursor": [x, y]} after a "cursor" action; {"shortcuts": ...}, the
+kglobalaccel keys of KWin's and the session's actions as labels, at start and when they change. Actions
+come in as JSON lines on stdin and run as one-shot KWin scripts. Exits when stdin closes or the parent
+dies, and unloads its scripts then.
 """
 import ctypes
 import glob
@@ -23,7 +25,10 @@ ACTION = "bidshell-action"
 HERE = os.path.dirname(os.path.abspath(__file__))
 ACTION_FILE = os.path.join(os.environ.get("XDG_RUNTIME_DIR", "/tmp"), "bidshell-kwin-action.js")
 INTERFACE = Gio.DBusNodeInfo.new_for_xml(f"""
-<node><interface name="{SERVICE}"><method name="State"><arg type="s" direction="in"/></method></interface></node>
+<node><interface name="{SERVICE}">
+<method name="State"><arg type="s" direction="in"/></method>
+<method name="Cursor"><arg type="s" direction="in"/></method>
+</interface></node>
 """).interfaces[0]
 
 bus = Gio.bus_get_sync(Gio.BusType.SESSION)
@@ -62,29 +67,75 @@ def monitor_key(output):
     return output
 
 
+def emit(message):
+    print(json.dumps(message), flush=True)
+
+
 def flush():
     global pending
     state = json.loads(pending)
     pending = None
     for output in state["outputs"]:
         output["key"] = keys.setdefault(output["name"], monitor_key(output["name"]))
-    print(json.dumps(state), flush=True)
+    emit({"state": state})
     return False
 
 
 def on_call(connection, sender, path, interface, method, params, invocation):
     global pending
-    if pending is None:
-        GLib.idle_add(flush)
-    pending = params.unpack()[0]
+    if method == "Cursor":
+        emit({"cursor": json.loads(params.unpack()[0])})
+    else:
+        if pending is None:
+            GLib.idle_add(flush)
+        pending = params.unpack()[0]
     invocation.return_value(None)
+
+
+SHORTCUT_COMPONENTS = ["kwin", "ksmserver", "org_kde_powerdevil"]
+MODIFIERS = [(0x10000000, "Super"), (0x04000000, "Ctrl"), (0x08000000, "Alt"), (0x02000000, "Shift")]
+KEY_NAMES = {0x20: "Space", 0x01000000: "Escape", 0x01000001: "Tab", 0x01000003: "Backspace", 0x01000004: "Return",
+             0x01000005: "Enter", 0x01000006: "Insert", 0x01000007: "Delete", 0x01000008: "Pause", 0x01000009: "Print",
+             0x01000010: "Home", 0x01000011: "End", 0x01000012: "Left", 0x01000013: "Up", 0x01000014: "Right",
+             0x01000015: "Down", 0x01000016: "PageUp", 0x01000017: "PageDown"}
+
+
+def key_label(code):
+    """A Qt key code with modifiers as Hyprland's labels read ("Super Shift Q"); "" for keys without a name here."""
+    key = code & 0x01FFFFFF
+    if 0x21 <= key <= 0x7E:
+        name = chr(key).upper()
+    elif 0x01000030 <= key <= 0x01000052:
+        name = f"F{key - 0x01000030 + 1}"
+    else:
+        name = KEY_NAMES.get(key, "")
+    return " ".join([label for bit, label in MODIFIERS if code & bit] + [name]) if name else ""
+
+
+def read_shortcuts(*_):
+    shortcuts = {}
+    for component in SHORTCUT_COMPONENTS:
+        try:
+            infos = bus.call_sync("org.kde.kglobalaccel", f"/component/{component}", "org.kde.kglobalaccel.Component",
+                                  "allShortcutInfos", None, None, Gio.DBusCallFlags.NONE, -1, None).unpack()[0]
+        except GLib.Error:
+            continue
+        for action, _, _, _, _, _, codes, _ in infos:
+            labels = [label for label in map(key_label, codes) if label]
+            # Of several keys for one action, the one with Super, as a Hyprland bind would be
+            label = next((label for label in labels if label.startswith("Super")), labels[0] if labels else "")
+            if label:
+                shortcuts[f"{component}/{action}"] = label
+    emit({"shortcuts": shortcuts})
 
 
 def act(command):
     if command["action"] == "logout":
         bus.call_sync("org.kde.Shutdown", "/Shutdown", "org.kde.Shutdown", "logout", None, None, Gio.DBusCallFlags.NONE, -1, None)
         return
-    if command["action"] == "switch":
+    if command["action"] == "cursor":
+        body = f"callDBus({json.dumps(SERVICE)}, \"/bidshell\", {json.dumps(SERVICE)}, \"Cursor\", JSON.stringify([workspace.cursorPos.x, workspace.cursorPos.y]));"
+    elif command["action"] == "switch":
         body = f"""const desktop = workspace.desktops.find(d => d.x11DesktopNumber === {json.dumps(command["desktop"])});
 const output = workspace.screens.find(s => s.name === {json.dumps(command["output"])});
 if (desktop && output)
@@ -143,6 +194,10 @@ def main():
     # A new bridge (after a reload) takes the name over, and the old one exits
     Gio.bus_own_name_on_connection(bus, SERVICE, Gio.BusNameOwnerFlags.ALLOW_REPLACEMENT | Gio.BusNameOwnerFlags.REPLACE,
                                    on_name_acquired, on_name_lost)
+    for signal_name in ["yourShortcutGotChanged", "yourShortcutsChanged"]:
+        bus.signal_subscribe("org.kde.kglobalaccel", "org.kde.KGlobalAccel", signal_name, "/kglobalaccel", None,
+                             Gio.DBusSignalFlags.NONE, read_shortcuts)
+    read_shortcuts()
     GLib.io_add_watch(GLib.IOChannel.unix_new(sys.stdin.fileno()), GLib.PRIORITY_DEFAULT,
                       GLib.IOCondition.IN | GLib.IOCondition.HUP, on_stdin)
     try:
