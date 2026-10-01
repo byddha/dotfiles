@@ -74,6 +74,11 @@ Singleton {
     function toplevelFor(address) {
         return backend ? backend.toplevelFor(address) : null;
     }
+    // Whether the compositor draws this window over every other one on its workspace (a
+    // fullscreen or maximized window it handles itself; a scrolling layout keeps it a column)
+    function coversWorkspace(window) {
+        return backend ? backend.coversWorkspace(window) : false;
+    }
     // The windows on a workspace that are drawn there (not unmapped, not a hidden group member)
     function shownWindows(workspaceId) {
         return backend ? backend.shownWindows(workspaceId) : [];

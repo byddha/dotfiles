@@ -75,9 +75,12 @@ PanelWindow {
     property real adjustStartRegionH: 0
 
     // Window regions on this workspace, sorted for proper z-order (floating above tiled); each is
-    // the part on this screen, as a scrolling layout puts windows past it
+    // the part on this screen, as a scrolling layout puts windows past it. None where the
+    // compositor gives no window positions: then only a dragged region can be taken.
     readonly property var windowRegions: {
-        const workspaceWindows = Compositor.windowList.filter(w => w.workspace.id === root.effectiveWorkspaceId);
+        if (!Compositor.hasWindowGeometry)
+            return [];
+        const workspaceWindows = Compositor.shownWindows(root.effectiveWorkspaceId);
         const toRegion = w => {
             const left = Math.max(0, w.at[0] - root.monitorOffsetX);
             const top = Math.max(0, w.at[1] - root.monitorOffsetY);
@@ -93,12 +96,9 @@ PanelWindow {
         };
         const onScreen = region => region.size[0] > 0 && region.size[1] > 0;
 
-        // A fullscreen or maximized window (1 = maximized, 2 = fullscreen) hides the others when
-        // Hyprland's default handler draws it; a layout that handles it (scrolling) keeps it a
-        // column beside the others
-        const fullscreenWindow = workspaceWindows.find(w => w.fullscreen > 0 && w.fullscreenHandler === "default");
-        if (fullscreenWindow)
-            return [toRegion(fullscreenWindow)].filter(onScreen);
+        const coveringWindow = workspaceWindows.find(w => Compositor.coversWorkspace(w));
+        if (coveringWindow)
+            return [toRegion(coveringWindow)].filter(onScreen);
 
         // Floating windows first (higher z-order), and among them smaller ones first
         // (easier to target, likely on top)

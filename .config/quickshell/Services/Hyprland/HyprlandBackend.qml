@@ -94,6 +94,12 @@ QtObject {
         return Hyprland.toplevels.values.find(t => `0x${t.address}` === address)?.wayland ?? null;
     }
 
+    // fullscreen: 1 = maximized, 2 = fullscreen. The default handler draws it over the rest; a layout
+    // that handles it itself (scrolling) keeps it beside the others
+    function coversWorkspace(window) {
+        return window.fullscreen > 0 && window.fullscreenHandler === "default";
+    }
+
     function shownWindows(workspaceId) {
         return backend.windowList.filter(w => w.workspace?.id === workspaceId && w.mapped && !w.hidden);
     }

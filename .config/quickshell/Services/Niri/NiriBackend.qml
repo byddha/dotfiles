@@ -323,6 +323,10 @@ QtObject {
         return null;
     }
 
+    function coversWorkspace(window) {
+        return window.fullscreen > 0;
+    }
+
     function shownWindows(workspaceId) {
         return backend.windowList.filter(w => w.workspace?.id === workspaceId);
     }
