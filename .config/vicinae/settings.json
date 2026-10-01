@@ -18,6 +18,11 @@
       "toggle": "super+f"
    },
    "providers": {
+      "theme": {
+         "entrypoints": {
+            "set": { "enabled": false }
+         }
+      },
       "files": {
          "preferences": {
             "indexingPaths": [

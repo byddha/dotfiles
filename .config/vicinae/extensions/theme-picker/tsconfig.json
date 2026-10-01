@@ -1,0 +1,12 @@
+{
+  "include": ["src/**/*"],
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es2022",
+    "strict": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "jsx": "react-jsx"
+  }
+}
