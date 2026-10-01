@@ -177,6 +177,35 @@ Still to do:
 - HDR (`hasHdrControl` is false). It would read `"hdr"` per output from `kscreen-doctor -j` and switch with `kscreen-doctor output.<name>.hdr.enable` / `.hdr.disable`. hasHdrControl would be true when an output reports HDR capability. This cannot be tested on the laptop, which has no HDR screen.
 - The colour picker. It needs a facade change.
 
+### Plasma applets in the bar (KWin only)
+
+`bar.plasmaApplets` in config.json lists KDE Plasma applet ids, for example `["org.kde.plasma.networkmanagement"]`. Each one appears next to the tray: its own compact view sits in the bar, and its full view opens in our BarPopout. Esc or a click outside closes the popout, and the applet collapses with it.
+
+How it works:
+- `Services/KWin/plasma` is a C++ QML module, `Bidshell.Plasma`, with one type, `PlasmoidHost`.
+- It runs a small `Plasma::Corona` in the shell process, the way plasmawindowed does, and loads each applet into one containment that has the bar's edge.
+- Our own Plasma/Shell package (`plasma/shell`) holds the compact view and never opens Plasma's popup. The full view goes to the bar's popout instead.
+- The applet's QML runs in PlasmaQuick's own engine, and its items are parented into Quickshell's window.
+- The facade capability is `appletHostSource`. The KWin backend sets it to `Services/KWin/PlasmaAppletHost.qml`; the Hyprland and Niri backends set "", so nothing loads there.
+
+Build the module (needs cmake, ninja, extra-cmake-modules and Plasma's development files):
+
+    ~/dotfiles/scripts/setup --only plasma        # or Services/KWin/plasma/setup.sh
+
+It builds out of tree and installs into `${XDG_DATA_HOME:-~/.local/share}/bidshell/qml`. Run it again after a Plasma or Qt upgrade, or after the repo moves, because the path to the shell package is built in.
+
+Launch on KDE with the module on the import path; the Env pragma does not expand `$HOME`, so the path comes from the launch line:
+
+    QML_IMPORT_PATH="$HOME/.local/share/bidshell/qml" qs -p ~/dotfiles/.config/quickshell
+
+Without the module, each configured applet logs one warning ("no Bidshell.Plasma module …") and is left out of the bar. An unknown applet id logs its own error and is left out too.
+
+Limits:
+- No right-click menu with the applet's actions, and no configuration dialog.
+- The applet's settings start fresh each session: the layout lives in `$XDG_RUNTIME_DIR`.
+- On Hyprland, the shell now runs as a QApplication (`//@ pragma UseQApplication`).
+- Measured RSS on the laptop: about 244 MB without the module and 271 MB with the network applet hosted.
+
 ## 3. Features that cannot work on KWin
 
 | Feature | Why | Hole in |
