@@ -16,7 +16,7 @@ Scope {
             id: window
 
             required property ShellScreen modelData
-            readonly property var monitorInfo: Compositor.monitorForScreen(modelData)
+            readonly property var monitorInfo: Compositor.monitorFor(modelData)
             readonly property rect local: Qt.rect(Recording.region.x - (monitorInfo?.x ?? 0), Recording.region.y - (monitorInfo?.y ?? 0), Recording.region.width, Recording.region.height)
             // Wider than the corner shadow (blur 4), plus a pixel for rounding on scaled monitors
             readonly property int gap: 6

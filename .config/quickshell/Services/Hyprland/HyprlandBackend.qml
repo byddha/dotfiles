@@ -3,28 +3,50 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
 import "../../Utils"
+import "../Wayland"
 
 QtObject {
     id: backend
 
-    property string type: "hyprland"
     readonly property bool hasWindowGeometry: true
+    readonly property bool hasFocusGrab: true
+    readonly property bool hasHdrControl: true
+    readonly property string windowPreviewSource: Qt.resolvedUrl("ToplevelPreview.qml")
+    readonly property string screenSnapshotSource: Qt.resolvedUrl("../Wayland/ScreencopySnapshot.qml")
 
-    property var workspaces: []
     property string focusedMonitorName: Hyprland.focusedMonitor?.name ?? ""
+    readonly property var activeWindow: _activeToplevel.window
+    property var _activeToplevel: ActiveToplevel {}
 
     // lastIpcObject holds the same JSON as `hyprctl clients/monitors -j`. Quickshell fills it
     // shortly after startup and on refreshToplevels()/refreshMonitors(); each update
     // re-evaluates these bindings through lastIpcObjectChanged.
-    readonly property var windowList: Hyprland.toplevels.values.map(t => t.lastIpcObject).filter(w => w?.address)
     readonly property var monitors: Hyprland.monitors.values.map(m => m.lastIpcObject).filter(m => m?.name)
+    readonly property var windows: Hyprland.toplevels.values.map(t => t.lastIpcObject).filter(w => w?.address).map(w => ({
+                id: w.address,
+                appId: w.class,
+                title: w.title,
+                tag: w.xdgTag || "",
+                workspaceId: w.workspace.id,
+                monitorName: monitors.find(m => m.id === w.monitor)?.name ?? "",
+                x: w.at[0],
+                y: w.at[1],
+                width: w.size[0],
+                height: w.size[1],
+                floating: w.floating,
+                // fullscreen: 1 = maximized, 2 = fullscreen. The default handler draws it over the rest; a layout
+                // that handles it itself (scrolling) keeps it beside the others
+                covers: w.fullscreen > 0 && w.fullscreenHandler === "default",
+                focused: w.focusHistoryID === 0,
+                // Unmapped windows and the hidden members of a group are not drawn
+                hidden: !w.mapped || w.hidden
+            }))
 
-    signal workspaceFocusChanged
     signal windowDataUpdated
     signal monitorDataUpdated
 
     // A refresh updates each toplevel separately, so coalesce the per-object binding updates.
-    onWindowListChanged: Qt.callLater(_emitWindowData)
+    onWindowsChanged: Qt.callLater(_emitWindowData)
     onMonitorsChanged: Qt.callLater(_emitMonitorData)
 
     function _emitWindowData() {
@@ -34,9 +56,6 @@ QtObject {
     function _emitMonitorData() {
         monitorDataUpdated();
     }
-
-    // Compositor.qml only loads this backend when HYPRLAND_INSTANCE_SIGNATURE is set.
-    Component.onCompleted: workspaces = Hyprland.workspaces.values
 
     // Main-map binds that have a description, as { description, keys } with keys ready to show
     // ("Super Shift Q"). With a Lua config the dispatcher reads "__lua <n>", so the description is
@@ -63,70 +82,43 @@ QtObject {
 
     // --- Data query functions ---
 
-    function getWorkspaceApps(workspaceId) {
-        const windowsInWorkspace = backend.windowList.filter(w => w.workspace.id == workspaceId);
-
-        if (windowsInWorkspace.length === 0) {
-            return [];
-        }
-
-        const classMap = {};
-        windowsInWorkspace.forEach(win => {
-            const windowClass = win.class || "unknown";
-            if (!classMap[windowClass]) {
-                classMap[windowClass] = {
-                    class: windowClass,
-                    title: win.title || "",
-                    xdgTag: win.xdgTag || "",
-                    count: 0
-                };
-            }
-            classMap[windowClass].count++;
-        });
-
-        const appList = Object.values(classMap);
-        appList.sort((a, b) => b.count - a.count);
-
-        return appList;
-    }
-
-    function toplevelFor(address) {
-        return Hyprland.toplevels.values.find(t => `0x${t.address}` === address)?.wayland ?? null;
-    }
-
-    // fullscreen: 1 = maximized, 2 = fullscreen. The default handler draws it over the rest; a layout
-    // that handles it itself (scrolling) keeps it beside the others
-    function coversWorkspace(window) {
-        return window.fullscreen > 0 && window.fullscreenHandler === "default";
-    }
-
-    function shownWindows(workspaceId) {
-        return backend.windowList.filter(w => w.workspace?.id === workspaceId && w.mapped && !w.hidden);
-    }
-
-    function monitorForScreen(screen) {
-        const name = screen?.name ?? "";
-        const mon = backend.monitors.find(m => m.name === name);
+    function monitorFor(screen) {
+        const mon = backend.monitors.find(m => m.name === screen?.name);
         if (!mon)
             return null;
+        // width/height are the mode's pixels; an odd transform turns the monitor a quarter
+        const turned = (mon.transform ?? 0) % 2 === 1;
         return {
             name: mon.name,
-            model: screen?.model ?? "",
-            id: mon.id,
+            key: screen.model,
             x: mon.x,
             y: mon.y,
-            width: mon.width,
-            height: mon.height,
+            width: (turned ? mon.height : mon.width) / mon.scale,
+            height: (turned ? mon.width : mon.height) / mon.scale,
             scale: mon.scale,
-            activeWorkspaceId: mon.activeWorkspace?.id ?? 1,
             transform: mon.transform ?? 0,
-            reserved: mon.reserved ?? [0, 0, 0, 0]
+            reserved: mon.reserved ?? [0, 0, 0, 0],
+            activeWorkspaceId: mon.activeWorkspace?.id ?? 1,
+            specialWorkspaceId: mon.specialWorkspace?.id ?? 0,
+            hdr: mon.colorManagementPreset === "hdr"
         };
     }
 
+    // The monitor's configured range; none configured, no buttons
+    function workspaceSlots(screen, range) {
+        if (!range)
+            return [];
+        const slots = [];
+        for (let id = range[0]; id <= range[1]; id++)
+            slots.push({
+                id: id,
+                label: id
+            });
+        return slots;
+    }
+
     function activeWorkspaceIdForScreen(screen) {
-        const mon = monitorForScreen(screen);
-        return mon?.activeWorkspaceId ?? 1;
+        return monitorFor(screen)?.activeWorkspaceId ?? 1;
     }
 
     function getCursorPosition(callback) {
@@ -153,9 +145,9 @@ QtObject {
         }
     }
 
-    function setMonitorColorManagement(name, preset) {
+    function setHdr(monitorName, on) {
         const proc = cmComponent.createObject(backend, {
-            command: ["hyprctl", "eval", `cmd.run("monitor cm ${name} ${preset}")`]
+            command: ["hyprctl", "eval", `cmd.run("monitor cm ${monitorName} ${on ? "hdr" : "srgb"}")`]
         });
         proc.running = true;
     }
@@ -163,7 +155,7 @@ QtObject {
     property var _cmComponent: Component {
         id: cmComponent
         Process {
-            // `monitor cm` emits no event, so pull the new colorManagementPreset for Hdr.
+            // `monitor cm` emits no event, so the monitors are read again for the new colorManagementPreset
             onExited: {
                 Hyprland.refreshMonitors();
                 destroy();
@@ -192,13 +184,8 @@ QtObject {
     property var _hyprlandConnections: Connections {
         target: Hyprland
 
-        function onFocusedWorkspaceChanged() {
-            backend.workspaceFocusChanged();
-        }
-
         function onFocusedMonitorChanged() {
             backend.focusedMonitorName = Hyprland.focusedMonitor?.name ?? "";
-            backend.workspaceFocusChanged();
         }
 
         function onRawEvent(event) {
@@ -217,12 +204,12 @@ QtObject {
 
     // --- Dispatch functions ---
 
-    function switchWorkspace(id) {
+    function switchWorkspace(id, screen) {
         Hyprland.dispatch(`hl.dsp.focus({ workspace = ${id} })`);
     }
 
-    function focusWindow(address) {
-        Hyprland.dispatch(`hl.dsp.focus({ window = "address:${address}" })`);
+    function focusWindow(id) {
+        Hyprland.dispatch(`hl.dsp.focus({ window = "address:${id}" })`);
     }
 
     function refreshWindows() {

@@ -2,61 +2,65 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
-import Quickshell.Wayland
+import "../Config"
 import "../Utils"
 
+/**
+ * Compositor - The one way the shell reaches the compositor. Modules use only this; each backend
+ * (Services/Hyprland, Services/Niri) implements the same members, with Services/Wayland holding code
+ * the Wayland backends share. Two exceptions use Hyprland directly: HyprWhichKey (Hyprland submaps,
+ * absent elsewhere) and Components/FocusGrab, activated only when hasFocusGrab.
+ */
 Singleton {
     id: compositor
 
-    // --- Backend loaded by URL (swap this path for a different compositor) ---
+    // The first backend whose environment variable is set runs
+    readonly property var backends: [["NIRI_SOCKET", "Niri/NiriBackend.qml"], ["HYPRLAND_INSTANCE_SIGNATURE", "Hyprland/HyprlandBackend.qml"]]
     property var backend: null
-    property bool isHyprland: backend?.type === "hyprland"
-    property bool isNiri: backend?.type === "niri"
-    property bool useHyprlandFocusGrab: isHyprland
 
     Component.onCompleted: {
-        var backendPath;
-        if (Quickshell.env("NIRI_SOCKET")) {
-            backendPath = "Niri/NiriBackend.qml";
-        } else if (Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE")) {
-            backendPath = "Hyprland/HyprlandBackend.qml";
-        } else {
-            Logger.error("No supported compositor detected (need Hyprland or Niri). Exiting...");
+        const match = backends.find(([variable]) => Quickshell.env(variable));
+        if (!match) {
+            Logger.error(`No supported compositor detected (none of ${backends.map(([variable]) => variable).join(", ")} is set). Exiting...`);
             Qt.callLater(Qt.quit);
             return;
         }
-
-        var comp = Qt.createComponent(backendPath);
-        if (comp.status === Component.Ready) {
+        const comp = Qt.createComponent(match[1]);
+        if (comp.status === Component.Ready)
             backend = comp.createObject(compositor);
-        } else {
+        else
             Logger.error("Failed to load backend:", comp.errorString());
-        }
     }
 
     // --- Public properties ---
 
-    property var workspaces: backend?.workspaces ?? []
-    readonly property string activeWindow: ToplevelManager.activeToplevel?.title ?? ""
-    readonly property string activeWindowClass: ToplevelManager.activeToplevel?.appId ?? ""
+    // { appId, title } of the focused window, title kept live; null when no window has focus
+    readonly property var activeWindow: backend?.activeWindow ?? null
     property string focusedMonitorName: backend?.focusedMonitorName ?? ""
 
-    property var windowList: backend?.windowList ?? []
-    // Whether windows carry real positions (`at`, `size`), so a map of a workspace can be drawn
+    // Every window, each { id (opaque, stable while it exists), appId, title, tag (xdg tag or ""), workspaceId,
+    // monitorName, x, y, width, height (global logical px), floating, covers (drawn over every other window on
+    // its workspace), focused, hidden (not drawn: unmapped, or a group member behind another) }
+    readonly property var windows: backend?.windows ?? []
+    // Whether windows carry real positions (x, y), so a map of a workspace can be drawn
     readonly property bool hasWindowGeometry: backend?.hasWindowGeometry ?? false
-    property var monitors: backend?.monitors ?? []
+    // Whether a FocusGrab works: the compositor tells a popup about clicks outside it, so the popup
+    // need not cover the screen and take every key
+    readonly property bool hasFocusGrab: backend?.hasFocusGrab ?? false
+    // QML files the backend draws previews with: a window's (WindowPreview) and a screen's (ScreenSnapshot);
+    // "" when it has none
+    readonly property string windowPreviewSource: backend?.windowPreviewSource ?? ""
+    readonly property string screenSnapshotSource: backend?.screenSnapshotSource ?? ""
+    // Whether setHdr can switch a monitor between HDR and SDR
+    readonly property bool hasHdrControl: backend?.hasHdrControl ?? false
 
     // --- Signals ---
 
-    signal workspaceFocusChanged
     signal windowDataUpdated
     signal monitorDataUpdated
 
     Connections {
         target: backend
-        function onWorkspaceFocusChanged() {
-            compositor.workspaceFocusChanged();
-        }
         function onWindowDataUpdated() {
             compositor.windowDataUpdated();
         }
@@ -67,24 +71,37 @@ Singleton {
 
     // --- Function forwarding ---
 
-    function getWorkspaceApps(workspaceId) {
-        return backend ? backend.getWorkspaceApps(workspaceId) : [];
+    // The windows drawn on a workspace
+    function windowsOn(workspaceId) {
+        return windows.filter(w => w.workspaceId === workspaceId && !w.hidden);
     }
-    // The Wayland toplevel of a window, for a ScreencopyView; null when the backend has none
-    function toplevelFor(address) {
-        return backend ? backend.toplevelFor(address) : null;
+    // The apps open on a workspace, each { appId, title, tag, count }, most windows first; hidden windows count
+    function workspaceApps(workspaceId) {
+        const apps = {};
+        for (const w of windows.filter(w => w.workspaceId === workspaceId)) {
+            const appId = w.appId || "unknown";
+            if (!apps[appId])
+                apps[appId] = {
+                    appId: appId,
+                    title: w.title,
+                    tag: w.tag,
+                    count: 0
+                };
+            apps[appId].count++;
+        }
+        return Object.values(apps).sort((a, b) => b.count - a.count);
     }
-    // Whether the compositor draws this window over every other one on its workspace (a
-    // fullscreen or maximized window it handles itself; a scrolling layout keeps it a column)
-    function coversWorkspace(window) {
-        return backend ? backend.coversWorkspace(window) : false;
+    // The monitor showing a screen, or null: { name, key (its key in config.json: the bare model, "MO34WQC2"),
+    // x, y, width, height (logical rect, transform applied, in the windows' global space), scale, transform,
+    // reserved [left, top, right, bottom], activeWorkspaceId, specialWorkspaceId (0 when none), hdr }
+    function monitorFor(screen) {
+        return backend ? backend.monitorFor(screen) : null;
     }
-    // The windows on a workspace that are drawn there (not unmapped, not a hidden group member)
-    function shownWindows(workspaceId) {
-        return backend ? backend.shownWindows(workspaceId) : [];
-    }
-    function monitorForScreen(screen) {
-        return backend ? backend.monitorForScreen(screen) : null;
+    // The workspace buttons of a screen's bar, in order, each { id, label }. The range set for the
+    // monitor in config.json (monitors.<key>.workspaces) is passed on; a backend may ignore it
+    function workspaceSlots(screen) {
+        const range = Config.options.monitors?.[monitorFor(screen)?.key ?? ""]?.workspaces;
+        return backend ? backend.workspaceSlots(screen, range) : [];
     }
     function activeWorkspaceIdForScreen(screen) {
         return backend ? backend.activeWorkspaceIdForScreen(screen) : 1;
@@ -99,18 +116,19 @@ Singleton {
         if (backend)
             backend.getCursorPosition(callback);
     }
-    function setMonitorColorManagement(name, preset) {
+    function setHdr(monitorName, on) {
         if (backend)
-            backend.setMonitorColorManagement(name, preset);
+            backend.setHdr(monitorName, on);
     }
 
-    function switchWorkspace(id) {
+    // screen is the one the switch is asked from: with per-output desktops (KWin) it says which output switches
+    function switchWorkspace(id, screen) {
         if (backend)
-            backend.switchWorkspace(id);
+            backend.switchWorkspace(id, screen);
     }
-    function focusWindow(address) {
+    function focusWindow(id) {
         if (backend)
-            backend.focusWindow(address);
+            backend.focusWindow(id);
     }
     // Re-reads the windows now: Hyprland sends no event when a layout moves or resizes them
     function refreshWindows() {

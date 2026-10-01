@@ -2,21 +2,25 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import "../../Utils"
+import "../Wayland"
 
 QtObject {
     id: backend
 
-    property string type: "niri"
     // Its windows have no positions yet (see _normalizeWindow)
     readonly property bool hasWindowGeometry: false
+    readonly property bool hasFocusGrab: false
+    readonly property bool hasHdrControl: false
+    readonly property string windowPreviewSource: ""
+    readonly property string screenSnapshotSource: Qt.resolvedUrl("../Wayland/ScreencopySnapshot.qml")
 
-    property var workspaces: []
     property string focusedMonitorName: ""
+    readonly property var activeWindow: _activeToplevel.window
+    property var _activeToplevel: ActiveToplevel {}
 
-    property var windowList: []
+    property var windows: []
     property var monitors: []
 
-    signal workspaceFocusChanged
     signal windowDataUpdated
     signal monitorDataUpdated
 
@@ -117,25 +121,15 @@ QtObject {
     // --- Data processing ---
 
     function _processWorkspaces() {
-        workspaces = _workspacesRaw.map(ws => ({
-                    id: ws.id,
-                    idx: ws.idx,
-                    name: ws.name ?? "",
-                    output: ws.output ?? "",
-                    is_active: ws.is_active ?? false,
-                    is_focused: ws.is_focused ?? false
-                }));
-
         const focused = _workspacesRaw.find(ws => ws.is_focused);
         if (focused?.output && _monitorNameToId[focused.output] !== undefined)
             focusedMonitorName = focused.output;
 
         _updateMonitorActiveWorkspaces();
-        workspaceFocusChanged();
     }
 
     function _processWindows(raw) {
-        windowList = raw.map(w => _normalizeWindow(w));
+        windows = raw.map(w => _normalizeWindow(w));
         windowDataUpdated();
     }
 
@@ -158,8 +152,7 @@ QtObject {
                     id: _getActiveWorkspaceForOutput(name)
                 },
                 transform: _mapTransform(logical.transform),
-                reserved: [0, 0, 0, 0],
-                colorManagementPreset: ""
+                reserved: [0, 0, 0, 0]
             };
         });
 
@@ -174,24 +167,22 @@ QtObject {
 
     function _normalizeWindow(win) {
         const ws = _workspacesRaw.find(w => w.id === win.workspace_id);
-        const monitorId = ws?.output ? (_monitorNameToId[ws.output] ?? -1) : -1;
+        const size = win.layout?.window_size ?? [0, 0];
         return {
-            address: "niri-" + win.id,
-            class: win.app_id ?? "",
+            id: "niri-" + win.id,
+            appId: win.app_id ?? "",
             title: win.title ?? "",
-            xdgTag: "",
-            xwayland: false,
-            workspace: {
-                id: win.workspace_id
-            },
-            monitor: monitorId,
-            at: [0, 0],
-            size: win.layout?.window_size ?? [0, 0],
+            tag: "",
+            workspaceId: win.workspace_id,
+            monitorName: ws?.output ?? "",
+            x: 0,
+            y: 0,
+            width: size[0],
+            height: size[1],
             floating: win.is_floating ?? false,
-            fullscreen: 0,
-            pinned: false,
-            focusHistoryID: -(win.focus_timestamp ?? 0),
-            _niriId: win.id
+            covers: false,
+            focused: win.is_focused ?? false,
+            hidden: false
         };
     }
 
@@ -239,36 +230,23 @@ QtObject {
         } else if (event.WindowsChanged) {
             _processWindows(event.WindowsChanged.windows);
         } else if (event.WindowOpenedOrChanged) {
-            const rawWin = event.WindowOpenedOrChanged.window;
-            const normalized = _normalizeWindow(rawWin);
-            const idx = windowList.findIndex(w => w._niriId === rawWin.id);
-            if (idx >= 0) {
-                const newList = [...windowList];
-                newList[idx] = normalized;
-                windowList = newList;
-            } else {
-                windowList = [...windowList, normalized];
-            }
+            const window = _normalizeWindow(event.WindowOpenedOrChanged.window);
+            const others = window.focused ? windows.map(w => Object.assign({}, w, {
+                    focused: false
+                })) : windows;
+            const idx = others.findIndex(w => w.id === window.id);
+            windows = idx >= 0 ? others.map((w, i) => i === idx ? window : w) : [...others, window];
             windowDataUpdated();
         } else if (event.WindowClosed) {
-            const addr = "niri-" + event.WindowClosed.id;
-            windowList = windowList.filter(w => w.address !== addr);
+            const id = "niri-" + event.WindowClosed.id;
+            windows = windows.filter(w => w.id !== id);
             windowDataUpdated();
-        } else if (event.WindowFocusTimestampChanged) {
-            const {
-                id,
-                focus_timestamp
-            } = event.WindowFocusTimestampChanged;
-            const addr = "niri-" + id;
-            const idx = windowList.findIndex(w => w.address === addr);
-            if (idx >= 0) {
-                const newList = [...windowList];
-                newList[idx] = Object.assign({}, newList[idx], {
-                    focusHistoryID: -(focus_timestamp ?? 0)
-                });
-                windowList = newList;
-                windowDataUpdated();
-            }
+        } else if (event.WindowFocusChanged) {
+            const id = "niri-" + event.WindowFocusChanged.id;
+            windows = windows.map(w => Object.assign({}, w, {
+                    focused: w.id === id
+                }));
+            windowDataUpdated();
         }
     }
 
@@ -287,65 +265,36 @@ QtObject {
 
     // --- Data query functions ---
 
-    function getWorkspaceApps(workspaceId) {
-        const windows = windowList.filter(w => w.workspace.id == workspaceId);
-        if (windows.length === 0)
-            return [];
-
-        const classMap = {};
-        windows.forEach(win => {
-            const windowClass = win.class || "unknown";
-            if (!classMap[windowClass]) {
-                classMap[windowClass] = {
-                    class: windowClass,
-                    title: win.title || "",
-                    xdgTag: "",
-                    count: 0
-                };
-            }
-            classMap[windowClass].count++;
-        });
-
-        const appList = Object.values(classMap);
-        appList.sort((a, b) => b.count - a.count);
-        return appList;
-    }
-
-    function toplevelFor(address) {
-        return null;
-    }
-
-    function coversWorkspace(window) {
-        return window.fullscreen > 0;
-    }
-
-    function shownWindows(workspaceId) {
-        return backend.windowList.filter(w => w.workspace?.id === workspaceId);
-    }
-
-    function monitorForScreen(screen) {
-        const name = screen?.name ?? "";
-        const mon = monitors.find(m => m.name === name);
+    function monitorFor(screen) {
+        const mon = monitors.find(m => m.name === screen?.name);
         if (!mon)
             return null;
         return {
             name: mon.name,
-            model: screen?.model ?? "",
-            id: mon.id,
+            key: screen.model,
             x: mon.x,
             y: mon.y,
             width: mon.width,
             height: mon.height,
             scale: mon.scale,
-            activeWorkspaceId: mon.activeWorkspace?.id ?? 1,
-            transform: mon.transform ?? 0,
-            reserved: mon.reserved ?? [0, 0, 0, 0]
+            transform: mon.transform,
+            reserved: mon.reserved,
+            activeWorkspaceId: mon.activeWorkspace.id,
+            specialWorkspaceId: 0,
+            hdr: false
         };
     }
 
+    // The output's own workspaces; the configured range does not apply
+    function workspaceSlots(screen, range) {
+        return _workspacesRaw.filter(ws => ws.output === screen?.name).sort((a, b) => (a.idx ?? 0) - (b.idx ?? 0)).map(ws => ({
+                    id: ws.id,
+                    label: ws.idx ?? ws.id
+                }));
+    }
+
     function activeWorkspaceIdForScreen(screen) {
-        const mon = monitorForScreen(screen);
-        return mon?.activeWorkspaceId ?? 1;
+        return monitorFor(screen)?.activeWorkspaceId ?? 1;
     }
 
     // Niri's IPC does not list binds, so no bar item shows keys there
@@ -355,13 +304,12 @@ QtObject {
         // Not available via Niri IPC
     }
 
-    function setMonitorColorManagement(name, preset) {
-        Logger.debug("setMonitorColorManagement: not supported on Niri");
+    function setHdr(monitorName, on) {
     }
 
     // --- Actions ---
 
-    function switchWorkspace(id) {
+    function switchWorkspace(id, screen) {
         const ws = _workspacesRaw.find(w => w.id === id);
         if (!ws) {
             Logger.error("switchWorkspace: unknown workspace id", id);
@@ -372,9 +320,9 @@ QtObject {
         }).running = true;
     }
 
-    function focusWindow(address) {
+    function focusWindow(id) {
         actionComponent.createObject(backend, {
-            command: ["niri", "msg", "action", "focus-window", "--id", address.replace("niri-", "")]
+            command: ["niri", "msg", "action", "focus-window", "--id", id.replace("niri-", "")]
         }).running = true;
     }
 

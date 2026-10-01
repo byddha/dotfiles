@@ -19,3 +19,5 @@ Popout 1.0 Popout.qml
 Icon 1.0 Icon.qml
 Spinner 1.0 Spinner.qml
 Keycap 1.0 Keycap.qml
+WindowPreview 1.0 WindowPreview.qml
+ScreenSnapshot 1.0 ScreenSnapshot.qml

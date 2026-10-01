@@ -35,12 +35,12 @@ PanelWindow {
     }
 
     // Monitor info (snapshot)
-    readonly property var monitorInfo: Compositor.monitorForScreen(screen)
+    readonly property var monitorInfo: Compositor.monitorFor(screen)
     readonly property real monitorScale: monitorInfo?.scale ?? 1
     readonly property real monitorOffsetX: monitorInfo?.x ?? 0
     readonly property real monitorOffsetY: monitorInfo?.y ?? 0
     property int activeWorkspaceId: monitorInfo?.activeWorkspaceId ?? 0
-    readonly property int specialWorkspaceId: (Compositor.monitors.find(m => m.name === screen?.name)?.specialWorkspace?.id) ?? 0
+    readonly property int specialWorkspaceId: monitorInfo?.specialWorkspaceId ?? 0
     readonly property int effectiveWorkspaceId: specialWorkspaceId !== 0 ? specialWorkspaceId : activeWorkspaceId
 
     // Screenshot paths
@@ -80,23 +80,23 @@ PanelWindow {
     readonly property var windowRegions: {
         if (!Compositor.hasWindowGeometry)
             return [];
-        const workspaceWindows = Compositor.shownWindows(root.effectiveWorkspaceId);
+        const workspaceWindows = Compositor.windowsOn(root.effectiveWorkspaceId);
         const toRegion = w => {
-            const left = Math.max(0, w.at[0] - root.monitorOffsetX);
-            const top = Math.max(0, w.at[1] - root.monitorOffsetY);
-            const right = Math.min(root.width, w.at[0] - root.monitorOffsetX + w.size[0]);
-            const bottom = Math.min(root.height, w.at[1] - root.monitorOffsetY + w.size[1]);
+            const left = Math.max(0, w.x - root.monitorOffsetX);
+            const top = Math.max(0, w.y - root.monitorOffsetY);
+            const right = Math.min(root.width, w.x - root.monitorOffsetX + w.width);
+            const bottom = Math.min(root.height, w.y - root.monitorOffsetY + w.height);
             return {
                 at: [left, top],
                 size: [right - left, bottom - top],
-                class: w.class,
+                appId: w.appId,
                 title: w.title,
                 floating: w.floating
             };
         };
         const onScreen = region => region.size[0] > 0 && region.size[1] > 0;
 
-        const coveringWindow = workspaceWindows.find(w => Compositor.coversWorkspace(w));
+        const coveringWindow = workspaceWindows.find(w => w.covers);
         if (coveringWindow)
             return [toRegion(coveringWindow)].filter(onScreen);
 
@@ -156,9 +156,9 @@ PanelWindow {
     // select. Instead, snip() and shrinkToContent() each grab a cropped region
     // on demand via the `regionCrop` ShaderEffectSource below.
     Connections {
-        target: screencopyView
+        target: snapshot
         function onHasContentChanged() {
-            if (!screencopyView.hasContent || root.preparationDone)
+            if (!snapshot.hasContent || root.preparationDone)
                 return;
             root.preparationDone = true;
         }
@@ -174,7 +174,7 @@ PanelWindow {
         y: 0
         visible: root.preparationDone
         live: false
-        sourceItem: screencopyView
+        sourceItem: snapshot
 
         property real grabX: 0
         property real grabY: 0
@@ -539,7 +539,7 @@ PanelWindow {
         }
 
         // Hide all UI chrome immediately (uiLayer.visible is gated on
-        // !root.snipping). The PanelWindow + ScreencopyView stay alive briefly
+        // !root.snipping). The PanelWindow + the snapshot stay alive briefly
         // so grabToImage has a rendered scene to read from, then dismiss once
         // the grab callback fires. User perceives the overlay as "gone now".
         root._grabRegionToFile(root.regionX, root.regionY, root.regionWidth, root.regionHeight, success => {
@@ -572,12 +572,10 @@ PanelWindow {
     // screen pixels, not the overlay UI. hasContentChanged fires after the
     // compositor delivers the first frame; the Connections block above flips
     // preparationDone then. File writes happen on demand via regionCrop.
-    ScreencopyView {
-        id: screencopyView
+    ScreenSnapshot {
+        id: snapshot
         anchors.fill: parent
-        live: false
-        paintCursor: false
-        captureSource: root.screen
+        screen: root.screen
     }
 
     // Loading spinner shown between snip confirm and actual window dismiss.
@@ -623,7 +621,7 @@ PanelWindow {
         }
     }
 
-    // UI layer — sibling of screencopyView so grabToImage excludes it.
+    // UI layer — sibling of the snapshot so grabToImage excludes it.
     // Hidden until the screencopy buffer is ready, and hidden again the instant
     // the user confirms a snip so the chrome disappears before the grab finishes.
     Item {

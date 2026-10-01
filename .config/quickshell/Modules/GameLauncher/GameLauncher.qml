@@ -32,7 +32,7 @@ Scope {
             exclusiveZone: 0
             color: Theme.hostSurface
 
-            // Click-outside-to-close using HyprlandFocusGrab
+            // A click outside closes it, where the compositor has a focus grab
             FocusGrab {
                 id: focusGrab
                 windows: [launcherWindow]
@@ -43,7 +43,7 @@ Scope {
 
             onVisibleChanged: {
                 if (visible) {
-                    Qt.callLater(() => focusGrab.active = Compositor.useHyprlandFocusGrab);
+                    Qt.callLater(() => focusGrab.active = Compositor.hasFocusGrab);
                     GameService.refresh();
                 } else {
                     focusGrab.active = false;

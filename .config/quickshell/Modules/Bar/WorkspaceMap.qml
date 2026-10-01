@@ -2,7 +2,6 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Effects
 import Quickshell
-import Quickshell.Wayland
 import "../../Config"
 import "../../Services"
 import "../../Components"
@@ -21,20 +20,20 @@ BarAnchoredPopup {
     readonly property bool hovered: pointer.containsMouse
     readonly property var hoveredWindow: pointer.containsMouse ? windowAt(Qt.point(pointer.mouseX, pointer.mouseY)) : null
 
-    readonly property var monitor: Compositor.monitors.find(m => m.name === (target?.QsWindow.window?.screen?.name ?? "")) ?? null
-    readonly property real screenWidth: (monitor?.width ?? 1) / (monitor?.scale ?? 1)
-    readonly property real screenHeight: (monitor?.height ?? 1) / (monitor?.scale ?? 1)
+    readonly property var monitor: Compositor.monitorFor(target?.QsWindow.window?.screen)
+    readonly property real screenWidth: monitor?.width ?? 1
+    readonly property real screenHeight: monitor?.height ?? 1
     // Floating ones last, so they are drawn and found on top
-    readonly property var windows: monitor ? Compositor.shownWindows(workspaceId).sort((a, b) => a.floating - b.floating) : []
+    readonly property var windows: monitor ? Compositor.windowsOn(workspaceId).sort((a, b) => a.floating - b.floating) : []
     // The screen and every window on the workspace (a scrolling layout reaches past the screen),
     // relative to the screen's top left
     readonly property rect bounds: {
         let left = 0, top = 0, right = screenWidth, bottom = screenHeight;
         for (const w of windows) {
-            left = Math.min(left, w.at[0] - monitor.x);
-            top = Math.min(top, w.at[1] - monitor.y);
-            right = Math.max(right, w.at[0] - monitor.x + w.size[0]);
-            bottom = Math.max(bottom, w.at[1] - monitor.y + w.size[1]);
+            left = Math.min(left, w.x - monitor.x);
+            top = Math.min(top, w.y - monitor.y);
+            right = Math.max(right, w.x - monitor.x + w.width);
+            bottom = Math.max(bottom, w.y - monitor.y + w.height);
         }
         return Qt.rect(left, top, right - left, bottom - top);
     }
@@ -50,9 +49,9 @@ BarAnchoredPopup {
     function windowAt(point) {
         for (let i = windows.length - 1; i >= 0; i--) {
             const w = windows[i];
-            const x = (w.at[0] - monitor.x - bounds.x) * mapScale;
-            const y = (w.at[1] - monitor.y - bounds.y) * mapScale;
-            if (point.x >= x && point.y >= y && point.x < x + w.size[0] * mapScale && point.y < y + w.size[1] * mapScale)
+            const x = (w.x - monitor.x - bounds.x) * mapScale;
+            const y = (w.y - monitor.y - bounds.y) * mapScale;
+            if (point.x >= x && point.y >= y && point.x < x + w.width * mapScale && point.y < y + w.height * mapScale)
                 return w;
         }
         return null;
@@ -98,9 +97,9 @@ BarAnchoredPopup {
             onClicked: {
                 const window = root.hoveredWindow;
                 if (window)
-                    Compositor.focusWindow(window.address);
+                    Compositor.focusWindow(window.id);
                 else
-                    Compositor.switchWorkspace(root.workspaceId);
+                    Compositor.switchWorkspace(root.workspaceId, root.target?.QsWindow.window?.screen);
                 root.chosen();
             }
         }
@@ -130,13 +129,13 @@ BarAnchoredPopup {
                     id: tile
 
                     required property var modelData
-                    readonly property bool lit: root.hoveredWindow?.address === modelData.address
+                    readonly property bool lit: root.hoveredWindow?.id === modelData.id
 
                     // Whole-pixel edges, so the tiles of one column come out the same size
-                    readonly property int x0: Math.round((modelData.at[0] - root.monitor.x - root.bounds.x) * root.mapScale)
-                    readonly property int y0: Math.round((modelData.at[1] - root.monitor.y - root.bounds.y) * root.mapScale)
-                    readonly property int x1: Math.round((modelData.at[0] + modelData.size[0] - root.monitor.x - root.bounds.x) * root.mapScale)
-                    readonly property int y1: Math.round((modelData.at[1] + modelData.size[1] - root.monitor.y - root.bounds.y) * root.mapScale)
+                    readonly property int x0: Math.round((modelData.x - root.monitor.x - root.bounds.x) * root.mapScale)
+                    readonly property int y0: Math.round((modelData.y - root.monitor.y - root.bounds.y) * root.mapScale)
+                    readonly property int x1: Math.round((modelData.x + modelData.width - root.monitor.x - root.bounds.x) * root.mapScale)
+                    readonly property int y1: Math.round((modelData.y + modelData.height - root.monitor.y - root.bounds.y) * root.mapScale)
 
                     x: x0 + 1
                     y: y0 + 1
@@ -148,14 +147,12 @@ BarAnchoredPopup {
                     border.color: lit ? Theme.primary : Theme.chipSurfaceNested
 
                     // One frame, taken as the map opens
-                    ScreencopyView {
+                    WindowPreview {
                         id: preview
 
                         anchors.fill: parent
                         anchors.margins: 1
-                        captureSource: Compositor.toplevelFor(tile.modelData.address)
-                        live: false
-                        constraintSize: Qt.size(width, height)
+                        windowId: tile.modelData.id
                     }
 
                     // In a corner over the preview; centred and larger until there is one
@@ -167,7 +164,7 @@ BarAnchoredPopup {
 
                         x: preview.hasContent ? tile.width - width - margin : (tile.width - width) / 2
                         y: preview.hasContent ? tile.height - height - margin : (tile.height - height) / 2
-                        appClass: tile.modelData.class
+                        appClass: tile.modelData.appId
                         size: preview.hasContent ? Math.min(20, fullSize) : fullSize
                         visible: size >= 14
                     }
@@ -202,7 +199,7 @@ BarAnchoredPopup {
                 elide: Text.ElideRight
                 role: "tertiary"
                 font.pixelSize: Theme.fontSizeTiny
-                text: root.hoveredWindow ? AppIcons.getDisplayName(root.hoveredWindow.class, root.hoveredWindow.title, root.hoveredWindow.xdgTag) : root.detail
+                text: root.hoveredWindow ? AppIcons.getDisplayName(root.hoveredWindow.appId, root.hoveredWindow.title, root.hoveredWindow.tag) : root.detail
             }
             Row {
                 anchors.horizontalCenter: parent.horizontalCenter

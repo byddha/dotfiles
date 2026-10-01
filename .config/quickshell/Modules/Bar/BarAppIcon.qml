@@ -11,7 +11,7 @@ Item {
     property string appClass: ""
     property int size: BarLayout.appIconSize
     // Rasterized at the size it is drawn on this screen, so it is never scaled down (and blurred)
-    readonly property real scale: Compositor.monitorForScreen(QsWindow.window?.screen)?.scale ?? 1
+    readonly property real scale: Compositor.monitorFor(QsWindow.window?.screen)?.scale ?? 1
 
     implicitWidth: size
     implicitHeight: size

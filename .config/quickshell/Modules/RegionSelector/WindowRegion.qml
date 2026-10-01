@@ -67,7 +67,7 @@ Rectangle {
             spacing: 8
 
             IconImage {
-                readonly property string iconSource: AppIcons.iconSourceFor(root.clientDimensions.class)
+                readonly property string iconSource: AppIcons.iconSourceFor(root.clientDimensions.appId)
 
                 visible: iconSource !== ""
                 implicitSize: 24
@@ -75,7 +75,7 @@ Rectangle {
             }
 
             StyledText {
-                text: AppIcons.getDisplayName(root.clientDimensions.class, root.clientDimensions.title, "") || root.clientDimensions.class || "Window"
+                text: AppIcons.getDisplayName(root.clientDimensions.appId, root.clientDimensions.title, "") || root.clientDimensions.appId || "Window"
                 font.pixelSize: Theme.fontSizeTitle
             }
         }
