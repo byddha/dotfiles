@@ -35,25 +35,12 @@ local rules = {
         center = true,
     },
     {
-        name   = "kitty-file-picker-files",
-        match  = { class = "^(kitty)$", title = "^(Select Files:)$", initial_title = "^(Select Files:)$" },
-        float  = true,
-        center = true,
-        size   = { 1300, 800 },
-    },
-    {
-        name   = "kitty-file-picker-directory",
-        match  = { class = "^(kitty)$", title = "^(Select Directory:)$", initial_title = "^(Select Directory:)$" },
-        float  = true,
-        center = true,
-        size   = { 1300, 800 },
-    },
-    {
-        name   = "kitty-file-picker-save",
-        match  = { class = "^(kitty)$", title = "^(Save File:)$", initial_title = "^(Save File:)$" },
-        float  = true,
-        center = true,
-        size   = { 1300, 800 },
+        name      = "file-picker",
+        match     = { class = "^(com\\.mitchellh\\.ghostty)$", initial_title = "^(Select Files:|Select Directory:|Save File:)$" },
+        animation = "popin 90%",
+        float     = true,
+        center    = true,
+        size      = { 1300, 800 },
     },
     {
         -- vicinae runs yazi.desktop in ghostty with the desktop id as its class
