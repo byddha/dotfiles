@@ -107,14 +107,14 @@ Singleton {
                 // Rules evaluated when a window gains focus — each matching rule clears notifications whose fields match.
                 // Shape: [{ "focus": { <window fields> }, "match": { <notification fields> } }, ...]
                 // Each block ANDs its keys. Values: case-insensitive substring, "/regex/flags", or array (OR).
-                // Window fields: class, initialClass, title, initialTitle, xdgTag, fullscreen, floating, workspace.id, workspace.name, pid, ...
+                // Window fields: appId, title, tag, workspaceId, monitorName, floating, covers
                 // Notification fields: appName, desktopEntry, summary, body, urgency, hints.<name>, ...
                 // Example:
                 // [
-                //   { "focus": { "class": "vesktop" },                    "match": { "desktopEntry": "vesktop" } },
-                //   { "focus": { "class": "zen" },                        "match": { "appName": "Zen" } },
-                //   { "focus": { "class": "slack" },                      "match": { "appName": "Slack", "urgency": ["low", "normal"] } },
-                //   { "focus": { "class": "/(vesktop|slack|telegram)/" }, "match": { "hints.category": "im.received" } }
+                //   { "focus": { "appId": "vesktop" },                    "match": { "desktopEntry": "vesktop" } },
+                //   { "focus": { "appId": "zen" },                        "match": { "appName": "Zen" } },
+                //   { "focus": { "appId": "slack" },                      "match": { "appName": "Slack", "urgency": ["low", "normal"] } },
+                //   { "focus": { "appId": "/(vesktop|slack|telegram)/" }, "match": { "hints.category": "im.received" } }
                 // ]
                 property var autoClearOnFocus: ([])
 

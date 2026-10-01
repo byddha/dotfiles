@@ -80,23 +80,23 @@ PanelWindow {
     readonly property var windowRegions: {
         if (!Compositor.hasWindowGeometry)
             return [];
-        const workspaceWindows = Compositor.shownWindows(root.effectiveWorkspaceId);
+        const workspaceWindows = Compositor.windowsOn(root.effectiveWorkspaceId);
         const toRegion = w => {
-            const left = Math.max(0, w.at[0] - root.monitorOffsetX);
-            const top = Math.max(0, w.at[1] - root.monitorOffsetY);
-            const right = Math.min(root.width, w.at[0] - root.monitorOffsetX + w.size[0]);
-            const bottom = Math.min(root.height, w.at[1] - root.monitorOffsetY + w.size[1]);
+            const left = Math.max(0, w.x - root.monitorOffsetX);
+            const top = Math.max(0, w.y - root.monitorOffsetY);
+            const right = Math.min(root.width, w.x - root.monitorOffsetX + w.width);
+            const bottom = Math.min(root.height, w.y - root.monitorOffsetY + w.height);
             return {
                 at: [left, top],
                 size: [right - left, bottom - top],
-                class: w.class,
+                appId: w.appId,
                 title: w.title,
                 floating: w.floating
             };
         };
         const onScreen = region => region.size[0] > 0 && region.size[1] > 0;
 
-        const coveringWindow = workspaceWindows.find(w => Compositor.coversWorkspace(w));
+        const coveringWindow = workspaceWindows.find(w => w.covers);
         if (coveringWindow)
             return [toRegion(coveringWindow)].filter(onScreen);
 

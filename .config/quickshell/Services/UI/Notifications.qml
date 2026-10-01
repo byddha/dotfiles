@@ -495,11 +495,10 @@ Singleton {
         return true;
     }
 
-    // IPC data is not refreshed on title changes, so class and title come live from the compositor's active window.
+    // Window data is not refreshed on title changes, so appId and title come live from the compositor's active window.
     function _focusedWindow() {
-        const ipc = (Compositor.windowList ?? []).find(w => w.focusHistoryID === 0) ?? {};
-        return Object.assign({}, ipc, {
-            class: Compositor.activeWindow?.appId ?? "",
+        return Object.assign({}, Compositor.windows.find(w => w.focused), {
+            appId: Compositor.activeWindow?.appId ?? "",
             title: Compositor.activeWindow?.title ?? ""
         });
     }
@@ -521,7 +520,7 @@ Singleton {
                     toDiscard.push(notif.notificationId);
             }
             for (const id of toDiscard) {
-                Logger.info(`Auto-clear (focus=${win.class || "?"}): discarding ${id}`);
+                Logger.info(`Auto-clear (focus=${win.appId || "?"}): discarding ${id}`);
                 root.discardNotification(id);
             }
         }

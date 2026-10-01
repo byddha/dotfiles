@@ -19,15 +19,33 @@ QtObject {
     // lastIpcObject holds the same JSON as `hyprctl clients/monitors -j`. Quickshell fills it
     // shortly after startup and on refreshToplevels()/refreshMonitors(); each update
     // re-evaluates these bindings through lastIpcObjectChanged.
-    readonly property var windowList: Hyprland.toplevels.values.map(t => t.lastIpcObject).filter(w => w?.address)
     readonly property var monitors: Hyprland.monitors.values.map(m => m.lastIpcObject).filter(m => m?.name)
+    readonly property var windows: Hyprland.toplevels.values.map(t => t.lastIpcObject).filter(w => w?.address).map(w => ({
+                id: w.address,
+                appId: w.class,
+                title: w.title,
+                tag: w.xdgTag || "",
+                workspaceId: w.workspace.id,
+                monitorName: monitors.find(m => m.id === w.monitor)?.name ?? "",
+                x: w.at[0],
+                y: w.at[1],
+                width: w.size[0],
+                height: w.size[1],
+                floating: w.floating,
+                // fullscreen: 1 = maximized, 2 = fullscreen. The default handler draws it over the rest; a layout
+                // that handles it itself (scrolling) keeps it beside the others
+                covers: w.fullscreen > 0 && w.fullscreenHandler === "default",
+                focused: w.focusHistoryID === 0,
+                // Unmapped windows and the hidden members of a group are not drawn
+                hidden: !w.mapped || w.hidden
+            }))
 
     signal workspaceFocusChanged
     signal windowDataUpdated
     signal monitorDataUpdated
 
     // A refresh updates each toplevel separately, so coalesce the per-object binding updates.
-    onWindowListChanged: Qt.callLater(_emitWindowData)
+    onWindowsChanged: Qt.callLater(_emitWindowData)
     onMonitorsChanged: Qt.callLater(_emitMonitorData)
 
     function _emitWindowData() {
@@ -66,45 +84,8 @@ QtObject {
 
     // --- Data query functions ---
 
-    function getWorkspaceApps(workspaceId) {
-        const windowsInWorkspace = backend.windowList.filter(w => w.workspace.id == workspaceId);
-
-        if (windowsInWorkspace.length === 0) {
-            return [];
-        }
-
-        const classMap = {};
-        windowsInWorkspace.forEach(win => {
-            const windowClass = win.class || "unknown";
-            if (!classMap[windowClass]) {
-                classMap[windowClass] = {
-                    class: windowClass,
-                    title: win.title || "",
-                    xdgTag: win.xdgTag || "",
-                    count: 0
-                };
-            }
-            classMap[windowClass].count++;
-        });
-
-        const appList = Object.values(classMap);
-        appList.sort((a, b) => b.count - a.count);
-
-        return appList;
-    }
-
-    function toplevelFor(address) {
-        return Hyprland.toplevels.values.find(t => `0x${t.address}` === address)?.wayland ?? null;
-    }
-
-    // fullscreen: 1 = maximized, 2 = fullscreen. The default handler draws it over the rest; a layout
-    // that handles it itself (scrolling) keeps it beside the others
-    function coversWorkspace(window) {
-        return window.fullscreen > 0 && window.fullscreenHandler === "default";
-    }
-
-    function shownWindows(workspaceId) {
-        return backend.windowList.filter(w => w.workspace?.id === workspaceId && w.mapped && !w.hidden);
+    function toplevelFor(id) {
+        return Hyprland.toplevels.values.find(t => `0x${t.address}` === id)?.wayland ?? null;
     }
 
     function monitorForScreen(screen) {
@@ -224,8 +205,8 @@ QtObject {
         Hyprland.dispatch(`hl.dsp.focus({ workspace = ${id} })`);
     }
 
-    function focusWindow(address) {
-        Hyprland.dispatch(`hl.dsp.focus({ window = "address:${address}" })`);
+    function focusWindow(id) {
+        Hyprland.dispatch(`hl.dsp.focus({ window = "address:${id}" })`);
     }
 
     function refreshWindows() {

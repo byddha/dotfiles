@@ -40,8 +40,11 @@ Singleton {
     readonly property var activeWindow: backend?.activeWindow ?? null
     property string focusedMonitorName: backend?.focusedMonitorName ?? ""
 
-    property var windowList: backend?.windowList ?? []
-    // Whether windows carry real positions (`at`, `size`), so a map of a workspace can be drawn
+    // Every window, each { id (opaque, stable while it exists), appId, title, tag (xdg tag or ""), workspaceId,
+    // monitorName, x, y, width, height (global logical px), floating, covers (drawn over every other window on
+    // its workspace), focused, hidden (not drawn: unmapped, or a group member behind another) }
+    readonly property var windows: backend?.windows ?? []
+    // Whether windows carry real positions (x, y), so a map of a workspace can be drawn
     readonly property bool hasWindowGeometry: backend?.hasWindowGeometry ?? false
     property var monitors: backend?.monitors ?? []
 
@@ -66,21 +69,29 @@ Singleton {
 
     // --- Function forwarding ---
 
-    function getWorkspaceApps(workspaceId) {
-        return backend ? backend.getWorkspaceApps(workspaceId) : [];
+    // The windows drawn on a workspace
+    function windowsOn(workspaceId) {
+        return windows.filter(w => w.workspaceId === workspaceId && !w.hidden);
+    }
+    // The apps open on a workspace, each { appId, title, tag, count }, most windows first; hidden windows count
+    function workspaceApps(workspaceId) {
+        const apps = {};
+        for (const w of windows.filter(w => w.workspaceId === workspaceId)) {
+            const appId = w.appId || "unknown";
+            if (!apps[appId])
+                apps[appId] = {
+                    appId: appId,
+                    title: w.title,
+                    tag: w.tag,
+                    count: 0
+                };
+            apps[appId].count++;
+        }
+        return Object.values(apps).sort((a, b) => b.count - a.count);
     }
     // The Wayland toplevel of a window, for a ScreencopyView; null when the backend has none
-    function toplevelFor(address) {
-        return backend ? backend.toplevelFor(address) : null;
-    }
-    // Whether the compositor draws this window over every other one on its workspace (a
-    // fullscreen or maximized window it handles itself; a scrolling layout keeps it a column)
-    function coversWorkspace(window) {
-        return backend ? backend.coversWorkspace(window) : false;
-    }
-    // The windows on a workspace that are drawn there (not unmapped, not a hidden group member)
-    function shownWindows(workspaceId) {
-        return backend ? backend.shownWindows(workspaceId) : [];
+    function toplevelFor(id) {
+        return backend ? backend.toplevelFor(id) : null;
     }
     function monitorForScreen(screen) {
         return backend ? backend.monitorForScreen(screen) : null;
@@ -107,9 +118,9 @@ Singleton {
         if (backend)
             backend.switchWorkspace(id);
     }
-    function focusWindow(address) {
+    function focusWindow(id) {
         if (backend)
-            backend.focusWindow(address);
+            backend.focusWindow(id);
     }
     // Re-reads the windows now: Hyprland sends no event when a layout moves or resizes them
     function refreshWindows() {

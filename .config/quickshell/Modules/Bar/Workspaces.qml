@@ -58,7 +58,7 @@ Grid {
         const start = Math.max(0, workspaces.findIndex(ws => ws.id === activeId));
         for (let i = 1; i <= count; i++) {
             const next = workspaces[(((start + direction * i) % count) + count) % count];
-            if (Compositor.getWorkspaceApps(next.id).length > 0) {
+            if (Compositor.workspaceApps(next.id).length > 0) {
                 if (next.id !== activeId)
                     Compositor.switchWorkspace(next.id);
                 return;
@@ -228,7 +228,7 @@ Grid {
             id: slot
 
             required property var modelData
-            readonly property var apps: Compositor.getWorkspaceApps(modelData.id)
+            readonly property var apps: Compositor.workspaceApps(modelData.id)
             readonly property bool current: modelData.id === root.activeId
 
             readonly property bool firstAppOnly: !root.vertical && root.level >= 3
@@ -246,7 +246,7 @@ Grid {
             readonly property string workspaceTitle: `Workspace ${modelData.label}`
             readonly property string keys: Compositor.keysFor(`Workspace ${modelData.id}`)
             readonly property string detail: apps.length === 0 ? "Empty" : apps.map(app => {
-                const name = AppIcons.getDisplayName(app.class, app.title, app.xdgTag);
+                const name = AppIcons.getDisplayName(app.appId, app.title, app.tag);
                 return app.count > 1 ? `${name} ×${app.count}` : name;
             }).join(" · ")
 
@@ -292,7 +292,7 @@ Grid {
 
                     BarAppIcon {
                         anchors.fill: parent
-                        appClass: app.modelData.class
+                        appClass: app.modelData.appId
                     }
 
                     // Window count, on the corner away from the active marker; the border is a ring in the
