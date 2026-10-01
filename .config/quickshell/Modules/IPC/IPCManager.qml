@@ -53,6 +53,13 @@ Item {
             Quickshell.execDetached(["bash", Qt.resolvedUrl("../../scripts/ocr/setup.sh").toString().replace("file://", "")]);
             return "OCR setup started; a notification says when it is done";
         }
+
+        // Writes every setting into config.json, the defaults with the user's own values
+        function config(): string {
+            Logger.info("IPC: setup.config");
+            Config.writeAll();
+            return `Every setting written to ${Config.configFile.replace("file://", "")}; the old file is beside it as config.json.<time>.bak`;
+        }
     }
 
     IpcHandler {

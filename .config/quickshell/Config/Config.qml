@@ -37,6 +37,23 @@ Singleton {
         fileView.writeAdapter();
     }
 
+    // Every setting into the file: its own values, and the defaults of the ones it leaves out. Keys
+    // the shell no longer knows are dropped, so the old file is kept beside it, a new copy each time.
+    function writeAll() {
+        backupConfig.running = true;
+    }
+
+    Process {
+        id: backupConfig
+        command: ["bash", "-c", '[ ! -e "$0" ] || cp -n "$0" "$0.$(date +%Y-%m-%dT%H-%M-%S).bak"', config.configFile.replace("file://", "")]
+        onExited: code => {
+            if (code === 0)
+                fileView.writeAdapter();
+            else
+                Logger.error("Config not written: no backup of", config.configFile);
+        }
+    }
+
     Timer {
         id: reloadTimer
         interval: 100
