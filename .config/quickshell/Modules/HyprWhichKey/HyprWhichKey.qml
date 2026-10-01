@@ -1,12 +1,18 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
 import "../../Config"
 import "../../Services"
-import "../../Utils"
+import "../../Components"
 
 Scope {
+    id: root
+
+    property bool shown: false
+
     Variants {
         model: Quickshell.screens
 
@@ -15,14 +21,14 @@ Scope {
 
             required property ShellScreen modelData
             screen: modelData
-            visible: Config?.options.hyprWhichKey.enabled && Settings.hyprWhichKeyVisible && modelData.name === Compositor.focusedMonitorName
+            visible: root.shown && modelData.name === Compositor.focusedMonitorName
 
             anchors {
                 bottom: true
             }
 
             margins {
-                bottom: 20
+                bottom: Placement.inset("bottom", 20)
             }
 
             implicitWidth: container.width
@@ -37,13 +43,10 @@ Scope {
             Connections {
                 target: HyprWhichKeyService
                 function onVisibleChanged() {
-                    if (HyprWhichKeyService.visible) {
-                        // Show window with delay after content is ready
+                    if (HyprWhichKeyService.visible)
                         showTimer.restart();
-                    } else {
-                        // Hide immediately
-                        Settings.hyprWhichKeyVisible = false;
-                    }
+                    else
+                        root.shown = false;
                 }
             }
 
@@ -51,7 +54,7 @@ Scope {
                 id: showTimer
                 interval: 50
                 onTriggered: {
-                    Settings.hyprWhichKeyVisible = true;
+                    root.shown = true;
                 }
             }
 
@@ -60,89 +63,57 @@ Scope {
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.bottom: parent.bottom
 
-                width: Math.max(200, columnLayout.implicitWidth + 16)
-                height: Math.max(60, columnLayout.implicitHeight + 16)
+                width: grid.implicitWidth + Theme.spacingLarge * 2
+                height: grid.implicitHeight + Theme.spacingLarge * 2
 
-                color: Theme.colLayer0
-                border.color: Theme.colSecondary
-                border.width: 2
-                radius: 5
-                layer.enabled: true  // Force offscreen rendering to eliminate border artifacts
+                color: Theme.hostSurface
+                radius: Theme.radiusWindow
+                border.width: 1
+                border.color: Theme.popupBorder
 
-                visible: true
-                opacity: visible ? 1 : 0
-
-                Behavior on opacity {
-                    OpacityAnimator {
-                        duration: 150
-                        easing.type: Easing.InOutQuad
+                Connections {
+                    target: HyprWhichKeyService
+                    function onKeybindListChanged() {
+                        // Hide entire window immediately to avoid resize artifacts
+                        root.shown = false;
+                        showTimer.restart();
                     }
                 }
 
-                Behavior on width {
-                    enabled: false
-                }
+                // Keys right-aligned in the first column, descriptions in the second
+                GridLayout {
+                    id: grid
 
-                Behavior on height {
-                    enabled: false
-                }
-
-                ColumnLayout {
-                    id: columnLayout
                     anchors.centerIn: parent
+                    columns: 2
+                    rowSpacing: Theme.spacingSmall
+                    columnSpacing: Theme.spacingBase
 
-                    spacing: 2
+                    Repeater {
+                        model: HyprWhichKeyService.keybindList
 
-                    Component.onCompleted: populateList()
+                        Keycap {
+                            required property var modelData
+                            required property int index
 
-                    Connections {
-                        target: HyprWhichKeyService
-                        function onKeybindListChanged() {
-                            // Hide entire window immediately to avoid resize artifacts
-                            Settings.hyprWhichKeyVisible = false;
-                            columnLayout.populateList();
-                            // Show window after layout settles
-                            showTimer.restart();
+                            Layout.row: index
+                            Layout.column: 0
+                            Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                            text: modelData.keys
                         }
                     }
 
-                    function populateList() {
-                        // Clean up existing children
-                        const childrenToDestroy = [];
-                        for (let i = columnLayout.children.length - 1; i >= 0; i--) {
-                            const child = columnLayout.children[i];
-                            if (child) {
-                                childrenToDestroy.push(child);
-                                child.parent = null;
-                            }
-                        }
+                    Repeater {
+                        model: HyprWhichKeyService.keybindList
 
-                        for (const child of childrenToDestroy) {
-                            if (child)
-                                child.destroy();
-                        }
+                        StyledText {
+                            required property var modelData
+                            required property int index
 
-                        // Calculate single global max key width for alignment
-                        // Scale character width based on font size (approximate ratio)
-                        Logger.info(JSON.stringify(Config.options.hyprWhichKey));
-                        const charWidth = Config.options.hyprWhichKey.fontSize * 0.6;
-                        let maxKeyWidth = 0;
-                        for (const bind of HyprWhichKeyService.keybindList) {
-                            const keyText = HyprWhichKeyService.getRawKey(bind);
-                            maxKeyWidth = Math.max(maxKeyWidth, keyText.length * charWidth);
+                            Layout.row: index
+                            Layout.column: 1
+                            text: modelData.description
                         }
-
-                        // Create keybind items
-                        for (const bind of HyprWhichKeyService.keybindList) {
-                            const keybindComponent = Qt.createComponent("KeybindItem.qml");
-                            const keybind = keybindComponent.createObject(columnLayout, {
-                                bind: bind,
-                                columnWidth: maxKeyWidth
-                            });
-                        }
-
-                        //Debug
-                        Logger.info(`Populated ${HyprWhichKeyService.keybindList.length} keybinds, maxKeyWidth: ${maxKeyWidth}`);
                     }
                 }
             }

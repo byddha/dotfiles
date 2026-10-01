@@ -24,6 +24,9 @@ Singleton {
     property var _logoDownloaded: ({}) // domain → true (persisted)
     property var _pendingOui: ({})
 
+    // The cache file is read; lookups before this would search logo.dev for brands it already knows
+    property bool ready: false
+
     signal brandResolved
 
     // ==================
@@ -175,10 +178,12 @@ Singleton {
             } catch (e) {
                 Logger.warn("Failed to parse brand cache:", e);
             }
+            root.ready = true;
         }
 
         onLoadFailed: function (error) {
             Logger.info("No brand cache found, starting fresh");
+            root.ready = true;
         }
     }
 

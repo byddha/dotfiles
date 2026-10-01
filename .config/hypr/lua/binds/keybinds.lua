@@ -81,8 +81,8 @@ local workspace_keys  = {
 local workspace_binds = {}
 
 for key, workspace in pairs(workspace_keys) do
-    table.insert(workspace_binds, { "<D-" .. key .. ">", hl.dsp.focus({ workspace = workspace }) })
-    table.insert(workspace_binds, { "<D-S-" .. key .. ">", hl.dsp.window.move({ workspace = workspace }) })
+    table.insert(workspace_binds, { "<D-" .. key .. ">", hl.dsp.focus({ workspace = workspace }), "Workspace " .. workspace })
+    table.insert(workspace_binds, { "<D-S-" .. key .. ">", hl.dsp.window.move({ workspace = workspace }), "Move window to workspace " .. workspace })
 end
 
 local scroll_binds = {

@@ -6,13 +6,9 @@ layout(location = 0) out vec4 fragColor;
 layout(std140, binding = 0) uniform buf {
     mat4 qt_Matrix;
     float qt_Opacity;
-    // Pack floats together
     float overlayOpacity;
-    float hatchOpacity;
-    float hatchSpacing;
     // vec4s are 16-byte aligned
     vec4 overlayColor;
-    vec4 hatchColor;
     vec4 selection;
     // Pack resolution and cornerRadius together
     vec4 resolutionAndRadius;  // xy = resolution, z = cornerRadius
@@ -71,24 +67,5 @@ void main() {
         return;
     }
 
-    // Dark overlay
-    vec4 overlay = vec4(overlayColor.rgb, overlayOpacity);
-
-    // Diagonal hatching - distance-based anti-aliasing (top-left to bottom-right)
-    float diagonal = fragCoord.x - fragCoord.y;
-
-    // Distance to nearest line (centered mod)
-    float d = mod(diagonal, hatchSpacing);
-    float distToLine = min(d, hatchSpacing - d);
-
-    // Sharp 1px line with slight AA
-    float hatch = 1.0 - smoothstep(0.0, 0.7, distToLine);
-
-    vec4 hatchLayer = vec4(hatchColor.rgb, hatch * hatchOpacity);
-
-    // Simple alpha blend
-    float outAlpha = overlay.a + hatchLayer.a * (1.0 - overlay.a);
-    vec3 outRgb = (overlay.rgb * overlay.a + hatchLayer.rgb * hatchLayer.a * (1.0 - overlay.a)) / max(outAlpha, 0.001);
-
-    fragColor = vec4(outRgb, outAlpha * cornerAA) * qt_Opacity;
+    fragColor = vec4(overlayColor.rgb, 1.0) * overlayOpacity * cornerAA * qt_Opacity;
 }

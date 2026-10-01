@@ -1,137 +1,93 @@
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
 import "../../../Config"
 import "../../../Components"
 import "../../../Services"
-import "../../../Utils"
 
-ColumnLayout {
+ReversibleGrid {
     id: root
 
-    spacing: Theme.spacingBase
+    property bool shown: false
 
-    // Disabled state - centered icon and text
-    Item {
+    reversed: Placement.sidebarReversed
+
+    // Tabs stay loaded, so refresh each time this tab is shown
+    onShownChanged: {
+        if (shown)
+            Bluetooth.refresh();
+    }
+    Component.onCompleted: {
+        if (shown)
+            Bluetooth.refresh();
+    }
+
+    EmptyState {
         Layout.fillWidth: true
         Layout.fillHeight: true
         visible: !Bluetooth.enabled
-
-        ColumnLayout {
-            anchors.centerIn: parent
-            spacing: Theme.spacingBase
-
-            Text {
-                Layout.alignment: Qt.AlignHCenter
-                text: "Bluetooth disabled"
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSizeBase
-                color: Theme.textSecondary
-            }
-
-            Text {
-                Layout.alignment: Qt.AlignHCenter
-                text: Icons.bluetoothOff
-                font.family: Theme.fontFamilyIcons
-                font.pixelSize: 64
-                color: Theme.textSecondary
-            }
-        }
+        text: "Bluetooth disabled"
+        icon: Lucide.bluetoothOff
     }
 
-    // Device list
-    ScrollView {
-        id: scrollView
+    ScrollList {
         Layout.fillWidth: true
         Layout.fillHeight: true
-        Layout.minimumHeight: 100
+        // Whole sections swap places when reversed; each still reads top to bottom
+        reversed: root.reversed
+        spacing: 14
         visible: Bluetooth.enabled
 
-        clip: true
-        ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
-        ScrollBar.vertical.policy: ScrollBar.AsNeeded
+        DeviceGroup {
+            title: "Connected"
+            devices: Bluetooth.connectedDevices
+        }
 
-        ColumnLayout {
-            width: scrollView.availableWidth
-            spacing: 4
+        DeviceGroup {
+            title: "Paired devices"
+            devices: Bluetooth.pairedDevices
+        }
 
-            // Connected devices section
-            StyledText {
-                Layout.fillWidth: true
-                visible: Bluetooth.connectedDevices.length > 0
-                text: "Connected"
-                font.pixelSize: Theme.fontSizeSmall
-                color: Theme.textSecondary
-            }
-
-            Repeater {
-                model: ScriptModel {
-                    values: Bluetooth.connectedDevices
-                }
-
-                BluetoothDeviceItem {
-                    required property var modelData
-                    Layout.fillWidth: true
-                    device: modelData
-                }
-            }
-
-            // Paired devices section
-            StyledText {
-                Layout.fillWidth: true
-                visible: Bluetooth.pairedDevices.length > 0
-                Layout.topMargin: Bluetooth.connectedDevices.length > 0 ? Theme.spacingBase : 0
-                text: "Paired Devices"
-                font.pixelSize: Theme.fontSizeSmall
-                color: Theme.textSecondary
-            }
-
-            Repeater {
-                model: ScriptModel {
-                    values: Bluetooth.pairedDevices
-                }
-
-                BluetoothDeviceItem {
-                    required property var modelData
-                    Layout.fillWidth: true
-                    device: modelData
-                }
-            }
-
-            // Empty state
-            Item {
-                Layout.fillWidth: true
-                Layout.preferredHeight: emptyText.height + Theme.spacingLarge * 2
-                visible: Bluetooth.deviceList.length === 0 && Bluetooth.enabled
-
-                StyledText {
-                    id: emptyText
-                    anchors.centerIn: parent
-                    text: "No paired devices"
-                    font.pixelSize: Theme.fontSizeBase
-                    color: Theme.textSecondary
-                }
-            }
+        EmptyState {
+            Layout.fillWidth: true
+            visible: Bluetooth.deviceList.length === 0
+            text: "No paired devices"
+            icon: Lucide.bluetooth
         }
     }
 
-    // Advanced settings button
-    Button {
+    ListFooter {
+        meta: `${Bluetooth.deviceList.length} device${Bluetooth.deviceList.length === 1 ? "" : "s"}`
+        actionText: "Advanced Settings"
+        actionIcon: Lucide.slidersHorizontal
+        onActionClicked: Quickshell.execDetached(["blueman-manager"])
+    }
+
+    component DeviceGroup: ColumnLayout {
+        id: group
+
+        property string title
+        property var devices
+
         Layout.fillWidth: true
-        text: "Advanced Settings"
-        onClicked: Quickshell.execDetached(["blueman-manager"])
-    }
+        visible: devices.length > 0
+        spacing: 2
 
-    // Refresh when tab becomes visible
-    onVisibleChanged: {
-        if (visible) {
-            Bluetooth.refresh();
+        SectionHeader {
+            text: group.title
+            meta: group.devices.length
         }
-    }
 
-    Component.onCompleted: {
-        Logger.info("Bluetooth tab loaded");
-        Bluetooth.refresh();
+        Repeater {
+            model: ScriptModel {
+                values: group.devices
+            }
+
+            BluetoothDeviceItem {
+                required property var modelData
+                Layout.fillWidth: true
+                device: modelData
+            }
+        }
     }
 }

@@ -1,7 +1,7 @@
 import QtQuick
-import QtQuick.Controls
 import "../../Config"
 import "../../Services"
+import "../../Components"
 
 Rectangle {
     id: root
@@ -13,9 +13,9 @@ Rectangle {
 
     height: 36
     radius: Theme.radiusBase
-    color: Theme.colLayer1
+    color: Theme.cardSurface
     border.width: searchInput.activeFocus ? 2 : 1
-    border.color: searchInput.activeFocus ? Theme.primary : Theme.colLayer2
+    border.color: searchInput.activeFocus ? Theme.primary : Theme.chipSurface
 
     Behavior on border.color {
         ColorAnimation {
@@ -29,11 +29,10 @@ Rectangle {
         spacing: Theme.spacingBase
 
         // Search icon
-        Text {
+        Icon {
             anchors.verticalCenter: parent.verticalCenter
-            text: ""  // Search icon from Nerd Font
-            font.family: Theme.fontFamilyIcons
-            font.pixelSize: 14
+            text: Lucide.search
+            size: Theme.iconSizeSmall
             color: Theme.textSecondary
         }
 
@@ -43,7 +42,7 @@ Rectangle {
             anchors.verticalCenter: parent.verticalCenter
             width: parent.width - 30
 
-            font.family: Theme.fontFamily
+            font.family: Theme.fontUi
             font.pixelSize: Theme.fontSizeSmall
             color: Theme.textColor
             selectionColor: Theme.primary
@@ -78,11 +77,10 @@ Rectangle {
         }
 
         // Clear button
-        Text {
+        Icon {
             anchors.verticalCenter: parent.verticalCenter
-            text: ""  // Close icon
-            font.family: Theme.fontFamilyIcons
-            font.pixelSize: 12
+            text: Lucide.x
+            size: Theme.iconSizeSmall
             color: Theme.textSecondary
             visible: searchInput.text.length > 0
 

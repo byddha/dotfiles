@@ -61,6 +61,7 @@ git-delta
 git-filter-repo
 github-cli
 gnome-keyring
+gpu-screen-recorder
 grim
 grub
 grub-btrfs

@@ -10,7 +10,7 @@ Singleton {
 
     // --- Backend loaded by URL (swap this path for a different compositor) ---
     property var backend: null
-    property bool isHyprland: backend?.isHyprland ?? false
+    property bool isHyprland: backend?.type === "hyprland"
     property bool isNiri: backend?.type === "niri"
     property bool useHyprlandFocusGrab: isHyprland
 
@@ -37,13 +37,13 @@ Singleton {
     // --- Public properties ---
 
     property var workspaces: backend?.workspaces ?? []
-    property string activeWindow: ""
-    property string activeWindowClass: ""
+    readonly property string activeWindow: ToplevelManager.activeToplevel?.title ?? ""
+    readonly property string activeWindowClass: ToplevelManager.activeToplevel?.appId ?? ""
     property string focusedMonitorName: backend?.focusedMonitorName ?? ""
 
     property var windowList: backend?.windowList ?? []
-    property var addresses: backend?.addresses ?? []
-    property var windowByAddress: backend?.windowByAddress ?? ({})
+    // Whether windows carry real positions (`at`, `size`), so a map of a workspace can be drawn
+    readonly property bool hasWindowGeometry: backend?.hasWindowGeometry ?? false
     property var monitors: backend?.monitors ?? []
 
     // --- Signals ---
@@ -65,22 +65,23 @@ Singleton {
         }
     }
 
-    // --- Wayland toplevel tracking (compositor-generic) ---
-
-    Connections {
-        target: ToplevelManager
-
-        function onActiveToplevelChanged() {
-            activeWindow = ToplevelManager.activeToplevel?.title ?? "";
-            activeWindowClass = ToplevelManager.activeToplevel?.appId ?? "";
-            Logger.debug("Focus →", activeWindowClass || "none");
-        }
-    }
-
     // --- Function forwarding ---
 
     function getWorkspaceApps(workspaceId) {
         return backend ? backend.getWorkspaceApps(workspaceId) : [];
+    }
+    // The Wayland toplevel of a window, for a ScreencopyView; null when the backend has none
+    function toplevelFor(address) {
+        return backend ? backend.toplevelFor(address) : null;
+    }
+    // Whether the compositor draws this window over every other one on its workspace (a
+    // fullscreen or maximized window it handles itself; a scrolling layout keeps it a column)
+    function coversWorkspace(window) {
+        return backend ? backend.coversWorkspace(window) : false;
+    }
+    // The windows on a workspace that are drawn there (not unmapped, not a hidden group member)
+    function shownWindows(workspaceId) {
+        return backend ? backend.shownWindows(workspaceId) : [];
     }
     function monitorForScreen(screen) {
         return backend ? backend.monitorForScreen(screen) : null;
@@ -88,8 +89,10 @@ Singleton {
     function activeWorkspaceIdForScreen(screen) {
         return backend ? backend.activeWorkspaceIdForScreen(screen) : 1;
     }
-    function windowForToplevel(toplevel) {
-        return backend ? backend.windowForToplevel(toplevel) : null;
+
+    // The keys of the compositor bind with this description, ready to show ("Super Q"); "" when there is none
+    function keysFor(description) {
+        return (backend?.describedBinds ?? []).find(bind => bind.description === description)?.keys ?? "";
     }
 
     function getCursorPosition(callback) {
@@ -104,6 +107,15 @@ Singleton {
     function switchWorkspace(id) {
         if (backend)
             backend.switchWorkspace(id);
+    }
+    function focusWindow(address) {
+        if (backend)
+            backend.focusWindow(address);
+    }
+    // Re-reads the windows now: Hyprland sends no event when a layout moves or resizes them
+    function refreshWindows() {
+        if (backend)
+            backend.refreshWindows();
     }
     function logout() {
         if (backend)

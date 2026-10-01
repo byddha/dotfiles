@@ -5,7 +5,6 @@ import Quickshell
 import Quickshell.Io
 import QtCore
 import "../Utils"
-import "../Services"
 
 Singleton {
     id: config
@@ -19,7 +18,6 @@ Singleton {
 
     property bool configLoaded: false
     property alias options: adapter
-    property string lastLoadedTheme: ""
 
     readonly property string primaryMonitor: {
         const monitors = adapter.monitors || {};
@@ -35,8 +33,21 @@ Singleton {
         fileView.reload();
     }
 
-    function saveConfig() {
-        fileView.writeAdapter();
+    // Every setting into the file: its own values, and the defaults of the ones it leaves out. Keys
+    // the shell no longer knows are dropped, so the old file is kept beside it, a new copy each time.
+    function writeAll() {
+        backupConfig.running = true;
+    }
+
+    Process {
+        id: backupConfig
+        command: ["bash", "-c", '[ ! -e "$0" ] || cp -n "$0" "$0.$(date +%Y-%m-%dT%H-%M-%S).bak"', config.configFile.replace("file://", "")]
+        onExited: code => {
+            if (code === 0)
+                fileView.writeAdapter();
+            else
+                Logger.error("Config not written: no backup of", config.configFile);
+        }
     }
 
     Timer {
@@ -56,8 +67,6 @@ Singleton {
                 Logger.info("Config directory created, saving defaults...");
                 config.configLoaded = true;
                 fileView.writeAdapter();
-                ThemeService.loadTheme(adapter.general.base16Theme);
-                config.lastLoadedTheme = adapter.general.base16Theme;
             } else {
                 Logger.error("Failed to create config directory");
                 config.configLoaded = true;
@@ -83,28 +92,18 @@ Singleton {
 
         onLoaded: {
             Logger.info("Config loaded from:", config.configFile);
-            const newTheme = adapter.general.base16Theme;
-
-            // Load theme on first load or if theme changed
-            if (!config.configLoaded || config.lastLoadedTheme !== newTheme) {
-                Logger.info(`Theme ${config.configLoaded ? "changed to" : "loaded"}:`, newTheme);
-                ThemeService.loadTheme(newTheme);
-                config.lastLoadedTheme = newTheme;
-            } else {
-                Logger.debug("Theme unchanged, skipping reload");
-            }
-
             config.configLoaded = true;
             Logger.debugEnabled = adapter.general.debugLogging;
             Logger.traceEnabled = adapter.general.traceLogging;
-            Logger.debug("Full config:", adapter);
         }
 
         JsonAdapter {
             id: adapter
 
-            property var notifications: JsonObject {
-                property bool enabled: true
+            property JsonObject notifications: JsonObject {
+                // "top-left", "top-center", "top-right", "bottom-left", "bottom-center" or "bottom-right"
+                property string position: "bottom-right"
+
                 // Rules evaluated when a window gains focus — each matching rule clears notifications whose fields match.
                 // Shape: [{ "focus": { <window fields> }, "match": { <notification fields> } }, ...]
                 // Each block ANDs its keys. Values: case-insensitive substring, "/regex/flags", or array (OR).
@@ -133,61 +132,45 @@ Singleton {
                 property var rules: ([])
             }
 
-            property var hyprWhichKey: JsonObject {
-                property bool enabled: true
-                property int fontSize: 24
-            }
-
-            property var general: JsonObject {
-                property string base16Theme: "tokyo-night-dark"
+            property JsonObject general: JsonObject {
                 property bool debugLogging: false
                 property bool traceLogging: false
             }
 
-            property var bar: JsonObject {
-                property bool enabled: true
-                property string position: "top"
+            // App icons the shell shows instead of the icon theme's, by desktop entry id (the .desktop file
+            // name): an absolute path or another themed icon name. Tray icons come from the apps themselves.
+            // Example: { "zen": "/usr/share/icons/hicolor/128x128/apps/zen-browser.png" }
+            property var iconOverrides: ({})
 
-                property var tray: JsonObject {
-                    property bool enabled: true
-                    property bool showTooltips: true
-                }
+            property JsonObject sidebar: JsonObject {
+                // "left" or "right": the screen side it opens on
+                property string side: "right"
+                // "top": hangs from the top and grows down; "bottom": stands on the bottom and grows
+                // up, with everything in it in the reverse order (the toggles lowest)
+                property string anchor: "top"
             }
 
-            property var overview: JsonObject {
-                property bool enabled: true
-                property real scale: 0.08
+            property JsonObject osd: JsonObject {
+                // "left" or "right", vertically centered
+                property string position: "right"
+            }
+
+            property JsonObject bar: JsonObject {
+                // "top", "bottom", "left" or "right"
+                property string position: "top"
+                // Away from the screen edges, with rounded corners and a shadow
+                property bool floating: false
             }
 
             // Centralized monitor configuration
             // Keys are monitor model strings from EDID (e.g., "MO34WQC2", "0x1920")
             // Fields: workspaces ([start, end]), hdrCapable (bool), primary (bool)
-            // Exactly one monitor should set primary: true (lockscreen, notifications).
+            // Exactly one monitor should set primary: true (notifications).
             property var monitors: (
                 // Example:
                 // "MO34WQC2": { "workspaces": [1, 5], "hdrCapable": true, "primary": true },
                 // "0x1920":   { "workspaces": [6, 8], "hdrCapable": false }
                 {})
-
-            property var sidebar: JsonObject {
-                property bool enabled: true
-                property int width: 400
-                property int marginTop: 50
-                property int marginRight: 10
-                property int marginBottom: 10
-
-                property var sliders: JsonObject {
-                    property bool showVolume: true
-                    property bool showBrightness: true
-                    property bool showMicrophone: true
-                    property bool showKeyboardBrightness: true
-                }
-            }
-
-            property var osd: JsonObject {
-                property bool enabled: true
-                property int timeout: 1000
-            }
 
             // Custom peripheral battery sources
             // devices: [{ name, type, command, interval, replaces? }]
@@ -195,11 +178,16 @@ Singleton {
             // command: outputs JSON {"percentage": 0-100, "charging": true/false}
             // replaces: UPower model name substring to suppress (optional)
             property var peripheralBatteries: ({
-                    devices: [],
-                    shutdownReminderThreshold: 40
+                    devices: []
                 })
 
-            property var brandLogos: JsonObject {
+            property JsonObject ocr: JsonObject {
+                // "small" or "medium": the PP-OCRv6 models the region selector reads text with
+                // (setup installs both); small is about twice as fast, medium reads better
+                property string model: "medium"
+            }
+
+            property JsonObject brandLogos: JsonObject {
                 property string apiKey: ""      // logo.dev publishable key (for logo images)
                 property string secretKey: ""   // logo.dev secret key (for brand search)
             }
@@ -210,23 +198,8 @@ Singleton {
             // whitelist: string array of case-insensitive substrings matched against item title;
             //            absent/empty passes everything through
             // format: parser key, default "rss"
-            property var rssFeedNotifier: JsonObject {
-                property bool enabled: true
+            property JsonObject rssFeedNotifier: JsonObject {
                 property var feeds: ([])
-            }
-
-            property var calendar: JsonObject {
-                property bool enabled: true
-
-                property var weather: JsonObject {
-                    property bool enabled: true
-                    property string location: "Bucharest"  // City name for geocoding
-                }
-
-                property var holidays: JsonObject {
-                    property bool enabled: true
-                    property string countryCode: "RO"  // ISO 3166-1 alpha-2
-                }
             }
         }
     }

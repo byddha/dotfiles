@@ -1,7 +1,8 @@
 import QtQuick
+import Quickshell
+import Quickshell.Widgets
 import "../../Config"
-import "../../Services"
-import "../../Utils"
+import "../../Components"
 
 Item {
     id: root
@@ -27,7 +28,7 @@ Item {
             anchors.fill: parent
             anchors.margins: isSelected ? 3 : 0
             radius: Theme.radiusBase - 2
-            color: Theme.colLayer1
+            color: Theme.cardSurface
             clip: true
         }
 
@@ -45,14 +46,13 @@ Item {
         // Fallback placeholder
         Rectangle {
             anchors.fill: cardContent
-            color: Theme.colLayer2
+            color: Theme.chipSurface
             visible: coverImage.status !== Image.Ready
 
-            Text {
+            StyledText {
                 anchors.centerIn: parent
                 text: root.game?.name?.charAt(0)?.toUpperCase() ?? "?"
-                font.family: Theme.fontFamily
-                font.pixelSize: 48
+                font.pixelSize: Theme.fontSizeDisplay
                 font.weight: Font.Bold
                 color: Theme.textSecondary
             }
@@ -72,23 +72,20 @@ Item {
                 }
                 GradientStop {
                     position: 1.0
-                    color: Theme.alpha(Theme.colLayer0, 0.9)
+                    color: Theme.alpha(Theme.hostSurface, 0.9)
                 }
             }
         }
 
         // Game title
-        Text {
+        StyledText {
             anchors.left: cardContent.left
             anchors.right: cardContent.right
             anchors.bottom: cardContent.bottom
             anchors.margins: 10
 
             text: root.game?.name ?? "Unknown"
-            font.family: Theme.fontFamily
             font.pixelSize: Theme.fontSizeSmall
-            font.weight: Font.Medium
-            color: Theme.textColor
             elide: Text.ElideRight
             maximumLineCount: 2
             wrapMode: Text.WordWrap
@@ -102,15 +99,13 @@ Item {
             width: platformIcon.width + 12
             height: platformIcon.height + 8
             radius: Theme.radiusSmall
-            color: Theme.alpha(Theme.colLayer0, 0.8)
+            color: Theme.alpha(Theme.hostSurface, 0.8)
 
-            Text {
+            IconImage {
                 id: platformIcon
                 anchors.centerIn: parent
-                text: ""  // Steam icon from Nerd Font
-                font.family: Theme.fontFamilyIcons
-                font.pixelSize: 14
-                color: Theme.textColor
+                implicitSize: Theme.iconSizeSmall
+                source: Quickshell.iconPath("steam", true)
             }
         }
 

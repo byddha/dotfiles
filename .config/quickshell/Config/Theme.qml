@@ -2,74 +2,103 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
-import "../Utils"
 import "../Services"
 
 /**
- * Theme - Semantic base16 color theme system
+ * Theme - The colors, type, sizes and animations every part of the shell uses.
  *
- * Maps base16 color palette to semantic UI colors.
- * All colors are reactive and update when ThemeService loads a new theme.
+ * Colors come from ThemeService (the palette theme-set generates) and follow it live.
  */
 Singleton {
     id: root
-
-    function init() {
-        // Initialization hook for shell.qml
-    }
 
     // ========================================================================
     // SEMANTIC COLOR MAPPING
     // ========================================================================
 
-    // Background layers (darkest to lightest)
-    property color colLayer0: ThemeService.background            // Default background
-    property color colLayer1: ThemeService.surfaceContainer      // Lighter background (surfaces)
-    property color colLayer2: ThemeService.surfaceContainerHigh  // Selection/hover background
+    // Surfaces, named after DankMaterialShell's roles (Common/Theme.qml). The generated palette is
+    // shifted one step down, so surfaceContainer is the theme's own surface: a card can be lighter or
+    // darker than the panel it sits on, or the same, as the theme chose.
+    // Panels and popouts
+    property color hostSurface: ThemeService.background
+    // Cards on a panel
+    property color cardSurface: ThemeService.surfaceContainer
+    // Buttons, chips and rows on a card; hover on a card
+    property color chipSurface: ThemeService.surfaceContainerHigh
+    // Keycaps and hover on a chip
+    property color chipSurfaceNested: ThemeService.surfaceContainerHighest
 
     // Foreground colors
     property color textColor: ThemeService.surfaceText             // Default text
     property color textSecondary: ThemeService.surfaceVariantText  // Muted text
-    property color colOnLayer1: ThemeService.surfaceVariantText    // Text on layer1 surfaces
 
     // Accent colors
     property color primary: ThemeService.primary                 // Primary accent
     property color primaryText: ThemeService.primaryTextColor           // Text on primary
-    property color colSecondary: ThemeService.secondary          // Secondary accent
+    property color secondaryContainer: ThemeService.secondaryContainer
+    property color secondaryContainerText: ThemeService.secondaryContainerText
     property color accentRed: ThemeService.error                 // Red accent (warnings/danger)
+    property color accentRedText: ThemeService.errorText
     property color accentOrange: ThemeService.base09             // Orange accent (no material role for it)
+    property color accentYellow: ThemeService.base0A
+    property color accentGreen: ThemeService.base0B
 
-    // Surface and border colors
-    property color surface: ThemeService.surfaceContainer        // Surface background
-    property color colLayer0Border: ColorUtils.mix(ThemeService.surfaceContainerHigh, ThemeService.background, 0.4)
+    // Border colors
+    // DankMaterialShell's popup border: outline at 35% (BlurService.borderColor)
+    property color popupBorder: alpha(ThemeService.outline, 0.35)
+    property color outline: ThemeService.outline
+    property color outlineVariant: ThemeService.outlineVariant
+
+    // State layer opacities: one overlay rule for every interactive element
+    readonly property real stateHover: 0.08
+    readonly property real statePressed: 0.12
+    readonly property real stateSelected: 0.12
+    readonly property real stateDisabled: 0.38
 
     // ========================================================================
     // TYPOGRAPHY
     // ========================================================================
 
-    property string fontFamily: "JetBrainsMono Nerd Font Mono"
-    property string fontFamilyIcons: "CaskaydiaCove Nerd Font Mono"
+    // Bundled, so the shell never depends on what the system has installed and Lucide's
+    // codepoints stay pinned to the version Lucide.qml maps them from
+    readonly property string fontUi: geistLoader.name
+    readonly property string fontIcons: lucideLoader.name
 
-    property int fontSizeTiny: 12
-    property int fontSizeSmall: 13
-    property int fontSizeBase: 14
+    readonly property FontLoader geistLoader: FontLoader {
+        source: Quickshell.shellPath("assets/fonts/geist/Geist-Variable.ttf")
+    }
+    readonly property FontLoader lucideLoader: FontLoader {
+        source: Quickshell.shellPath("assets/fonts/lucide/lucide.ttf")
+    }
+
+    readonly property int fontSizeTiny: 12
+    readonly property int fontSizeSmall: 13
+    readonly property int fontSizeBase: 14
+    readonly property int fontSizeLarge: 16
+    readonly property int fontSizeTitle: 20
+    readonly property int fontSizeDisplay: 48
+
+    readonly property int iconSizeSmall: 14
+    readonly property int iconSize: 18
+    readonly property int iconSizeLarge: 22
+
+    // Opacities of textSecondary for the "secondary" and "tertiary" text roles
+    readonly property real secondaryOpacity: 0.78
+    readonly property real tertiaryOpacity: 0.56
 
     // ========================================================================
     // SPACING & LAYOUT
     // ========================================================================
 
-    property int spacingBase: 8
-    property int spacingLarge: 16
-    property int spacingSmall: 4
+    readonly property int spacingSmall: 4
+    readonly property int spacingBase: 8
+    readonly property int spacingLarge: 16
+    readonly property int sidebarWidth: 400
 
-    property int radiusBase: 6
-    property int radiusSmall: 4
-
-    property int barHeight: 32
-    property int iconSize: 20
-
-    property int roundingScreen: 23
-    property int roundingWindow: 10
+    readonly property int radiusSmall: 4
+    readonly property int radiusBase: 7
+    // Matches Hyprland decoration:rounding, as DankMaterialShell's windowRadius does
+    readonly property int radiusWindow: 10
 
     property real elevationMargin: 10
 
@@ -124,6 +153,7 @@ Singleton {
      * @returns Color with specified opacity
      */
     function alpha(color, opacity) {
-        return Qt.rgba(color.r, color.g, color.b, opacity);
+        const c = Qt.color(color);
+        return Qt.rgba(c.r, c.g, c.b, opacity);
     }
 }

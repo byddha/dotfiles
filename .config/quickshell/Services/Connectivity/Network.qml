@@ -15,7 +15,6 @@ Singleton {
     property bool ethernet: false
     property bool wifiEnabled: false
     property bool wifiScanning: false
-    property bool wifiConnecting: connectProc.running
     property WifiAccessPoint wifiConnectTarget: null
 
     // Network lists
@@ -34,7 +33,6 @@ Singleton {
     // ==================
 
     function enableWifi(enabled: bool) {
-        Logger.info("WiFi", enabled ? "enabling" : "disabling");
         const cmd = enabled ? "on" : "off";
         enableWifiProc.command = ["nmcli", "radio", "wifi", cmd];
         enableWifiProc.running = true;
@@ -45,13 +43,11 @@ Singleton {
     }
 
     function rescanWifi() {
-        Logger.debug("WiFi scanning...");
         wifiScanning = true;
         rescanProcess.running = true;
     }
 
     function connectToWifiNetwork(accessPoint: WifiAccessPoint) {
-        Logger.info("Connecting to:", accessPoint.ssid);
         accessPoint.askingPassword = false;
         root.wifiConnectTarget = accessPoint;
         connectProc.command = ["nmcli", "dev", "wifi", "connect", accessPoint.ssid];
@@ -60,7 +56,6 @@ Singleton {
 
     function disconnectWifiNetwork() {
         if (active) {
-            Logger.info("Disconnecting from:", active.ssid);
             disconnectProc.command = ["nmcli", "connection", "down", active.ssid];
             disconnectProc.running = true;
         }
@@ -68,10 +63,13 @@ Singleton {
 
     function changePassword(network: WifiAccessPoint, password: string) {
         network.askingPassword = false;
+        // changePasswordProc reconnects to this target when it exits
+        root.wifiConnectTarget = network;
         changePasswordProc.environment = {
             "PASSWORD": password
         };
-        changePasswordProc.command = ["bash", "-c", `nmcli connection modify "${network.ssid}" wifi-sec.psk "$PASSWORD"`];
+        // SSID as a positional arg so quotes in it can't break the script; password via env to keep it out of argv
+        changePasswordProc.command = ["bash", "-c", 'nmcli connection modify "$1" wifi-sec.psk "$PASSWORD"', "bash", network.ssid];
         changePasswordProc.running = true;
     }
 
@@ -105,11 +103,8 @@ Singleton {
             }
         }
         onExited: (exitCode, exitStatus) => {
-            if (exitCode === 0) {
-                Logger.info("Connected successfully");
-            } else {
+            if (exitCode !== 0)
                 Logger.warn("Connection failed, code:", exitCode);
-            }
             if (root.wifiConnectTarget) {
                 root.wifiConnectTarget.askingPassword = (exitCode !== 0);
             }
@@ -161,7 +156,8 @@ Singleton {
     Process {
         id: subscriber
         running: true
-        command: ["nmcli", "monitor"]
+        // setpriv: the kernel ends it with qs, also when qs dies without cleaning up (SIGTERM, crash)
+        command: ["setpriv", "--pdeathsig", "TERM", "--", "nmcli", "monitor"]
         stdout: SplitParser {
             onRead: root.update()
         }
@@ -170,7 +166,7 @@ Singleton {
     Process {
         id: updateConnectionType
         property string buffer: ""
-        command: ["sh", "-c", "nmcli -t -f TYPE,STATE d status && nmcli -t -f CONNECTIVITY g"]
+        command: ["nmcli", "-t", "-f", "TYPE,STATE", "d", "status"]
         running: true
 
         function startCheck() {
@@ -186,8 +182,7 @@ Singleton {
 
         onExited: (exitCode, exitStatus) => {
             const lines = buffer.trim().split('\n');
-            lines.pop(); // connectivity line
-            root.ethernet = lines.some(line => line.includes("ethernet") && line.includes("connected"));
+            root.ethernet = lines.some(line => line.startsWith("ethernet:connected"));
         }
     }
 
@@ -282,8 +277,5 @@ Singleton {
         WifiAccessPoint {}
     }
 
-    Component.onCompleted: {
-        Logger.info("Service initialized");
-        update();
-    }
+    Component.onCompleted: update()
 }

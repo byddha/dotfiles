@@ -1,7 +1,7 @@
 import QtQuick
-import QtQuick.Controls
 import "../../Config"
 import "../../Services"
+import "../../Components"
 
 Item {
     id: root
@@ -63,12 +63,6 @@ Item {
         centerOnSelected();
     }
 
-    // No up/down for single row
-    function moveUp() {
-    }
-    function moveDown() {
-    }
-
     function centerOnSelected() {
         carousel.positionViewAtIndex(selectedIndex, ListView.Center);
     }
@@ -102,12 +96,10 @@ Item {
         }
 
         // Empty state
-        Text {
+        StyledText {
             anchors.centerIn: parent
+            role: "secondary"
             text: GameService.isLoading ? "Loading games..." : GameService.searchQuery ? "No games found" : GameService.games.length === 0 ? "No Steam games detected" : ""
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSizeBase
-            color: Theme.textSecondary
             visible: carousel.count === 0
         }
     }

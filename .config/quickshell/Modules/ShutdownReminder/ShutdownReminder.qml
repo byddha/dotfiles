@@ -5,7 +5,7 @@ import Quickshell
 import Quickshell.Wayland
 import "../../Config"
 import "../../Services"
-import "../../Utils"
+import "../../Components"
 
 Scope {
     id: root
@@ -19,10 +19,8 @@ Scope {
         function onShutdownReminderVisibleChanged() {
             if (!Settings.shutdownReminderVisible)
                 return;
-            const threshold = Config.options.peripheralBatteries?.shutdownReminderThreshold ?? 40;
-            root.lowDevices = PeripheralBatteries.getLowBatteryDevices(threshold);
+            root.lowDevices = PeripheralBatteries.getLowBatteryDevices();
             root.remaining = root.totalSeconds;
-            Logger.info(`Shutdown reminder shown, ${root.lowDevices.length} low device(s), poweroff in ${root.totalSeconds}s`);
         }
     }
 
@@ -69,9 +67,9 @@ Scope {
                 anchors.centerIn: parent
                 implicitWidth: contentLayout.implicitWidth + Theme.spacingLarge * 2
                 implicitHeight: contentLayout.implicitHeight + Theme.spacingLarge * 2
-                color: Theme.colLayer0
+                color: Theme.hostSurface
                 radius: Theme.radiusBase
-                border.color: Theme.colLayer0Border
+                border.color: Theme.popupBorder
                 border.width: 1
 
                 ColumnLayout {
@@ -79,21 +77,17 @@ Scope {
                     anchors.centerIn: parent
                     spacing: Theme.spacingBase
 
-                    Text {
+                    StyledText {
                         Layout.alignment: Qt.AlignHCenter
                         text: `Shutting down in ${root.remaining}s`
-                        color: Theme.textColor
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSizeBase + 4
-                        font.weight: Font.Black
+                        font.pixelSize: Theme.fontSizeTitle
+                        font.weight: Font.DemiBold
                     }
 
-                    Text {
+                    StyledText {
                         Layout.alignment: Qt.AlignHCenter
+                        role: "secondary"
                         text: "Consider plugging in:"
-                        color: Theme.textSecondary
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSizeBase
                     }
 
                     Repeater {
@@ -109,36 +103,25 @@ Scope {
                             property bool isLow: !isCritical && percentage <= PeripheralBatteries.lowThreshold
                             property color accent: isCritical ? Theme.accentRed : (isLow ? Theme.accentOrange : Theme.primary)
 
-                            Text {
+                            Icon {
                                 text: modelData?.icon ?? ""
                                 color: parent.accent
-                                font.family: Theme.fontFamilyIcons
-                                font.pixelSize: Theme.fontSizeBase + 2
                             }
 
-                            Text {
+                            StyledText {
                                 Layout.fillWidth: true
                                 text: modelData?.label ?? "Device"
-                                color: Theme.textColor
-                                font.family: Theme.fontFamily
-                                font.pixelSize: Theme.fontSizeBase
                             }
 
-                            Text {
+                            StyledText {
                                 text: `${parent.percentage}%`
                                 color: parent.accent
-                                font.family: Theme.fontFamily
-                                font.pixelSize: Theme.fontSizeBase
-                                font.weight: Font.Black
+                                font.weight: Font.DemiBold
                             }
                         }
                     }
                 }
             }
         }
-    }
-
-    Component.onCompleted: {
-        Logger.info("ShutdownReminder initialized");
     }
 }

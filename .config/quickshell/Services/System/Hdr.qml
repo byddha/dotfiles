@@ -5,14 +5,12 @@ import Quickshell
 import Quickshell.Io
 import ".."
 import "../../Config"
-import "../../Utils"
 
 Singleton {
     id: root
 
     property bool enabled: false
     property var hdrMonitors: []
-    property bool pendingToggle: false
 
     function refresh() {
         checkState();
@@ -21,8 +19,8 @@ Singleton {
     function toggle() {
         if (hdrMonitors.length === 0)
             return;
-        pendingToggle = true;
         checkState();
+        doToggle();
     }
 
     function checkState() {
@@ -40,22 +38,11 @@ Singleton {
             if (root.hdrMonitors.includes(mon.name)) {
                 if (mon.colorManagementPreset === "hdr") {
                     root.enabled = true;
-                    Logger.trace("HDR state: enabled");
-                    if (root.pendingToggle) {
-                        root.pendingToggle = false;
-                        root.doToggle();
-                    }
                     return;
                 }
             }
         }
         root.enabled = false;
-        Logger.trace("HDR state: disabled");
-
-        if (root.pendingToggle) {
-            root.pendingToggle = false;
-            root.doToggle();
-        }
     }
 
     function doToggle() {

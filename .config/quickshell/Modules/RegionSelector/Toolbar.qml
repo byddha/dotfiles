@@ -1,383 +1,548 @@
 import QtQuick
+import QtQuick.Effects
 import QtQuick.Layouts
+import "../../Components"
 import "../../Config"
-import "../../Services/UI"
+import "../../Services"
 
 Rectangle {
     id: root
 
     required property int action
     required property bool adjusting
+    property bool fullscreen: false
+    property bool ocrMenuOpen: false
+    property bool recordAudio: false
+    property bool recordMic: false
+    readonly property bool recordMode: action === RegionSelector.SnipAction.Record
+
     signal dismiss
     signal actionRequested(int newAction)
+    signal fullscreenRequested
     signal cropRequested
-    signal lensRequested
-    signal ocrRequested        // English only
-    signal ocrAllRequested     // All languages
-    signal translateRequested  // OCR + Kagi Translate
+    signal snipRequested(string mode, bool translate)
+    signal audioToggled
+    signal micToggled
 
-    radius: Theme.radiusBase * 1.5
-    color: Theme.alpha(Theme.colLayer1, 0.9)
-    border.color: Theme.alpha(Theme.colLayer0Border, 0.5)
+    property Item tipTarget: null
+    property bool tipShown: false
+
+    implicitWidth: content.implicitWidth + 14
+    implicitHeight: content.implicitHeight + 14
+    radius: Theme.radiusWindow
+    color: Theme.cardSurface
     border.width: 1
+    border.color: Theme.popupBorder
 
-    implicitWidth: content.width + 12
-    implicitHeight: content.height + 12
+    onAdjustingChanged: if (!adjusting)
+        ocrMenuOpen = false
+
+    RectangularShadow {
+        z: -1
+        anchors.fill: parent
+        radius: root.radius
+        blur: 8
+        offset: Qt.vector2d(0, 4)
+        color: Qt.rgba(0, 0, 0, 0.25)
+    }
 
     RowLayout {
         id: content
         anchors.centerIn: parent
-        spacing: 8
+        spacing: 2
 
-        // Segmented mode toggle
         Rectangle {
-            id: segmentedControl
-            Layout.preferredHeight: 36
-            implicitWidth: segmentRow.width + 4
-            radius: Theme.radiusBase
-            color: Theme.alpha(Theme.colLayer0, 0.6)
+            implicitWidth: modeRow.implicitWidth + 6
+            implicitHeight: 40
+            radius: 8
+            color: Theme.chipSurface
 
-            RowLayout {
-                id: segmentRow
+            Row {
+                id: modeRow
                 anchors.centerIn: parent
                 spacing: 2
 
-                // Screenshot button
-                Rectangle {
-                    Layout.preferredWidth: screenshotContent.width + 20
-                    Layout.preferredHeight: 32
-                    radius: Theme.radiusBase - 2
-                    color: root.action === RegionSelector.SnipAction.Copy ? Theme.primary : "transparent"
-
-                    RowLayout {
-                        id: screenshotContent
-                        anchors.centerIn: parent
-                        spacing: 6
-
-                        Text {
-                            font.family: Theme.fontFamilyIcons
-                            font.pixelSize: 14
-                            color: root.action === RegionSelector.SnipAction.Copy ? Theme.primaryText : Theme.textSecondary
-                            text: Icons.screenshot
-                        }
-                        Text {
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSizeSmall
-                            font.weight: Font.Medium
-                            color: root.action === RegionSelector.SnipAction.Copy ? Theme.primaryText : Theme.textSecondary
-                            textFormat: Text.RichText
-                            text: `<u>S</u>creenshot`
-                        }
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.actionRequested(RegionSelector.SnipAction.Copy)
-                    }
+                ToolButton {
+                    implicitHeight: 34
+                    radius: 5
+                    icon: Lucide.camera
+                    toggled: !root.recordMode
+                    tip: "Screenshot"
+                    keys: ["S"]
+                    onClicked: root.actionRequested(RegionSelector.SnipAction.Copy)
                 }
-
-                // Record button
-                Rectangle {
-                    Layout.preferredWidth: recordContent.width + 20
-                    Layout.preferredHeight: 32
-                    radius: Theme.radiusBase - 2
-                    color: root.action === RegionSelector.SnipAction.Record ? Theme.primary : "transparent"
-
-                    RowLayout {
-                        id: recordContent
-                        anchors.centerIn: parent
-                        spacing: 6
-
-                        Text {
-                            font.family: Theme.fontFamilyIcons
-                            font.pixelSize: 14
-                            color: root.action === RegionSelector.SnipAction.Record ? Theme.primaryText : Theme.textSecondary
-                            text: Icons.record
-                        }
-                        Text {
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSizeSmall
-                            font.weight: Font.Medium
-                            color: root.action === RegionSelector.SnipAction.Record ? Theme.primaryText : Theme.textSecondary
-                            textFormat: Text.RichText
-                            text: `<u>R</u>ecord`
-                        }
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.actionRequested(RegionSelector.SnipAction.Record)
-                    }
+                ToolButton {
+                    implicitHeight: 34
+                    radius: 5
+                    icon: Lucide.video
+                    toggled: root.recordMode
+                    tip: "Record"
+                    keys: ["R"]
+                    onClicked: root.actionRequested(RegionSelector.SnipAction.Record)
                 }
             }
         }
 
-        // Fullscreen button
-        Rectangle {
-            Layout.preferredWidth: fullscreenContent.width + 16
-            Layout.preferredHeight: 36
-            radius: Theme.radiusBase
-            color: fullscreenMouse.containsMouse ? Theme.alpha(Theme.colLayer2, 0.8) : Theme.alpha(Theme.colLayer0, 0.6)
+        Separator {}
 
-            RowLayout {
-                id: fullscreenContent
-                anchors.centerIn: parent
-                spacing: 6
+        ToolButton {
+            icon: Lucide.monitor
+            toggled: root.fullscreen
+            tip: root.fullscreen ? "Clear the full screen selection" : "Select the full screen"
+            keys: ["F"]
+            onClicked: root.fullscreenRequested()
+        }
+        ToolButton {
+            icon: Lucide.crop
+            active: root.adjusting
+            tip: "Crop to content"
+            keys: ["C"]
+            onClicked: root.cropRequested()
+        }
 
-                Text {
-                    font.family: Theme.fontFamilyIcons
-                    font.pixelSize: 16
-                    color: Theme.textColor
-                    text: Icons.fullscreen
-                }
-                Text {
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeSmall
-                    font.weight: Font.Medium
-                    color: Theme.textSecondary
-                    textFormat: Text.RichText
-                    text: `<u>F</u>ull`
-                }
+        Separator {}
+
+        ToolButton {
+            icon: Lucide.scanSearch
+            active: root.adjusting
+            tip: "Google Lens"
+            keys: ["L"]
+            onClicked: root.snipRequested("lens", false)
+        }
+        RowLayout {
+            spacing: 1
+
+            ToolButton {
+                icon: Lucide.scanText
+                active: root.adjusting
+                rightFlat: true
+                tip: "Copy text"
+                keys: ["O"]
+                onClicked: root.snipRequested("ocr", false)
             }
-
-            MouseArea {
-                id: fullscreenMouse
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onClicked: root.actionRequested(-1)  // -1 signals fullscreen
+            ToolButton {
+                id: ocrChevron
+                implicitWidth: 18
+                icon: Lucide.chevronUp
+                iconSize: Theme.iconSizeSmall
+                active: root.adjusting
+                leftFlat: true
+                toggled: root.ocrMenuOpen
+                tip: "More text options"
+                onClicked: root.ocrMenuOpen = !root.ocrMenuOpen
             }
         }
 
-        // Crop button (shrink to content)
-        Rectangle {
-            Layout.preferredWidth: cropContent.width + 16
-            Layout.preferredHeight: 36
-            radius: Theme.radiusBase
-            color: cropMouse.containsMouse && root.adjusting ? Theme.alpha(Theme.colLayer2, 0.8) : Theme.alpha(Theme.colLayer0, 0.6)
-            opacity: root.adjusting ? 1.0 : 0.4
+        Separator {}
 
-            RowLayout {
-                id: cropContent
+        // Fixed width: the hint and the output buttons swap without resizing the bar
+        Item {
+            implicitWidth: Math.max(hint.implicitWidth + 16, output.implicitWidth)
+            implicitHeight: 40
+
+            StyledText {
+                id: hint
                 anchors.centerIn: parent
-                spacing: 6
-
-                Text {
-                    font.family: Theme.fontFamilyIcons
-                    font.pixelSize: 16
-                    color: root.adjusting ? Theme.textColor : Theme.textSecondary
-                    text: Icons.crop
-                }
-                Text {
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeSmall
-                    font.weight: Font.Medium
-                    color: root.adjusting ? Theme.textSecondary : Theme.textSecondary
-                    textFormat: Text.RichText
-                    text: `<u>C</u>rop`
-                }
+                visible: !root.adjusting
+                role: "secondary"
+                text: "Drag or click a window"
+                font.pixelSize: Theme.fontSizeSmall
             }
 
-            MouseArea {
-                id: cropMouse
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: root.adjusting ? Qt.PointingHandCursor : Qt.ArrowCursor
-                onClicked: if (root.adjusting)
-                    root.cropRequested()
+            RowLayout {
+                id: output
+                anchors.centerIn: parent
+                visible: root.adjusting
+                spacing: 2
+
+                ToolButton {
+                    visible: !root.recordMode
+                    icon: Lucide.pencil
+                    tip: "Edit in Swappy"
+                    keys: ["E"]
+                    onClicked: root.snipRequested("edit", false)
+                }
+                ToolButton {
+                    visible: !root.recordMode
+                    icon: Lucide.save
+                    tip: "Save to Pictures"
+                    keys: ["Ctrl", "S"]
+                    onClicked: root.snipRequested("save", false)
+                }
+                ToolButton {
+                    visible: root.recordMode
+                    icon: Lucide.volume2
+                    toggled: root.recordAudio
+                    tip: root.recordAudio ? "System audio · on" : "System audio · off"
+                    keys: ["A"]
+                    onClicked: root.audioToggled()
+                }
+                ToolButton {
+                    visible: root.recordMode
+                    icon: Lucide.mic
+                    toggled: root.recordMic
+                    tip: root.recordMic ? "Microphone · on" : "Microphone · off"
+                    keys: ["M"]
+                    onClicked: root.micToggled()
+                }
+                PrimaryButton {
+                    Layout.leftMargin: 4
+                    icon: root.recordMode ? Lucide.circleDot : Lucide.copy
+                    text: root.recordMode ? "Record" : "Copy"
+                    labels: ["Copy", "Record"]
+                    tip: root.recordMode ? "Start recording" : "Copy to clipboard"
+                    keys: ["Space", "Enter"]
+                    onClicked: root.snipRequested("copy", false)
+                }
             }
         }
 
-        // Lens button (Google Lens visual search)
-        Rectangle {
-            Layout.preferredWidth: lensContent.width + 16
-            Layout.preferredHeight: 36
-            radius: Theme.radiusBase
-            color: lensMouse.containsMouse && root.adjusting ? Theme.alpha(Theme.colLayer2, 0.8) : Theme.alpha(Theme.colLayer0, 0.6)
-            opacity: root.adjusting ? 1.0 : 0.4
+        Separator {}
+
+        ToolButton {
+            icon: Lucide.x
+            danger: true
+            tip: "Cancel"
+            keys: ["Esc"]
+            onClicked: root.dismiss()
+        }
+    }
+
+    // ---- OCR menu, opens upward from the split button
+    Rectangle {
+        id: ocrMenu
+        visible: root.ocrMenuOpen
+        x: {
+            root.ocrMenuOpen;
+            return Math.min(ocrChevron.parent.mapToItem(root, 0, 0).x, root.width - width);
+        }
+        y: -height - 6
+        width: Math.max(ocrCopy.implicitWidth, ocrTranslate.implicitWidth) + 8
+        height: menuColumn.implicitHeight + 8
+        radius: Theme.radiusWindow
+        color: Theme.cardSurface
+        border.width: 1
+        border.color: Theme.popupBorder
+
+        RectangularShadow {
+            z: -1
+            anchors.fill: parent
+            radius: parent.radius
+            blur: 8
+            offset: Qt.vector2d(0, 4)
+            color: Qt.rgba(0, 0, 0, 0.25)
+        }
+
+        Column {
+            id: menuColumn
+            anchors.fill: parent
+            anchors.margins: 4
+
+            MenuRow {
+                id: ocrCopy
+                icon: Lucide.scanText
+                text: "Copy text"
+                keys: ["O"]
+                onClicked: root.snipRequested("ocr", false)
+            }
+            MenuRow {
+                id: ocrTranslate
+                icon: Lucide.languages
+                text: "Translate"
+                keys: ["Ctrl", "O"]
+                onClicked: root.snipRequested("ocr", true)
+            }
+        }
+    }
+
+    // ---- Tooltip, above the hovered button, kept inside the bar's width
+    Timer {
+        id: tipTimer
+        interval: 400
+        onTriggered: root.tipShown = true
+    }
+    onTipTargetChanged: {
+        tipShown = false;
+        if (tipTarget)
+            tipTimer.restart();
+        else
+            tipTimer.stop();
+    }
+
+    Rectangle {
+        id: tooltip
+        readonly property Item target: root.tipTarget
+        visible: root.tipShown && target !== null && !root.ocrMenuOpen
+        x: target ? Math.max(0, Math.min(root.width - width, target.mapToItem(root, target.width / 2, 0).x - width / 2)) : 0
+        y: -height - 8
+        width: tipColumn.implicitWidth + 16
+        height: tipColumn.implicitHeight + 12
+        radius: Theme.radiusBase
+        color: Theme.chipSurface
+        border.width: 1
+        border.color: Theme.popupBorder
+
+        RectangularShadow {
+            z: -1
+            anchors.fill: parent
+            radius: parent.radius
+            blur: 8
+            offset: Qt.vector2d(0, 4)
+            color: Qt.rgba(0, 0, 0, 0.25)
+        }
+
+        Column {
+            id: tipColumn
+            anchors.centerIn: parent
+            spacing: 4
 
             RowLayout {
-                id: lensContent
-                anchors.centerIn: parent
-                spacing: 6
-
-                Text {
-                    font.family: Theme.fontFamilyIcons
-                    font.pixelSize: 16
-                    color: root.adjusting ? Theme.textColor : Theme.textSecondary
-                    text: Icons.lens
+                spacing: 8
+                StyledText {
+                    text: tooltip.target?.tip ?? ""
+                    font.pixelSize: Theme.fontSizeTiny
                 }
-                Text {
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeSmall
-                    font.weight: Font.Medium
-                    color: root.adjusting ? Theme.textSecondary : Theme.textSecondary
-                    textFormat: Text.RichText
-                    text: `<u>L</u>ens`
+                Keycaps {
+                    keys: tooltip.target?.keys ?? []
                 }
             }
+            RowLayout {
+                readonly property string line: tooltip.target ? (tooltip.target.active ? tooltip.target.detail : "Select a region first") : ""
+                visible: line !== ""
+                spacing: 8
+                StyledText {
+                    role: "secondary"
+                    text: parent.line
+                    font.pixelSize: Theme.fontSizeTiny
+                }
+                Keycaps {
+                    keys: tooltip.target?.active ? tooltip.target.detailKeys : []
+                }
+            }
+        }
+    }
 
-            MouseArea {
-                id: lensMouse
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: root.adjusting ? Qt.PointingHandCursor : Qt.ArrowCursor
-                onClicked: if (root.adjusting)
-                    root.lensRequested()
+    component Separator: Rectangle {
+        Layout.leftMargin: 6
+        Layout.rightMargin: 6
+        implicitWidth: 1
+        implicitHeight: 24
+        color: Theme.outlineVariant
+    }
+
+    component Keycaps: Row {
+        property var keys: []
+        property bool onPrimary: false
+        visible: keys.length > 0
+        spacing: 3
+
+        Repeater {
+            model: parent.keys
+            Keycap {
+                required property string modelData
+                text: modelData
+                onPrimary: parent.onPrimary
+            }
+        }
+    }
+
+    // Inactive buttons stay hoverable (the tooltip says why) and swallow clicks so a press
+    // doesn't fall through and start a new selection, hence `active` instead of `enabled`.
+    component ToolButton: Rectangle {
+        id: button
+
+        property string icon
+        property int iconSize: Theme.iconSize
+        property bool active: true
+        property bool toggled: false
+        property bool danger: false
+        property bool leftFlat: false
+        property bool rightFlat: false
+        property string tip
+        property var keys: []
+        property string detail
+        property var detailKeys: []
+
+        signal clicked
+
+        implicitWidth: 40
+        implicitHeight: 40
+        radius: Theme.radiusBase
+        topLeftRadius: leftFlat ? 0 : radius
+        bottomLeftRadius: leftFlat ? 0 : radius
+        topRightRadius: rightFlat ? 0 : radius
+        bottomRightRadius: rightFlat ? 0 : radius
+        color: !active ? "transparent" : danger && mouse.containsMouse ? Theme.alpha(Theme.accentRed, mouse.pressed ? 0.24 : 0.16) : toggled ? Theme.alpha(Theme.primary, Theme.stateSelected) : "transparent"
+
+        StateLayer {
+            visible: button.active && !button.danger
+            topLeftRadius: button.topLeftRadius
+            bottomLeftRadius: button.bottomLeftRadius
+            topRightRadius: button.topRightRadius
+            bottomRightRadius: button.bottomRightRadius
+            hovered: mouse.containsMouse
+            pressed: mouse.pressed
+        }
+
+        Icon {
+            anchors.centerIn: parent
+            text: button.icon
+            size: button.iconSize
+            color: !button.active ? Theme.alpha(Theme.textSecondary, 0.35) : button.danger && mouse.containsMouse ? Theme.accentRed : button.toggled ? Theme.primary : mouse.containsMouse ? Theme.textColor : Theme.textSecondary
+        }
+
+        MouseArea {
+            id: mouse
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: button.active ? Qt.PointingHandCursor : Qt.ArrowCursor
+            onContainsMouseChanged: {
+                if (containsMouse)
+                    root.tipTarget = button;
+                else if (root.tipTarget === button)
+                    root.tipTarget = null;
+            }
+            onClicked: if (button.active)
+                button.clicked()
+        }
+    }
+
+    // [icon] [label] [↵]: icon and keycap sit at fixed spots, the label is centered between them. The width
+    // comes from the longest of `labels`, so swapping Copy / Record never moves anything.
+    component PrimaryButton: Rectangle {
+        id: primary
+
+        property string icon
+        property string text
+        property var labels: []
+        property string tip
+        property var keys: []
+        readonly property bool active: true
+        readonly property string detail: ""
+        readonly property var detailKeys: []
+        readonly property int padLeft: 10
+        readonly property int padRight: 8
+        readonly property int iconBox: 20
+        readonly property int gap: 8
+
+        signal clicked
+
+        implicitWidth: padLeft + iconBox + gap + widestLabel.implicitWidth + gap + keycap.implicitWidth + padRight
+        implicitHeight: 40
+        radius: Theme.radiusBase
+        color: Theme.primary
+
+        // Measures the longest label; never shown
+        Column {
+            id: widestLabel
+            visible: false
+            Repeater {
+                model: primary.labels
+                StyledText {
+                    required property string modelData
+                    text: modelData
+                    font: primaryLabel.font
+                }
             }
         }
 
-        // Text button (OCR English)
-        Rectangle {
-            Layout.preferredWidth: textContent.width + 16
-            Layout.preferredHeight: 36
-            radius: Theme.radiusBase
-            color: textMouse.containsMouse && root.adjusting ? Theme.alpha(Theme.colLayer2, 0.8) : Theme.alpha(Theme.colLayer0, 0.6)
-            opacity: root.adjusting ? 1.0 : 0.4
+        StateLayer {
+            primaryFill: true
+            hovered: primaryMouse.containsMouse
+            pressed: primaryMouse.pressed
+        }
 
-            RowLayout {
-                id: textContent
-                anchors.centerIn: parent
-                spacing: 6
+        RowLayout {
+            anchors.fill: parent
+            anchors.leftMargin: primary.padLeft
+            anchors.rightMargin: primary.padRight
+            spacing: primary.gap
 
-                Text {
-                    font.family: Theme.fontFamilyIcons
-                    font.pixelSize: 16
-                    color: root.adjusting ? Theme.textColor : Theme.textSecondary
-                    text: Icons.ocr
-                }
-                Text {
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeSmall
-                    font.weight: Font.Medium
-                    color: root.adjusting ? Theme.textSecondary : Theme.textSecondary
-                    textFormat: Text.RichText
-                    text: `<u>O</u>CR copy (En)`
-                }
+            Icon {
+                Layout.preferredWidth: primary.iconBox
+                text: primary.icon
+                color: Theme.primaryText
             }
-
-            MouseArea {
-                id: textMouse
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: root.adjusting ? Qt.PointingHandCursor : Qt.ArrowCursor
-                onClicked: if (root.adjusting)
-                    root.ocrRequested()
+            StyledText {
+                id: primaryLabel
+                Layout.fillWidth: true
+                horizontalAlignment: Text.AlignHCenter
+                text: primary.text
+                font.pixelSize: Theme.fontSizeBase
+                font.weight: Font.DemiBold
+                color: Theme.primaryText
+            }
+            Keycaps {
+                id: keycap
+                keys: ["Enter"]
+                onPrimary: true
             }
         }
 
-        // Text+ button (OCR All Languages)
-        Rectangle {
-            Layout.preferredWidth: textPlusContent.width + 16
-            Layout.preferredHeight: 36
-            radius: Theme.radiusBase
-            color: textPlusMouse.containsMouse && root.adjusting ? Theme.alpha(Theme.colLayer2, 0.8) : Theme.alpha(Theme.colLayer0, 0.6)
-            opacity: root.adjusting ? 1.0 : 0.4
-
-            RowLayout {
-                id: textPlusContent
-                anchors.centerIn: parent
-                spacing: 6
-
-                Text {
-                    font.family: Theme.fontFamilyIcons
-                    font.pixelSize: 16
-                    color: root.adjusting ? Theme.textColor : Theme.textSecondary
-                    text: Icons.ocrAll
-                }
-                Text {
-                    font.pixelSize: Theme.fontSizeSmall
-                    font.weight: Font.Medium
-                    color: root.adjusting ? Theme.textSecondary : Theme.textSecondary
-                    textFormat: Text.RichText
-                    text: `<u><font face="${Theme.fontFamilyIcons}">${Icons.keyShift}</font>O</u>CR copy (All)`
-                }
+        MouseArea {
+            id: primaryMouse
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onContainsMouseChanged: {
+                if (containsMouse)
+                    root.tipTarget = primary;
+                else if (root.tipTarget === primary)
+                    root.tipTarget = null;
             }
+            onClicked: primary.clicked()
+        }
+    }
 
-            MouseArea {
-                id: textPlusMouse
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: root.adjusting ? Qt.PointingHandCursor : Qt.ArrowCursor
-                onClicked: if (root.adjusting)
-                    root.ocrAllRequested()
+    component MenuRow: Rectangle {
+        id: row
+
+        property string icon
+        property string text
+        property var keys: []
+
+        signal clicked
+
+        width: parent.width
+        implicitWidth: rowContent.implicitWidth + 20
+        height: 32
+        radius: Theme.radiusBase
+        color: "transparent"
+
+        StateLayer {
+            hovered: rowMouse.containsMouse
+            pressed: rowMouse.pressed
+        }
+
+        RowLayout {
+            id: rowContent
+            anchors.fill: parent
+            anchors.leftMargin: 10
+            anchors.rightMargin: 10
+            spacing: 10
+
+            Icon {
+                text: row.icon
+                color: Theme.textSecondary
+            }
+            StyledText {
+                Layout.fillWidth: true
+                Layout.rightMargin: 14
+                text: row.text
+                font.pixelSize: Theme.fontSizeSmall
+                font.weight: Font.Normal
+            }
+            Keycaps {
+                keys: row.keys
             }
         }
 
-        // Translate button (OCR + Kagi Translate)
-        Rectangle {
-            Layout.preferredWidth: translateContent.width + 16
-            Layout.preferredHeight: 36
-            radius: Theme.radiusBase
-            color: translateMouse.containsMouse && root.adjusting ? Theme.alpha(Theme.colLayer2, 0.8) : Theme.alpha(Theme.colLayer0, 0.6)
-            opacity: root.adjusting ? 1.0 : 0.4
-
-            RowLayout {
-                id: translateContent
-                anchors.centerIn: parent
-                spacing: 6
-
-                Text {
-                    font.family: Theme.fontFamilyIcons
-                    font.pixelSize: 16
-                    color: root.adjusting ? Theme.textColor : Theme.textSecondary
-                    text: Icons.translate
-                }
-                Text {
-                    font.pixelSize: Theme.fontSizeSmall
-                    font.weight: Font.Medium
-                    color: root.adjusting ? Theme.textSecondary : Theme.textSecondary
-                    textFormat: Text.RichText
-                    text: `<u><font face="${Theme.fontFamilyIcons}">${Icons.keyCtrl}</font>O</u>CR + Translate`
-                }
-            }
-
-            MouseArea {
-                id: translateMouse
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: root.adjusting ? Qt.PointingHandCursor : Qt.ArrowCursor
-                onClicked: if (root.adjusting)
-                    root.translateRequested()
-            }
-        }
-
-        // Cancel button
-        Rectangle {
-            Layout.preferredWidth: cancelContent.width + 16
-            Layout.preferredHeight: 36
-            radius: Theme.radiusBase
-            color: cancelMouse.containsMouse ? Theme.alpha(Theme.accentRed, 0.2) : Theme.alpha(Theme.colLayer0, 0.6)
-
-            RowLayout {
-                id: cancelContent
-                anchors.centerIn: parent
-                spacing: 6
-
-                Text {
-                    font.family: Theme.fontFamilyIcons
-                    font.pixelSize: 16
-                    color: cancelMouse.containsMouse ? Theme.accentRed : Theme.textSecondary
-                    text: Icons.cancel
-                }
-                Text {
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeSmall
-                    font.weight: Font.Medium
-                    color: cancelMouse.containsMouse ? Theme.accentRed : Theme.textSecondary
-                    text: "Esc"
-                }
-            }
-
-            MouseArea {
-                id: cancelMouse
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onClicked: root.dismiss()
-            }
+        MouseArea {
+            id: rowMouse
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: row.clicked()
         }
     }
 }

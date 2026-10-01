@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell
 import Quickshell.Io
 import "../../Config"
 import "../../Services"
@@ -16,16 +17,12 @@ Item {
             // theme-set recolors the whole desktop and rewrites the palette
             // files; ThemeService is watching those and repaints the shell.
             ThemeService.setTheme(themeName, false);
-            Config.options.general.base16Theme = themeName;
-            Config.saveConfig();
             return `Theme switched to: ${themeName}`;
         }
 
         function setLightTheme(themeName: string): string {
             Logger.info("IPC: theme.setLightTheme called with:", themeName);
             ThemeService.setTheme(themeName, true);
-            Config.options.general.base16Theme = themeName;
-            Config.saveConfig();
             return `Theme switched to: ${themeName} (light)`;
         }
 
@@ -47,24 +44,31 @@ Item {
     }
 
     IpcHandler {
+        target: "setup"
+
+        // Installs the region selector's OCR (a venv and models, a few hundred MB) in the background;
+        // notifications say when it starts and ends
+        function ocr(): string {
+            Logger.info("IPC: setup.ocr");
+            Quickshell.execDetached(["bash", Qt.resolvedUrl("../../scripts/ocr/setup.sh").toString().replace("file://", "")]);
+            return "OCR setup started; a notification says when it is done";
+        }
+
+        // Writes every setting into config.json, the defaults with the user's own values
+        function config(): string {
+            Logger.info("IPC: setup.config");
+            Config.writeAll();
+            return `Every setting written to ${Config.configFile.replace("file://", "")}; the old file is beside it as config.json.<time>.bak`;
+        }
+    }
+
+    IpcHandler {
         target: "sidebar"
 
         function toggle(): string {
             Settings.sidebarVisible = !Settings.sidebarVisible;
             Logger.info("IPC: sidebar.toggle →", Settings.sidebarVisible ? "shown" : "hidden");
             return `Sidebar ${Settings.sidebarVisible ? "shown" : "hidden"}`;
-        }
-
-        function show(): string {
-            Logger.info("IPC: sidebar.show");
-            Settings.sidebarVisible = true;
-            return "Sidebar shown";
-        }
-
-        function hide(): string {
-            Logger.info("IPC: sidebar.hide");
-            Settings.sidebarVisible = false;
-            return "Sidebar hidden";
         }
 
         function status(): string {
@@ -82,18 +86,6 @@ Item {
             return `Game Launcher ${Settings.gameLauncherVisible ? "shown" : "hidden"}`;
         }
 
-        function show(): string {
-            Logger.info("IPC: games.show");
-            Settings.gameLauncherVisible = true;
-            return "Game Launcher shown";
-        }
-
-        function hide(): string {
-            Logger.info("IPC: games.hide");
-            Settings.gameLauncherVisible = false;
-            return "Game Launcher hidden";
-        }
-
         function refresh(): string {
             Logger.info("IPC: games.refresh");
             GameService.refresh();
@@ -108,6 +100,16 @@ Item {
             HyprWhichKeyService.toggleManual();
             Logger.info("IPC: hyprwhichkey.toggle →", HyprWhichKeyService.visible ? "shown" : "hidden");
             return `HyprWhichKey ${HyprWhichKeyService.visible ? "shown" : "hidden"}`;
+        }
+    }
+
+    // Called by scripts/whisper on every state change
+    IpcHandler {
+        target: "whisper"
+
+        function refresh(): string {
+            Whisper.refresh();
+            return "ok";
         }
     }
 

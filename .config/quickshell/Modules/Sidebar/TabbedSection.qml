@@ -1,9 +1,8 @@
+pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Controls
 import "../../Config"
 import "../../Components"
-import "../../Utils"
 import "../../Services"
 import "VolumeMixer"
 import "NotificationHistory"
@@ -14,154 +13,131 @@ import "PeripheralsTab"
 Card {
     id: root
 
+    property bool shown: false
     property int selectedTab: Settings.sidebarSelectedTab
     onSelectedTabChanged: Settings.sidebarSelectedTab = selectedTab
-    collapsible: true
-    collapsed: false
 
-    // Tab data model with icon and name
-    property var tabModel: [
+    readonly property var tabModel: [
         {
-            icon: Icons.volumeHigh,
-            name: "Volume"
+            icon: Lucide.volume2,
+            name: "Volume",
+            label: "Volume"
         },
         {
-            icon: Icons.bell,
-            name: "Notifications"
+            icon: Lucide.bell,
+            name: "Notifications",
+            label: "Notifs"
         },
         {
-            icon: Icons.bluetoothOn,
-            name: "Bluetooth"
+            icon: Lucide.bluetooth,
+            name: "Bluetooth",
+            label: "Bluetooth"
         },
         {
-            icon: Icons.wifiOn,
-            name: "Network"
+            icon: Lucide.wifi,
+            name: "Network",
+            label: "Network"
         },
         {
-            icon: Icons.device,
-            name: "Peripherals"
+            icon: Lucide.monitorSmartphone,
+            name: "Peripherals",
+            label: "Devices"
         }
     ]
 
-    ColumnLayout {
-        width: parent.width
-        spacing: Theme.spacingBase
+    padding: 0
+    reversed: Placement.sidebarReversed
 
-        // Tab bar
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: 4
+    RowLayout {
+        Layout.fillWidth: true
+        Layout.margins: 8
+        Layout.minimumHeight: implicitHeight
+        spacing: 4
 
-            Repeater {
-                model: root.tabModel
+        Repeater {
+            model: root.tabModel
 
-                Rectangle {
-                    id: tabButton
-                    property bool isActive: index === root.selectedTab
-                    property bool isHovered: tabMouseArea.containsMouse
+            // Equal widths and an always-visible label: switching tabs never moves the other tabs
+            Rectangle {
+                id: tab
+                required property var modelData
+                required property int index
+                readonly property bool active: index === root.selectedTab
+                readonly property color foreground: active ? Theme.secondaryContainerText : Theme.textSecondary
 
-                    Layout.fillWidth: true
-                    Layout.preferredWidth: isActive ? 3 : 1  // Active tab gets 3x weight
-                    height: 32
-                    radius: Theme.radiusBase
-                    color: isActive ? Theme.primary : (isHovered ? Theme.colLayer2 : "transparent")
+                Layout.fillWidth: true
+                Layout.preferredWidth: 1
+                implicitHeight: 48
+                radius: Theme.radiusBase
+                color: active ? Theme.secondaryContainer : "transparent"
 
-                    Behavior on Layout.preferredWidth {
-                        NumberAnimation {
-                            duration: 150
-                            easing.type: Easing.OutQuad
-                        }
+                StateLayer {
+                    hovered: tabMouse.containsMouse
+                    pressed: tabMouse.pressed
+                }
+
+                ColumnLayout {
+                    anchors.centerIn: parent
+                    spacing: 2
+
+                    Icon {
+                        Layout.alignment: Qt.AlignHCenter
+                        text: tab.modelData.icon
+                        color: tab.foreground
                     }
 
-                    Behavior on color {
-                        ColorAnimation {
-                            duration: 150
-                        }
+                    StyledText {
+                        Layout.alignment: Qt.AlignHCenter
+                        text: tab.modelData.label
+                        font.pixelSize: Theme.fontSizeTiny
+                        font.weight: tab.active ? Font.Medium : Font.Normal
+                        color: tab.foreground
                     }
+                }
 
-                    // Content row
-                    Row {
-                        id: expandedContent
-                        anchors.centerIn: parent
-                        spacing: 6
-
-                        // Icon
-                        Text {
-                            text: modelData.icon
-                            font.family: Theme.fontFamilyIcons
-                            font.pixelSize: Theme.fontSizeBase + 2
-                            color: tabButton.isActive ? Theme.primaryText : Theme.textColor
-                            anchors.verticalCenter: parent.verticalCenter
-
-                            Behavior on color {
-                                ColorAnimation {
-                                    duration: 150
-                                }
-                            }
-                        }
-
-                        // Name (only visible when active)
-                        Text {
-                            text: modelData.name
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSizeBase
-                            color: Theme.primaryText
-                            visible: tabButton.isActive
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-                    }
-
-                    MouseArea {
-                        id: tabMouseArea
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        hoverEnabled: true
-                        onClicked: root.selectedTab = index
+                MouseArea {
+                    id: tabMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        root.selectedTab = tab.index;
                     }
                 }
             }
         }
-
-        // Tab content
-        StackLayout {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 450
-
-            currentIndex: root.selectedTab
-
-            // Volume Mixer tab
-            Loader {
-                active: root.selectedTab === 0
-                sourceComponent: VolumeMixerTab {}
-            }
-
-            // Notifications tab
-            Loader {
-                active: root.selectedTab === 1
-                sourceComponent: NotificationHistoryTab {}
-            }
-
-            // Bluetooth tab
-            Loader {
-                active: root.selectedTab === 2
-                sourceComponent: BluetoothTab {}
-            }
-
-            // Network tab
-            Loader {
-                active: root.selectedTab === 3
-                sourceComponent: NetworkTab {}
-            }
-
-            // Peripherals tab
-            Loader {
-                active: root.selectedTab === 4
-                sourceComponent: PeripheralsTab {}
-            }
-        }
     }
 
-    Component.onCompleted: {
-        Logger.info("Tabbed section loaded");
+    Rectangle {
+        Layout.fillWidth: true
+        Layout.minimumHeight: 1
+        implicitHeight: 1
+        color: Theme.outlineVariant
+    }
+
+    // All tabs stay loaded: switching never rebuilds a tab and keeps its scroll position.
+    // StackLayout's own natural height is its tallest tab; the sidebar follows the open one.
+    StackLayout {
+        id: stack
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+        Layout.preferredHeight: stack.children[stack.currentIndex]?.implicitHeight ?? 0
+        currentIndex: root.selectedTab
+
+        VolumeMixerTab {
+            shown: root.shown && root.selectedTab === 0
+        }
+        NotificationHistoryTab {
+            shown: root.shown && root.selectedTab === 1
+        }
+        BluetoothTab {
+            shown: root.shown && root.selectedTab === 2
+        }
+        NetworkTab {
+            shown: root.shown && root.selectedTab === 3
+        }
+        PeripheralsTab {
+            shown: root.shown && root.selectedTab === 4
+        }
     }
 }

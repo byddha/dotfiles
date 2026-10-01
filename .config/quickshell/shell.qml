@@ -7,23 +7,18 @@ import "Components"
 import "Modules/IPC"
 import "Modules/Notifications"
 import "Modules/HyprWhichKey"
-import "Modules/Overview"
 import "Modules/Bar"
 import "Modules/Sidebar"
 import "Modules/OSD"
 import "Modules/ShutdownReminder"
 import "Modules/GameLauncher"
 import "Modules/RegionSelector"
-import "Modules/Lock"
 
 ShellRoot {
     id: root
 
     Component.onCompleted: {
         Config.init();
-        Theme.init();
-        Settings.init();
-        Icons.init();
         WeatherService.init();
         RssFeedNotifier.init();
         Logger.info("Components initialized");
@@ -46,10 +41,6 @@ ShellRoot {
         id: notifications
     }
 
-    Overview {
-        id: overview
-    }
-
     Sidebar {
         id: sidebar
     }
@@ -70,7 +61,7 @@ ShellRoot {
         id: regionSelector
     }
 
-    Lock {
-        id: lock
+    RecordingOutline {
+        id: recordingOutline
     }
 }

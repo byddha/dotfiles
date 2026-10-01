@@ -1,127 +1,81 @@
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
 import "../../../Config"
 import "../../../Components"
 import "../../../Services"
-import "../../../Utils"
 
-ColumnLayout {
+ReversibleGrid {
     id: root
 
-    spacing: Theme.spacingBase
+    property bool shown: false
 
-    // Disabled state - centered icon and text
-    Item {
+    reversed: Placement.sidebarReversed
+
+    ScrollList {
         Layout.fillWidth: true
         Layout.fillHeight: true
-        visible: !Network.wifiEnabled
+        reversed: root.reversed
 
-        ColumnLayout {
-            anchors.centerIn: parent
-            spacing: Theme.spacingBase
-
-            Text {
-                Layout.alignment: Qt.AlignHCenter
-                text: "WiFi disabled"
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSizeBase
-                color: Theme.textSecondary
-            }
-
-            Text {
-                Layout.alignment: Qt.AlignHCenter
-                text: Icons.wifiOff
-                font.family: Theme.fontFamilyIcons
-                font.pixelSize: 64
-                color: Theme.textSecondary
-            }
-        }
-    }
-
-    // Ethernet status (if connected)
-    Rectangle {
-        Layout.fillWidth: true
-        visible: Network.ethernet
-        height: 40
-        radius: Theme.radiusBase
-        color: Theme.alpha(Theme.primary, 0.15)
-
-        RowLayout {
-            anchors.fill: parent
-            anchors.margins: Theme.spacingBase
-            spacing: Theme.spacingBase
-
-            Text {
-                text: Icons.network
-                font.family: Theme.fontFamilyIcons
-                font.pixelSize: Theme.fontSizeBase + 4
-                color: Theme.primary
-            }
-
-            StyledText {
-                Layout.fillWidth: true
-                text: "Ethernet connected"
-                font.pixelSize: Theme.fontSizeBase
-                color: Theme.primary
-            }
-        }
-    }
-
-    // Scanning indicator
-    Rectangle {
-        Layout.fillWidth: true
-        visible: Network.wifiScanning && Network.wifiEnabled
-        height: 4
-        radius: 2
-        color: Theme.colLayer2
-
+        // Ethernet banner
         Rectangle {
-            id: scanningBar
-            width: parent.width * 0.3
-            height: parent.height
-            radius: 2
-            color: Theme.primary
+            Layout.fillWidth: true
+            // The gap faces the Wi-Fi list
+            Layout.topMargin: root.reversed ? 8 : 0
+            Layout.bottomMargin: root.reversed ? 0 : 8
+            visible: Network.ethernet
+            implicitHeight: 40
+            radius: Theme.radiusBase
+            color: Theme.alpha(Theme.primary, Theme.stateSelected)
 
-            SequentialAnimation on x {
-                running: Network.wifiScanning
-                loops: Animation.Infinite
-                NumberAnimation {
-                    from: 0
-                    to: scanningBar.parent.width - scanningBar.width
-                    duration: 800
-                    easing.type: Easing.InOutQuad
+            RowLayout {
+                anchors.fill: parent
+                anchors.leftMargin: 8
+                anchors.rightMargin: 8
+                spacing: 12
+
+                Item {
+                    implicitWidth: 32
+                    implicitHeight: Theme.iconSizeLarge
+
+                    Icon {
+                        anchors.centerIn: parent
+                        text: Lucide.ethernetPort
+                        size: Theme.iconSizeLarge
+                        color: Theme.primary
+                    }
                 }
-                NumberAnimation {
-                    from: scanningBar.parent.width - scanningBar.width
-                    to: 0
-                    duration: 800
-                    easing.type: Easing.InOutQuad
+
+                StyledText {
+                    Layout.fillWidth: true
+                    text: "Ethernet connected"
+                    font.pixelSize: Theme.fontSizeSmall
                 }
             }
         }
-    }
 
-    // Network list
-    ScrollView {
-        id: scrollView
-        Layout.fillWidth: true
-        Layout.fillHeight: true
-        Layout.minimumHeight: 100
-        visible: Network.wifiEnabled
-
-        clip: true
-        ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
-        ScrollBar.vertical.policy: ScrollBar.AsNeeded
+        EmptyState {
+            Layout.fillWidth: true
+            visible: !Network.wifiEnabled
+            text: "Wi-Fi disabled"
+            icon: Lucide.wifiOff
+        }
 
         ColumnLayout {
-            width: scrollView.availableWidth
-            spacing: 4
+            Layout.fillWidth: true
+            visible: Network.wifiEnabled
+            spacing: 2
+
+            SectionHeader {
+                text: "Wi-Fi networks"
+                meta: Network.wifiScanning ? "Scanning…" : ""
+                metaIcon: Network.wifiScanning ? Lucide.refreshCw : ""
+                metaColor: Theme.primary
+            }
 
             Repeater {
                 model: ScriptModel {
-                    values: Network.friendlyWifiNetworks
+                    values: Network.wifiEnabled ? Network.friendlyWifiNetworks : []
                 }
 
                 NetworkItem {
@@ -131,32 +85,21 @@ ColumnLayout {
                 }
             }
 
-            // Empty state
-            Item {
+            EmptyState {
                 Layout.fillWidth: true
-                Layout.preferredHeight: emptyText.height + Theme.spacingLarge * 2
-                visible: Network.friendlyWifiNetworks.length === 0 && Network.wifiEnabled && !Network.wifiScanning
-
-                StyledText {
-                    id: emptyText
-                    anchors.centerIn: parent
-                    text: "No networks found"
-                    font.pixelSize: Theme.fontSizeBase
-                    color: Theme.textSecondary
-                }
+                visible: !Network.wifiScanning && Network.friendlyWifiNetworks.length === 0
+                text: "No networks found"
+                icon: Lucide.wifi
             }
         }
     }
 
-    // Footer button
-    Button {
-        Layout.fillWidth: true
-        text: "Scan"
-        enabled: Network.wifiEnabled && !Network.wifiScanning
-        onClicked: Network.rescanWifi()
-    }
-
-    Component.onCompleted: {
-        Logger.info("Network tab loaded");
+    ListFooter {
+        visible: Network.wifiEnabled
+        meta: `${Network.friendlyWifiNetworks.length} network${Network.friendlyWifiNetworks.length === 1 ? "" : "s"}`
+        actionText: "Scan"
+        actionIcon: Lucide.refreshCw
+        actionEnabled: !Network.wifiScanning
+        onActionClicked: Network.rescanWifi()
     }
 }

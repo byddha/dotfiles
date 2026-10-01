@@ -1,1 +1,4 @@
 CalendarPanelContent 1.0 CalendarPanelContent.qml
+MonthCalendar 1.0 MonthCalendar.qml
+WeatherCard 1.0 WeatherCard.qml
+HourlyGraph 1.0 HourlyGraph.qml

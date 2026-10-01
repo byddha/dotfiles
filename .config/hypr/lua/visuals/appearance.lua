@@ -3,7 +3,7 @@ local theme = require("lua.core.theme")
 hl.config({
     general    = {
         gaps_in           = 5,
-        gaps_out          = 20,
+        gaps_out          = { top = 8, right = 20, bottom = 20, left = 20 }, -- the bar already spaces the top
         border_size       = 2,
         col               = {
             active_border   = theme.active_border,

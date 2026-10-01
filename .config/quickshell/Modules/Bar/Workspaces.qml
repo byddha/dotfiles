@@ -1,445 +1,322 @@
+pragma ComponentBehavior: Bound
 import QtQuick
-import QtQuick.Controls
 import Quickshell
-import Quickshell.Wayland
 import "../../Config"
 import "../../Services"
-import "../../Utils"
+import "../../Components"
 
 /**
- * Workspaces - Multi-icon workspace indicator
+ * Workspaces - One slot per workspace this screen shows, with the apps open on it.
  *
- * Displays workspace buttons with all app icons and instance counts.
- * Workspace buttons grow dynamically based on number of apps.
+ * Hyprland: the range set for the monitor in config (monitors.<model>.workspaces).
+ * Niri: the workspaces of this output. The wheel steps through the occupied ones.
  */
-Item {
+Grid {
     id: root
 
-    // Workspace range configuration (set from Bar.qml based on monitor)
-    property int startWorkspace: 1
-    property int endWorkspace: 5
-
-    // Configuration
-    readonly property Toplevel activeWindow: ToplevelManager.activeToplevel
-    readonly property string screenName: root.QsWindow.window && root.QsWindow.window.screen ? root.QsWindow.window.screen.name : ""
-    readonly property var workspaceItems: buildWorkspaceItems()
-    readonly property int workspacesShown: workspaceItems.length
-
-    // Active workspace for this monitor (updated via signal)
-    property int currentActiveWorkspaceId: Compositor.activeWorkspaceIdForScreen(root.QsWindow.window?.screen)
-
-    // Index within this group (-1 if active workspace is outside our range)
-    property int workspaceIndexInGroup: {
-        const activeId = currentActiveWorkspaceId;
-        for (let i = 0; i < workspaceItems.length; i++) {
-            if (workspaceId(workspaceItems[i]) === activeId)
-                return i;
-        }
-        return -1;  // Active workspace is outside this visible group
-    }
-
-    // Sizing
-    property int baseWorkspaceWidth: BarStyle.buttonSize
-    property real activeWorkspaceMargin: 2
-    property real iconSize: 26
-    property real iconSpacing: 4
-
-    readonly property var currentSpecial: Compositor.isHyprland ? ((Compositor.monitors.find(m => m.name === root.screenName)?.specialWorkspace) ?? null) : null
-    readonly property bool specialVisible: (currentSpecial?.id ?? 0) !== 0
-    readonly property var specialApps: specialVisible ? Compositor.getWorkspaceApps(currentSpecial.id) : []
-
-    function buildWorkspaceItems() {
-        if (Compositor.isNiri) {
-            const items = Compositor.workspaces.filter(ws => ws.output === root.screenName);
-            return items.sort((a, b) => {
-                const aIdx = a.idx !== undefined ? a.idx : 0;
-                const bIdx = b.idx !== undefined ? b.idx : 0;
-                return aIdx - bIdx;
-            });
-        }
-
-        const items = [];
-        for (let i = root.startWorkspace; i <= root.endWorkspace; i++) {
-            items.push({
-                id: i
-            });
-        }
-        return items;
-    }
-
-    function workspaceId(workspace) {
-        return workspace && workspace.id !== undefined ? workspace.id : workspace;
-    }
-
-    function workspaceApps(workspace) {
-        return Compositor.getWorkspaceApps(workspaceId(workspace));
-    }
-
-    function workspaceIsOccupied(workspace) {
+    readonly property bool vertical: BarLayout.vertical
+    readonly property var barScreen: QsWindow.window?.screen ?? null
+    readonly property int activeId: Compositor.activeWorkspaceIdForScreen(barScreen)
+    readonly property var workspaces: {
         if (Compositor.isNiri)
-            return workspaceApps(workspace).length > 0;
-        return Compositor.workspaces.some(ws => ws.id === workspaceId(workspace));
+            return Compositor.workspaces.filter(ws => ws.output === barScreen?.name).sort((a, b) => (a.idx ?? 0) - (b.idx ?? 0)).map(ws => ({
+                        id: ws.id,
+                        label: ws.idx ?? ws.id
+                    }));
+        const range = Config.options.monitors?.[barScreen?.model ?? ""]?.workspaces;
+        if (!range)
+            return [];
+        const list = [];
+        for (let id = range[0]; id <= range[1]; id++)
+            list.push({
+                id: id,
+                label: id
+            });
+        return list;
     }
 
-    // Calculate workspace positions for animated border
-    property var workspacePositions: []
-    property real activeWorkspaceX: 0
-    property real activeWorkspaceWidth: 0
+    // One binding for the shape, so switching orientation never passes through a 1x1 grid
+    columns: vertical ? 1 : Math.max(1, children.length)
+    spacing: 2
 
-    function updateActiveWorkspacePosition() {
-        const activeId = currentActiveWorkspaceId;
-        const activeIndex = workspaceIndexInGroup;
-        // If active workspace is outside our visible items, hide the indicator
-        if (activeIndex < 0) {
-            activeWorkspaceWidth = 0;
+    // Set by BarContent. At level 3 a horizontal slot shows only its first app, with "+n" for the rest.
+    property int level: 0
+
+    function lengthAt(level) {
+        let total = 0;
+        for (let i = 0; i < slots.count; i++)
+            total += slots.itemAt(i)?.lengthAt(level) ?? 0;
+        return total + spacing * Math.max(0, slots.count - 1);
+    }
+
+    // Wheel up: the next occupied workspace, wrapping around; down: the previous one
+    function step(wheel) {
+        const direction = wheel.angleDelta.y > 0 ? 1 : wheel.angleDelta.y < 0 ? -1 : 0;
+        const count = workspaces.length;
+        if (direction === 0 || count === 0)
             return;
-        }
-
-        let xPos = 0;
-        for (let i = 0; i < workspaceItems.length; i++) {
-            const workspace = workspaceItems[i];
-            const wsId = workspaceId(workspace);
-            const apps = workspaceApps(workspace);
-            const appCount = apps.length;
-            const width = (iconSize * Math.max(1, appCount)) + (iconSpacing * Math.max(0, appCount - 1)) + 8;
-            if (wsId === activeId) {
-                activeWorkspaceX = xPos;
-                activeWorkspaceWidth = width;
-                break;
-            }
-            xPos += width;
-        }
-    }
-
-    // Initialize and track workspace changes
-    Component.onCompleted: {
-        updateActiveWorkspacePosition();
-    }
-
-    Connections {
-        target: Compositor
-
-        function onWorkspaceFocusChanged() {
-            currentActiveWorkspaceId = Compositor.activeWorkspaceIdForScreen(root.QsWindow.window?.screen);
-            updateActiveWorkspacePosition();
-        }
-
-        function onWindowDataUpdated() {
-            currentActiveWorkspaceId = Compositor.activeWorkspaceIdForScreen(root.QsWindow.window?.screen);
-            updateActiveWorkspacePosition();
-        }
-
-        function onMonitorDataUpdated() {
-            currentActiveWorkspaceId = Compositor.activeWorkspaceIdForScreen(root.QsWindow.window?.screen);
-            updateActiveWorkspacePosition();
-        }
-    }
-
-    onWorkspaceIndexInGroupChanged: updateActiveWorkspacePosition()
-    onWorkspaceItemsChanged: updateActiveWorkspacePosition()
-
-    implicitWidth: workspaceBackground.width + (root.specialVisible ? specialPill.width + BarStyle.spacing : 0)
-    implicitHeight: BarStyle.barHeight
-
-    // Find next occupied workspace in a direction (1 = forward, -1 = backward)
-    function findNextOccupied(currentId, direction) {
-        if (workspaceItems.length === 0)
-            return currentId;
-
-        const currentIndex = workspaceItems.findIndex(ws => workspaceId(ws) === currentId);
-        const startIndex = currentIndex >= 0 ? currentIndex : 0;
-
-        if (Compositor.isNiri) {
-            let nextIndex = startIndex + direction;
-            if (nextIndex >= workspaceItems.length)
-                nextIndex = 0;
-            else if (nextIndex < 0)
-                nextIndex = workspaceItems.length - 1;
-            return workspaceId(workspaceItems[nextIndex]);
-        }
-
-        for (let i = 1; i <= workspaceItems.length; i++) {
-            let nextIndex = startIndex + (direction * i);
-            while (nextIndex >= workspaceItems.length)
-                nextIndex -= workspaceItems.length;
-            while (nextIndex < 0)
-                nextIndex += workspaceItems.length;
-
-            const nextWorkspace = workspaceItems[nextIndex];
-            if (workspaceIsOccupied(nextWorkspace))
-                return workspaceId(nextWorkspace);
-        }
-
-        let fallbackIndex = startIndex + direction;
-        if (fallbackIndex >= workspaceItems.length)
-            fallbackIndex = 0;
-        else if (fallbackIndex < 0)
-            fallbackIndex = workspaceItems.length - 1;
-        return workspaceId(workspaceItems[fallbackIndex]);
-    }
-
-    // Scroll to switch workspaces (cycles within configured range, skipping empty)
-    WheelHandler {
-        onWheel: event => {
-            const currentId = root.currentActiveWorkspaceId;
-            let nextId;
-
-            if (event.angleDelta.y > 0) {
-                // Scroll up = next occupied workspace
-                nextId = findNextOccupied(currentId, 1);
-            } else if (event.angleDelta.y < 0) {
-                // Scroll down = previous occupied workspace
-                nextId = findNextOccupied(currentId, -1);
-            } else {
+        const start = Math.max(0, workspaces.findIndex(ws => ws.id === activeId));
+        for (let i = 1; i <= count; i++) {
+            const next = workspaces[(((start + direction * i) % count) + count) % count];
+            if (Compositor.getWorkspaceApps(next.id).length > 0) {
+                if (next.id !== activeId)
+                    Compositor.switchWorkspace(next.id);
                 return;
             }
-
-            if (nextId !== currentId) {
-                Compositor.switchWorkspace(nextId);
-            }
-        }
-        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
-    }
-
-    // Background for all workspaces
-    Rectangle {
-        id: workspaceBackground
-        width: workspaceRow.width + (BarStyle.spacing * 2)
-        height: BarStyle.barHeight
-        color: BarStyle.buttonBackground
-        radius: BarStyle.buttonRadius
-
-        Behavior on width {
-            NumberAnimation {
-                duration: Theme.animation.elementMoveFast.duration
-                easing.type: Theme.animation.elementMoveFast.type
-                easing.bezierCurve: Theme.animation.elementMoveFast.bezierCurve
-            }
         }
     }
 
-    Row {
-        id: workspaceRow
-        x: BarStyle.spacing
-        spacing: 0
-        height: BarStyle.barHeight
+    // The map of the hovered workspace, as a taskbar shows its thumbnails: it opens after a short
+    // hover, follows the pointer to another workspace at once, and closes a moment after the pointer
+    // has left both the workspaces and the map, so the way over to it never closes it
+    property Item hoveredSlot: null
+    property Item mapSlot: null
+    // The last one shown: the map keeps it while it closes, so its bindings never see null
+    property Item shownSlot: null
+    onMapSlotChanged: if (mapSlot)
+        shownSlot = mapSlot
+    // After a click, until the pointer leaves that workspace
+    property Item quietSlot: null
 
-        Repeater {
-            model: ScriptModel {
-                values: root.workspaceItems
+    // Crossing another workspace on the way to the open map must not swap it ("menu aim", as
+    // macOS submenus): while the pointer heads into the triangle between where it was and the
+    // map's near edge, the swap waits until it rests there or turns away. In this item's
+    // coordinates: Wayland gives windows no screen position, so the map's edge is worked out from
+    // where the popup opens (centred on its workspace, past the bar's inner edge).
+    property Item aimSlot: null
+    property point trailPoint
+    property point pointerPoint
+    readonly property point hoverPosition: pointerTracker.point.position
+
+    onHoverPositionChanged: {
+        const point = hoverPosition;
+        // A few pixels of travel, so the heading is not just jitter
+        if (Math.hypot(point.x - pointerPoint.x, point.y - pointerPoint.y) < 6)
+            return;
+        trailPoint = pointerPoint;
+        pointerPoint = point;
+        if (!aimSlot)
+            return;
+        if (aimingAtMap())
+            aimTimer.restart();
+        else
+            swapTo(aimSlot);
+    }
+
+    function aimingAtMap() {
+        const size = mapLoader.item?.cardSize;
+        if (!size || !mapSlot)
+            return false;
+        const slot = mapSlot.mapToItem(root, 0, 0);
+        const reach = (BarLayout.thickness - BarLayout.itemSize) / 2 + BarLayout.popoutGap;
+        const edge = BarLayout.edge;
+        // Near a screen end the compositor slides the popup back on: the bar window spans its
+        // whole edge, so its coordinates along the bar are the screen's
+        const offset = vertical ? mapToItem(null, 0, 0).y : mapToItem(null, 0, 0).x;
+        const screenLength = vertical ? QsWindow.window.height : QsWindow.window.width;
+        // The window slides with its shadow room, which is the same on both ends along the bar
+        const pad = mapLoader.item.shadowRoom;
+        const length = vertical ? size.height : size.width;
+        const middle = vertical ? slot.y + mapSlot.height / 2 : slot.x + mapSlot.width / 2;
+        const start = pad + Math.max(-offset, Math.min(screenLength - offset - length - 2 * pad, middle - length / 2 - pad));
+        let a, b;
+        if (vertical) {
+            const x = edge === "left" ? slot.x + mapSlot.width + reach : slot.x - reach;
+            a = Qt.point(x, start);
+            b = Qt.point(x, start + length);
+        } else {
+            const y = edge === "top" ? slot.y + mapSlot.height + reach : slot.y - reach;
+            a = Qt.point(start, y);
+            b = Qt.point(start + length, y);
+        }
+        const side = (p, q, r) => (q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x);
+        const d1 = side(trailPoint, a, pointerPoint);
+        const d2 = side(a, b, pointerPoint);
+        const d3 = side(b, trailPoint, pointerPoint);
+        return !((d1 < 0 || d2 < 0 || d3 < 0) && (d1 > 0 || d2 > 0 || d3 > 0));
+    }
+
+    function swapTo(slot) {
+        aimTimer.stop();
+        aimSlot = null;
+        if (mapSlot && hoveredSlot === slot)
+            mapSlot = slot;
+    }
+
+    function slotHovered(slot, hovered) {
+        if (hovered) {
+            hoveredSlot = slot;
+            if (slot === quietSlot)
+                return;
+            if (!mapSlot) {
+                showTimer.restart();
+            } else if (slot !== mapSlot) {
+                // The pointer's position comes after this, so its next move decides
+                aimSlot = slot;
+                aimTimer.restart();
             }
-
-            Item {
-                id: workspaceContainer
-                property var workspaceData: modelData
-                property int workspaceValue: root.workspaceId(workspaceData)
-                property var workspaceApps: root.workspaceApps(workspaceData)
-                property int appCount: workspaceApps.length
-                property bool isActive: root.currentActiveWorkspaceId === workspaceValue
-                property bool isOccupied: root.workspaceIsOccupied(workspaceData)
-
-                // Dynamic width calculation (treat empty as 1 icon for consistent spacing)
-                property real contentWidth: (iconSize * Math.max(1, appCount)) + (iconSpacing * Math.max(0, appCount - 1)) + 8
-
-                width: contentWidth
-                height: BarStyle.buttonSize
-
-                // Mouse interaction
-                MouseArea {
-                    id: workspaceMouseArea
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    onClicked: Compositor.switchWorkspace(workspaceContainer.workspaceValue)
-                }
-
-                // Content: workspace number OR app icons
-                Item {
-                    anchors.fill: parent
-
-                    // Workspace symbol (shown when no apps)
-                    Text {
-                        visible: workspaceContainer.appCount === 0
-                        anchors.centerIn: parent
-                        font.family: BarStyle.iconFont
-                        font.pixelSize: iconSize / 1.5
-
-                        text: Icons.workspace
-                        color: BarStyle.textColor
-                    }
-
-                    // App icons (shown when apps exist)
-                    Row {
-                        visible: workspaceContainer.appCount > 0
-                        anchors.centerIn: parent
-                        spacing: iconSpacing
-
-                        Repeater {
-                            model: workspaceContainer.workspaceApps
-
-                            Item {
-                                width: iconSize
-                                height: iconSize
-                                property var appData: modelData
-
-                                Text {
-                                    id: appIcon
-                                    anchors.centerIn: parent
-                                    font.family: BarStyle.iconFont
-                                    font.pixelSize: iconSize
-                                    text: AppIcons.getIcon(appData.class, appData.title, appData.xdgTag)
-                                    color: workspaceContainer.isActive ? Theme.primary : BarStyle.iconColor
-                                }
-
-                                // Count badge (only if count > 1)
-                                Rectangle {
-                                    visible: appData.count > 1
-                                    anchors {
-                                        top: parent.top
-                                        right: parent.right
-                                        topMargin: -1
-                                        rightMargin: -1
-                                    }
-                                    width: Math.max(14, countText.width + 4)
-                                    height: 14
-                                    radius: 5
-                                    color: workspaceContainer.isActive ? Theme.primary : BarStyle.iconColor
-                                    border.width: 1
-                                    border.color: Theme.colLayer0
-
-                                    Text {
-                                        id: countText
-                                        anchors.centerIn: parent
-                                        font.pixelSize: 10
-                                        font.weight: Font.Bold
-                                        color: Theme.primaryText
-                                        text: appData.count
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Width animation
-                Behavior on contentWidth {
-                    NumberAnimation {
-                        duration: Theme.animation.elementMoveFast.duration
-                        easing.type: Theme.animation.elementMoveFast.type
-                        easing.bezierCurve: Theme.animation.elementMoveFast.bezierCurve
-                    }
-                }
-
-                // Subtle separator
-                Rectangle {
-                    visible: index < root.workspaceItems.length - 1
-                    anchors.right: parent.right
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 1
-                    height: parent.height * 0.4
-                    color: Theme.textSecondary
-                    opacity: 0.5
-                }
+        } else if (hoveredSlot === slot) {
+            hoveredSlot = null;
+            if (quietSlot === slot)
+                quietSlot = null;
+            if (aimSlot === slot) {
+                aimTimer.stop();
+                aimSlot = null;
             }
         }
     }
 
-    // Animated bottom border for active workspace
-    Rectangle {
-        id: activeBorder
-        x: activeWorkspaceX + BarStyle.spacing
-        y: BarStyle.barHeight - 3
-        width: activeWorkspaceWidth
-        height: 3
-        color: Theme.primary
-        radius: 1.5
+    function closeMap() {
+        showTimer.stop();
+        quietSlot = hoveredSlot;
+        mapSlot = null;
+    }
 
-        Behavior on x {
-            NumberAnimation {
-                duration: Theme.animation.elementMoveFast.duration
-                easing.type: Theme.animation.elementMoveFast.type
-                easing.bezierCurve: Theme.animation.elementMoveFast.bezierCurve
-            }
-        }
+    HoverHandler {
+        id: pointerTracker
+    }
 
-        Behavior on width {
-            NumberAnimation {
-                duration: Theme.animation.elementMoveFast.duration
-                easing.type: Theme.animation.elementMoveFast.type
-                easing.bezierCurve: Theme.animation.elementMoveFast.bezierCurve
-            }
+    // Resting on the crossed workspace means it is the one wanted
+    Timer {
+        id: aimTimer
+
+        interval: 150
+        onTriggered: root.swapTo(root.aimSlot)
+    }
+
+    Timer {
+        id: showTimer
+
+        interval: 300
+        onTriggered: {
+            if (!root.hoveredSlot || !Compositor.hasWindowGeometry)
+                return;
+            Compositor.refreshWindows();
+            root.mapSlot = root.hoveredSlot;
         }
     }
 
-    Rectangle {
-        id: specialPill
-        x: workspaceBackground.width + BarStyle.spacing
-        y: 0
-        height: BarStyle.barHeight
-        width: root.specialVisible ? (specialContent.implicitWidth + BarStyle.spacing * 2) : 0
-        color: Theme.primary
-        radius: BarStyle.buttonRadius
-        opacity: root.specialVisible ? 1.0 : 0.0
-        clip: true
+    Timer {
+        interval: 300
+        running: root.mapSlot !== null && root.hoveredSlot === null && !(mapLoader.item?.hovered ?? false)
+        onTriggered: root.mapSlot = null
+    }
 
-        Behavior on width {
-            NumberAnimation {
-                duration: Theme.animation.elementMoveFast.duration
-                easing.type: Theme.animation.elementMoveFast.type
-                easing.bezierCurve: Theme.animation.elementMoveFast.bezierCurve
-            }
+    LazyLoader {
+        id: mapLoader
+
+        active: root.mapSlot !== null
+
+        WorkspaceMap {
+            target: root.shownSlot
+            workspaceId: root.shownSlot?.modelData.id ?? 0
+            workspaceTitle: root.shownSlot?.workspaceTitle ?? ""
+            keys: root.shownSlot?.keys ?? ""
+            detail: root.shownSlot?.detail ?? ""
+            visible: true
+            onTargetChanged: anchor.updateAnchor()
+            onChosen: root.closeMap()
         }
+    }
 
-        Behavior on opacity {
-            NumberAnimation {
-                duration: Theme.animation.elementMoveFast.duration
-                easing.type: Theme.animation.elementMoveFast.type
-                easing.bezierCurve: Theme.animation.elementMoveFast.bezierCurve
+    Repeater {
+        id: slots
+
+        model: root.workspaces
+
+        BarItem {
+            id: slot
+
+            required property var modelData
+            readonly property var apps: Compositor.getWorkspaceApps(modelData.id)
+            readonly property bool current: modelData.id === root.activeId
+
+            readonly property bool firstAppOnly: !root.vertical && root.level >= 3
+
+            level: root.level
+            marked: current
+            spacing: BarLayout.appIconGap
+
+            function lengthAt(level) {
+                if (root.vertical)
+                    return implicitHeight;
+                const shown = level >= 3 ? Math.min(1, apps.length) : apps.length;
+                return padded(label.implicitWidth + shown * (BarLayout.appIconSize + spacing));
             }
-        }
+            readonly property string workspaceTitle: `Workspace ${modelData.label}`
+            readonly property string keys: Compositor.keysFor(`Workspace ${modelData.id}`)
+            readonly property string detail: apps.length === 0 ? "Empty" : apps.map(app => {
+                const name = AppIcons.getDisplayName(app.class, app.title, app.xdgTag);
+                return app.count > 1 ? `${name} ×${app.count}` : name;
+            }).join(" · ")
 
-        Row {
-            id: specialContent
-            anchors.centerIn: parent
-            spacing: iconSpacing
+            // The map shows the same, where there is one
+            tooltipTitle: Compositor.hasWindowGeometry ? "" : workspaceTitle
+            tooltipKeys: keys
+            tooltipDetail: detail
+
+            onHoveredChanged: root.slotHovered(slot, hovered)
+            onClicked: mouse => {
+                if (mouse.button !== Qt.LeftButton)
+                    return;
+                root.closeMap();
+                if (!current)
+                    Compositor.switchWorkspace(modelData.id);
+            }
+            onWheel: wheel => root.step(wheel)
+
+            StyledText {
+                id: label
+
+                font.pixelSize: BarLayout.workspaceNumberSize
+                font.weight: Font.DemiBold
+                horizontalAlignment: Text.AlignHCenter
+                color: slot.current ? Theme.primary : Theme.alpha(Theme.textSecondary, slot.apps.length === 0 ? 0.4 : BarLayout.workspaceNumberOpacity)
+                text: slot.modelData.label
+            }
 
             Repeater {
-                model: root.specialApps
+                model: slot.apps
 
                 Item {
-                    width: iconSize
-                    height: iconSize
-                    property var appData: modelData
+                    id: app
 
-                    Text {
-                        anchors.centerIn: parent
-                        font.family: BarStyle.iconFont
-                        font.pixelSize: iconSize
-                        text: AppIcons.getIcon(appData.class, appData.title, appData.xdgTag)
-                        color: Theme.primaryText
+                    required property var modelData
+                    required property int index
+                    // The first app stands for the whole workspace when only it is shown
+                    readonly property string badge: slot.firstAppOnly && slot.apps.length > 1 ? `+${slot.apps.length - 1}` : modelData.count > 1 ? String(modelData.count) : ""
+
+                    visible: !slot.firstAppOnly || index === 0
+                    implicitWidth: BarLayout.appIconSize
+                    implicitHeight: BarLayout.appIconSize
+
+                    BarAppIcon {
+                        anchors.fill: parent
+                        appClass: app.modelData.class
                     }
 
+                    // Window count, on the corner away from the active marker; the border is a ring in the
+                    // item's color around the pill
                     Rectangle {
-                        visible: appData.count > 1
-                        anchors {
-                            top: parent.top
-                            right: parent.right
-                            topMargin: -1
-                            rightMargin: -1
-                        }
-                        width: Math.max(14, specialCountText.width + 4)
-                        height: 14
-                        radius: 5
-                        color: Theme.colLayer0
-                        border.width: 1
-                        border.color: Theme.primary
+                        readonly property int ring: 2
 
-                        Text {
-                            id: specialCountText
+                        visible: app.badge !== ""
+                        x: root.vertical && BarLayout.edge === "left" ? -7 - ring : parent.width - width + 7 + ring
+                        y: BarLayout.edge === "bottom" ? parent.height - height + 6 + ring : -6 - ring
+                        width: Math.max(height, count.implicitWidth + 8 + ring * 2)
+                        height: BarLayout.badgeSize + ring * 2
+                        radius: height / 2
+                        color: Theme.chipSurfaceNested
+                        border.width: ring
+                        border.color: slot.hovered || slot.marked ? Theme.chipSurface : Theme.hostSurface
+
+                        StyledText {
+                            id: count
+
                             anchors.centerIn: parent
-                            font.pixelSize: 10
+                            font.pixelSize: BarLayout.badgeTextSize
                             font.weight: Font.Bold
-                            color: Theme.primary
-                            text: appData.count
+                            text: app.badge
                         }
                     }
                 }

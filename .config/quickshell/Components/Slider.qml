@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import "../Config"
 
+// [icon button] · slider · label. Above 1.0 (to > 1) is the boost zone; stepped sliders show a dot per level.
 RowLayout {
     id: root
 
@@ -10,177 +11,151 @@ RowLayout {
     property alias from: slider.from
     property alias to: slider.to
     property alias stepSize: slider.stepSize
-    property bool snapMode: false  // Enable snapping to stepSize
+    property bool snapMode: false
     property string icon: ""
-    property int iconSize: Theme.iconSize
     property bool showMuteIcon: false
     property bool isMuted: false
+    // Replaces the percentage, e.g. "2/3"
+    property string labelText: ""
+
+    readonly property bool boosted: slider.value > 1.0
+    readonly property real boostStart: slider.to > 1 ? 1.0 / slider.to : 1
+    readonly property color accent: isMuted ? Theme.alpha(Theme.textSecondary, 0.38) : boosted ? Theme.accentOrange : Theme.primary
 
     signal moved(real value)
     signal iconClicked
     signal rightClicked
 
-    spacing: Theme.spacingBase
+    spacing: 4
+    implicitHeight: 36
 
     onValueChanged: {
-        if (Math.abs(slider.value - value) > 0.001) {
+        if (Math.abs(slider.value - value) > 0.001)
             slider.value = value;
-        }
     }
 
-    // Icon
-    Text {
-        id: iconText
-        text: root.icon
-        font.family: Theme.fontFamilyIcons
-        font.pixelSize: root.iconSize
-        color: root.isMuted ? Theme.textSecondary : Theme.textColor
+    IconButton {
         visible: root.icon !== ""
+        icon: root.icon
+        danger: root.isMuted && root.showMuteIcon
+        onClicked: root.iconClicked()
+        onRightClicked: root.rightClicked()
+    }
 
-        Layout.alignment: Qt.AlignVCenter
-        Layout.preferredWidth: Theme.iconSize
-        Layout.preferredHeight: Theme.iconSize
+    Slider {
+        id: slider
+        Layout.fillWidth: true
+        implicitHeight: 20
+        padding: 0
+        from: 0
+        to: 1
+        value: root.value
+        snapMode: root.snapMode ? Slider.SnapAlways : Slider.NoSnap
+
+        onMoved: root.moved(value)
 
         MouseArea {
             anchors.fill: parent
-            enabled: root.showMuteIcon
-            cursorShape: root.showMuteIcon ? Qt.PointingHandCursor : Qt.ArrowCursor
-            onClicked: root.iconClicked()
+            acceptedButtons: Qt.RightButton
+            onClicked: root.rightClicked()
         }
 
-        Behavior on color {
-            ColorAnimation {
-                duration: 150
-            }
-        }
-    }
+        background: Item {
+            x: slider.leftPadding
+            y: slider.topPadding + slider.availableHeight / 2 - height / 2
+            width: slider.availableWidth
+            height: 6
 
-    // Slider with hover percentage
-    Item {
-        Layout.fillWidth: true
-        implicitHeight: slider.implicitHeight
-
-        Slider {
-            id: slider
-            anchors.fill: parent
-
-            from: 0
-            to: 1
-            snapMode: root.snapMode ? Slider.SnapAlways : Slider.NoSnap
-
-            onMoved: {
-                root.moved(value);
-            }
-
-            MouseArea {
+            Rectangle {
                 anchors.fill: parent
-                acceptedButtons: Qt.RightButton
-                onClicked: root.rightClicked()
+                radius: 3
+                color: Theme.chipSurface
             }
 
-            background: Rectangle {
-                x: slider.leftPadding
-                y: slider.topPadding + slider.availableHeight / 2 - height / 2
-                implicitWidth: 200
-                implicitHeight: 4
-                width: slider.availableWidth
-                height: implicitHeight
-                radius: 2
-                color: Theme.colLayer2
-
-                // Normal range (0-100%)
-                Rectangle {
-                    width: Math.min(slider.visualPosition, (1.0 / slider.to)) * parent.width
-                    height: parent.height
-                    color: root.isMuted ? Theme.textSecondary : Theme.primary
-                    radius: 2
-
-                    Behavior on width {
-                        NumberAnimation {
-                            duration: Theme.animation.elementMoveFast.duration
-                            easing.type: Theme.animation.elementMoveFast.type
-                            easing.bezierCurve: Theme.animation.elementMoveFast.bezierCurve
-                        }
-                    }
-
-                    Behavior on color {
-                        ColorAnimation {
-                            duration: 150
-                        }
-                    }
-                }
-
-                // Boosted range (above 100%)
-                Rectangle {
-                    x: (1.0 / slider.to) * parent.width
-                    width: Math.max(0, (slider.visualPosition - (1.0 / slider.to))) * parent.width
-                    height: parent.height
-                    color: root.isMuted ? Theme.textSecondary : Theme.accentOrange
-                    radius: 2
-                    visible: slider.value > 1.0
-
-                    Behavior on width {
-                        NumberAnimation {
-                            duration: Theme.animation.elementMoveFast.duration
-                            easing.type: Theme.animation.elementMoveFast.type
-                            easing.bezierCurve: Theme.animation.elementMoveFast.bezierCurve
-                        }
-                    }
-
-                    Behavior on color {
-                        ColorAnimation {
-                            duration: 150
-                        }
-                    }
-                }
+            // Boost zone
+            Rectangle {
+                visible: slider.to > 1
+                x: root.boostStart * parent.width
+                width: parent.width - x
+                height: parent.height
+                radius: 3
+                color: Theme.alpha(Theme.accentOrange, 0.22)
             }
 
-            handle: Rectangle {
-                x: slider.leftPadding + slider.visualPosition * (slider.availableWidth - width)
-                y: slider.topPadding + slider.availableHeight / 2 - height / 2
-                implicitWidth: 16
-                implicitHeight: 16
-                radius: 8
-                color: slider.pressed ? Theme.primary : Theme.colLayer1
-                border.color: root.isMuted ? Theme.textSecondary : Theme.primary
-                border.width: 2
+            Rectangle {
+                width: Math.min(slider.visualPosition, root.boostStart) * parent.width
+                height: parent.height
+                radius: 3
+                color: root.isMuted ? root.accent : Theme.primary
 
                 Behavior on color {
                     ColorAnimation {
                         duration: 150
                     }
                 }
+            }
 
-                Behavior on border.color {
-                    ColorAnimation {
-                        duration: 150
-                    }
+            Rectangle {
+                visible: slider.visualPosition > root.boostStart
+                x: root.boostStart * parent.width
+                width: (slider.visualPosition - root.boostStart) * parent.width
+                height: parent.height
+                radius: 3
+                color: root.accent
+            }
+
+            // 100% tick
+            Rectangle {
+                visible: slider.to > 1
+                x: root.boostStart * parent.width - 1
+                y: parent.height / 2 - 6
+                width: 2
+                height: 12
+                radius: 1
+                color: Theme.alpha(Theme.outline, 0.35)
+            }
+
+            // One dot per level on stepped sliders
+            Repeater {
+                model: root.snapMode && slider.stepSize > 0 ? Math.round((slider.to - slider.from) / slider.stepSize) + 1 : 0
+
+                Rectangle {
+                    required property int index
+                    readonly property real fraction: index * slider.stepSize / (slider.to - slider.from)
+                    x: fraction * (parent.width - 4)
+                    y: parent.height / 2 - 2
+                    width: 4
+                    height: 4
+                    radius: 2
+                    color: Theme.alpha(Theme.textSecondary, 0.5)
                 }
+            }
+        }
 
-                // Elevation when pressed
-                layer.enabled: slider.pressed
-                layer.effect: Item {
-                    Rectangle {
-                        anchors.centerIn: parent
-                        width: parent.width
-                        height: parent.height
-                        color: Theme.primary
-                        opacity: 0.2
-                    }
+        handle: Rectangle {
+            x: slider.leftPadding + slider.visualPosition * (slider.availableWidth - width)
+            y: slider.topPadding + slider.availableHeight / 2 - height / 2
+            implicitWidth: 16
+            implicitHeight: 16
+            radius: 8
+            color: root.accent
+            border.width: 3
+            border.color: Theme.cardSurface
+
+            Behavior on color {
+                ColorAnimation {
+                    duration: 150
                 }
             }
         }
     }
 
-    // Value label
-    Text {
-        id: valueLabel
-        text: Math.round(slider.value * 100) + "%"
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.fontSizeSmall
-        color: Theme.textSecondary
-
-        Layout.alignment: Qt.AlignVCenter
-        Layout.preferredWidth: 35
+    StyledText {
+        Layout.preferredWidth: 44
+        horizontalAlignment: Text.AlignRight
+        text: root.isMuted && root.showMuteIcon ? "Muted" : root.labelText !== "" ? root.labelText : Math.round(slider.value * 100) + "%"
+        font.pixelSize: Theme.fontSizeTiny
+        font.weight: Font.Normal
+        color: root.isMuted && root.showMuteIcon ? Theme.accentRed : root.boosted ? Theme.accentOrange : Theme.textSecondary
     }
 }

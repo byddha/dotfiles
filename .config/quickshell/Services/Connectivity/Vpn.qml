@@ -15,16 +15,28 @@ import "../../Utils"
 Singleton {
     id: root
 
-    // State properties
-    property bool mullvadConnected: false
+    // State properties. mullvadState comes from `mullvad status listen`: connecting, connected,
+    // disconnecting, disconnected or error.
+    property string mullvadState: "disconnected"
+    readonly property bool mullvadConnected: mullvadState === "connected"
     property bool fortiConnected: false
     property bool fortiConnectionFailed: false
+
+    // Busy = a connect / disconnect was requested and has not finished yet. Pending covers the
+    // gap between the command and the first state change it causes.
+    property bool mullvadPending: false
+    readonly property bool mullvadBusy: mullvadPending || mullvadState === "connecting" || mullvadState === "disconnecting"
+    property bool fortiDisconnecting: false
+    readonly property bool fortiConnecting: fortiConnectDelay.running
+    readonly property bool fortiBusy: fortiConnecting || fortiDisconnecting
+    readonly property bool busy: mullvadBusy || fortiBusy
+    readonly property bool disconnecting: fortiDisconnecting || mullvadState === "disconnecting" || (mullvadPending && mullvadConnected)
 
     // Mullvad location info (from JSON)
     property string mullvadCity: ""
     property string mullvadCountry: ""
 
-    // FortiVPN uptime tracking
+    // How long openfortivpn has been running, read with its status, so it survives shell restarts
     property int fortiUptimeSeconds: 0
     readonly property int _fortiHours: Math.floor(fortiUptimeSeconds / 3600)
     readonly property int _fortiMinutes: Math.floor((fortiUptimeSeconds % 3600) / 60)
@@ -32,67 +44,63 @@ Singleton {
 
     readonly property bool anyConnected: mullvadConnected || fortiConnected
 
-    // Poll status every 5 seconds
+    // Forti has no event stream: poll, fast while a disconnect is pending
     Timer {
-        interval: 5000
+        interval: root.fortiDisconnecting ? 300 : 5000
         running: true
         repeat: true
         onTriggered: root.updateStatus()
-    }
-
-    // FortiVPN uptime timer (tick every minute for HH:MM display)
-    Timer {
-        id: fortiUptimeTimer
-        interval: 60000
-        repeat: true
-        onTriggered: {
-            root.fortiUptimeSeconds = root.fortiUptimeSeconds + 60;
-        }
-    }
-
-    onFortiConnectedChanged: {
-        if (fortiConnected) {
-            fortiUptimeTimer.start();
-        } else {
-            fortiUptimeTimer.stop();
-            fortiUptimeSeconds = 0;
-        }
     }
 
     // ==================
     // Mullvad Processes
     // ==================
 
+    // Prints the current state at start, then one JSON line per change
     Process {
-        id: mullvadStatusProc
-        command: ["mullvad", "status", "-j"]
+        id: mullvadListenProc
+        // setpriv: the kernel ends it with qs, also when qs dies without cleaning up (SIGTERM, crash)
+        command: ["setpriv", "--pdeathsig", "TERM", "--", "mullvad", "status", "-j", "listen"]
+        running: true
 
-        stdout: StdioCollector {
-            onStreamFinished: {
+        stdout: SplitParser {
+            onRead: line => {
                 try {
-                    const data = JSON.parse(text);
-                    root.mullvadConnected = data.state === "connected";
+                    const data = JSON.parse(line);
+                    root.mullvadState = data.state ?? "disconnected";
+                    root.mullvadPending = false;
                     if (data.details?.location) {
                         root.mullvadCity = data.details.location.city || "";
                         root.mullvadCountry = data.details.location.country || "";
                     }
                 } catch (e) {
-                    root.mullvadConnected = false;
+                    Logger.warn("Unreadable mullvad status line");
                 }
             }
         }
 
-        onExited: (code, status) => {
-            if (code !== 0) {
-                root.mullvadConnected = false;
-            }
-        }
+        // Daemon restarted or mullvad missing: retry later
+        onExited: mullvadListenRestart.start()
+    }
+
+    Timer {
+        id: mullvadListenRestart
+        interval: 10000
+        onTriggered: mullvadListenProc.running = true
+    }
+
+    Timer {
+        id: mullvadPendingTimeout
+        interval: 15000
+        onTriggered: root.mullvadPending = false
     }
 
     Process {
         id: mullvadConnectProc
-        onExited: (code, status) => {
-            root.updateStatus();
+        // A failed command causes no state change to clear the pending state
+        onExited: code => {
+            if (code !== 0)
+                root.mullvadPending = false;
         }
     }
 
@@ -100,11 +108,18 @@ Singleton {
     // FortiVPN Processes
     // ==================
 
+    // Prints the process's elapsed seconds, nothing when it is not running
     Process {
         id: fortiStatusProc
-        command: ["pgrep", "openfortivpn"]
-        onExited: (code, status) => {
-            root.fortiConnected = (code === 0);
+        command: ["ps", "-o", "etimes=", "-C", "openfortivpn"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const seconds = parseInt(text.trim());
+                root.fortiConnected = !isNaN(seconds);
+                root.fortiUptimeSeconds = root.fortiConnected ? seconds : 0;
+                if (!root.fortiConnected)
+                    root.fortiDisconnecting = false;
+            }
         }
     }
 
@@ -134,6 +149,16 @@ Singleton {
     }
 
     Timer {
+        id: fortiDisconnectTimeout
+        interval: 10000
+        onTriggered: {
+            if (root.fortiDisconnecting)
+                Logger.warn("FortiVPN did not stop");
+            root.fortiDisconnecting = false;
+        }
+    }
+
+    Timer {
         id: fortiErrorClearTimer
         interval: 3000
         onTriggered: root.fortiConnectionFailed = false
@@ -152,7 +177,6 @@ Singleton {
     // ==================
 
     function updateStatus() {
-        mullvadStatusProc.running = true;
         fortiStatusProc.running = true;
     }
 
@@ -163,15 +187,17 @@ Singleton {
     function connectMullvad() {
         if (fortiConnected)
             disconnectForti();
+        mullvadPending = true;
+        mullvadPendingTimeout.restart();
         mullvadConnectProc.command = ["mullvad", "connect"];
         mullvadConnectProc.running = true;
-        Logger.info("Connecting to Mullvad...");
     }
 
     function disconnectMullvad() {
+        mullvadPending = true;
+        mullvadPendingTimeout.restart();
         mullvadConnectProc.command = ["mullvad", "disconnect"];
         mullvadConnectProc.running = true;
-        Logger.info("Disconnecting Mullvad...");
     }
 
     function connectFortiWithPassword(password: string) {
@@ -179,19 +205,27 @@ Singleton {
             disconnectMullvad();
         fortiConnectionFailed = false;  // Clear any previous error
         fortiUptimeSeconds = 0;  // Reset uptime counter
-        // Use execDetached for long-running daemon process
-        Quickshell.execDetached(["bash", "-c", `sudo openfortivpn --set-dns=1 -p '${password}'`]);
-        Logger.info("FortiVPN launched");
+        // Detached so the tunnel survives shell reloads. The password goes in through stdin
+        // (openfortivpn prompts on it), never through argv or the script text.
+        Quickshell.execDetached({
+            command: ["bash", "-c", 'exec sudo openfortivpn --set-dns=1 <<< "$FORTI_PASS"'],
+            environment: {
+                FORTI_PASS: password
+            }
+        });
         // Check status after a delay to allow connection
         fortiConnectDelay.start();
     }
 
     function disconnectForti() {
+        fortiDisconnecting = true;
+        fortiDisconnectTimeout.restart();
         fortiDisconnectProc.running = true;
-        Logger.info("Disconnecting FortiVPN...");
     }
 
     function toggleMullvad() {
+        if (mullvadBusy)
+            return;
         if (mullvadConnected)
             disconnectMullvad();
         else
@@ -199,7 +233,6 @@ Singleton {
     }
 
     Component.onCompleted: {
-        Logger.info("VPN service initialized");
         updateStatus();
     }
 }

@@ -25,15 +25,6 @@ Singleton {
     // Cache expiry (2 weeks in seconds)
     readonly property int cacheExpiry: 14 * 24 * 60 * 60
 
-    // State
-    property bool isFetching: false
-
-    // Data alias for external access
-    readonly property alias data: adapter
-
-    // Helper property for UI
-    readonly property bool holidaysReady: adapter.holidays !== null && Object.keys(adapter.holidays).length > 0
-
     // ========================================================================
     // HARDCODED DATA
     // ========================================================================
@@ -160,16 +151,12 @@ Singleton {
      * Update holidays - checks cache and fetches if needed
      */
     function updateHolidays() {
-        if (!(Config.options.calendar?.holidays?.enabled ?? true))
-            return;
-
         const currentYear = new Date().getFullYear();
-        const countryCode = Config.options.calendar?.holidays?.countryCode ?? "RO";
+        const countryCode = "RO";
         const now = Math.floor(Date.now() / 1000);
 
         // Refetch if country changed or cache expired
         if (adapter.countryCode !== countryCode || (adapter.lastFetch > 0 && now >= adapter.lastFetch + cacheExpiry)) {
-            Logger.info("Clearing holiday cache (country changed or expired)");
             adapter.holidays = {};
             adapter.countryCode = countryCode;
             adapter.lastFetch = 0;
@@ -184,13 +171,9 @@ Singleton {
         if (adapter.holidays[year.toString()])
             return; // Already cached
 
-        isFetching = true;
-        Logger.info("Fetching holidays for", year, countryCode);
-
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = function () {
             if (xhr.readyState === XMLHttpRequest.DONE) {
-                isFetching = false;
                 if (xhr.status === 200) {
                     try {
                         const holidays = JSON.parse(xhr.responseText);
@@ -201,7 +184,6 @@ Singleton {
                         adapter.lastFetch = Math.floor(Date.now() / 1000);
                         adapter.holidaysChanged();
                         saveTimer.start();
-                        Logger.info("Loaded", Object.keys(yearMap).length, "holidays for", year);
                     } catch (e) {
                         Logger.error("Failed to parse holiday response:", e);
                     }
@@ -221,7 +203,6 @@ Singleton {
         printErrors: false
 
         onLoaded: {
-            Logger.info("Loaded holiday cache");
             root.updateHolidays();
         }
 

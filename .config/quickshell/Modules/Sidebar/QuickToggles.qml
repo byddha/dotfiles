@@ -1,109 +1,101 @@
 import QtQuick
+import QtQuick.Layouts
 import "../../Config"
 import "../../Components"
-import "../../Utils"
 import "../../Services"
 
 Card {
     id: root
 
-    title: "Quick Toggles"
-    collapsible: true
-    collapsed: false
+    reversed: Placement.sidebarReversed
 
-    Column {
-        width: parent.width
-        spacing: Theme.spacingBase
+    GridLayout {
+        Layout.fillWidth: true
+        columns: 5
+        rowSpacing: 8
+        columnSpacing: 8
 
-        Grid {
-            anchors.horizontalCenter: parent.horizontalCenter
-            columns: 5
-            spacing: Theme.spacingBase
-
-            QuickToggleButton {
-                icon: Icons.wifiOn
-                iconOff: Icons.wifiOff
-                label: "WiFi"
-                isStateful: true
-                isActive: Network.wifiEnabled
-                onClicked: Network.toggleWifi()
-            }
-            QuickToggleButton {
-                icon: Icons.bluetoothOn
-                iconOff: Icons.bluetoothOff
-                label: "Bluetooth"
-                isStateful: true
-                isActive: Bluetooth.enabled
-                onClicked: Bluetooth.toggleEnabled()
-            }
-            QuickToggleButton {
-                icon: Icons.vpnOn
-                iconOff: Icons.vpnOff
-                label: "VPN"
-                isStateful: true
-                isActive: Vpn.anyConnected
-                onClicked: vpnSelector.expanded = !vpnSelector.expanded
-            }
-            QuickToggleButton {
-                icon: Icons.hdrOn
-                iconOff: Icons.hdrOff
-                label: "HDR"
-                isStateful: true
-                isActive: Hdr.enabled
-                onClicked: Hdr.toggle()
-                iconSize: 48
-            }
-            QuickToggleButton {
-                icon: Icons.bell
-                iconOff: Icons.bellOff
-                label: "Notifications"
-                isStateful: true
-                isActive: !Notifications.dnd
-                onClicked: Notifications.toggleDnd()
-            }
-            QuickToggleButton {
-                icon: Icons.idleOff
-                iconOff: Icons.idleOn
-                label: "Idle Inhibitor"
-                isStateful: true
-                isActive: Idle.inhibit
-                onClicked: Idle.toggleInhibit()
-            }
-            QuickToggleButton {
-                icon: Icons.screenSnip
-                label: "Screen Snip"
-                isStateful: false
-            }
-            QuickToggleButton {
-                icon: Icons.colorPicker
-                label: "Color Picker"
-                isStateful: false
-                onClicked: Actions.launchColorPicker()
-            }
-            QuickToggleButton {
-                icon: Icons.recordOn
-                iconOff: Icons.recordOff
-                label: "Recording"
-                isStateful: true
-                isActive: false
-            }
-            QuickToggleButton {
-                icon: Icons.airplaneOn
-                iconOff: Icons.airplaneOff
-                label: "Airplane Mode"
-                isStateful: true
-                isActive: AirplaneMode.enabled
-                onClicked: AirplaneMode.toggle()
-            }
+        // Row 1: connectivity
+        Tile {
+            icon: Network.wifiEnabled ? Lucide.wifi : Lucide.wifiOff
+            label: "Wi-Fi"
+            active: Network.wifiEnabled
+            onClicked: Network.toggleWifi()
+        }
+        Tile {
+            icon: Bluetooth.enabled ? Lucide.bluetooth : Lucide.bluetoothOff
+            label: "Bluetooth"
+            active: Bluetooth.enabled
+            onClicked: Bluetooth.toggleEnabled()
+        }
+        Tile {
+            icon: Lucide.shieldLock
+            label: "VPN"
+            active: Vpn.anyConnected
+            hasMenu: true
+            menuOpen: vpnSelector.expanded
+            menuAbove: Placement.sidebarReversed
+            onClicked: vpnSelector.expanded = !vpnSelector.expanded
+        }
+        Tile {
+            icon: Lucide.plane
+            label: "Airplane Mode"
+            active: AirplaneMode.enabled
+            onClicked: AirplaneMode.toggle()
+        }
+        Tile {
+            icon: Lucide.bellOff
+            label: "Do Not Disturb"
+            active: Notifications.dnd
+            onClicked: Notifications.toggleDnd()
         }
 
-        VpnSelector {
-            id: vpnSelector
-            width: parent.width
+        // Row 2: display and tools
+        Tile {
+            icon: Lucide.hdr
+            label: "HDR"
+            active: Hdr.enabled
+            onClicked: Hdr.toggle()
+        }
+        Tile {
+            icon: Lucide.coffee
+            label: "Idle Inhibitor"
+            active: Idle.inhibit
+            onClicked: Idle.toggleInhibit()
+        }
+        Tile {
+            icon: Lucide.crop
+            label: "Screen Snip"
+        }
+        Tile {
+            icon: Lucide.pipette
+            label: "Color Picker"
+            onClicked: Actions.launchColorPicker()
+        }
+        Tile {
+            icon: Lucide.circleDot
+            label: "Recording"
+            danger: true
         }
     }
 
-    Component.onCompleted: {
-        Logger.info("Panel loaded");
+    // Between the tiles and the VPN list, whichever way the card runs; the wider gap faces the tiles
+    Rectangle {
+        Layout.fillWidth: true
+        Layout.topMargin: root.reversed ? 8 : 12
+        Layout.bottomMargin: root.reversed ? 12 : 8
+        visible: vpnSelector.expanded
+        implicitHeight: 1
+        color: Theme.outlineVariant
+    }
+
+    VpnSelector {
+        id: vpnSelector
+        Layout.fillWidth: true
+    }
+
+    component Tile: ToggleTile {
+        Layout.fillWidth: true
+        Layout.preferredHeight: width
     }
 }
