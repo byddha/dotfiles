@@ -50,7 +50,9 @@ quote_string() {
   local input="$1"
   echo "'${input//\'/\'\\\'\'}'"
 }
-termcmd="${TERMCMD:-/usr/bin/kitty --title $(quote_string "$TITLE")}"
+# single instance off: the wrapper waits for the terminal to exit before reading the selection,
+# and a ghostty that hands its window to a running instance would return at once
+termcmd="${TERMCMD:-/usr/bin/ghostty --gtk-single-instance=false --title=$(quote_string "$TITLE") -e}"
 cleanup() {
   if [ -f "$tmpfile" ]; then
     /usr/bin/rm "$tmpfile" || :
@@ -94,7 +96,7 @@ else
   # upload only 1 file
   set -- --chooser-file="$(quote_string "$out")" "$(quote_string "$path")"
 fi
-eval "$termcmd -- $cmd $@"
+eval "$termcmd $cmd $@"
 
 # Validate: reject directories when files were requested :)
 if [ "$directory" = "0" ] && [ "$save" = "0" ] && [ -f "$out" ]; then
