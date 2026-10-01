@@ -63,7 +63,7 @@ PanelWindow {
     // Adjustment mode (after initial drag, before confirming)
     property bool adjusting: false
     // What snip() does with the grabbed region: "copy" (clipboard), "edit" (Swappy),
-    // "save" (~/Pictures/Screenshots), "lens" (Google Lens) or "ocr" (scripts/ocr, set up by `qs ipc call setup ocr`)
+    // "save" (~/Pictures/Screenshots), "lens" (Google Lens) or "ocr" (scripts/ocr, set up by ~/dotfiles/scripts/setup --only ocr)
     property string snipMode: "copy"
     property bool ocrTranslate: false // When true, open OCR result in Kagi Translate
     property string adjustHandle: ""  // Which handle is being dragged: "", "move", "nw", "ne", "sw", "se", "n", "s", "e", "w"
@@ -312,7 +312,7 @@ PanelWindow {
                 return;
             }
             if (code === 127) {
-                Quickshell.execDetached(["notify-send", "-a", "OCR", "OCR is not set up", "Run: qs ipc call setup ocr"]);
+                Quickshell.execDetached(["notify-send", "-a", "OCR", "OCR is not set up", "Run: ~/dotfiles/scripts/setup --only ocr"]);
             } else if (code !== 0) {
                 Logger.error("OCR failed:", ocrErrors.text);
                 Quickshell.execDetached(["notify-send", "-a", "OCR", "OCR failed", ocrErrors.text.trim().split("\n").pop() ?? ""]);

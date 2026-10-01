@@ -46,14 +46,6 @@ Item {
     IpcHandler {
         target: "setup"
 
-        // Installs the region selector's OCR (a venv and models, a few hundred MB) in the background;
-        // notifications say when it starts and ends
-        function ocr(): string {
-            Logger.info("IPC: setup.ocr");
-            Quickshell.execDetached(["bash", Qt.resolvedUrl("../../scripts/ocr/setup.sh").toString().replace("file://", "")]);
-            return "OCR setup started; a notification says when it is done";
-        }
-
         // Writes every setting into config.json, the defaults with the user's own values
         function config(): string {
             Logger.info("IPC: setup.config");

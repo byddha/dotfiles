@@ -16,7 +16,7 @@ Laptop screen / keyboard brightness: `brightnessctl`
 
 Screenshots and recording: `wl-clipboard`, `swappy`, `curl`, `jq`, `xdg-utils`, `python-pillow`, `gpu-screen-recorder`, `hyprpicker`
 
-OCR (copy text from a region): run `qs ipc call setup ocr` once. It installs RapidOCR with the PP-OCRv6 small and medium models (50 languages in one model; `ocr.model` in config.json picks one, default medium) in `~/.local/share/bidshell/ocr`; run it again if a Python upgrade breaks it
+OCR (copy text from a region): run `~/dotfiles/scripts/setup --only ocr` once. It installs RapidOCR with the PP-OCRv6 small and medium models (50 languages in one model; `ocr.model` in config.json picks one, default medium) in `~/.local/share/bidshell/ocr`; `scripts/setup` runs it again after a Python upgrade
 
 Peripheral brand lookup: `hwdata`
 
