@@ -6,7 +6,7 @@ local function after_notification_daemon(command)
 end
 
 local commands = {
-    "hypridle",
+    "hypridle > ~/.cache/hypridle.log 2>&1",
     "systemctl --user start hyprpolkitagent",
     "qs -d",
     "hyprpm reload -n",

@@ -56,13 +56,6 @@ local rules = {
         fullscreen = true,
         tag        = "+cursorlock",
     },
-    { match = { class = "^(steam_app).*" },                                     idle_inhibit = "focus" },
-    { match = { class = "^(gamescope).*" },                                     idle_inhibit = "focus" },
-    { match = { class = ".*(cemu|yuzu|Ryujinx|emulationstation|retroarch).*" }, idle_inhibit = "focus" },
-    { match = { title = ".*(cemu|yuzu|Ryujinx|emulationstation|retroarch).*" }, idle_inhibit = "fullscreen" },
-    { match = { class = "^(zen|Firefox)$" },                                    idle_inhibit = "fullscreen" },
-    { match = { title = ".*(YouTube|Twitch|Netflix).*" },                       idle_inhibit = "focus" },
-    { match = { class = "^(mpv|vlc|.+exe)$" },                                  idle_inhibit = "focus" },
     -- {
     --     name        = "smart-gaps-one-tiled",
     --     match       = { float = false, workspace = "w[tv1]" },
