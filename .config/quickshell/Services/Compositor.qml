@@ -46,7 +46,6 @@ Singleton {
     readonly property var windows: backend?.windows ?? []
     // Whether windows carry real positions (x, y), so a map of a workspace can be drawn
     readonly property bool hasWindowGeometry: backend?.hasWindowGeometry ?? false
-    property var monitors: backend?.monitors ?? []
 
     // --- Signals ---
 
@@ -93,8 +92,11 @@ Singleton {
     function toplevelFor(id) {
         return backend ? backend.toplevelFor(id) : null;
     }
-    function monitorForScreen(screen) {
-        return backend ? backend.monitorForScreen(screen) : null;
+    // The monitor showing a screen, or null: { name, key (its key in config.json: the bare model, "MO34WQC2"),
+    // x, y, width, height (logical rect, transform applied, in the windows' global space), scale, transform,
+    // reserved [left, top, right, bottom], activeWorkspaceId, specialWorkspaceId (0 when none), hdr }
+    function monitorFor(screen) {
+        return backend ? backend.monitorFor(screen) : null;
     }
     function activeWorkspaceIdForScreen(screen) {
         return backend ? backend.activeWorkspaceIdForScreen(screen) : 1;

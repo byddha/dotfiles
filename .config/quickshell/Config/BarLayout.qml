@@ -69,7 +69,7 @@ Singleton {
     // Top-left of a w x h popout opening from an item at rect (screen coordinates): past the bar's
     // inner edge, centered on the item along the bar, kept on the screen, on whole physical pixels
     function popoutPosition(screen, rect, w, h) {
-        const scale = Compositor.monitorForScreen(screen)?.scale ?? 1;
+        const scale = Compositor.monitorFor(screen)?.scale ?? 1;
         const snap = v => Math.round(v * scale) / scale;
         const margin = Math.max(gap, Theme.spacingBase);
         const along = (start, length, size, screenLength) => Math.max(margin, Math.min(screenLength - size - margin, start + length / 2 - size / 2));

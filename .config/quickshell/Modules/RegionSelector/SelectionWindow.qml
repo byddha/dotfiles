@@ -35,12 +35,12 @@ PanelWindow {
     }
 
     // Monitor info (snapshot)
-    readonly property var monitorInfo: Compositor.monitorForScreen(screen)
+    readonly property var monitorInfo: Compositor.monitorFor(screen)
     readonly property real monitorScale: monitorInfo?.scale ?? 1
     readonly property real monitorOffsetX: monitorInfo?.x ?? 0
     readonly property real monitorOffsetY: monitorInfo?.y ?? 0
     property int activeWorkspaceId: monitorInfo?.activeWorkspaceId ?? 0
-    readonly property int specialWorkspaceId: (Compositor.monitors.find(m => m.name === screen?.name)?.specialWorkspace?.id) ?? 0
+    readonly property int specialWorkspaceId: monitorInfo?.specialWorkspaceId ?? 0
     readonly property int effectiveWorkspaceId: specialWorkspaceId !== 0 ? specialWorkspaceId : activeWorkspaceId
 
     // Screenshot paths

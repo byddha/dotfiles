@@ -24,25 +24,11 @@ Singleton {
     }
 
     function checkState() {
-        const monitors = Compositor.monitors;
+        const monitors = Quickshell.screens.map(screen => Compositor.monitorFor(screen)).filter(mon => mon);
         const configMonitors = Config.options?.monitors || {};
-
-        root.hdrMonitors = [];
-        for (const mon of monitors) {
-            if (configMonitors[mon.model]?.hdrCapable) {
-                root.hdrMonitors.push(mon.name);
-            }
-        }
-
-        for (const mon of monitors) {
-            if (root.hdrMonitors.includes(mon.name)) {
-                if (mon.colorManagementPreset === "hdr") {
-                    root.enabled = true;
-                    return;
-                }
-            }
-        }
-        root.enabled = false;
+        const capable = monitors.filter(mon => configMonitors[mon.key]?.hdrCapable);
+        root.hdrMonitors = capable.map(mon => mon.name);
+        root.enabled = capable.some(mon => mon.hdr);
     }
 
     function doToggle() {

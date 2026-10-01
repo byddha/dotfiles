@@ -4,6 +4,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import QtCore
+import "../Services"
 import "../Utils"
 
 Singleton {
@@ -26,7 +27,7 @@ Singleton {
                 return model;
         }
         const models = Object.keys(monitors);
-        return models.length > 0 ? models[0] : (Quickshell.screens[0]?.model ?? "");
+        return models.length > 0 ? models[0] : (Compositor.monitorFor(Quickshell.screens[0])?.key ?? "");
     }
 
     function loadConfig() {

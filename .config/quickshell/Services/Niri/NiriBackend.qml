@@ -161,8 +161,7 @@ QtObject {
                     id: _getActiveWorkspaceForOutput(name)
                 },
                 transform: _mapTransform(logical.transform),
-                reserved: [0, 0, 0, 0],
-                colorManagementPreset: ""
+                reserved: [0, 0, 0, 0]
             };
         });
 
@@ -279,29 +278,28 @@ QtObject {
         return null;
     }
 
-    function monitorForScreen(screen) {
-        const name = screen?.name ?? "";
-        const mon = monitors.find(m => m.name === name);
+    function monitorFor(screen) {
+        const mon = monitors.find(m => m.name === screen?.name);
         if (!mon)
             return null;
         return {
             name: mon.name,
-            model: screen?.model ?? "",
-            id: mon.id,
+            key: screen.model,
             x: mon.x,
             y: mon.y,
             width: mon.width,
             height: mon.height,
             scale: mon.scale,
-            activeWorkspaceId: mon.activeWorkspace?.id ?? 1,
-            transform: mon.transform ?? 0,
-            reserved: mon.reserved ?? [0, 0, 0, 0]
+            transform: mon.transform,
+            reserved: mon.reserved,
+            activeWorkspaceId: mon.activeWorkspace.id,
+            specialWorkspaceId: 0,
+            hdr: false
         };
     }
 
     function activeWorkspaceIdForScreen(screen) {
-        const mon = monitorForScreen(screen);
-        return mon?.activeWorkspaceId ?? 1;
+        return monitorFor(screen)?.activeWorkspaceId ?? 1;
     }
 
     // Niri's IPC does not list binds, so no bar item shows keys there

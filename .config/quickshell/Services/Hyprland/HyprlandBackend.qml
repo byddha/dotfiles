@@ -88,29 +88,30 @@ QtObject {
         return Hyprland.toplevels.values.find(t => `0x${t.address}` === id)?.wayland ?? null;
     }
 
-    function monitorForScreen(screen) {
-        const name = screen?.name ?? "";
-        const mon = backend.monitors.find(m => m.name === name);
+    function monitorFor(screen) {
+        const mon = backend.monitors.find(m => m.name === screen?.name);
         if (!mon)
             return null;
+        // width/height are the mode's pixels; an odd transform turns the monitor a quarter
+        const turned = (mon.transform ?? 0) % 2 === 1;
         return {
             name: mon.name,
-            model: screen?.model ?? "",
-            id: mon.id,
+            key: screen.model,
             x: mon.x,
             y: mon.y,
-            width: mon.width,
-            height: mon.height,
+            width: (turned ? mon.height : mon.width) / mon.scale,
+            height: (turned ? mon.width : mon.height) / mon.scale,
             scale: mon.scale,
-            activeWorkspaceId: mon.activeWorkspace?.id ?? 1,
             transform: mon.transform ?? 0,
-            reserved: mon.reserved ?? [0, 0, 0, 0]
+            reserved: mon.reserved ?? [0, 0, 0, 0],
+            activeWorkspaceId: mon.activeWorkspace?.id ?? 1,
+            specialWorkspaceId: mon.specialWorkspace?.id ?? 0,
+            hdr: mon.colorManagementPreset === "hdr"
         };
     }
 
     function activeWorkspaceIdForScreen(screen) {
-        const mon = monitorForScreen(screen);
-        return mon?.activeWorkspaceId ?? 1;
+        return monitorFor(screen)?.activeWorkspaceId ?? 1;
     }
 
     function getCursorPosition(callback) {

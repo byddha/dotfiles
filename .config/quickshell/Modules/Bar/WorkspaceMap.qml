@@ -21,9 +21,9 @@ BarAnchoredPopup {
     readonly property bool hovered: pointer.containsMouse
     readonly property var hoveredWindow: pointer.containsMouse ? windowAt(Qt.point(pointer.mouseX, pointer.mouseY)) : null
 
-    readonly property var monitor: Compositor.monitors.find(m => m.name === (target?.QsWindow.window?.screen?.name ?? "")) ?? null
-    readonly property real screenWidth: (monitor?.width ?? 1) / (monitor?.scale ?? 1)
-    readonly property real screenHeight: (monitor?.height ?? 1) / (monitor?.scale ?? 1)
+    readonly property var monitor: Compositor.monitorFor(target?.QsWindow.window?.screen)
+    readonly property real screenWidth: monitor?.width ?? 1
+    readonly property real screenHeight: monitor?.height ?? 1
     // Floating ones last, so they are drawn and found on top
     readonly property var windows: monitor ? Compositor.windowsOn(workspaceId).sort((a, b) => a.floating - b.floating) : []
     // The screen and every window on the workspace (a scrolling layout reaches past the screen),

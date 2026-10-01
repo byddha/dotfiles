@@ -23,7 +23,7 @@ Grid {
                         id: ws.id,
                         label: ws.idx ?? ws.id
                     }));
-        const range = Config.options.monitors?.[barScreen?.model ?? ""]?.workspaces;
+        const range = Config.options.monitors?.[Compositor.monitorFor(barScreen)?.key ?? ""]?.workspaces;
         if (!range)
             return [];
         const list = [];

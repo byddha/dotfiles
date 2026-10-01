@@ -17,7 +17,7 @@ Scope {
             required property ShellScreen modelData
             screen: modelData
 
-            visible: stack.entries.length > 0 && modelData.model === primaryMonitorModel
+            visible: stack.entries.length > 0 && Compositor.monitorFor(modelData)?.key === primaryMonitorModel
 
             WlrLayershell.namespace: "bidshell:notificationPopup"
             WlrLayershell.layer: WlrLayer.Overlay
