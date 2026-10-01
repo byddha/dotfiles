@@ -20,6 +20,7 @@ local app_binds = {
     { "<D-f>",      exec("vicinae toggle"),                            "Launcher" },
     { "<D-v>",      exec("vicinae deeplink vicinae://launch/clipboard/history"), "Clipboard history" },
     { "<D-period>", exec("vicinae deeplink vicinae://launch/core/search-emojis"), "Emoji" },
+    { "<D-b>",      exec("vicinae deeplink vicinae://launch/browser-extension/browse-tabs"), "Browser tabs" },
     { "<D-g>",      exec("qs ipc call games toggle"),                  "Games" },
     { "<D-1>",      hl.dsp.workspace.toggle_special("chatapps") },
     { "<D-2>",      hl.dsp.workspace.toggle_special("gaming") },
@@ -103,7 +104,7 @@ local layout_binds = {
 }
 
 local workspace_navigation_binds = {
-    { "<D-semicolon>", hl.dsp.focus({ workspace = "previous" }), "Back" },
+    { "<D-o>", hl.dsp.focus({ workspace = "previous" }), "Back" },
 }
 
 local mouse_binds = {
