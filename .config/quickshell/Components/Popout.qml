@@ -61,7 +61,6 @@ PanelWindow {
     readonly property size panelSize: Qt.size(panel.width, panel.height)
     readonly property Item contentItem: contentHolder.children[0] ?? null
 
-    signal panelOpened(window: var)
     signal panelClosed
     signal dismissed
 

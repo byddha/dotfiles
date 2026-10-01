@@ -75,7 +75,6 @@ BarPopout {
                         id: entry
 
                         required property var modelData
-                        readonly property bool checkable: modelData.buttonType === QsMenuButtonType.CheckBox || modelData.buttonType === QsMenuButtonType.RadioButton
 
                         Layout.fillWidth: true
                         implicitWidth: row.implicitWidth

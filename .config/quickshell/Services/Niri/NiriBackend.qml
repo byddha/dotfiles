@@ -40,14 +40,6 @@ QtObject {
         getWorkspaces.running = true;
     }
 
-    function updateWindowList() {
-        getWindows.running = true;
-    }
-
-    function updateMonitorData() {
-        getOutputs.running = true;
-    }
-
     property var _wsProc: Process {
         id: getWorkspaces
         command: ["niri", "msg", "--json", "workspaces"]

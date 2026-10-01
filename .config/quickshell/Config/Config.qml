@@ -33,10 +33,6 @@ Singleton {
         fileView.reload();
     }
 
-    function saveConfig() {
-        fileView.writeAdapter();
-    }
-
     // Every setting into the file: its own values, and the defaults of the ones it leaves out. Keys
     // the shell no longer knows are dropped, so the old file is kept beside it, a new copy each time.
     function writeAll() {

@@ -19,7 +19,6 @@ Item {
 
     property string activeSteamPath: ""
     property var libraryPaths: []
-    property var pendingManifests: []
     property var loadedGames: []
     property int currentPathIndex: 0
 

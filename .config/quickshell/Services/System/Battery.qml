@@ -25,7 +25,6 @@ Singleton {
     readonly property bool charging: state === UPowerDeviceState.Charging
     readonly property bool discharging: state === UPowerDeviceState.Discharging
     readonly property bool full: state === UPowerDeviceState.FullyCharged
-    readonly property bool pluggedIn: charging || state === UPowerDeviceState.PendingCharge || full
 
     // Time estimates (in seconds)
     readonly property int timeToEmpty: available ? (UPower.displayDevice.timeToEmpty ?? 0) : 0

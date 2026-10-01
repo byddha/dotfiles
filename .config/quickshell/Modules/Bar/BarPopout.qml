@@ -30,6 +30,5 @@ Popout {
         openerRect = Qt.rect(origin.x + local.x, origin.y + local.y, opener.width, opener.height);
         targetScreen = barScreen;
         visible = true;
-        panelOpened(root);
     }
 }

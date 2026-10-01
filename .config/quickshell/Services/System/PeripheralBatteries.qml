@@ -150,24 +150,6 @@ Singleton {
         return results;
     }
 
-    function getDeviceStatusText(device): string {
-        if (!device)
-            return "Unknown device";
-
-        const pct = Math.round((device.percentage ?? 0) * 100);
-        const label = getDeviceLabel(device);
-        const charging = device.state === UPowerDeviceState.Charging;
-        const full = device.state === UPowerDeviceState.FullyCharged;
-
-        let status = `${label}: ${pct}%`;
-        if (charging)
-            status += " - Charging";
-        else if (full)
-            status += " - Fully charged";
-
-        return status;
-    }
-
     function _notifyLevel(label, percentage, critical) {
         if (critical) {
             Quickshell.execDetached(["notify-send", "-e", `Critical Battery: ${label}`, `${label} at ${percentage}%! Charge now!`, "-u", "critical", "-a", "Battery"]);

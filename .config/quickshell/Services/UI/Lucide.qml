@@ -77,7 +77,6 @@ Singleton {
     readonly property string crop: "\ue0ab"
     readonly property string scanSearch: "\ue537"
     readonly property string scanText: "\ue538"
-    readonly property string textSelect: "\ue6ea"
     readonly property string languages: "\ue0fe"
     readonly property string x: "\ue1b2"
     readonly property string copy: "\ue09e"
