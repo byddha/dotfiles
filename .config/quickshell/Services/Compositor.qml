@@ -2,6 +2,7 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
+import "../Config"
 import "../Utils"
 
 Singleton {
@@ -35,7 +36,6 @@ Singleton {
 
     // --- Public properties ---
 
-    property var workspaces: backend?.workspaces ?? []
     // { appId, title } of the focused window, title kept live; null when no window has focus
     readonly property var activeWindow: backend?.activeWindow ?? null
     property string focusedMonitorName: backend?.focusedMonitorName ?? ""
@@ -98,6 +98,12 @@ Singleton {
     function monitorFor(screen) {
         return backend ? backend.monitorFor(screen) : null;
     }
+    // The workspace buttons of a screen's bar, in order, each { id, label }. The range set for the
+    // monitor in config.json (monitors.<key>.workspaces) is passed on; a backend may ignore it
+    function workspaceSlots(screen) {
+        const range = Config.options.monitors?.[monitorFor(screen)?.key ?? ""]?.workspaces;
+        return backend ? backend.workspaceSlots(screen, range) : [];
+    }
     function activeWorkspaceIdForScreen(screen) {
         return backend ? backend.activeWorkspaceIdForScreen(screen) : 1;
     }
@@ -116,9 +122,10 @@ Singleton {
             backend.setMonitorColorManagement(name, preset);
     }
 
-    function switchWorkspace(id) {
+    // screen is the one the switch is asked from: with per-output desktops (KWin) it says which output switches
+    function switchWorkspace(id, screen) {
         if (backend)
-            backend.switchWorkspace(id);
+            backend.switchWorkspace(id, screen);
     }
     function focusWindow(id) {
         if (backend)

@@ -11,7 +11,6 @@ QtObject {
     // Its windows have no positions yet (see _normalizeWindow)
     readonly property bool hasWindowGeometry: false
 
-    property var workspaces: []
     property string focusedMonitorName: ""
     readonly property var activeWindow: _activeToplevel.window
     property var _activeToplevel: ActiveToplevel {}
@@ -120,15 +119,6 @@ QtObject {
     // --- Data processing ---
 
     function _processWorkspaces() {
-        workspaces = _workspacesRaw.map(ws => ({
-                    id: ws.id,
-                    idx: ws.idx,
-                    name: ws.name ?? "",
-                    output: ws.output ?? "",
-                    is_active: ws.is_active ?? false,
-                    is_focused: ws.is_focused ?? false
-                }));
-
         const focused = _workspacesRaw.find(ws => ws.is_focused);
         if (focused?.output && _monitorNameToId[focused.output] !== undefined)
             focusedMonitorName = focused.output;
@@ -298,6 +288,14 @@ QtObject {
         };
     }
 
+    // The output's own workspaces; the configured range does not apply
+    function workspaceSlots(screen, range) {
+        return _workspacesRaw.filter(ws => ws.output === screen?.name).sort((a, b) => (a.idx ?? 0) - (b.idx ?? 0)).map(ws => ({
+                    id: ws.id,
+                    label: ws.idx ?? ws.id
+                }));
+    }
+
     function activeWorkspaceIdForScreen(screen) {
         return monitorFor(screen)?.activeWorkspaceId ?? 1;
     }
@@ -315,7 +313,7 @@ QtObject {
 
     // --- Actions ---
 
-    function switchWorkspace(id) {
+    function switchWorkspace(id, screen) {
         const ws = _workspacesRaw.find(w => w.id === id);
         if (!ws) {
             Logger.error("switchWorkspace: unknown workspace id", id);

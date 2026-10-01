@@ -11,7 +11,6 @@ QtObject {
     property string type: "hyprland"
     readonly property bool hasWindowGeometry: true
 
-    property var workspaces: []
     property string focusedMonitorName: Hyprland.focusedMonitor?.name ?? ""
     readonly property var activeWindow: _activeToplevel.window
     property var _activeToplevel: ActiveToplevel {}
@@ -55,9 +54,6 @@ QtObject {
     function _emitMonitorData() {
         monitorDataUpdated();
     }
-
-    // Compositor.qml only loads this backend when HYPRLAND_INSTANCE_SIGNATURE is set.
-    Component.onCompleted: workspaces = Hyprland.workspaces.values
 
     // Main-map binds that have a description, as { description, keys } with keys ready to show
     // ("Super Shift Q"). With a Lua config the dispatcher reads "__lua <n>", so the description is
@@ -108,6 +104,19 @@ QtObject {
             specialWorkspaceId: mon.specialWorkspace?.id ?? 0,
             hdr: mon.colorManagementPreset === "hdr"
         };
+    }
+
+    // The monitor's configured range; none configured, no buttons
+    function workspaceSlots(screen, range) {
+        if (!range)
+            return [];
+        const slots = [];
+        for (let id = range[0]; id <= range[1]; id++)
+            slots.push({
+                id: id,
+                label: id
+            });
+        return slots;
     }
 
     function activeWorkspaceIdForScreen(screen) {
@@ -202,7 +211,7 @@ QtObject {
 
     // --- Dispatch functions ---
 
-    function switchWorkspace(id) {
+    function switchWorkspace(id, screen) {
         Hyprland.dispatch(`hl.dsp.focus({ workspace = ${id} })`);
     }
 

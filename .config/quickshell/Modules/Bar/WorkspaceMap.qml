@@ -100,7 +100,7 @@ BarAnchoredPopup {
                 if (window)
                     Compositor.focusWindow(window.id);
                 else
-                    Compositor.switchWorkspace(root.workspaceId);
+                    Compositor.switchWorkspace(root.workspaceId, root.target?.QsWindow.window?.screen);
                 root.chosen();
             }
         }
