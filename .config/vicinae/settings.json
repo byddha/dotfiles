@@ -14,10 +14,25 @@
    "input_server": {
       "enabled": false
    },
+   "launcher_window": {
+      "layer_shell": {
+         "keyboard_interactivity": "on_demand"
+      }
+   },
    "global_shortcuts": {
       "toggle": "super+f"
    },
    "providers": {
+      "applications": {
+         "entrypoints": {
+            "dev.vencord.Vesktop": { "alias": "d" },
+            "steam": { "alias": "s" },
+            "webapp-teams": { "alias": "t" },
+            "zen": { "alias": "z", "preferences": { "defaultAction": "launch" } },
+            "yazi": { "alias": "w", "preferences": { "defaultAction": "launch" } },
+            "org.kde.dolphin": { "alias": "ww", "preferences": { "defaultAction": "launch" } }
+         }
+      },
       "theme": {
          "entrypoints": {
             "set": { "enabled": false }
