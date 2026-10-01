@@ -13,6 +13,7 @@ QtObject {
     readonly property bool hasHdrControl: true
     readonly property string windowPreviewSource: Qt.resolvedUrl("ToplevelPreview.qml")
     readonly property string screenSnapshotSource: Qt.resolvedUrl("../Wayland/ScreencopySnapshot.qml")
+    readonly property string appletHostSource: ""
 
     property string focusedMonitorName: Hyprland.focusedMonitor?.name ?? ""
     readonly property var activeWindow: _activeToplevel.window

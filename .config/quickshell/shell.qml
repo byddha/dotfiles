@@ -1,3 +1,5 @@
+// Plasma applets (KWin) use widget classes
+//@ pragma UseQApplication
 import QtQuick
 import Quickshell
 import "Config"

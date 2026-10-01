@@ -129,13 +129,18 @@ Item {
         x: pos.x
         y: pos.y
 
+        PlasmaApplets {
+            id: plasmaApplets
+
+            level: root.level
+        }
         Tray {
             id: tray
 
             level: root.level
         }
         BarDivider {
-            visible: tray.visible
+            visible: tray.visible || plasmaApplets.visible
         }
         MicButton {
             level: root.level

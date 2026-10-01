@@ -11,6 +11,7 @@ QtObject {
     readonly property bool hasHdrControl: false
     readonly property string windowPreviewSource: ""
     readonly property string screenSnapshotSource: Qt.resolvedUrl("SpectacleSnapshot.qml")
+    readonly property string appletHostSource: Qt.resolvedUrl("PlasmaAppletHost.qml")
 
     // kglobalaccel actions as "<component>/<action>" → keys, from kwin_bridge.py
     property var _shortcuts: ({})

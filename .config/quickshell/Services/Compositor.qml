@@ -51,6 +51,8 @@ Singleton {
     // "" when it has none
     readonly property string windowPreviewSource: backend?.windowPreviewSource ?? ""
     readonly property string screenSnapshotSource: backend?.screenSnapshotSource ?? ""
+    // QML file of an item that hosts a desktop applet (KDE Plasma) given its id, with expanded and fullRepresentation; "" when there is none
+    readonly property string appletHostSource: backend?.appletHostSource ?? ""
     // Whether setHdr can switch a monitor between HDR and SDR
     readonly property bool hasHdrControl: backend?.hasHdrControl ?? false
 

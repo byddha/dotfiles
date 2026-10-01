@@ -161,6 +161,8 @@ Singleton {
                 property string position: "top"
                 // Away from the screen edges, with rounded corners and a shadow
                 property bool floating: false
+                // KDE Plasma applets shown next to the tray, by id (e.g. "org.kde.plasma.networkmanagement"); KWin only
+                property var plasmaApplets: []
             }
 
             // Centralized monitor configuration

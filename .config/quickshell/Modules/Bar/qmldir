@@ -30,3 +30,5 @@ RecordingButton 1.0 RecordingButton.qml
 WhisperButton 1.0 WhisperButton.qml
 VpnButton 1.0 VpnButton.qml
 WorkspaceMap 1.0 WorkspaceMap.qml
+PlasmaApplets 1.0 PlasmaApplets.qml
+PlasmaAppletButton 1.0 PlasmaAppletButton.qml
