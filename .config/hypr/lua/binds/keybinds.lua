@@ -17,7 +17,9 @@ local app_binds = {
     { "<D-x>",      hl.dsp.window.close(),                             "Kill active window" },
     { "<D-S-f>",    hl.dsp.window.fullscreen({ mode = "maximized" }),  "Maximize" },
     { "<D-C-f>",    hl.dsp.window.fullscreen({ mode = "fullscreen" }), "Fullscreen" },
-    { "<D-f>",      exec("nc -U /run/user/1000/walker/walker.sock"),   "Launcher" },
+    { "<D-f>",      exec("vicinae toggle"),                            "Launcher" },
+    { "<D-v>",      exec("vicinae deeplink vicinae://launch/clipboard/history"), "Clipboard history" },
+    { "<D-period>", exec("vicinae deeplink vicinae://launch/core/search-emojis"), "Emoji" },
     { "<D-g>",      exec("qs ipc call games toggle"),                  "Games" },
     { "<D-1>",      hl.dsp.workspace.toggle_special("chatapps") },
     { "<D-2>",      hl.dsp.workspace.toggle_special("gaming") },
@@ -95,8 +97,8 @@ local scroll_binds = {
 local layout_binds = {
     { "<D-bracketleft>",  hl.dsp.layout("consume_or_expel prev"), "Consume or expel prev" },
     { "<D-bracketright>", hl.dsp.layout("consume_or_expel next"), "Consume or expel next" },
-    { "<D-comma>",        hl.dsp.layout("consume"),               "Consume" },
-    { "<D-period>",       hl.dsp.layout("expel"),                 "Expel" },
+    -- { "<D-comma>",        hl.dsp.layout("consume"),               "Consume" },
+    -- { "<D-period>",       hl.dsp.layout("expel"),                 "Expel" },
     { "<D-S-g>",          hl.dsp.layout("colresize +conf"),       "Cycle column width" },
 }
 
