@@ -10,6 +10,7 @@ QtObject {
     property string type: "niri"
     // Its windows have no positions yet (see _normalizeWindow)
     readonly property bool hasWindowGeometry: false
+    readonly property bool hasHdrControl: false
 
     property string focusedMonitorName: ""
     readonly property var activeWindow: _activeToplevel.window
@@ -307,8 +308,7 @@ QtObject {
         // Not available via Niri IPC
     }
 
-    function setMonitorColorManagement(name, preset) {
-        Logger.debug("setMonitorColorManagement: not supported on Niri");
+    function setHdr(monitorName, on) {
     }
 
     // --- Actions ---

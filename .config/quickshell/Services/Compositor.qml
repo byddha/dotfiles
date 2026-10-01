@@ -46,6 +46,8 @@ Singleton {
     readonly property var windows: backend?.windows ?? []
     // Whether windows carry real positions (x, y), so a map of a workspace can be drawn
     readonly property bool hasWindowGeometry: backend?.hasWindowGeometry ?? false
+    // Whether setHdr can switch a monitor between HDR and SDR
+    readonly property bool hasHdrControl: backend?.hasHdrControl ?? false
 
     // --- Signals ---
 
@@ -117,9 +119,9 @@ Singleton {
         if (backend)
             backend.getCursorPosition(callback);
     }
-    function setMonitorColorManagement(name, preset) {
+    function setHdr(monitorName, on) {
         if (backend)
-            backend.setMonitorColorManagement(name, preset);
+            backend.setHdr(monitorName, on);
     }
 
     // screen is the one the switch is asked from: with per-output desktops (KWin) it says which output switches

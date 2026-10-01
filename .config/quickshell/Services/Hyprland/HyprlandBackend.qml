@@ -10,6 +10,7 @@ QtObject {
 
     property string type: "hyprland"
     readonly property bool hasWindowGeometry: true
+    readonly property bool hasHdrControl: true
 
     property string focusedMonitorName: Hyprland.focusedMonitor?.name ?? ""
     readonly property var activeWindow: _activeToplevel.window
@@ -147,9 +148,9 @@ QtObject {
         }
     }
 
-    function setMonitorColorManagement(name, preset) {
+    function setHdr(monitorName, on) {
         const proc = cmComponent.createObject(backend, {
-            command: ["hyprctl", "eval", `cmd.run("monitor cm ${name} ${preset}")`]
+            command: ["hyprctl", "eval", `cmd.run("monitor cm ${monitorName} ${on ? "hdr" : "srgb"}")`]
         });
         proc.running = true;
     }
@@ -157,7 +158,7 @@ QtObject {
     property var _cmComponent: Component {
         id: cmComponent
         Process {
-            // `monitor cm` emits no event, so pull the new colorManagementPreset for Hdr.
+            // `monitor cm` emits no event, so the monitors are read again for the new colorManagementPreset
             onExited: {
                 Hyprland.refreshMonitors();
                 destroy();
