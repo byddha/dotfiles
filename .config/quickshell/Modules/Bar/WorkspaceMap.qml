@@ -2,7 +2,6 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Effects
 import Quickshell
-import Quickshell.Wayland
 import "../../Config"
 import "../../Services"
 import "../../Components"
@@ -148,14 +147,12 @@ BarAnchoredPopup {
                     border.color: lit ? Theme.primary : Theme.chipSurfaceNested
 
                     // One frame, taken as the map opens
-                    ScreencopyView {
+                    WindowPreview {
                         id: preview
 
                         anchors.fill: parent
                         anchors.margins: 1
-                        captureSource: Compositor.toplevelFor(tile.modelData.id)
-                        live: false
-                        constraintSize: Qt.size(width, height)
+                        windowId: tile.modelData.id
                     }
 
                     // In a corner over the preview; centred and larger until there is one

@@ -156,9 +156,9 @@ PanelWindow {
     // select. Instead, snip() and shrinkToContent() each grab a cropped region
     // on demand via the `regionCrop` ShaderEffectSource below.
     Connections {
-        target: screencopyView
+        target: snapshot
         function onHasContentChanged() {
-            if (!screencopyView.hasContent || root.preparationDone)
+            if (!snapshot.hasContent || root.preparationDone)
                 return;
             root.preparationDone = true;
         }
@@ -174,7 +174,7 @@ PanelWindow {
         y: 0
         visible: root.preparationDone
         live: false
-        sourceItem: screencopyView
+        sourceItem: snapshot
 
         property real grabX: 0
         property real grabY: 0
@@ -539,7 +539,7 @@ PanelWindow {
         }
 
         // Hide all UI chrome immediately (uiLayer.visible is gated on
-        // !root.snipping). The PanelWindow + ScreencopyView stay alive briefly
+        // !root.snipping). The PanelWindow + the snapshot stay alive briefly
         // so grabToImage has a rendered scene to read from, then dismiss once
         // the grab callback fires. User perceives the overlay as "gone now".
         root._grabRegionToFile(root.regionX, root.regionY, root.regionWidth, root.regionHeight, success => {
@@ -572,12 +572,10 @@ PanelWindow {
     // screen pixels, not the overlay UI. hasContentChanged fires after the
     // compositor delivers the first frame; the Connections block above flips
     // preparationDone then. File writes happen on demand via regionCrop.
-    ScreencopyView {
-        id: screencopyView
+    ScreenSnapshot {
+        id: snapshot
         anchors.fill: parent
-        live: false
-        paintCursor: false
-        captureSource: root.screen
+        screen: root.screen
     }
 
     // Loading spinner shown between snip confirm and actual window dismiss.
@@ -623,7 +621,7 @@ PanelWindow {
         }
     }
 
-    // UI layer — sibling of screencopyView so grabToImage excludes it.
+    // UI layer — sibling of the snapshot so grabToImage excludes it.
     // Hidden until the screencopy buffer is ready, and hidden again the instant
     // the user confirms a snip so the chrome disappears before the grab finishes.
     Item {

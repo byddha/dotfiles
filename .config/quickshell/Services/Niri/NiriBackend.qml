@@ -12,6 +12,8 @@ QtObject {
     readonly property bool hasWindowGeometry: false
     readonly property bool hasFocusGrab: false
     readonly property bool hasHdrControl: false
+    readonly property string windowPreviewSource: ""
+    readonly property string screenSnapshotSource: Qt.resolvedUrl("../Wayland/ScreencopySnapshot.qml")
 
     property string focusedMonitorName: ""
     readonly property var activeWindow: _activeToplevel.window
@@ -265,10 +267,6 @@ QtObject {
     }
 
     // --- Data query functions ---
-
-    function toplevelFor(id) {
-        return null;
-    }
 
     function monitorFor(screen) {
         const mon = monitors.find(m => m.name === screen?.name);

@@ -12,6 +12,8 @@ QtObject {
     readonly property bool hasWindowGeometry: true
     readonly property bool hasFocusGrab: true
     readonly property bool hasHdrControl: true
+    readonly property string windowPreviewSource: Qt.resolvedUrl("ToplevelPreview.qml")
+    readonly property string screenSnapshotSource: Qt.resolvedUrl("../Wayland/ScreencopySnapshot.qml")
 
     property string focusedMonitorName: Hyprland.focusedMonitor?.name ?? ""
     readonly property var activeWindow: _activeToplevel.window
@@ -81,10 +83,6 @@ QtObject {
     }
 
     // --- Data query functions ---
-
-    function toplevelFor(id) {
-        return Hyprland.toplevels.values.find(t => `0x${t.address}` === id)?.wayland ?? null;
-    }
 
     function monitorFor(screen) {
         const mon = backend.monitors.find(m => m.name === screen?.name);

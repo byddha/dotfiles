@@ -48,6 +48,10 @@ Singleton {
     // Whether a FocusGrab works: the compositor tells a popup about clicks outside it, so the popup
     // need not cover the screen and take every key
     readonly property bool hasFocusGrab: backend?.hasFocusGrab ?? false
+    // QML files the backend draws previews with: a window's (WindowPreview) and a screen's (ScreenSnapshot);
+    // "" when it has none
+    readonly property string windowPreviewSource: backend?.windowPreviewSource ?? ""
+    readonly property string screenSnapshotSource: backend?.screenSnapshotSource ?? ""
     // Whether setHdr can switch a monitor between HDR and SDR
     readonly property bool hasHdrControl: backend?.hasHdrControl ?? false
 
@@ -91,10 +95,6 @@ Singleton {
             apps[appId].count++;
         }
         return Object.values(apps).sort((a, b) => b.count - a.count);
-    }
-    // The Wayland toplevel of a window, for a ScreencopyView; null when the backend has none
-    function toplevelFor(id) {
-        return backend ? backend.toplevelFor(id) : null;
     }
     // The monitor showing a screen, or null: { name, key (its key in config.json: the bare model, "MO34WQC2"),
     // x, y, width, height (logical rect, transform applied, in the windows' global space), scale, transform,
