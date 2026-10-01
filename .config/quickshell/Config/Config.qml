@@ -168,6 +168,12 @@ Singleton {
                     devices: []
                 })
 
+            property JsonObject ocr: JsonObject {
+                // "small" or "medium": the PP-OCRv6 models the region selector reads text with
+                // (setup installs both); small is about twice as fast, medium reads better
+                property string model: "medium"
+            }
+
             property JsonObject brandLogos: JsonObject {
                 property string apiKey: ""      // logo.dev publishable key (for logo images)
                 property string secretKey: ""   // logo.dev secret key (for brand search)

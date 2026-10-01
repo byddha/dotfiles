@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Installs the region selector's OCR: a venv with RapidOCR and the PP-OCRv6 medium models under
+# Installs the region selector's OCR: a venv with RapidOCR and the PP-OCRv6 small and medium models under
 # ~/.local/share/bidshell/ocr. Started by `qs ipc call setup ocr`; run it again when a Python
 # upgrade breaks the venv.
 set -euo pipefail
@@ -12,7 +12,7 @@ exec >"$log" 2>&1
 notify() { notify-send -a "OCR setup" "$@"; }
 trap 'notify -u critical "OCR setup failed" "Details in $log"' ERR
 
-notify "OCR setup" "Installing RapidOCR and the PP-OCRv6 medium models…"
+notify "OCR setup" "Installing RapidOCR and the PP-OCRv6 small and medium models…"
 rm -rf "$dir/venv"
 python3 -m venv "$dir/venv"
 # Pinned: RapidOCR fetches the models from URLs tied to its version

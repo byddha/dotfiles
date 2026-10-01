@@ -258,7 +258,7 @@ PanelWindow {
         ocrProc.text = "";
         ocrProc.cancelled = false;
         // The script's venv: without it (not set up yet, or broken by a Python upgrade) bash exits 127
-        ocrProc.command = ["bash", "-c", 'exec "${XDG_DATA_HOME:-$HOME/.local/share}/bidshell/ocr/venv/bin/python" "$0" "$1"', Qt.resolvedUrl("../../scripts/ocr/ocr.py").toString().replace("file://", ""), file];
+        ocrProc.command = ["bash", "-c", 'exec "${XDG_DATA_HOME:-$HOME/.local/share}/bidshell/ocr/venv/bin/python" "$0" "$1" "$2"', Qt.resolvedUrl("../../scripts/ocr/ocr.py").toString().replace("file://", ""), Config.options.ocr.model, file];
         ocrProc.running = true;
     }
 

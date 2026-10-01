@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-The text in an image, with RapidOCR and the PP-OCRv6 medium models, reported as it goes so the
+The text in an image, with RapidOCR and the PP-OCRv6 small or medium models, reported as it goes so the
 region selector can draw it: one JSON object per line on stdout.
 
   {"boxes": [[x, y, width, height], ...]}   the text lines found, in image pixels, reading order
   {"read": [i, ...]}                        these of them (indices into boxes) have been read
   {"text": "..."}                           the result, one line per row of text
 
-Usage: ocr.py IMAGE
-       ocr.py --download    (only fetch the models; setup.sh runs this)
+Usage: ocr.py small|medium IMAGE
+       ocr.py --download    (only fetch both models; setup.sh runs this)
 """
 
 import json
@@ -46,27 +46,33 @@ def rows(boxes, texts):
     return [" ".join(text for _, text in sorted(line["items"])) for line in lines]
 
 
-def main():
-    os.makedirs(MODELS, exist_ok=True)
-    engine = RapidOCR(params={
+def load(model_type):
+    return RapidOCR(params={
         "Global.model_root_dir": MODELS,
         "Global.log_level": "error",
         # Screen text is upright, so the orientation model only costs time
         "Global.use_cls": False,
         "Det.ocr_version": OCRVersion.PPOCRV6,
-        "Det.model_type": ModelType.MEDIUM,
+        "Det.model_type": model_type,
         "Rec.ocr_version": OCRVersion.PPOCRV6,
-        "Rec.model_type": ModelType.MEDIUM,
+        "Rec.model_type": model_type,
         # One model reads all its 50 languages; the language only selects that model
         "Det.lang_type": LangDet.EN,
         "Rec.lang_type": LangRec.EN,
     })
+
+
+def main():
+    os.makedirs(MODELS, exist_ok=True)
     if sys.argv[1] == "--download":
+        load(ModelType.SMALL)
+        load(ModelType.MEDIUM)
         return
+    engine = load(ModelType.SMALL if sys.argv[1] == "small" else ModelType.MEDIUM)
 
     # RapidOCR's own steps (pinned to 3.9.2 by setup.sh), so the lines found can be shown before
     # they are read: detection takes well under a second, reading most of the time
-    original = engine.load_img(sys.argv[1])
+    original = engine.load_img(sys.argv[2])
     image, record = engine.preprocess_img(original)
     try:
         crops, found = engine.detect_and_crop(image, record)
