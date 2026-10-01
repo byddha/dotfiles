@@ -10,7 +10,8 @@ link-previews = osc8
 shell-integration-features = ssh-terminfo
 
 # Keybinds
-keybind = ctrl+enter=new_window
+keybind = alt+enter=new_window
+keybind = ctrl+enter=unbind
 keybind = alt+n=jump_to_prompt:1
 keybind = alt+shift+n=jump_to_prompt:-1
 keybind = alt+e=write_scrollback_file:open,plain
