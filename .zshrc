@@ -83,16 +83,46 @@ setopt hist_find_no_dups
 
 # NVM (Node Version Manager)
 export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
-
-
-if command -v ng >/dev/null 2>&1; then
-  source <(ng completion script)
+if [[ -s $NVM_DIR/nvm.sh ]]; then
+  # --no-use skips nvm's own `nvm use default`, which spends ~100ms resolving the alias in shell code.
+  # The same PATH/NVM_BIN/NVM_INC result is set here; aliases not handled below
+  # (lts/*, custom names, no default) still go through nvm.
+  source "$NVM_DIR/nvm.sh" --no-use
+  () {
+    setopt localoptions extendedglob
+    # A nested shell inherits the version in use, as nvm itself keeps it
+    local bin=${path[(r)$NVM_DIR/versions/node/*/bin]} def
+    if [[ -z $bin ]]; then
+      [[ -r $NVM_DIR/alias/default ]] && def=$(<$NVM_DIR/alias/default)
+      local -a v
+      case $def in
+        node|stable) v=($NVM_DIR/versions/node/v*(N/n)) ;;
+        (v|)<->(.<->)#) v=($NVM_DIR/versions/node/v${def#v}(|.*)(N/n)) ;;
+      esac
+      (( $#v )) || { nvm_auto use; return }
+      bin=$v[-1]/bin
+    fi
+    path=($bin ${path:#$bin})
+    export NVM_BIN=$bin NVM_INC=${bin%/bin}/include/node
+  }
 fi
 
+# `ng completion script` boots node (~75ms), so its output is cached as an autoloaded _ng
+# and regenerated only when ng is newer than the cache
+() {
+  local dir=${XDG_CACHE_HOME:-$HOME/.cache}/zsh/completions ng=${commands[ng]}
+  if [[ -n $ng ]]; then
+    [[ -d $dir ]] || mkdir -p $dir
+    [[ $dir/_ng -nt $ng ]] || { ng completion script >| $dir/_ng.tmp && mv -f $dir/_ng.tmp $dir/_ng }
+  elif [[ -e $dir/_ng ]]; then
+    rm -f $dir/_ng
+  fi
+  fpath=($dir $fpath)
+}
 
 autoload -Uz compinit && compinit
+# Sourced after compinit: before it, this file runs its own compinit and the completion system starts twice
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 # _bun calls compdef, and runs compinit itself if it isn't loaded yet
 [ -s "$BUN_INSTALL/_bun" ] && source "$BUN_INSTALL/_bun"
 zinit cdreplay -q
