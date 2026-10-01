@@ -2,7 +2,6 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
-import Quickshell.Wayland
 import "../Utils"
 
 Singleton {
@@ -37,8 +36,8 @@ Singleton {
     // --- Public properties ---
 
     property var workspaces: backend?.workspaces ?? []
-    readonly property string activeWindow: ToplevelManager.activeToplevel?.title ?? ""
-    readonly property string activeWindowClass: ToplevelManager.activeToplevel?.appId ?? ""
+    // { appId, title } of the focused window, title kept live; null when no window has focus
+    readonly property var activeWindow: backend?.activeWindow ?? null
     property string focusedMonitorName: backend?.focusedMonitorName ?? ""
 
     property var windowList: backend?.windowList ?? []

@@ -3,6 +3,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
 import "../../Utils"
+import "../Wayland"
 
 QtObject {
     id: backend
@@ -12,6 +13,8 @@ QtObject {
 
     property var workspaces: []
     property string focusedMonitorName: Hyprland.focusedMonitor?.name ?? ""
+    readonly property var activeWindow: _activeToplevel.window
+    property var _activeToplevel: ActiveToplevel {}
 
     // lastIpcObject holds the same JSON as `hyprctl clients/monitors -j`. Quickshell fills it
     // shortly after startup and on refreshToplevels()/refreshMonitors(); each update

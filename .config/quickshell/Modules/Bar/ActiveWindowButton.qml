@@ -1,5 +1,4 @@
 import QtQuick
-import Quickshell.Wayland
 import "../../Config"
 import "../../Services"
 import "../../Components"
@@ -7,12 +6,12 @@ import "../../Components"
 BarItem {
     id: root
 
-    readonly property var toplevel: ToplevelManager.activeToplevel
-    readonly property string appClass: toplevel?.appId ?? ""
+    readonly property var window: Compositor.activeWindow
+    readonly property string appClass: window?.appId ?? ""
 
-    visible: toplevel !== null
+    visible: window !== null
     iconOnly: !vertical && level >= 2
-    tooltipTitle: toplevel?.title ?? ""
+    tooltipTitle: window?.title ?? ""
 
     function lengthAt(level) {
         return vertical ? padded(BarLayout.appIconSize) : level >= 2 ? BarLayout.itemSize : padded(BarLayout.appIconSize + BarLayout.itemGap + name.implicitWidth);
@@ -25,6 +24,6 @@ BarItem {
         id: name
 
         visible: !root.vertical && root.level < 2
-        text: AppIcons.getDisplayName(root.appClass, root.toplevel?.title ?? "", "")
+        text: AppIcons.getDisplayName(root.appClass, root.window?.title ?? "", "")
     }
 }

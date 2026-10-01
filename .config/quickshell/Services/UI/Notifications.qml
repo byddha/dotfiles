@@ -495,12 +495,12 @@ Singleton {
         return true;
     }
 
-    // IPC data is not refreshed on title changes, so class and title come live from ToplevelManager.
+    // IPC data is not refreshed on title changes, so class and title come live from the compositor's active window.
     function _focusedWindow() {
         const ipc = (Compositor.windowList ?? []).find(w => w.focusHistoryID === 0) ?? {};
         return Object.assign({}, ipc, {
-            class: Compositor.activeWindowClass,
-            title: Compositor.activeWindow
+            class: Compositor.activeWindow?.appId ?? "",
+            title: Compositor.activeWindow?.title ?? ""
         });
     }
 
@@ -536,9 +536,6 @@ Singleton {
 
     Connections {
         target: Compositor
-        function onActiveWindowClassChanged() {
-            autoClearDebounce.restart();
-        }
         function onActiveWindowChanged() {
             autoClearDebounce.restart();
         }

@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import "../../Utils"
+import "../Wayland"
 
 QtObject {
     id: backend
@@ -12,6 +13,8 @@ QtObject {
 
     property var workspaces: []
     property string focusedMonitorName: ""
+    readonly property var activeWindow: _activeToplevel.window
+    property var _activeToplevel: ActiveToplevel {}
 
     property var windowList: []
     property var monitors: []
