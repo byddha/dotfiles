@@ -157,6 +157,26 @@ Functions:
 
 The facade itself also provides `windowsOn(workspaceId)`, `workspaceApps(workspaceId)` and `keysFor(description)`.
 
+### The KWin backend
+
+The KWin backend lives in Services/KWin, on kde-port. It is picked when `KDE_FULL_SESSION` is set.
+
+How it works:
+- `bidshell.js` is the KWin script. It sends a snapshot of windows, outputs and desktops over D-Bus on every change. A drag or resize is sent once, when it ends.
+- `kwin_bridge.py` relays the script to the shell as JSON lines: `state`, `cursor` and `shortcuts`. It runs actions (switch, focus, cursor) as one-shot KWin scripts, and gives each monitor its config key from its EDID.
+- `SpectacleSnapshot.qml` is the screen snapshot. It takes `spectacle -b -n -f` into `XDG_RUNTIME_DIR`, crops it to the screen, and deletes the file once loaded.
+
+Measured on the laptop:
+- A one-shot script takes 5–12 ms, and a desktop switch reaches the shell in about 25 ms.
+- During a real drag, the shell uses 1.6% CPU and the bridge 0%. Without the drag throttle it was 11% and 7%.
+- The region selector takes about 1.3 s from opening to having its snapshot. Spectacle alone takes about 0.84 s, against about 30 ms with screencopy on Hyprland.
+
+Shortcut labels: `keysFor` maps the shell's descriptions to kglobalaccel actions: kwin "Switch to Desktop N", and ksmserver "Lock Session", "Log Out", "Reboot" and "Shut Down". It shows the key with Super when an action has several.
+
+Still to do:
+- HDR (`hasHdrControl` is false). It would read `"hdr"` per output from `kscreen-doctor -j` and switch with `kscreen-doctor output.<name>.hdr.enable` / `.hdr.disable`. hasHdrControl would be true when an output reports HDR capability. This cannot be tested on the laptop, which has no HDR screen.
+- The colour picker. It needs a facade change.
+
 ## 3. Features that cannot work on KWin
 
 | Feature | Why | Hole in |
