@@ -5,7 +5,7 @@
 # A script takes part by carrying '# @setup' header lines:
 #
 #   # @setup name: ocr
-#   # @setup inputs: ocr.py requirements.txt     (relative to the script, optional)
+#   # @setup inputs: ocr.py src/*.ts             (relative to the script, globs allowed, optional)
 #   # @setup version: python3 --version          (command, its output is hashed too, optional)
 #   # @setup check: test -x ~/.venv/bin/python   (command, must pass after a run, optional)
 #   # @setup note: downloads ~700 MB             (shown in the plan, optional)
@@ -49,9 +49,11 @@ fingerprint() {
 	dir="$(dirname "$script")"
 	{
 		cat "$script"
-		for input in $(header "$script" inputs); do
-			cat "$dir/$input" 2>/dev/null || echo "missing: $input"
-		done
+		# unquoted on purpose, so inputs can be globs like src/*.tsx
+		(cd "$dir" && for input in $(header "$script" inputs); do
+			echo "$input"
+			cat "$input" 2>/dev/null || echo "missing"
+		done)
 		local version
 		version="$(header "$script" version)"
 		[[ -n "$version" ]] && bash -c "$version" 2>&1
