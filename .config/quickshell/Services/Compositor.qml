@@ -15,7 +15,7 @@ Singleton {
     id: compositor
 
     // The first backend whose environment variable is set runs
-    readonly property var backends: [["NIRI_SOCKET", "Niri/NiriBackend.qml"], ["HYPRLAND_INSTANCE_SIGNATURE", "Hyprland/HyprlandBackend.qml"]]
+    readonly property var backends: [["NIRI_SOCKET", "Niri/NiriBackend.qml"], ["HYPRLAND_INSTANCE_SIGNATURE", "Hyprland/HyprlandBackend.qml"], ["KDE_FULL_SESSION", "KWin/KWinBackend.qml"]]
     property var backend: null
 
     Component.onCompleted: {
