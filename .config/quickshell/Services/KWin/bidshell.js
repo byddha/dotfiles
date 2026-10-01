@@ -42,7 +42,12 @@ function send() {
 }
 
 function watch(w) {
-    for (const changed of [w.frameGeometryChanged, w.captionChanged, w.desktopsChanged, w.outputChanged, w.fullScreenChanged, w.minimizedChanged])
+    // A drag or resize sends its end only; the map and the region selector need no frame in between
+    w.frameGeometryChanged.connect(() => {
+        if (!w.move && !w.resize)
+            send();
+    });
+    for (const changed of [w.interactiveMoveResizeFinished, w.captionChanged, w.desktopsChanged, w.outputChanged, w.fullScreenChanged, w.minimizedChanged])
         changed.connect(send);
 }
 
