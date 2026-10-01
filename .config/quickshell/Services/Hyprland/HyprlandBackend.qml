@@ -8,7 +8,6 @@ import "../Wayland"
 QtObject {
     id: backend
 
-    property string type: "hyprland"
     readonly property bool hasWindowGeometry: true
     readonly property bool hasFocusGrab: true
     readonly property bool hasHdrControl: true
@@ -43,7 +42,6 @@ QtObject {
                 hidden: !w.mapped || w.hidden
             }))
 
-    signal workspaceFocusChanged
     signal windowDataUpdated
     signal monitorDataUpdated
 
@@ -186,13 +184,8 @@ QtObject {
     property var _hyprlandConnections: Connections {
         target: Hyprland
 
-        function onFocusedWorkspaceChanged() {
-            backend.workspaceFocusChanged();
-        }
-
         function onFocusedMonitorChanged() {
             backend.focusedMonitorName = Hyprland.focusedMonitor?.name ?? "";
-            backend.workspaceFocusChanged();
         }
 
         function onRawEvent(event) {

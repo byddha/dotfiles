@@ -7,7 +7,6 @@ import "../Wayland"
 QtObject {
     id: backend
 
-    property string type: "niri"
     // Its windows have no positions yet (see _normalizeWindow)
     readonly property bool hasWindowGeometry: false
     readonly property bool hasFocusGrab: false
@@ -22,7 +21,6 @@ QtObject {
     property var windows: []
     property var monitors: []
 
-    signal workspaceFocusChanged
     signal windowDataUpdated
     signal monitorDataUpdated
 
@@ -128,7 +126,6 @@ QtObject {
             focusedMonitorName = focused.output;
 
         _updateMonitorActiveWorkspaces();
-        workspaceFocusChanged();
     }
 
     function _processWindows(raw) {

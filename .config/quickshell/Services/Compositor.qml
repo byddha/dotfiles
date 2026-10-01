@@ -5,32 +5,31 @@ import Quickshell
 import "../Config"
 import "../Utils"
 
+/**
+ * Compositor - The one way the shell reaches the compositor. Modules use only this; each backend
+ * (Services/Hyprland, Services/Niri) implements the same members, with Services/Wayland holding code
+ * the Wayland backends share. Two exceptions use Hyprland directly: HyprWhichKey (Hyprland submaps,
+ * absent elsewhere) and Components/FocusGrab, activated only when hasFocusGrab.
+ */
 Singleton {
     id: compositor
 
-    // --- Backend loaded by URL (swap this path for a different compositor) ---
+    // The first backend whose environment variable is set runs
+    readonly property var backends: [["NIRI_SOCKET", "Niri/NiriBackend.qml"], ["HYPRLAND_INSTANCE_SIGNATURE", "Hyprland/HyprlandBackend.qml"]]
     property var backend: null
-    property bool isHyprland: backend?.type === "hyprland"
-    property bool isNiri: backend?.type === "niri"
 
     Component.onCompleted: {
-        var backendPath;
-        if (Quickshell.env("NIRI_SOCKET")) {
-            backendPath = "Niri/NiriBackend.qml";
-        } else if (Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE")) {
-            backendPath = "Hyprland/HyprlandBackend.qml";
-        } else {
-            Logger.error("No supported compositor detected (need Hyprland or Niri). Exiting...");
+        const match = backends.find(([variable]) => Quickshell.env(variable));
+        if (!match) {
+            Logger.error(`No supported compositor detected (none of ${backends.map(([variable]) => variable).join(", ")} is set). Exiting...`);
             Qt.callLater(Qt.quit);
             return;
         }
-
-        var comp = Qt.createComponent(backendPath);
-        if (comp.status === Component.Ready) {
+        const comp = Qt.createComponent(match[1]);
+        if (comp.status === Component.Ready)
             backend = comp.createObject(compositor);
-        } else {
+        else
             Logger.error("Failed to load backend:", comp.errorString());
-        }
     }
 
     // --- Public properties ---
@@ -57,15 +56,11 @@ Singleton {
 
     // --- Signals ---
 
-    signal workspaceFocusChanged
     signal windowDataUpdated
     signal monitorDataUpdated
 
     Connections {
         target: backend
-        function onWorkspaceFocusChanged() {
-            compositor.workspaceFocusChanged();
-        }
         function onWindowDataUpdated() {
             compositor.windowDataUpdated();
         }
