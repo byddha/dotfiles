@@ -1,0 +1,148 @@
+#!/usr/bin/env bash
+#
+# setup - run the per-directory setup scripts in the dotfiles repo
+#
+# A script takes part by carrying '# @setup' header lines:
+#
+#   # @setup name: ocr
+#   # @setup inputs: ocr.py requirements.txt     (relative to the script, optional)
+#   # @setup version: python3 --version          (command, its output is hashed too, optional)
+#   # @setup check: test -x ~/.venv/bin/python   (command, must pass after a run, optional)
+#   # @setup note: downloads ~700 MB             (shown in the plan, optional)
+#
+# A script runs again when the hash of itself + its inputs + the version output
+# changed, or when its check fails. Scripts must be idempotent and must not prompt;
+# anything that needs root belongs in a package, not here.
+#
+set -uo pipefail
+
+ROOT="$(dirname "$(dirname "$(realpath "$0")")")"
+STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles-setup"
+
+usage() {
+	cat <<'EOF'
+Usage: setup [--only NAME] [--force] [--dry-run] [--yes]
+
+  --only NAME   consider only the script with this name
+  --force       run even when nothing changed
+  --dry-run     show the plan and stop
+  --yes         do not ask before running
+EOF
+}
+
+ONLY="" FORCE=0 DRY=0 YES=0
+while [[ $# -gt 0 ]]; do
+	case "$1" in
+		--only)    [[ -n "${2:-}" ]] || { usage >&2; exit 1; }; ONLY="$2"; shift 2 ;;
+		--force)   FORCE=1; shift ;;
+		--dry-run) DRY=1; shift ;;
+		--yes|-y)  YES=1; shift ;;
+		-h|--help) usage; exit 0 ;;
+		*)         echo "setup: unknown option: $1" >&2; usage >&2; exit 1 ;;
+	esac
+done
+
+header() { sed -n "s/^# @setup $2: *//p" "$1" | head -1; }
+
+fingerprint() {
+	local script="$1" dir input
+	dir="$(dirname "$script")"
+	{
+		cat "$script"
+		for input in $(header "$script" inputs); do
+			cat "$dir/$input" 2>/dev/null || echo "missing: $input"
+		done
+		local version
+		version="$(header "$script" version)"
+		[[ -n "$version" ]] && bash -c "$version" 2>&1
+	} | sha256sum | cut -d' ' -f1
+}
+
+passes_check() {
+	local check
+	check="$(header "$1" check)"
+	[[ -z "$check" ]] || bash -c "$check" >/dev/null 2>&1
+}
+
+mkdir -p "$STATE_DIR"
+exec 9>"$STATE_DIR/.lock"
+flock -n 9 || { echo "setup: another run is in progress" >&2; exit 1; }
+
+# tracked files only: build trees under ignored folders (pkgs/*/src) are huge
+mapfile -t scripts < <(git -C "$ROOT" grep -l '^# @setup name:' | sed "s|^|$ROOT/|")
+
+names=() paths=() reasons=()
+for script in "${scripts[@]}"; do
+	name="$(header "$script" name)"
+	[[ -n "$ONLY" && "$name" != "$ONLY" ]] && continue
+
+	stored="$(cat "$STATE_DIR/$name.hash" 2>/dev/null)"
+	if [[ $FORCE -eq 1 ]]; then
+		reason="forced"
+	elif [[ -z "$stored" ]] && passes_check "$script"; then
+		# set up before the runner existed: adopt it instead of reinstalling
+		if [[ $DRY -eq 1 ]]; then
+			echo "$name: already set up, would record it"
+		else
+			fingerprint "$script" >"$STATE_DIR/$name.hash"
+			echo "$name: already set up, recorded"
+		fi
+		continue
+	elif [[ -z "$stored" ]]; then
+		reason="never ran"
+	elif [[ "$stored" != "$(fingerprint "$script")" ]]; then
+		reason="inputs changed"
+	elif ! passes_check "$script"; then
+		reason="check failed"
+	else
+		continue
+	fi
+	names+=("$name") paths+=("$script") reasons+=("$reason")
+done
+
+if [[ -n "$ONLY" && ${#names[@]} -eq 0 ]] && ! grep -qx "# @setup name: $ONLY" "${scripts[@]}" 2>/dev/null; then
+	echo "setup: no script named '$ONLY'" >&2
+	exit 1
+fi
+
+if [[ ${#names[@]} -eq 0 ]]; then
+	echo "Everything is up to date."
+	exit 0
+fi
+
+echo "Will run:"
+for i in "${!names[@]}"; do
+	printf '  %-12s %-15s %s\n' "${names[$i]}" "(${reasons[$i]})" "${paths[$i]#"$ROOT"/}"
+	note="$(header "${paths[$i]}" note)"
+	[[ -n "$note" ]] && printf '  %-12s %s\n' "" "note: $note"
+done
+
+[[ $DRY -eq 1 ]] && exit 0
+
+if [[ $YES -eq 0 ]]; then
+	[[ -t 0 ]] || { echo "setup: not a terminal, pass --yes to run" >&2; exit 1; }
+	read -rp "Continue? [y/N] " answer
+	[[ "$answer" == [yY]* ]] || exit 1
+fi
+
+failed=()
+for i in "${!names[@]}"; do
+	name="${names[$i]}" script="${paths[$i]}"
+	echo
+	echo "==> $name"
+	# the hash is stored only after a clean exit and a passing check, so a failed or
+	# partial run is retried next time
+	if bash "$script" && passes_check "$script"; then
+		fingerprint "$script" >"$STATE_DIR/$name.hash"
+		echo "==> $name: done"
+	else
+		echo "==> $name: FAILED" >&2
+		failed+=("$name")
+	fi
+done
+
+if [[ ${#failed[@]} -gt 0 ]]; then
+	echo
+	echo "Failed: ${failed[*]}" >&2
+	exit 1
+fi
