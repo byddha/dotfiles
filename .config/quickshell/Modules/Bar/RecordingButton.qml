@@ -1,90 +1,57 @@
 import QtQuick
-import Quickshell.Io
 import "../../Config"
 import "../../Services"
+import "../../Components"
 
-Rectangle {
-    id: recordingButton
+// While recording: the elapsed time; a click stops it. Starting and saving show a spinner.
+BarItem {
+    id: root
 
-    visible: Recording.recording
-    width: visible ? recordingRow.implicitWidth + BarStyle.spacing * 2 : 0
-    height: BarStyle.buttonSize
-    color: mouseArea.containsMouse ? BarStyle.buttonBackgroundHover : BarStyle.buttonBackground
-    radius: BarStyle.buttonRadius
+    readonly property bool busy: Recording.starting || Recording.stopping
 
-    MouseArea {
-        id: mouseArea
-        anchors.fill: parent
-        hoverEnabled: true
-        cursorShape: Qt.PointingHandCursor
-        onClicked: stopRecording.startDetached()
+    visible: Recording.recording || Recording.starting
+    tooltipTitle: busy ? "" : "Recording"
+    tooltipDetail: "Click to stop"
+
+    onClicked: mouse => {
+        if (mouse.button === Qt.LeftButton && !busy)
+            Recording.stop();
     }
 
-    Process {
-        id: stopRecording
-        command: ["pkill", "-INT", "wf-recorder"]  // SIGINT allows proper file finalization
-    }
+    Item {
+        implicitWidth: Theme.iconSize
+        implicitHeight: Theme.iconSize
 
-    property int elapsedSeconds: 0
-
-    function formatTime(totalSeconds) {
-        const minutes = Math.floor(totalSeconds / 60);
-        const seconds = totalSeconds % 60;
-        return String(minutes).padStart(2, '0') + ":" + String(seconds).padStart(2, '0');
-    }
-
-    onVisibleChanged: {
-        if (visible) {
-            elapsedSeconds = 0;
-            timer.start();
-        } else {
-            timer.stop();
-            elapsedSeconds = 0;
-        }
-    }
-
-    Timer {
-        id: timer
-        interval: 1000
-        repeat: true
-        onTriggered: recordingButton.elapsedSeconds++
-    }
-
-    Behavior on width {
-        NumberAnimation {
-            duration: 150
-            easing.type: Easing.InOutQuad
-        }
-    }
-
-    Row {
-        id: recordingRow
-        anchors.centerIn: parent
-        spacing: BarStyle.spacing / 2
-
-        Text {
-            anchors.verticalCenter: parent.verticalCenter
-            text: Icons.recordOn
-            font.family: BarStyle.iconFont
-            font.pixelSize: BarStyle.iconSize
+        Spinner {
+            visible: root.busy
             color: Theme.accentRed
         }
-
-        Text {
-            anchors.verticalCenter: parent.verticalCenter
-            text: "Recording"
-            font.family: BarStyle.textFont
-            font.pixelSize: BarStyle.textSize
-            font.weight: BarStyle.textWeight
-            color: BarStyle.textColor
+        // Hovered, the dot turns into a stop button
+        Icon {
+            visible: !root.busy && root.hovered
+            text: Lucide.circleStop
+            color: Theme.accentRed
         }
-
-        Text {
-            anchors.verticalCenter: parent.verticalCenter
-            text: `(${recordingButton.formatTime(recordingButton.elapsedSeconds)})`
-            font.family: BarStyle.textFont
-            font.pixelSize: BarStyle.textSize
-            color: BarStyle.textSecondaryColor
+        Rectangle {
+            visible: !root.busy && !root.hovered
+            anchors.centerIn: parent
+            width: 7
+            height: 7
+            radius: 3.5
+            color: Theme.accentRed
+            border.width: 3
+            border.color: Theme.alpha(Theme.accentRed, 0.22)
         }
+    }
+    StyledText {
+        visible: root.busy && !root.vertical
+        role: "secondary"
+        text: Recording.stopping ? "Saving…" : "Starting…"
+    }
+    ElapsedText {
+        visible: !root.busy
+        font.pixelSize: root.vertical ? Theme.fontSizeTiny : Theme.fontSizeBase
+        font.weight: root.vertical ? Font.DemiBold : Font.Medium
+        since: Recording.startedAt
     }
 }

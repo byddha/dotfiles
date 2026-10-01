@@ -1,14 +1,28 @@
 ### Dependencies
 
-General: `quickshell-git`, `yq` and must have [base16 themes](https://github.com/byddha/dotfiles/tree/master/.config/base16) in ~/.config/base16
+General: `quickshell-git`, `libnotify` (`notify-send`), `python-gobject` + `gtk3` (icon lookup)
 
-Wifi: `nmcli`
+Compositor: `hyprland` or `niri`
 
-Vpn: `mullvad`, `openfortivpn`
+Theme: `~/dotfiles/scripts/theme-set` (writes `~/.cache/theme/dms-colors.json`)
 
-Compositor: `hyprland`
+Wifi: `networkmanager` (`nmcli`)
+
+Bluetooth: `bluez`, `blueman` (manager button)
+
+Vpn: `mullvad`, `openfortivpn` (run through `sudo`)
 
 Laptop screen / keyboard brightness: `brightnessctl`
+
+Screenshots and recording: `wl-clipboard`, `swappy`, `curl`, `jq`, `xdg-utils`, `python-pillow`, `gpu-screen-recorder`, `hyprpicker`
+
+OCR (copy text from a region): run `qs ipc call setup ocr` once. It installs RapidOCR with the PP-OCRv6 small and medium models (50 languages in one model; `ocr.model` in config.json picks one, default medium) in `~/.local/share/bidshell/ocr`; run it again if a Python upgrade breaks it
+
+Peripheral brand lookup: `hwdata`
+
+Game launcher: `steam`
+
+Fonts: none to install; Geist and Lucide are bundled in `assets/fonts`. Icons Lucide lacks (HDR, from Tabler) are added to the bundled `lucide.ttf` by `assets/fonts/lucide/extra/add-icons.py`; rerun it after updating Lucide
 
 Fill monitors in ~/.config/bidshell/config.json. Keys are the monitor `model` from EDID (check with `hyprctl monitors` → `model:` line), for example:
 
@@ -27,3 +41,16 @@ Fill monitors in ~/.config/bidshell/config.json. Keys are the monitor `model` fr
     },
 
 ```
+
+Placement, in the same file. Everything keeps clear of the bar on whichever side it is:
+
+```json
+    "bar": { "position": "top", "floating": false },
+    "notifications": { "position": "bottom-right" },
+    "sidebar": { "side": "right" },
+    "osd": { "position": "right" },
+```
+
+- `bar.position`: `top`, `bottom`, `left`, `right`; `floating` keeps it off the screen edges
+- `notifications.position`: `top-left`, `top-center`, `top-right`, `bottom-left`, `bottom-center`, `bottom-right`
+- `sidebar.side`, `osd.position`: `left`, `right`

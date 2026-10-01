@@ -3,7 +3,6 @@ import Quickshell
 import Quickshell.Wayland
 import "../../Config"
 import "../../Services"
-import "../../Utils"
 import "../../Components"
 
 Scope {
@@ -31,7 +30,7 @@ Scope {
             WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
 
             exclusiveZone: 0
-            color: Theme.colLayer0
+            color: Theme.hostSurface
 
             // Click-outside-to-close using HyprlandFocusGrab
             FocusGrab {
@@ -39,19 +38,12 @@ Scope {
                 windows: [launcherWindow]
                 active: false
 
-                onCleared: {
-                    Logger.info("GameLauncher: Focus cleared");
-                    Settings.gameLauncherVisible = false;
-                    focusGrab.active = false;
-                }
+                onCleared: Settings.gameLauncherVisible = false
             }
 
             onVisibleChanged: {
                 if (visible) {
-                    Qt.callLater(() => {
-                        focusGrab.active = Compositor.useHyprlandFocusGrab;
-                        Logger.info("GameLauncher: Focus grab activated");
-                    });
+                    Qt.callLater(() => focusGrab.active = Compositor.useHyprlandFocusGrab);
                     GameService.refresh();
                 } else {
                     focusGrab.active = false;
@@ -59,7 +51,6 @@ Scope {
                 }
             }
 
-            // Content with fade animation
             Loader {
                 id: contentLoader
                 anchors.fill: parent
@@ -76,10 +67,6 @@ Scope {
                         easing.bezierCurve: Theme.animation.elementMoveFast.bezierCurve
                     }
                 }
-            }
-
-            Component.onCompleted: {
-                Logger.info(`GameLauncher: Initialized on screen ${modelData.name}`);
             }
         }
     }

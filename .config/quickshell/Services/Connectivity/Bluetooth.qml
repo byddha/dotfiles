@@ -42,10 +42,7 @@ Singleton {
     }
 
     // Combined list: connected first, then paired
-    property list<var> deviceList: {
-        refreshTrigger; // Dependency to force re-evaluation
-        return [...connectedDevices, ...pairedDevices];
-    }
+    property list<var> deviceList: [...connectedDevices, ...pairedDevices]
 
     // Watch for device list changes
     Connections {
@@ -80,7 +77,6 @@ Singleton {
             return;
         }
         Bluetooth.defaultAdapter.enabled = value;
-        Logger.info(`Adapter ${value ? "enabled" : "disabled"}`);
     }
 
     function toggleEnabled() {
@@ -89,30 +85,22 @@ Singleton {
 
     // Icon helper based on device type
     function getDeviceIcon(iconName: string): string {
-        Logger.debug(`Icon name ${iconName}`);
         if (!iconName)
-            return Icons.bluetoothOn;
+            return Lucide.bluetooth;
         if (iconName.includes("headset") || iconName.includes("headphones") || iconName.includes("audio"))
-            return Icons.headphones;
+            return Lucide.headphones;
         if (iconName.includes("phone"))
-            return Icons.phone;
+            return Lucide.smartphone;
         if (iconName.includes("mouse"))
-            return Icons.mouse;
+            return Lucide.mouse;
         if (iconName.includes("keyboard"))
-            return Icons.keyboard;
+            return Lucide.keyboard;
         if (iconName.includes("computer") || iconName.includes("laptop"))
-            return Icons.laptop;
+            return Lucide.laptop;
         if (iconName.includes("gaming"))
-            return Icons.controller;
-        return Icons.bluetoothOn;
+            return Lucide.gamepad2;
+        return Lucide.bluetooth;
     }
 
-    Component.onCompleted: {
-        Logger.info("Service initialized");
-    }
-
-    onEnabledChanged: {
-        Logger.info(`Enabled state changed: ${enabled}`);
-        refresh();
-    }
+    onEnabledChanged: refresh()
 }

@@ -1,135 +1,113 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
 import "../../../Config"
 import "../../../Components"
 import "../../../Services"
-import "../../../Utils"
 
-ColumnLayout {
+ScrollList {
     id: root
 
-    spacing: Theme.spacingBase
+    property bool shown: false
 
-    // App list
-    ScrollView {
+    // Whole sections are the list's children, so reversed they swap places but each still reads top
+    // to bottom; the gap between sections is the list's
+    reversed: Placement.sidebarReversed
+    spacing: 14
+
+    function deviceIcon(node, isOutput) {
+        if (!isOutput)
+            return Lucide.mic;
+        const name = (node?.name ?? "").toLowerCase();
+        if (name.includes("hdmi") || name.includes("displayport"))
+            return Lucide.monitor;
+        if (name.startsWith("bluez"))
+            return Lucide.headphones;
+        return Lucide.speaker;
+    }
+
+    ColumnLayout {
         Layout.fillWidth: true
-        Layout.fillHeight: true
-        Layout.minimumHeight: 100
+        spacing: 2
 
-        clip: true
+        SectionHeader {
+            text: "Apps"
+            meta: Audio.groupedOutputAppNodes.length > 0 ? `${Audio.groupedOutputAppNodes.length} playing` : ""
+        }
 
-        ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
-        ScrollBar.vertical.policy: ScrollBar.AsNeeded
-
-        ColumnLayout {
-            width: parent.width
-            spacing: Theme.spacingBase
-
-            // List of apps playing audio (grouped by application)
-            Repeater {
-                model: ScriptModel {
-                    values: Audio.groupedOutputAppNodes
-                }
-
-                VolumeMixerGroupEntry {
-                    required property var modelData
-                    Layout.fillWidth: true
-                    group: modelData
-                }
+        Repeater {
+            model: ScriptModel {
+                values: Audio.groupedOutputAppNodes
             }
 
-            // Empty state
-            Item {
+            VolumeMixerGroupEntry {
+                required property var modelData
                 Layout.fillWidth: true
-                Layout.preferredHeight: emptyText.height
-                visible: Audio.groupedOutputAppNodes.length === 0
-
-                StyledText {
-                    id: emptyText
-                    text: "No apps playing audio"
-                    font.pixelSize: Theme.fontSizeBase
-                    color: Theme.textSecondary
-                    anchors.centerIn: parent
-                }
+                group: modelData
             }
         }
-    }
 
-    // Output devices section
-    ColumnLayout {
-        Layout.fillWidth: true
-        spacing: 4
-
-        StyledText {
-            text: "Output Devices"
-            font.pixelSize: Theme.fontSizeSmall
-            color: Theme.textSecondary
-        }
-
-        ColumnLayout {
+        EmptyState {
             Layout.fillWidth: true
-            spacing: 2
-
-            Repeater {
-                model: ScriptModel {
-                    values: Audio.outputDevices
-                }
-
-                DeviceListItem {
-                    required property var modelData
-                    Layout.fillWidth: true
-
-                    deviceName: Audio.friendlyDeviceName(modelData)
-                    isSelected: modelData.id === Audio.sink?.id
-
-                    onClicked: {
-                        Audio.setDefaultSink(modelData);
-                        Logger.info(`Switched to output device: ${deviceName}`);
-                    }
-                }
-            }
+            visible: Audio.groupedOutputAppNodes.length === 0
+            text: "No apps playing audio"
+            icon: Lucide.volumeX
         }
     }
 
-    // Input devices section
-    ColumnLayout {
+    DeviceSection {
+        title: "Output devices"
+        devices: Audio.outputDevices
+        selectedId: Audio.sink?.id
+        isOutput: true
+        onDeviceSelected: device => Audio.setDefaultSink(device)
+    }
+
+    DeviceSection {
+        title: "Input devices"
+        devices: Audio.inputDevices
+        selectedId: Audio.source?.id
+        isOutput: false
+        onDeviceSelected: device => Audio.setDefaultSource(device)
+    }
+
+    component DeviceSection: ColumnLayout {
+        id: section
+
+        property string title
+        property var devices
+        property var selectedId
+        property bool isOutput
+
+        signal deviceSelected(var device)
+
         Layout.fillWidth: true
-        spacing: 4
+        spacing: 2
 
-        StyledText {
-            text: "Input Devices"
-            font.pixelSize: Theme.fontSizeSmall
-            color: Theme.textSecondary
+        SectionHeader {
+            text: section.title
         }
 
-        ColumnLayout {
-            Layout.fillWidth: true
-            spacing: 2
+        Repeater {
+            model: ScriptModel {
+                values: section.devices
+            }
 
-            Repeater {
-                model: ScriptModel {
-                    values: Audio.inputDevices
-                }
-
-                DeviceListItem {
-                    required property var modelData
-                    Layout.fillWidth: true
-
-                    deviceName: Audio.friendlyDeviceName(modelData)
-                    isSelected: modelData.id === Audio.source?.id
-
-                    onClicked: {
-                        Audio.setDefaultSource(modelData);
-                        Logger.info(`Switched to input device: ${deviceName}`);
-                    }
+            ListRow {
+                required property var modelData
+                readonly property bool isCurrent: modelData.id === section.selectedId
+                Layout.fillWidth: true
+                leadIcon: root.deviceIcon(modelData, section.isOutput)
+                title: Audio.friendlyDeviceName(modelData)
+                selected: isCurrent
+                trailIcon: isCurrent ? Lucide.check : ""
+                onClicked: {
+                    if (!isCurrent)
+                        section.deviceSelected(modelData);
                 }
             }
         }
-    }
-
-    Component.onCompleted: {
-        Logger.info("Volume mixer tab loaded");
     }
 }

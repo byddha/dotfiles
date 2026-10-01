@@ -1,193 +1,80 @@
 import QtQuick
-import Quickshell
-import Quickshell.Services.SystemTray
-import Quickshell.Widgets
-import "../../Utils"
+import Quickshell.Wayland
 import "../../Config"
+import "../../Services"
 import "../../Components"
-import "Popups"
 
 /**
- * Tray - System tray with unified background container
- *
- * Displays system tray icons in a single background container matching workspace style.
+ * Tray - The tray items in the bar, or, when the bar is short of room (level 1, with the device
+ * batteries), one chevron that opens them in a popout.
  */
 Item {
     id: root
 
-    required property var barWindow  // Pass the bar's window to get screen
+    property int level: 0
+    readonly property bool folded: items.count > 1 && level >= 1
 
-    visible: SystemTray.items.values.length > 0
-    implicitWidth: visible ? trayBackground.width : 0
-    implicitHeight: BarStyle.barHeight
+    property TrayMenu menu: TrayMenu {}
+    property BarPopout overflow: BarPopout {
+        WlrLayershell.namespace: "bidshell:tray-overflow"
+        padding: 6
 
-    // Track currently open menu for focus management
-    property var activeMenu: null
-
-    // Pending menu configuration (to pass to Loader)
-    property var pendingMenuItem: null
-    property real pendingMenuX: 0
-    property real pendingMenuY: 0
-
-    // Parent-level focus grab handles the single tray menu window (ii pattern)
-    FocusGrab {
-        id: focusGrab
-        active: false
-        windows: [root.activeMenu]
-        onCleared: {
-            Logger.info("Focus cleared (clicked outside or Escape pressed)");
-            if (root.activeMenu) {
-                root.activeMenu.hideMenu();
-                root.releaseFocus();
-            }
+        TrayItems {
+            anchors.fill: parent
+            menu: root.menu
+            inPopout: true
         }
     }
 
-    function setActiveMenuAndGrabFocus(menuWindow) {
-        root.activeMenu = menuWindow;
-        focusGrab.active = Compositor.useHyprlandFocusGrab;
-        Logger.info("Focus grabbed for menu");
+    function lengthAt(level) {
+        const foldedThen = items.count > 1 && level >= 1;
+        if (foldedThen)
+            return BarLayout.itemSize;
+        return items.count * BarLayout.itemSize + items.spacing * Math.max(0, items.count - 1);
     }
 
-    function releaseFocus() {
-        focusGrab.active = false;
-        root.activeMenu = null;
-        menuLoader.active = false;  // Destroy menu component
-        Logger.info("Focus released");
+    visible: items.count > 0
+    implicitWidth: folded ? chevron.implicitWidth : items.implicitWidth
+    implicitHeight: folded ? chevron.implicitHeight : items.implicitHeight
+
+    onFoldedChanged: if (!folded)
+        overflow.hidePanel()
+
+    TrayItems {
+        id: items
+
+        visible: !root.folded
+        menu: root.menu
     }
 
-    function showMenuFor(item, x, y) {
-        root.pendingMenuItem = item;
-        root.pendingMenuX = x;
-        root.pendingMenuY = y;
-        menuLoader.active = true;  // Create fresh menu instance
-    }
+    BarItem {
+        id: chevron
 
-    // TrayMenu Loader - Recreates menu on each open for fresh state
-    Loader {
-        id: menuLoader
-        active: false
+        visible: root.folded
+        iconOnly: true
+        highlighted: root.overflow.visible
+        tooltipTitle: root.overflow.visible ? "" : `${items.count} tray apps`
 
-        sourceComponent: TrayMenu {
-            Component.onCompleted: {
-                // Show menu immediately when created
-                showAt(root.pendingMenuItem, root.pendingMenuX, root.pendingMenuY, root.barWindow?.screen);
-            }
-
-            onMenuOpened: window => root.setActiveMenuAndGrabFocus(window)
-            onMenuClosed: root.releaseFocus()
+        onClicked: mouse => {
+            if (mouse.button !== Qt.LeftButton)
+                return;
+            if (root.overflow.visible)
+                root.overflow.hidePanel();
+            else
+                root.overflow.openFrom(chevron);
         }
-    }
 
-    // Background for all tray icons (like workspaces)
-    Rectangle {
-        id: trayBackground
-        width: trayRow.width + (BarStyle.spacing * 2)
-        height: BarStyle.barHeight
-        color: BarStyle.buttonBackground
-        radius: BarStyle.buttonRadius
-
-        Behavior on width {
-            NumberAnimation {
-                duration: Theme.animation.elementMoveFast.duration
-                easing.type: Theme.animation.elementMoveFast.type
-                easing.bezierCurve: Theme.animation.elementMoveFast.bezierCurve
-            }
-        }
-    }
-
-    Row {
-        id: trayRow
-        x: BarStyle.spacing
-        spacing: 0
-        height: BarStyle.barHeight
-
-        Repeater {
-            model: SystemTray.items
-
-            delegate: Item {
-                id: trayItem
-                width: BarStyle.buttonSize
-                height: BarStyle.buttonSize
-                visible: modelData
-
-                property var item: modelData
-
-                // Tooltip
-                Tooltip {
-                    id: trayTooltip
-                    target: trayItem
-                    text: trayItem.item?.tooltipTitle || trayItem.item?.name || trayItem.item?.id || ""
-                }
-
-                IconImage {
-                    id: trayIcon
-                    anchors.centerIn: parent
-                    width: BarStyle.iconSize
-                    height: BarStyle.iconSize
-                    smooth: true
-                    asynchronous: true
-                    backer.fillMode: Image.PreserveAspectFit
-                    source: {
-                        let icon = trayItem.item?.icon || "";
-                        if (!icon)
-                            return "";
-
-                        // Handle special ?path= format for custom icon paths
-                        if (icon.includes("?path=")) {
-                            const chunks = icon.split("?path=");
-                            const name = chunks[0];
-                            const path = chunks[1];
-                            const fileName = name.substring(name.lastIndexOf("/") + 1);
-                            return `file://${path}/${fileName}`;
-                        }
-                        return icon;
-                    }
-                }
-
-                MouseArea {
-                    id: trayMouseArea
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
-
-                    onEntered: {
-                        if (Config.options?.bar?.tray?.showTooltips ?? true) {
-                            trayTooltip.show();
-                        }
-                    }
-
-                    onExited: {
-                        trayTooltip.hide();
-                    }
-
-                    onClicked: mouse => {
-                        if (!trayItem.item)
-                            return;
-
-                        // Hide tooltip when clicking
-                        trayTooltip.hide();
-
-                        if (mouse.button === Qt.LeftButton) {
-                            if (!trayItem.item.onlyMenu) {
-                                trayItem.item.activate();
-                                Logger.info(`Activated: ${trayItem.item.name || trayItem.item.id}`);
-                            }
-                        } else if (mouse.button === Qt.MiddleButton) {
-                            trayItem.item.secondaryActivate();
-                            Logger.info(`Secondary activated: ${trayItem.item.name || trayItem.item.id}`);
-                        } else if (mouse.button === Qt.RightButton) {
-                            if (trayItem.item.menu) {
-                                // Calculate menu position as offset from tray icon
-                                const menuX = (trayItem.width / 2) - 100;  // Approximate menu width
-                                const menuY = Theme.barHeight;
-
-                                root.showMenuFor(trayItem, menuX, menuY);
-                                Logger.info(`Menu opened: ${trayItem.item.name || trayItem.item.id}`);
-                            }
-                        }
-                    }
+        Icon {
+            text: {
+                switch (BarLayout.edge) {
+                case "bottom":
+                    return Lucide.chevronUp;
+                case "left":
+                    return Lucide.chevronRight;
+                case "right":
+                    return Lucide.chevronLeft;
+                default:
+                    return Lucide.chevronDown;
                 }
             }
         }

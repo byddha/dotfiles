@@ -1,6 +1,10 @@
 hyprenv.conf
 base16.theme
 .claude
+# ...except the quickshell test skill
+!.config/quickshell/.claude/
+.config/quickshell/.claude/*
+!.config/quickshell/.claude/skills/
 .codex
 pkgs
 

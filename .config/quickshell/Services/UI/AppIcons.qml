@@ -1,555 +1,207 @@
 pragma Singleton
 
 import QtQuick
-import "../../Utils/"
+import Quickshell
+import "../../Config"
 
 QtObject {
     id: root
 
-    // Nerd Font unicode icon mappings
-
+    // Display names by window class (or title), from HyprPanel's app map:
     // https://github.com/Jas-SinghFSU/HyprPanel/blob/f9a04192e8fb90a48e1756989f582dc0baec2351/src/components/bar/modules/window_title/helpers/appIcons.ts#L64
-    readonly property var iconMap: ({
+    readonly property var nameMap: ({
             // Misc
-            "qbittorrent": {
-                icon: "",
-                name: "qBittorrent"
-            },
-            "rofi": {
-                icon: "",
-                name: "Rofi"
-            },
+            "qbittorrent": "qBittorrent",
+            "rofi": "Rofi",
 
             // Browsers
-            "brave-browser": {
-                icon: "󰖟",
-                name: "Brave"
-            },
-            "chromium": {
-                icon: "",
-                name: "Chromium"
-            },
-            "firefox": {
-                icon: "󰈹",
-                name: "Firefox"
-            },
-            "floorp": {
-                icon: "󰈹",
-                name: "Floorp"
-            },
-            "google-chrome": {
-                icon: "",
-                name: "Chrome"
-            },
-            "microsoft-edge": {
-                icon: "󰇩",
-                name: "Edge"
-            },
-            "opera": {
-                icon: "",
-                name: "Opera"
-            },
-            "thorium": {
-                icon: "󰖟",
-                name: "Thorium"
-            },
-            "tor-browser": {
-                icon: "",
-                name: "Tor Browser"
-            },
-            "vivaldi": {
-                icon: "󰖟",
-                name: "Vivaldi"
-            },
-            "waterfox": {
-                icon: "󰖟",
-                name: "Waterfox"
-            },
-            "zen": {
-                icon: "",
-                name: "Zen Browser"
-            },
+            "brave-browser": "Brave",
+            "chromium": "Chromium",
+            "firefox": "Firefox",
+            "floorp": "Floorp",
+            "google-chrome": "Chrome",
+            "microsoft-edge": "Edge",
+            "opera": "Opera",
+            "thorium": "Thorium",
+            "tor-browser": "Tor Browser",
+            "vivaldi": "Vivaldi",
+            "waterfox": "Waterfox",
+            "zen": "Zen Browser",
 
             // Terminals
-            "^st$": {
-                icon: "",
-                name: "st"
-            },
-            "alacritty": {
-                icon: "",
-                name: "Alacritty"
-            },
-            "com.mitchellh.ghostty": {
-                icon: "󰊠",
-                name: "Ghostty"
-            },
-            "foot": {
-                icon: "󰽒",
-                name: "Foot"
-            },
-            "gnome-terminal": {
-                icon: "",
-                name: "Terminal"
-            },
-            "kitty": {
-                icon: "",
-                name: "Kitty"
-            },
-            "konsole": {
-                icon: "",
-                name: "Konsole"
-            },
-            "tilix": {
-                icon: "",
-                name: "Tilix"
-            },
-            "urxvt": {
-                icon: "",
-                name: "URxvt"
-            },
-            "wezterm": {
-                icon: "",
-                name: "WezTerm"
-            },
-            "xterm": {
-                icon: "",
-                name: "XTerm"
-            },
+            "^st$": "st",
+            "alacritty": "Alacritty",
+            "com.mitchellh.ghostty": "Ghostty",
+            "foot": "Foot",
+            "gnome-terminal": "Terminal",
+            "kitty": "Kitty",
+            "konsole": "Konsole",
+            "tilix": "Tilix",
+            "urxvt": "URxvt",
+            "wezterm": "WezTerm",
+            "xterm": "XTerm",
 
             // Development Tools
-            "dbeaver": {
-                icon: "",
-                name: "DBeaver"
-            },
-            "android-studio": {
-                icon: "󰀴",
-                name: "Android Studio"
-            },
-            "atom": {
-                icon: "",
-                name: "Atom"
-            },
-            "code": {
-                icon: "󰨞",
-                name: "VS Code"
-            },
-            "docker": {
-                icon: "",
-                name: "Docker"
-            },
-            "eclipse": {
-                icon: "",
-                name: "Eclipse"
-            },
-            "emacs": {
-                icon: "",
-                name: "Emacs"
-            },
-            "godot": {
-                icon: "",
-                name: "Godot"
-            },
-            "jetbrains-idea": {
-                icon: "",
-                name: "IntelliJ IDEA"
-            },
-            "jetbrains-phpstorm": {
-                icon: "",
-                name: "PhpStorm"
-            },
-            "jetbrains-pycharm": {
-                icon: "",
-                name: "PyCharm"
-            },
-            "jetbrains-webstorm": {
-                icon: "",
-                name: "WebStorm"
-            },
-            "neovide": {
-                icon: "",
-                name: "Neovide"
-            },
-            "neovim": {
-                icon: "",
-                name: "Neovim"
-            },
-            "netbeans": {
-                icon: "",
-                name: "NetBeans"
-            },
-            "sublime-text": {
-                icon: "",
-                name: "Sublime Text"
-            },
-            "vim": {
-                icon: "",
-                name: "Vim"
-            },
-            "vscode": {
-                icon: "󰨞",
-                name: "VS Code"
-            },
+            "dbeaver": "DBeaver",
+            "android-studio": "Android Studio",
+            "atom": "Atom",
+            "code": "VS Code",
+            "docker": "Docker",
+            "eclipse": "Eclipse",
+            "emacs": "Emacs",
+            "godot": "Godot",
+            "jetbrains-idea": "IntelliJ IDEA",
+            "jetbrains-phpstorm": "PhpStorm",
+            "jetbrains-pycharm": "PyCharm",
+            "jetbrains-webstorm": "WebStorm",
+            "neovide": "Neovide",
+            "neovim": "Neovim",
+            "netbeans": "NetBeans",
+            "sublime-text": "Sublime Text",
+            "vim": "Vim",
+            "vscode": "VS Code",
 
             // Communication Tools
-            "discord": {
-                icon: "",
-                name: "Discord"
-            },
-            "legcord": {
-                icon: "",
-                name: "Legcord"
-            },
-            "webcord": {
-                icon: "",
-                name: "WebCord"
-            },
-            "org.telegram.desktop": {
-                icon: "",
-                name: "Telegram"
-            },
-            "skype": {
-                icon: "󰒯",
-                name: "Skype"
-            },
-            "slack": {
-                icon: "󰒱",
-                name: "Slack"
-            },
-            "teams": {
-                icon: "󰊻",
-                name: "Teams"
-            },
-            "teamspeak": {
-                icon: "",
-                name: "TeamSpeak"
-            },
-            "telegram-desktop": {
-                icon: "",
-                name: "Telegram"
-            },
-            "thunderbird": {
-                icon: "",
-                name: "Thunderbird"
-            },
-            "vesktop": {
-                icon: "",
-                name: "Vesktop"
-            },
-            "whatsapp": {
-                icon: "󰖣",
-                name: "WhatsApp"
-            },
-            "outlook": {
-                icon: "󰴢",
-                name: "Outlook"
-            },
+            "discord": "Discord",
+            "legcord": "Legcord",
+            "webcord": "WebCord",
+            "org.telegram.desktop": "Telegram",
+            "skype": "Skype",
+            "slack": "Slack",
+            "teams": "Teams",
+            "teamspeak": "TeamSpeak",
+            "telegram-desktop": "Telegram",
+            "thunderbird": "Thunderbird",
+            "vesktop": "Vesktop",
+            "whatsapp": "WhatsApp",
+            "outlook": "Outlook",
 
             // File Managers
-            "doublecmd": {
-                icon: "󰝰",
-                name: "Double Commander"
-            },
-            "krusader": {
-                icon: "󰝰",
-                name: "Krusader"
-            },
-            "nautilus": {
-                icon: "󰝰",
-                name: "Files"
-            },
-            "nemo": {
-                icon: "󰝰",
-                name: "Nemo"
-            },
-            "org.kde.dolphin": {
-                icon: "",
-                name: "Dolphin"
-            },
-            "pcmanfm": {
-                icon: "󰝰",
-                name: "PCManFM"
-            },
-            "ranger": {
-                icon: "󰝰",
-                name: "Ranger"
-            },
-            "thunar": {
-                icon: "󰝰",
-                name: "Thunar"
-            },
-            "org.kde.ark": {
-                icon: "󰀼",
-                name: "Ark"
-            },
+            "doublecmd": "Double Commander",
+            "krusader": "Krusader",
+            "nautilus": "Files",
+            "nemo": "Nemo",
+            "org.kde.dolphin": "Dolphin",
+            "pcmanfm": "PCManFM",
+            "ranger": "Ranger",
+            "thunar": "Thunar",
+            "org.kde.ark": "Ark",
 
             // Media Players
-            "mpv": {
-                icon: "󰿎",
-                name: "mpv"
-            },
-            "plex": {
-                icon: "󰚺",
-                name: "Plex"
-            },
-            "rhythmbox": {
-                icon: "󰓃",
-                name: "Rhythmbox"
-            },
-            "ristretto": {
-                icon: "󰋩",
-                name: "Ristretto"
-            },
-            "spotify": {
-                icon: "󰓇",
-                name: "Spotify"
-            },
-            "com.mastermindzh.tidal-hifi": {
-                icon: "",
-                name: "Tidal"
-            },
-            "tidal-hifi": {
-                icon: "",
-                name: "Tidal"
-            },
-            "vlc": {
-                icon: "󰕼",
-                name: "VLC"
-            },
-            "qimgv": {
-                icon: "",
-                name: "qimgv"
-            },
-            "waydroid.app.komikku": {
-                icon: "",
-                name: "Komikku"
-            },
+            "mpv": "mpv",
+            "plex": "Plex",
+            "rhythmbox": "Rhythmbox",
+            "ristretto": "Ristretto",
+            "spotify": "Spotify",
+            "com.mastermindzh.tidal-hifi": "Tidal",
+            "tidal-hifi": "Tidal",
+            "vlc": "VLC",
+            "qimgv": "qimgv",
+            "waydroid.app.komikku": "Komikku",
 
             // Graphics Tools
-            "blender": {
-                icon: "󰂫",
-                name: "Blender"
-            },
-            "gimp": {
-                icon: "",
-                name: "GIMP"
-            },
-            "inkscape": {
-                icon: "",
-                name: "Inkscape"
-            },
-            "krita": {
-                icon: "",
-                name: "Krita"
-            },
+            "blender": "Blender",
+            "gimp": "GIMP",
+            "inkscape": "Inkscape",
+            "krita": "Krita",
 
             // Video Editing
-            "kdenlive": {
-                icon: "",
-                name: "Kdenlive"
-            },
+            "kdenlive": "Kdenlive",
 
             // Games and Gaming Platforms
-            "csgo": {
-                icon: "󰺵",
-                name: "CS:GO"
-            },
-            "dota2": {
-                icon: "󰺵",
-                name: "Dota 2"
-            },
-            "heroic": {
-                icon: "󰺵",
-                name: "Heroic"
-            },
-            "lutris": {
-                icon: "󰺵",
-                name: "Lutris"
-            },
-            "minecraft": {
-                icon: "󰍳",
-                name: "Minecraft"
-            },
-            "steam": {
-                icon: "",
-                name: "Steam"
-            },
-            "com.github.mtkennerly.ludusavi": {
-                icon: "󰆔",
-                name: "Ludasavi"
-            },
+            "csgo": "CS:GO",
+            "dota2": "Dota 2",
+            "heroic": "Heroic",
+            "lutris": "Lutris",
+            "minecraft": "Minecraft",
+            "steam": "Steam",
+            "com.github.mtkennerly.ludusavi": "Ludasavi",
 
             // Office and Productivity
-            "evernote": {
-                icon: "",
-                name: "Evernote"
-            },
-            "libreoffice-base": {
-                icon: "",
-                name: "LibreOffice Base"
-            },
-            "libreoffice-calc": {
-                icon: "",
-                name: "LibreOffice Calc"
-            },
-            "libreoffice-draw": {
-                icon: "",
-                name: "LibreOffice Draw"
-            },
-            "libreoffice-impress": {
-                icon: "",
-                name: "LibreOffice Impress"
-            },
-            "libreoffice-math": {
-                icon: "",
-                name: "LibreOffice Math"
-            },
-            "libreoffice-writer": {
-                icon: "",
-                name: "LibreOffice Writer"
-            },
-            "obsidian": {
-                icon: "󱓧",
-                name: "Obsidian"
-            },
-            "sioyek": {
-                icon: "",
-                name: "Sioyek"
-            },
+            "evernote": "Evernote",
+            "libreoffice-base": "LibreOffice Base",
+            "libreoffice-calc": "LibreOffice Calc",
+            "libreoffice-draw": "LibreOffice Draw",
+            "libreoffice-impress": "LibreOffice Impress",
+            "libreoffice-math": "LibreOffice Math",
+            "libreoffice-writer": "LibreOffice Writer",
+            "obsidian": "Obsidian",
+            "sioyek": "Sioyek",
             // putting these at the bottom, as they are defaults
-            "libreoffice": {
-                icon: "",
-                name: "LibreOffice"
-            },
-            "title:LibreOffice": {
-                icon: "",
-                name: "LibreOffice"
-            },
-            "soffice": {
-                icon: "",
-                name: "LibreOffice"
-            },
+            "libreoffice": "LibreOffice",
+            "title:LibreOffice": "LibreOffice",
+            "soffice": "LibreOffice",
 
             // Utilities
-            "balenaetcher": {
-                icon: "󱊞",
-                name: "balenaEtcher"
-            },
-            "blueman-manager": {
-                icon: "",
-                name: "Blueman"
-            },
-            "org.corectrl.corectrl": {
-                icon: "󰍛",
-                name: "CoreCtrl"
-            },
-            "nwg-displays": {
-                icon: "󰍺",
-                name: "nwg-displays"
-            },
-            "mullvad vpn": {
-                icon: "󰖂",
-                name: "Mullvad VPN"
-            },
-            "org.remmina.remmina": {
-                icon: "󰢹",
-                name: "Remmina"
-            },
-            "virt-manager": {
-                icon: "󰢔",
-                name: "Virt Manager"
-            },
-            "io.missioncenter.missioncenter": {
-                icon: "",
-                name: "Mission Center"
-            },
-            "swappy": {
-                icon: "",
-                name: "Swappy"
-            },
-            "kvantummanager": {
-                icon: "󰔎",
-                name: "Kvantum"
-            },
-            "nwg-look": {
-                icon: "",
-                name: "GTK Theme"
-            },
+            "balenaetcher": "balenaEtcher",
+            "blueman-manager": "Blueman",
+            "org.corectrl.corectrl": "CoreCtrl",
+            "nwg-displays": "nwg-displays",
+            "mullvad vpn": "Mullvad VPN",
+            "org.remmina.remmina": "Remmina",
+            "virt-manager": "Virt Manager",
+            "io.missioncenter.missioncenter": "Mission Center",
+            "swappy": "Swappy",
+            "kvantummanager": "Kvantum",
+            "nwg-look": "GTK Theme",
 
             // Cloud Services and Sync
-            "dropbox": {
-                icon: "󰇣",
-                name: "Dropbox"
-            },
+            "dropbox": "Dropbox",
 
             // Fallback
-            "unknown": {
-                icon: "",
-                name: "Unknown"
-            }
+            "unknown": "Unknown"
         })
 
-    /**
-     * Look up app data by class name
-     * @param className - Window class name
-     * @returns App data object with icon and name
-     */
-    function lookup(className, title, xdgTag) {
-        // Check xdgTag first for special cases like Proton games
-        if (xdgTag === "proton-game") {
-            return {
-                icon: "󰊗",
-                name: "Game"
-            };
-        }
-
-        // Try className first
+    // Keys are tried as exact class, then as substrings of the class, then of the title, in declaration order.
+    // "^name$" keys are exact-only, for names too short to use as substrings.
+    function findEntry(className, title) {
         if (className && className.length > 0) {
             const lowerClass = className.toLowerCase();
-
-            // Try exact match
-            if (iconMap[lowerClass]) {
-                return iconMap[lowerClass];
-            }
-
-            // Try partial match (class contains key)
-            for (const key in iconMap) {
-                if (lowerClass.includes(key)) {
-                    return iconMap[key];
-                }
+            const exact = nameMap[lowerClass] || nameMap["^" + lowerClass + "$"];
+            if (exact)
+                return exact;
+            for (const key in nameMap) {
+                if (lowerClass.includes(key))
+                    return nameMap[key];
             }
         }
-
-        // Fallback: try title if provided
         if (title && title.length > 0) {
             const lowerTitle = title.toLowerCase();
-
-            // Try partial match (title contains key)
-            for (const key in iconMap) {
-                if (lowerTitle.includes(key)) {
-                    return iconMap[key];
-                }
+            for (const key in nameMap) {
+                if (lowerTitle.includes(key))
+                    return nameMap[key];
             }
         }
-
-        Logger.trace("No icon mapping found for class '" + className + "' and title '" + title + "'; using default.");
-        return iconMap["unknown"];
+        return nameMap["unknown"];
     }
 
-    /**
-     * Get Nerd Font icon for window class
-     * @param className - Window class name
-     * @returns Nerd Font unicode character
-     */
-    function getIcon(className, title, xdgTag) {
-        return lookup(className, title, xdgTag).icon;
+    // The app's icon file from its .desktop entry, "" when it has none. Proton games use the icon Steam installs.
+    function iconSourceFor(className) {
+        const steamApp = /^steam_app_(\d+)$/.exec(className ?? "");
+        if (steamApp)
+            return Quickshell.iconPath(`steam_icon_${steamApp[1]}`, true);
+        // Entries load after startup: reading the list makes a binding that calls this update then
+        if (!className || DesktopEntries.applications.values.length === 0)
+            return "";
+        return iconForEntry(DesktopEntries.byId(className) || DesktopEntries.heuristicLookup(className));
     }
 
-    /**
-     * Get display name for window class
-     * @param className - Window class name
-     * @returns Friendly display name
-     */
+    // The icon to show for an app's desktop entry: the config's override, else the entry's themed icon
+    function iconForEntry(entry) {
+        if (!entry)
+            return "";
+        return overrideFor(entry.id) || (entry.icon ? Quickshell.iconPath(entry.icon, true) : "");
+    }
+
+    // The config's iconOverrides icon for a desktop entry id, "" when it has none
+    function overrideFor(entryId) {
+        const override = Config.options.iconOverrides[entryId];
+        if (!override)
+            return "";
+        return override.startsWith("/") ? `file://${override}` : Quickshell.iconPath(override, true);
+    }
+
     function getDisplayName(className, title, xdgTag) {
-        return lookup(className, title, xdgTag).name;
+        return xdgTag === "proton-game" ? "Game" : findEntry(className, title);
     }
 }

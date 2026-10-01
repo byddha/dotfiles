@@ -1,99 +1,26 @@
 import QtQuick
-import "../../Utils"
 import "../../Services"
 import "../../Components"
-import "Popups"
 
-Rectangle {
-    id: powerButton
+BarItem {
+    id: root
 
-    width: BarStyle.buttonSize
-    height: BarStyle.buttonSize
-    color: BarStyle.buttonBackground
-    radius: BarStyle.buttonRadius
+    property PowerMenu menu: PowerMenu {}
 
-    property var activePopup: null
+    iconOnly: true
+    highlighted: menu.visible
+    tooltipTitle: menu.visible ? "" : "Power"
 
-    FocusGrab {
-        id: focusGrab
-        active: false
-        windows: powerButton.activePopup ? [powerButton.activePopup] : []
-        onCleared: {
-            Logger.info("Focus cleared");
-            if (powerButton.activePopup) {
-                powerButton.activePopup.hidePanel();
-                powerButton.releaseFocus();
-            }
-        }
+    onClicked: mouse => {
+        if (mouse.button !== Qt.LeftButton)
+            return;
+        if (menu.visible)
+            menu.hidePanel();
+        else
+            menu.openFrom(root);
     }
 
-    function setActivePopupAndGrabFocus(popupWindow) {
-        powerButton.activePopup = popupWindow;
-        focusGrab.active = Compositor.useHyprlandFocusGrab;
-        Logger.info("Focus grabbed for power popup");
-    }
-
-    function releaseFocus() {
-        focusGrab.active = false;
-        powerButton.activePopup = null;
-        popupLoader.active = false;
-        Logger.info("Focus released");
-    }
-
-    function showPowerPopup() {
-        popupLoader.active = true;
-    }
-
-    Loader {
-        id: popupLoader
-        active: false
-
-        sourceComponent: PowerPopup {
-            Component.onCompleted: {
-                showPanel(powerButton);
-            }
-
-            onPanelOpened: window => powerButton.setActivePopupAndGrabFocus(window)
-            onPanelClosed: powerButton.releaseFocus()
-        }
-    }
-
-    Text {
-        anchors.centerIn: parent
-        text: Icons.power
-        font.family: BarStyle.iconFont
-        font.pixelSize: BarStyle.iconSize
-        color: BarStyle.iconColor
-    }
-
-    MouseArea {
-        id: mouseArea
-        anchors.fill: parent
-        hoverEnabled: true
-        cursorShape: Qt.PointingHandCursor
-        onClicked: {
-            if (powerButton.activePopup) {
-                powerButton.activePopup.hidePanel();
-            } else {
-                powerButton.showPowerPopup();
-            }
-            Logger.info("Power menu clicked");
-        }
-    }
-
-    states: State {
-        name: "hovered"
-        when: mouseArea.containsMouse
-        PropertyChanges {
-            target: powerButton
-            color: BarStyle.buttonBackgroundHover
-        }
-    }
-
-    transitions: Transition {
-        ColorAnimation {
-            duration: 150
-            easing.type: Easing.InOutQuad
-        }
+    Icon {
+        text: Lucide.power
     }
 }

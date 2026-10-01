@@ -5,19 +5,26 @@ import Quickshell.Io
 import "../../Config"
 import "../../Services"
 import "../../Utils"
+import "../../Components"
 
 PanelWindow {
     id: root
 
     property int action: RegionSelector.SnipAction.Copy
+    property bool recordAudio: false
+    property bool recordMic: false
     signal dismiss
     signal actionChangeRequested(int newAction)
+    signal audioToggleRequested
+    signal micToggleRequested
 
     visible: true
     color: "transparent"
     WlrLayershell.namespace: "bidshell:regionselector"
     WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
+    // Only the focused monitor's window takes the keyboard (as in DankMaterialShell's overview);
+    // with Exclusive on every window, Hyprland gave keys to a random one and Space/F were ignored.
+    WlrLayershell.keyboardFocus: Compositor.focusedMonitorName === screen?.name ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
     exclusionMode: ExclusionMode.Ignore
 
     anchors {
@@ -55,11 +62,9 @@ PanelWindow {
 
     // Adjustment mode (after initial drag, before confirming)
     property bool adjusting: false
-    property bool editMode: false  // When true, snip opens in Swappy instead of copying
-    property bool saveMode: false  // When true, save directly to file instead of clipboard
-    property bool lensMode: false  // When true, send to Google Lens for visual search
-    property bool ocrMode: false   // When true, extract text via Tesseract OCR
-    property bool ocrAllLangs: false // When true, use all installed languages; otherwise English only
+    // What snip() does with the grabbed region: "copy" (clipboard), "edit" (Swappy),
+    // "save" (~/Pictures/Screenshots), "lens" (Google Lens) or "ocr" (scripts/ocr, set up by `qs ipc call setup ocr`)
+    property string snipMode: "copy"
     property bool ocrTranslate: false // When true, open OCR result in Kagi Translate
     property string adjustHandle: ""  // Which handle is being dragged: "", "move", "nw", "ne", "sw", "se", "n", "s", "e", "w"
     property real adjustStartX: 0
@@ -69,48 +74,36 @@ PanelWindow {
     property real adjustStartRegionW: 0
     property real adjustStartRegionH: 0
 
-    // Window regions from HyprlandData, sorted for proper z-order (floating above tiled)
+    // Window regions on this workspace, sorted for proper z-order (floating above tiled); each is
+    // the part on this screen, as a scrolling layout puts windows past it. None where the
+    // compositor gives no window positions: then only a dragged region can be taken.
     readonly property var windowRegions: {
-        const workspaceWindows = Compositor.windowList.filter(w => w.workspace.id === root.effectiveWorkspaceId);
+        if (!Compositor.hasWindowGeometry)
+            return [];
+        const workspaceWindows = Compositor.shownWindows(root.effectiveWorkspaceId);
+        const toRegion = w => {
+            const left = Math.max(0, w.at[0] - root.monitorOffsetX);
+            const top = Math.max(0, w.at[1] - root.monitorOffsetY);
+            const right = Math.min(root.width, w.at[0] - root.monitorOffsetX + w.size[0]);
+            const bottom = Math.min(root.height, w.at[1] - root.monitorOffsetY + w.size[1]);
+            return {
+                at: [left, top],
+                size: [right - left, bottom - top],
+                class: w.class,
+                title: w.title,
+                floating: w.floating
+            };
+        };
+        const onScreen = region => region.size[0] > 0 && region.size[1] > 0;
 
-        // If any window is fullscreen or maximized, only show that window (others are occluded)
-        // fullscreen: 1 = real fullscreen, 2 = maximized
-        const fullscreenWindow = workspaceWindows.find(w => w.fullscreen > 0);
-        if (fullscreenWindow) {
-            return [
-                {
-                    at: [fullscreenWindow.at[0] - root.monitorOffsetX, fullscreenWindow.at[1] - root.monitorOffsetY],
-                    size: fullscreenWindow.size,
-                    class: fullscreenWindow.class,
-                    title: fullscreenWindow.title,
-                    floating: fullscreenWindow.floating
-                }
-            ];
-        }
+        const coveringWindow = workspaceWindows.find(w => Compositor.coversWorkspace(w));
+        if (coveringWindow)
+            return [toRegion(coveringWindow)].filter(onScreen);
 
-        // Sort: floating windows first (higher z-order), then tiled
-        // Among floating windows, smaller ones first (easier to target, likely on top)
-        const sorted = [...workspaceWindows].sort((a, b) => {
-            if (a.floating && !b.floating)
-                return -1;
-            if (!a.floating && b.floating)
-                return 1;
-            // Both floating: smaller area first (higher priority for targeting)
-            if (a.floating && b.floating) {
-                const areaA = a.size[0] * a.size[1];
-                const areaB = b.size[0] * b.size[1];
-                return areaA - areaB;
-            }
-            return 0;
-        });
-
-        return sorted.map(w => ({
-                    at: [w.at[0] - root.monitorOffsetX, w.at[1] - root.monitorOffsetY],
-                    size: w.size,
-                    class: w.class,
-                    title: w.title,
-                    floating: w.floating
-                }));
+        // Floating windows first (higher z-order), and among them smaller ones first
+        // (easier to target, likely on top)
+        const area = w => w.size[0] * w.size[1];
+        return workspaceWindows.sort((a, b) => (!!b.floating - !!a.floating) || (a.floating ? area(a) - area(b) : 0)).map(toRegion).filter(onScreen);
     }
 
     // Floating windows only (for computing cutouts in tiled windows)
@@ -130,14 +123,19 @@ PanelWindow {
     // Tracks whether the cursor is on THIS monitor. Seeded from a Compositor
     // probe on show (containsMouse alone isn't reliable — Wayland doesn't send
     // an enter event when a sibling MouseArea just becomes visible, so hover
-    // starts out false until the user wiggles the mouse). Key-press guards
-    // use this instead of root.cursorOnThisMonitor directly.
+    // starts out false until the user wiggles the mouse).
     property bool cursorOnThisMonitor: false
+    // False (then undefined) once destroyed: `root` itself stays truthy in a late callback, its functions do not
+    property bool alive: true
+    Component.onDestruction: alive = false
 
     function _probeCursorMonitor() {
         if (!root.visible || !root.preparationDone)
             return;
         Compositor.getCursorPosition((globalX, globalY) => {
+            // The reply is async; the window may be gone by then.
+            if (!root?.alive)
+                return;
             const localX = globalX - root.monitorOffsetX;
             const localY = globalY - root.monitorOffsetY;
             root.cursorOnThisMonitor = localX >= 0 && localX < root.width && localY >= 0 && localY < root.height;
@@ -145,20 +143,11 @@ PanelWindow {
         });
     }
 
-    // Timing instrumentation
-    property double _t0: Date.now()
-    function _tlog(label) {
-        Logger.trace(`RegionSelector[${screen.name}] +${Date.now() - root._t0}ms ${label}`);
-    }
-
-    onVisibleChanged: root._tlog(`visible=${visible}`)
-
     // Ensure screenshot temp directory exists (saveToFile won't mkdir)
     Process {
         id: mkdirProc
         running: true
         command: ["mkdir", "-p", root.screenshotDir]
-        onRunningChanged: root._tlog(`mkdir running=${running}`)
     }
 
     // UI is interactive as soon as the screencopy buffer arrives (~15ms).
@@ -169,11 +158,9 @@ PanelWindow {
     Connections {
         target: screencopyView
         function onHasContentChanged() {
-            root._tlog(`ScreencopyView hasContent=${screencopyView.hasContent}`);
             if (!screencopyView.hasContent || root.preparationDone)
                 return;
             root.preparationDone = true;
-            Logger.debug("RegionSelector: screencopy ready for", root.screen.name);
         }
     }
 
@@ -195,10 +182,15 @@ PanelWindow {
         property real grabH: 1
         property real grabScale: 1
 
+        // grabToImage() renders the item at the window's device pixel ratio (the monitor scale), so the item
+        // gets the logical size of the rounded native size: the image comes out exactly nativeW x nativeH.
+        // (A native item size would be scaled twice; a fractional logical size would be truncated.)
+        readonly property int nativeW: Math.max(1, Math.round(grabW * grabScale))
+        readonly property int nativeH: Math.max(1, Math.round(grabH * grabScale))
         sourceRect: Qt.rect(grabX, grabY, grabW, grabH)
-        width: Math.max(1, Math.round(grabW * grabScale))
-        height: Math.max(1, Math.round(grabH * grabScale))
-        textureSize: Qt.size(width, height)
+        width: nativeW / grabScale
+        height: nativeH / grabScale
+        textureSize: Qt.size(nativeW, nativeH)
     }
 
     // Grab the given logical-coord region to `screenshotPath` at native
@@ -213,17 +205,21 @@ PanelWindow {
             onDone(false);
             return;
         }
-        regionCrop.grabScale = root.monitorScale;
-        regionCrop.grabX = rx;
-        regionCrop.grabY = ry;
-        regionCrop.grabW = rw;
-        regionCrop.grabH = rh;
+        // Snap the edges to the monitor's pixel grid: the pointer gives sub-pixel positions, and a region that
+        // starts between pixels is sampled across two of them, which blurs every sharp edge in the image.
+        const scale = root.monitorScale;
+        const left = Math.round(rx * scale);
+        const top = Math.round(ry * scale);
+        const right = Math.round((rx + rw) * scale);
+        const bottom = Math.round((ry + rh) * scale);
+        regionCrop.grabScale = scale;
+        regionCrop.grabX = left / scale;
+        regionCrop.grabY = top / scale;
+        regionCrop.grabW = Math.max(1, right - left) / scale;
+        regionCrop.grabH = Math.max(1, bottom - top) / scale;
         regionCrop.scheduleUpdate();
-        const nativeW = regionCrop.width;
-        const nativeH = regionCrop.height;
         // One tick so ShaderEffectSource re-captures with the new sourceRect
         Qt.callLater(() => {
-            const t0 = Date.now();
             const ok = regionCrop.grabToImage(result => {
                 if (!result) {
                     Logger.error("RegionSelector: region grabToImage returned null");
@@ -236,9 +232,8 @@ PanelWindow {
                     onDone(false);
                     return;
                 }
-                root._tlog(`region saved (${nativeW}x${nativeH}) in ${Date.now() - t0}ms`);
                 onDone(true);
-            }, Qt.size(nativeW, nativeH));
+            });
             if (!ok) {
                 Logger.error("RegionSelector: region grabToImage returned false");
                 onDone(false);
@@ -249,6 +244,85 @@ PanelWindow {
     // Snip process
     Process {
         id: snipProc
+    }
+
+    // OCR stays on screen: the lines found appear over the frozen region, each fills in as it is
+    // read, and the window closes once the text is copied. Esc cancels.
+    ListModel {
+        id: ocrLines
+    }
+
+    function readText(file) {
+        ocrLines.clear();
+        ocrProc.file = file;
+        ocrProc.text = "";
+        ocrProc.cancelled = false;
+        // The script's venv: without it (not set up yet, or broken by a Python upgrade) bash exits 127
+        ocrProc.command = ["bash", "-c", 'exec "${XDG_DATA_HOME:-$HOME/.local/share}/bidshell/ocr/venv/bin/python" "$0" "$1" "$2"', Qt.resolvedUrl("../../scripts/ocr/ocr.py").toString().replace("file://", ""), Config.options.ocr.model, file];
+        ocrProc.running = true;
+    }
+
+    function cancelReading() {
+        ocrProc.cancelled = true;
+        ocrProc.running = false;
+    }
+
+    Process {
+        id: ocrProc
+
+        property string file
+        property string text
+        property bool cancelled
+
+        stdout: SplitParser {
+            onRead: line => {
+                let message;
+                try {
+                    message = JSON.parse(line);
+                } catch (e) {
+                    Logger.error("OCR output:", line);
+                    return;
+                }
+                if (message.boxes) {
+                    // Image pixels of the grabbed region to this window's logical coordinates
+                    for (const [x, y, w, h] of message.boxes)
+                        ocrLines.append({
+                            lineX: regionCrop.grabX + x / regionCrop.grabScale,
+                            lineY: regionCrop.grabY + y / regionCrop.grabScale,
+                            lineWidth: w / regionCrop.grabScale,
+                            lineHeight: h / regionCrop.grabScale,
+                            read: false
+                        });
+                } else if (message.read) {
+                    for (const i of message.read)
+                        ocrLines.setProperty(i, "read", true);
+                } else if (message.text !== undefined) {
+                    ocrProc.text = message.text;
+                }
+            }
+        }
+        stderr: StdioCollector {
+            id: ocrErrors
+        }
+
+        onExited: code => {
+            Quickshell.execDetached(["rm", "-f", file]);
+            if (cancelled) {
+                root.dismiss();
+                return;
+            }
+            if (code === 127) {
+                Quickshell.execDetached(["notify-send", "-a", "OCR", "OCR is not set up", "Run: qs ipc call setup ocr"]);
+            } else if (code !== 0) {
+                Logger.error("OCR failed:", ocrErrors.text);
+                Quickshell.execDetached(["notify-send", "-a", "OCR", "OCR failed", ocrErrors.text.trim().split("\n").pop() ?? ""]);
+            } else if (text !== "") {
+                Quickshell.execDetached(["wl-copy", "--", text]);
+                if (root.ocrTranslate)
+                    Quickshell.execDetached(["xdg-open", `https://translate.kagi.com/?from=auto&to=&text=${encodeURIComponent(text)}`]);
+            }
+            root.dismiss();
+        }
     }
 
     // Shrink-to-content process. The file at screenshotPath is now the cropped
@@ -273,7 +347,6 @@ PanelWindow {
                     root.regionY = (result.y + shrinkProc.cropOffsetY) / shrinkProc.scale;
                     root.regionWidth = result.width / shrinkProc.scale;
                     root.regionHeight = result.height / shrinkProc.scale;
-                    Logger.debug("Shrink-to-content: new bounds", result);
                 } catch (e) {
                     Logger.error("Shrink-to-content parse error:", e, data);
                 }
@@ -415,6 +488,36 @@ PanelWindow {
         }
     }
 
+    readonly property bool canSnip: adjusting && regionWidth > 0 && regionHeight > 0 && cursorOnThisMonitor
+    readonly property bool fullscreenSelected: adjusting && regionX === 0 && regionY === 0 && regionWidth === width && regionHeight === height
+
+    function clearSelection() {
+        root.adjusting = false;
+        root.regionWidth = 0;
+        root.regionHeight = 0;
+    }
+
+    // The whole monitor becomes the selection, so every output and the record options work on it,
+    // and the handles can still trim it; again clears it
+    function toggleFullscreen() {
+        if (root.fullscreenSelected) {
+            root.clearSelection();
+            return;
+        }
+        root.regionX = 0;
+        root.regionY = 0;
+        root.regionWidth = root.width;
+        root.regionHeight = root.height;
+        root.adjusting = true;
+    }
+
+    function snipAs(mode, translate = false) {
+        root.snipping = true;
+        root.snipMode = mode;
+        root.ocrTranslate = translate;
+        root.snip();
+    }
+
     function snip() {
         if (root.regionWidth <= 0 || root.regionHeight <= 0) {
             // No region - try to find window at click position
@@ -427,17 +530,10 @@ PanelWindow {
             }
         }
 
-        const effectiveAction = root.action;
-
-        const rwNative = Math.round(root.regionWidth * root.monitorScale);
-        const rhNative = Math.round(root.regionHeight * root.monitorScale);
-
-        // Record mode: wf-recorder captures live, no file grab needed.
-        if (effectiveAction === RegionSelector.SnipAction.Record) {
-            const slurpRegion = `${Math.round(root.regionX + root.monitorOffsetX)},${Math.round(root.regionY + root.monitorOffsetY)} ${rwNative}x${rhNative}`;
-            snipProc.command = ["bash", "-c", `mkdir -p ~/Videos/Screencasts && wf-recorder -g '${slurpRegion}' -c h264_vaapi -f ~/Videos/Screencasts/recording_$(date +%Y-%m-%d_%H-%M-%S).mp4`];
-            Logger.info("RegionSelector: Starting recording");
-            snipProc.startDetached();
+        // Record mode: the recorder captures live, no file grab needed. Lens, OCR, Edit and Save
+        // still take a screenshot of the region.
+        if (root.action === RegionSelector.SnipAction.Record && root.snipMode === "copy") {
+            Recording.start(Math.round(root.regionX + root.monitorOffsetX), Math.round(root.regionY + root.monitorOffsetY), Math.round(root.regionWidth), Math.round(root.regionHeight), root.recordAudio, root.recordMic);
             root.dismiss();
             return;
         }
@@ -454,23 +550,17 @@ PanelWindow {
             const f = root.screenshotPath;
             const cleanup = `rm '${f}'`;
             let cmd;
-            if (root.saveMode) {
+            if (root.snipMode === "save") {
                 cmd = `mkdir -p ~/Pictures/Screenshots && cp '${f}' ~/Pictures/Screenshots/screenshot_$(date +%Y-%m-%d_%H-%M-%S).png && ${cleanup}`;
-                Logger.info("RegionSelector: Saving screenshot to ~/Pictures/Screenshots");
-            } else if (root.lensMode) {
+            } else if (root.snipMode === "lens") {
                 cmd = `imageLink=$(curl -sF files[]=@'${f}' 'https://uguu.se/upload' | jq -r '.files[0].url') && xdg-open "https://lens.google.com/uploadbyurl?url=\${imageLink}" && ${cleanup}`;
-                Logger.info("RegionSelector: Sending region to Google Lens");
-            } else if (root.ocrMode) {
-                const langFlag = root.ocrAllLangs ? `$(tesseract --list-langs 2>/dev/null | tail -n +2 | paste -sd+)` : "eng";
-                const base = `tesseract '${f}' stdout -l ${langFlag}`;
-                cmd = root.ocrTranslate ? `text=$(${base}) && printf '%s' "$text" | wl-copy && xdg-open "https://translate.kagi.com/?from=auto&to=&text=$(printf '%s' "$text" | jq -sRr @uri)" && ${cleanup}` : `${base} | wl-copy && ${cleanup}`;
-                Logger.info(`RegionSelector: OCR (${root.ocrAllLangs ? "all" : "eng"}${root.ocrTranslate ? ", translate" : ""})`);
-            } else if (root.editMode) {
+            } else if (root.snipMode === "ocr") {
+                root.readText(f);
+                return;
+            } else if (root.snipMode === "edit") {
                 cmd = `swappy -f '${f}' && ${cleanup}`;
-                Logger.info("RegionSelector: Opening region in swappy");
             } else {
                 cmd = `wl-copy --type image/png < '${f}' && ${cleanup}`;
-                Logger.info("RegionSelector: Copying region to clipboard");
             }
             snipProc.command = ["bash", "-c", cmd];
             snipProc.startDetached();
@@ -491,20 +581,45 @@ PanelWindow {
     }
 
     // Loading spinner shown between snip confirm and actual window dismiss.
-    Text {
+    Spinner {
         anchors.centerIn: parent
         visible: root.snipping
-        text: Icons.spinner
-        font.family: Theme.fontFamilyIcons
-        font.pixelSize: 160
+        size: 160
         color: Theme.primary
         z: 10
-        RotationAnimation on rotation {
-            from: 0
-            to: 360
-            duration: 900
-            loops: Animation.Infinite
-            running: root.snipping
+    }
+
+    // The lines OCR found, over the frozen region; each fills in once read
+    Item {
+        anchors.fill: parent
+        visible: ocrLines.count > 0
+        focus: ocrProc.running
+        z: 5
+
+        Keys.onEscapePressed: root.cancelReading()
+
+        Repeater {
+            model: ocrLines
+
+            Rectangle {
+                required property var model
+
+                // A little room around the glyphs
+                x: model.lineX - 2
+                y: model.lineY - 2
+                width: model.lineWidth + 4
+                height: model.lineHeight + 4
+                radius: 3
+                color: model.read ? Theme.alpha(Theme.primary, 0.3) : "transparent"
+                border.width: 1
+                border.color: Theme.alpha(Theme.primary, 0.8)
+
+                Behavior on color {
+                    ColorAnimation {
+                        duration: 150
+                    }
+                }
+            }
         }
     }
 
@@ -520,44 +635,25 @@ PanelWindow {
         Keys.onPressed: event => {
             switch (event.key) {
             case Qt.Key_Escape:
-                root.dismiss();
+                if (toolbar.ocrMenuOpen)
+                    toolbar.ocrMenuOpen = false;
+                else
+                    root.dismiss();
                 break;
             case Qt.Key_Space:
             case Qt.Key_Return:
             case Qt.Key_Enter:
-                // Confirm and copy to clipboard
-                if (root.adjusting && root.regionWidth > 0 && root.regionHeight > 0 && root.cursorOnThisMonitor) {
-                    root.snipping = true;
-                    root.editMode = false;
-                    root.lensMode = false;
-                    root.ocrMode = false;
-                    root.ocrTranslate = false;
-                    root.snip();
-                }
+                if (root.canSnip)
+                    root.snipAs("copy");
                 break;
             case Qt.Key_E:
-                // Confirm and open in Swappy for editing
-                if (root.adjusting && root.regionWidth > 0 && root.regionHeight > 0 && root.cursorOnThisMonitor) {
-                    root.snipping = true;
-                    root.editMode = true;
-                    root.lensMode = false;
-                    root.ocrMode = false;
-                    root.ocrTranslate = false;
-                    root.snip();
-                }
+                if (root.canSnip)
+                    root.snipAs("edit");
                 break;
             case Qt.Key_S:
                 if (event.modifiers & Qt.ControlModifier) {
-                    // Ctrl+S: Save directly to file
-                    if (root.adjusting && root.regionWidth > 0 && root.regionHeight > 0 && root.cursorOnThisMonitor) {
-                        root.snipping = true;
-                        root.saveMode = true;
-                        root.editMode = false;
-                        root.lensMode = false;
-                        root.ocrMode = false;
-                        root.ocrTranslate = false;
-                        root.snip();
-                    }
+                    if (root.canSnip)
+                        root.snipAs("save");
                 } else {
                     // Plain S: Switch to Screenshot mode
                     root.actionChangeRequested(RegionSelector.SnipAction.Copy);
@@ -566,21 +662,17 @@ PanelWindow {
             case Qt.Key_R:
                 root.actionChangeRequested(RegionSelector.SnipAction.Record);
                 break;
+            case Qt.Key_A:
+                if (root.action === RegionSelector.SnipAction.Record)
+                    root.audioToggleRequested();
+                break;
+            case Qt.Key_M:
+                if (root.action === RegionSelector.SnipAction.Record)
+                    root.micToggleRequested();
+                break;
             case Qt.Key_F:
-                // Select fullscreen (Shift+F = edit in swappy)
-                // Only capture if mouse is on this monitor
-                if (!root.cursorOnThisMonitor)
-                    break;
-                root.snipping = true;
-                root.regionX = 0;
-                root.regionY = 0;
-                root.regionWidth = root.width;
-                root.regionHeight = root.height;
-                root.editMode = (event.modifiers & Qt.ShiftModifier);
-                root.lensMode = false;
-                root.ocrMode = false;
-                root.ocrTranslate = false;
-                root.snip();
+                if (root.cursorOnThisMonitor)
+                    root.toggleFullscreen();
                 break;
             case Qt.Key_C:
                 // Shrink selection to content bounds
@@ -589,28 +681,13 @@ PanelWindow {
                 }
                 break;
             case Qt.Key_L:
-                // Send to Google Lens for visual search
-                if (root.adjusting && root.regionWidth > 0 && root.regionHeight > 0 && root.cursorOnThisMonitor) {
-                    root.snipping = true;
-                    root.editMode = false;
-                    root.lensMode = true;
-                    root.ocrMode = false;
-                    root.ocrTranslate = false;
-                    root.snip();
-                }
+                if (root.canSnip)
+                    root.snipAs("lens");
                 break;
             case Qt.Key_O:
-                // Extract text via Tesseract OCR
-                // O = English, Shift+O = all languages, Ctrl+O = all languages + Kagi Translate
-                if (root.adjusting && root.regionWidth > 0 && root.regionHeight > 0 && root.cursorOnThisMonitor) {
-                    root.snipping = true;
-                    root.editMode = false;
-                    root.lensMode = false;
-                    root.ocrMode = true;
-                    root.ocrTranslate = (event.modifiers & Qt.ControlModifier);
-                    root.ocrAllLangs = (event.modifiers & Qt.ShiftModifier) || root.ocrTranslate;
-                    root.snip();
-                }
+                // O = copy the text, Ctrl+O = also open it in Kagi Translate
+                if (root.canSnip && !(event.modifiers & Qt.ShiftModifier))
+                    root.snipAs("ocr", !!(event.modifiers & Qt.ControlModifier));
                 break;
             }
         }
@@ -621,9 +698,14 @@ PanelWindow {
             acceptedButtons: Qt.LeftButton
             hoverEnabled: true
 
-            // Once Wayland starts delivering hover events, keep the shared
-            // flag in sync with the real hover state.
-            onContainsMouseChanged: root.cursorOnThisMonitor = containsMouse
+            // A spurious leave arrives while the per-monitor surfaces map, with the cursor
+            // still here; trusting it left Space/F dead until the mouse moved. Re-probe instead.
+            onContainsMouseChanged: {
+                if (containsMouse)
+                    root.cursorOnThisMonitor = true;
+                else
+                    root._probeCursorMonitor();
+            }
 
             Component.onCompleted: root._probeCursorMonitor()
             Connections {
@@ -647,9 +729,7 @@ PanelWindow {
                         root.adjustStartRegionH = root.regionHeight;
                     } else {
                         // Clicked outside - start new selection
-                        root.adjusting = false;
-                        root.regionWidth = 0;
-                        root.regionHeight = 0;
+                        root.clearSelection();
                         root.dragStartX = mouse.x;
                         root.dragStartY = mouse.y;
                         root.draggingX = mouse.x;
@@ -722,70 +802,9 @@ PanelWindow {
                 regionHeight: root.regionHeight
                 mouseX: mouseArea.mouseX
                 mouseY: mouseArea.mouseY
+                monitorScale: root.monitorScale
+                showHandles: root.adjusting
                 visible: root.regionWidth > 2 && root.regionHeight > 2 && !root.snipping
-            }
-
-            // Corner bracket handles (only in adjusting mode)
-            Item {
-                visible: root.adjusting && root.regionWidth > 0 && !root.snipping
-                z: 10
-
-                readonly property int bracketLength: 20
-                readonly property int bracketThickness: 5
-                readonly property color bracketColor: Theme.textColor
-
-                // L-shaped corner brackets
-                Repeater {
-                    model: [
-                        // nw: horizontal goes right, vertical goes down
-                        {
-                            x: root.regionX,
-                            y: root.regionY,
-                            hDir: 1,
-                            vDir: 1
-                        },
-                        // ne: horizontal goes left, vertical goes down
-                        {
-                            x: root.regionX + root.regionWidth,
-                            y: root.regionY,
-                            hDir: -1,
-                            vDir: 1
-                        },
-                        // sw: horizontal goes right, vertical goes up
-                        {
-                            x: root.regionX,
-                            y: root.regionY + root.regionHeight,
-                            hDir: 1,
-                            vDir: -1
-                        },
-                        // se: horizontal goes left, vertical goes up
-                        {
-                            x: root.regionX + root.regionWidth,
-                            y: root.regionY + root.regionHeight,
-                            hDir: -1,
-                            vDir: -1
-                        }
-                    ]
-                    Item {
-                        required property var modelData
-                        // Horizontal arm of L
-                        Rectangle {
-                            x: modelData.hDir > 0 ? modelData.x : modelData.x - parent.parent.bracketLength
-                            y: modelData.vDir > 0 ? modelData.y : modelData.y - parent.parent.bracketThickness
-                            width: parent.parent.bracketLength
-                            height: parent.parent.bracketThickness
-                            color: parent.parent.bracketColor
-                        }
-                        // Vertical arm of L
-                        Rectangle {
-                            x: modelData.hDir > 0 ? modelData.x : modelData.x - parent.parent.bracketThickness
-                            y: modelData.vDir > 0 ? modelData.y : modelData.y - parent.parent.bracketLength
-                            width: parent.parent.bracketThickness
-                            height: parent.parent.bracketLength
-                            color: parent.parent.bracketColor
-                        }
-                    }
-                }
             }
 
             // Window region highlights (hidden during adjusting or dragging)
@@ -841,76 +860,35 @@ PanelWindow {
                 }
             }
 
-            // Bottom toolbar
+            // Closes the OCR menu on a press anywhere else, without starting a selection
+            MouseArea {
+                anchors.fill: parent
+                visible: toolbar.ocrMenuOpen
+                z: 19
+                onPressed: toolbar.ocrMenuOpen = false
+            }
+
+            // Bottom toolbar, snapped to whole physical pixels so it stays sharp on scaled monitors
             Toolbar {
                 id: toolbar
-                anchors {
-                    horizontalCenter: parent.horizontalCenter
-                    bottom: parent.bottom
-                    bottomMargin: 20
-                }
+                z: 20
+                x: Math.round((parent.width - width) / 2 * root.monitorScale) / root.monitorScale
+                y: Math.round((parent.height - height - 60) * root.monitorScale) / root.monitorScale
+                width: implicitWidth
+                height: implicitHeight
                 action: root.action
                 adjusting: root.adjusting
+                fullscreen: root.fullscreenSelected
+                recordAudio: root.recordAudio
+                recordMic: root.recordMic
+                onAudioToggled: root.audioToggleRequested()
+                onMicToggled: root.micToggleRequested()
                 onDismiss: root.dismiss()
+                onFullscreenRequested: root.toggleFullscreen()
                 onCropRequested: root.shrinkToContent()
-                onLensRequested: {
-                    root.snipping = true;
-                    root.editMode = false;
-                    root.lensMode = true;
-                    root.ocrMode = false;
-                    root.ocrTranslate = false;
-                    root.snip();
-                }
-                onOcrRequested: {
-                    root.snipping = true;
-                    root.editMode = false;
-                    root.lensMode = false;
-                    root.ocrMode = true;
-                    root.ocrAllLangs = false;
-                    root.ocrTranslate = false;
-                    root.snip();
-                }
-                onOcrAllRequested: {
-                    root.snipping = true;
-                    root.editMode = false;
-                    root.lensMode = false;
-                    root.ocrMode = true;
-                    root.ocrAllLangs = true;
-                    root.ocrTranslate = false;
-                    root.snip();
-                }
-                onTranslateRequested: {
-                    root.snipping = true;
-                    root.editMode = false;
-                    root.lensMode = false;
-                    root.ocrMode = true;
-                    root.ocrAllLangs = true;
-                    root.ocrTranslate = true;
-                    root.snip();
-                }
-                onActionRequested: newAction => {
-                    if (newAction === -1) {
-                        // Fullscreen
-                        root.snipping = true;
-                        root.regionX = 0;
-                        root.regionY = 0;
-                        root.regionWidth = root.width;
-                        root.regionHeight = root.height;
-                        root.editMode = false;
-                        root.lensMode = false;
-                        root.ocrMode = false;
-                        root.ocrTranslate = false;
-                        root.snip();
-                    } else {
-                        root.action = newAction;
-                    }
-                }
+                onSnipRequested: (mode, translate) => root.snipAs(mode, translate)
+                onActionRequested: newAction => root.actionChangeRequested(newAction)
             }
         }
-    }
-
-    Component.onCompleted: {
-        root._tlog("Component.onCompleted");
-        Logger.debug(`RegionSelector: Window initialized on ${screen.name}`);
     }
 }

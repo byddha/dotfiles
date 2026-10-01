@@ -25,7 +25,6 @@ Singleton {
     readonly property bool charging: state === UPowerDeviceState.Charging
     readonly property bool discharging: state === UPowerDeviceState.Discharging
     readonly property bool full: state === UPowerDeviceState.FullyCharged
-    readonly property bool pluggedIn: charging || state === UPowerDeviceState.PendingCharge || full
 
     // Time estimates (in seconds)
     readonly property int timeToEmpty: available ? (UPower.displayDevice.timeToEmpty ?? 0) : 0
@@ -40,54 +39,6 @@ Singleton {
 
     readonly property bool isLow: available && !charging && percentage <= lowThreshold
     readonly property bool isCritical: available && !charging && percentage <= criticalThreshold
-
-    // Get appropriate icon based on state
-    function getIcon(): string {
-        if (!available)
-            return Icons.batteryAlert;
-
-        if (charging) {
-            if (percentage >= 95)
-                return Icons.batteryCharging100;
-            if (percentage >= 85)
-                return Icons.batteryCharging90;
-            if (percentage >= 75)
-                return Icons.batteryCharging80;
-            if (percentage >= 65)
-                return Icons.batteryCharging70;
-            if (percentage >= 55)
-                return Icons.batteryCharging60;
-            if (percentage >= 45)
-                return Icons.batteryCharging50;
-            if (percentage >= 35)
-                return Icons.batteryCharging40;
-            if (percentage >= 25)
-                return Icons.batteryCharging30;
-            if (percentage >= 15)
-                return Icons.batteryCharging20;
-            return Icons.batteryCharging10;
-        } else {
-            if (percentage >= 95)
-                return Icons.battery100;
-            if (percentage >= 85)
-                return Icons.battery90;
-            if (percentage >= 75)
-                return Icons.battery80;
-            if (percentage >= 65)
-                return Icons.battery70;
-            if (percentage >= 55)
-                return Icons.battery60;
-            if (percentage >= 45)
-                return Icons.battery50;
-            if (percentage >= 35)
-                return Icons.battery40;
-            if (percentage >= 25)
-                return Icons.battery30;
-            if (percentage >= 15)
-                return Icons.battery20;
-            return Icons.battery10;
-        }
-    }
 
     // Format time as "Xh Ym"
     function formatTime(seconds: int): string {
@@ -149,9 +100,5 @@ Singleton {
         } else if (!isCritical) {
             _notifiedCritical = false;
         }
-    }
-
-    Component.onCompleted: {
-        Logger.info(available ? `Service initialized: ${percentage}%` : "No battery detected");
     }
 }

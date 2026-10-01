@@ -17,8 +17,8 @@ import ".."
 Singleton {
     id: root
 
+    // Called by shell.qml to instantiate the singleton eagerly.
     function init() {
-        Logger.info("Service initialized");
     }
 
     // Cache directory and file
@@ -35,7 +35,8 @@ Singleton {
     readonly property alias data: adapter
 
     // Helper property for UI
-    readonly property bool weatherReady: Config.options.calendar?.weather?.enabled && adapter.weather !== null
+    readonly property string location: "Bucharest"
+    readonly property bool weatherReady: adapter.weather !== null
 
     // File view for caching
     FileView {
@@ -44,7 +45,6 @@ Singleton {
         printErrors: false
 
         onLoaded: {
-            Logger.info("Loaded cached data");
             updateWeather();
         }
 
@@ -79,7 +79,7 @@ Singleton {
     Timer {
         id: updateTimer
         interval: 20 * 1000
-        running: Config.options.calendar?.weather?.enabled ?? false
+        running: true
         repeat: true
         onTriggered: updateWeather()
     }
@@ -92,16 +92,12 @@ Singleton {
      * Force weather refresh
      */
     function updateWeather() {
-        if (!(Config.options.calendar?.weather?.enabled ?? false)) {
-            return;
-        }
-
         if (isFetchingWeather) {
             Logger.warn("Weather is still fetching");
             return;
         }
 
-        const currentLocation = Config.options.calendar?.weather?.location ?? "London";
+        const currentLocation = root.location;
         const now = Math.floor(Date.now() / 1000);
 
         // Refresh if: no data, location changed, or cache expired
@@ -110,63 +106,50 @@ Singleton {
         }
     }
 
-    /**
-     * Get weather icon from WMO weather code
-     * Returns Nerd Font icon - use with Theme.fontFamilyIcons
-     */
-    function weatherSymbolFromCode(code) {
-        if (code === 0)
-            return Icons.weatherSunny;           // Clear sky
-        if (code === 1 || code === 2)
-            return Icons.weatherPartlyCloudy;    // Partly cloudy
-        if (code === 3)
-            return Icons.weatherCloudy;          // Overcast
-        if (code >= 45 && code <= 48)
-            return Icons.weatherFog;             // Fog
-        if (code >= 51 && code <= 67)
-            return Icons.weatherRainy;           // Drizzle/Rain
-        if (code >= 71 && code <= 77)
-            return Icons.weatherSnowy;           // Snow
-        if (code >= 80 && code <= 82)
-            return Icons.weatherRainy;           // Rain showers
-        if (code >= 85 && code <= 86)
-            return Icons.weatherSnowy;           // Snow showers
-        if (code >= 95 && code <= 99)
-            return Icons.weatherThunderstorm;    // Thunderstorm
-        return Icons.weatherCloudy;              // Default
+    // WMO weather code -> description
+    readonly property var wmoCodes: {
+        const table = {};
+        const add = (from, to, description) => {
+            for (let code = from; code <= to; code++)
+                table[code] = description;
+        };
+        add(0, 0, "Clear sky");
+        add(1, 1, "Mainly clear");
+        add(2, 2, "Partly cloudy");
+        add(3, 3, "Overcast");
+        add(45, 48, "Fog");
+        add(51, 55, "Drizzle");
+        add(56, 57, "Freezing drizzle");
+        add(61, 65, "Rain");
+        add(66, 67, "Freezing rain");
+        add(71, 77, "Snow");
+        add(80, 82, "Rain showers");
+        add(85, 86, "Snow showers");
+        add(95, 99, "Thunderstorm");
+        return table;
     }
 
-    /**
-     * Get weather description from WMO weather code
-     */
-    function weatherDescriptionFromCode(code) {
+    // Lucide glyph (Theme.fontIcons) for a WMO code
+    function glyphFromCode(code, isDay) {
         if (code === 0)
-            return "Clear sky";
-        if (code === 1)
-            return "Mainly clear";
-        if (code === 2)
-            return "Partly cloudy";
+            return isDay ? Lucide.sun : Lucide.moon;
+        if (code <= 2)
+            return isDay ? Lucide.cloudSun : Lucide.cloudMoon;
         if (code === 3)
-            return "Overcast";
-        if (code === 45 || code === 48)
-            return "Fog";
-        if (code >= 51 && code <= 55)
-            return "Drizzle";
-        if (code >= 56 && code <= 57)
-            return "Freezing drizzle";
-        if (code >= 61 && code <= 65)
-            return "Rain";
-        if (code >= 66 && code <= 67)
-            return "Freezing rain";
-        if (code >= 71 && code <= 77)
-            return "Snow";
-        if (code >= 80 && code <= 82)
-            return "Rain showers";
-        if (code >= 85 && code <= 86)
-            return "Snow showers";
-        if (code >= 95 && code <= 99)
-            return "Thunderstorm";
-        return "Unknown";
+            return Lucide.cloud;
+        if (code <= 48)
+            return Lucide.cloudFog;
+        if (code <= 57)
+            return Lucide.cloudDrizzle;
+        if (code <= 67 || (code >= 80 && code <= 82))
+            return Lucide.cloudRain;
+        if (code <= 86)
+            return Lucide.cloudSnow;
+        return Lucide.cloudLightning;
+    }
+
+    function weatherDescriptionFromCode(code) {
+        return wmoCodes[code] ?? "Unknown";
     }
 
     // ========================================================================
@@ -176,18 +159,12 @@ Singleton {
     function getFreshWeather() {
         isFetchingWeather = true;
 
-        const currentLocation = Config.options.calendar?.weather?.location ?? "London";
+        const currentLocation = root.location;
         const locationChanged = adapter.name !== currentLocation;
-
-        if (locationChanged) {
-            Logger.info("Location changed to: " + currentLocation);
-        }
 
         // Need geocoding?
         if (adapter.latitude === "" || adapter.longitude === "" || locationChanged) {
             geocodeLocation(currentLocation, function (lat, lon, name, country) {
-                Logger.info("Geocoded " + currentLocation + " to: " + lat + ", " + lon);
-
                 adapter.name = currentLocation;
                 adapter.latitude = lat.toString();
                 adapter.longitude = lon.toString();
@@ -200,8 +177,6 @@ Singleton {
     }
 
     function geocodeLocation(locationName, callback, errorCallback) {
-        Logger.info("Geocoding: " + locationName);
-
         const url = "https://geocoding-api.open-meteo.com/v1/search?name=" + encodeURIComponent(locationName) + "&count=1&language=en&format=json";
 
         const xhr = new XMLHttpRequest();
@@ -229,9 +204,7 @@ Singleton {
     }
 
     function fetchWeather(latitude, longitude) {
-        Logger.info("Fetching weather for: " + latitude + ", " + longitude);
-
-        const url = "https://api.open-meteo.com/v1/forecast?" + "latitude=" + latitude + "&longitude=" + longitude + "&current=temperature_2m,apparent_temperature,relative_humidity_2m,precipitation,weather_code,wind_speed_10m" + "&hourly=temperature_2m,weather_code,precipitation_probability" + "&daily=temperature_2m_max,temperature_2m_min,weather_code" + "&timezone=auto";
+        const url = "https://api.open-meteo.com/v1/forecast?" + "latitude=" + latitude + "&longitude=" + longitude + "&current=temperature_2m,apparent_temperature,is_day,relative_humidity_2m,precipitation,weather_code,wind_speed_10m" + "&hourly=temperature_2m,weather_code,precipitation_probability" + "&daily=temperature_2m_max,temperature_2m_min,weather_code" + "&timezone=auto";
 
         const xhr = new XMLHttpRequest();
         xhr.onreadystatechange = function () {
@@ -248,7 +221,6 @@ Singleton {
                         adapter.longitude = weatherData.longitude.toString();
 
                         isFetchingWeather = false;
-                        Logger.info("Weather data updated successfully");
                     } catch (e) {
                         errorCallback("WeatherService", "Failed to parse weather response: " + e);
                     }

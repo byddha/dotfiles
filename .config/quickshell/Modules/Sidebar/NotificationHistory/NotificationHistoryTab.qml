@@ -1,136 +1,62 @@
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Controls
 import "../../../Config"
 import "../../../Components"
 import "../../../Components/Notifications"
 import "../../../Services"
-import "../../../Utils"
 
-ColumnLayout {
+ReversibleGrid {
     id: root
 
-    spacing: Theme.spacingBase
+    property bool shown: false
+    readonly property int count: Notifications.list.length
 
-    onVisibleChanged: {
-        if (!visible) {
+    reversed: Placement.sidebarReversed
+
+    // The tab stays loaded, so start each visit with an empty search
+    onShownChanged: {
+        if (!shown)
             searchField.text = "";
-            searchField.focus = false;
-        }
     }
 
-    Connections {
-        target: Settings
-        function onSidebarVisibleChanged() {
-            searchField.text = "";
-            searchField.focus = false;
-        }
-    }
-
-    // Search field
-    TextField {
+    InputField {
         id: searchField
         Layout.fillWidth: true
-        Layout.preferredHeight: 36
-        leftPadding: Theme.spacingBase
-        placeholderText: "Search notifications..."
-        font.pixelSize: Theme.fontSizeBase
-        color: Theme.textColor
-        placeholderTextColor: Theme.textSecondary
-        verticalAlignment: Text.AlignVCenter
-        background: Rectangle {
-            radius: Theme.radiusBase
-            color: Theme.colLayer1
-            border.color: searchField.activeFocus ? Theme.primary : Theme.alpha(Theme.textColor, 0.1)
-            border.width: 1
-        }
+        Layout.margins: 12
+        // The smaller gap faces the list
+        Layout.topMargin: root.reversed ? 8 : 12
+        Layout.bottomMargin: root.reversed ? 12 : 8
+        visible: root.count > 0
+        icon: Lucide.search
+        placeholderText: "Search notifications…"
     }
 
-    // Notification list
-    Item {
+    NotificationListView {
+        id: list
         Layout.fillWidth: true
         Layout.fillHeight: true
-        Layout.minimumHeight: 100
-
-        // Click to unfocus search field
-        MouseArea {
-            anchors.fill: parent
-            onClicked: searchField.focus = false
-            propagateComposedEvents: true
-        }
-
-        NotificationListView {
-            id: notificationList
-            anchors.fill: parent
-            popup: false
-            searchText: searchField.text
-            visible: Notifications.list.length > 0
-        }
-
-        // Empty state
-        Item {
-            anchors.fill: parent
-            visible: Notifications.list.length === 0
-
-            ColumnLayout {
-                anchors.centerIn: parent
-                spacing: Theme.spacingBase
-
-                Text {
-                    Layout.alignment: Qt.AlignHCenter
-                    text: "No notifications"
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeBase
-                    color: Theme.textSecondary
-                }
-
-                Text {
-                    Layout.alignment: Qt.AlignHCenter
-                    text: Icons.bell
-                    font.family: Theme.fontFamilyIcons
-                    font.pixelSize: 64
-                    color: Theme.textSecondary
-                }
-            }
-        }
+        Layout.leftMargin: 12
+        Layout.rightMargin: 12
+        Layout.topMargin: root.reversed ? 12 : 0
+        Layout.bottomMargin: root.reversed ? 0 : 12
+        visible: root.count > 0
+        searchText: searchField.text
+        reversed: root.reversed
     }
 
-    // Bottom controls
-    RowLayout {
+    EmptyState {
         Layout.fillWidth: true
-        spacing: Theme.spacingBase / 2
-
-        // Notification count (disabled, just for display)
-        Rectangle {
-            Layout.fillWidth: true
-            height: 28
-            radius: Theme.radiusBase
-            color: Theme.colLayer1
-            border.color: Theme.alpha(Theme.textColor, 0.1)
-            border.width: 1
-
-            StyledText {
-                anchors.centerIn: parent
-                text: `${Notifications.list.length} notification${Notifications.list.length === 1 ? '' : 's'}`
-                font.pixelSize: Theme.fontSizeSmall
-                color: Theme.textSecondary
-            }
-        }
-
-        // Clear all button
-        Button {
-            Layout.preferredWidth: 80
-            text: "Clear All"
-            font.pixelSize: Theme.fontSizeSmall
-            enabled: Notifications.list.length > 0
-            onClicked: {
-                Notifications.discardAllNotifications();
-                Logger.info("All notifications cleared");
-            }
-        }
+        Layout.fillHeight: true
+        visible: root.count === 0
+        text: "No notifications"
+        icon: Lucide.bell
     }
 
-    Component.onCompleted: {
-        Logger.info("Notification history tab loaded");
+    ListFooter {
+        visible: root.count > 0
+        meta: searchField.text ? `${list.count} of ${root.count}` : `${root.count} notification${root.count === 1 ? "" : "s"}`
+        actionText: "Clear All"
+        actionIcon: Lucide.listX
+        onActionClicked: Notifications.discardAllNotifications()
     }
 }

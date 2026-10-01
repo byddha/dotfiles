@@ -1,74 +1,54 @@
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
 import "../../../Config"
 import "../../../Components"
 import "../../../Services"
-import "../../../Utils"
 
-ColumnLayout {
+ScrollList {
     id: root
-    spacing: Theme.spacingBase
 
-    // Empty state
-    ColumnLayout {
-        visible: Peripherals.devices.length === 0
-        Layout.fillWidth: true
-        Layout.fillHeight: true
-        spacing: Theme.spacingBase
+    property bool shown: false
 
-        Item {
-            Layout.fillHeight: true
-        }
+    reversed: Placement.sidebarReversed
 
-        Text {
-            Layout.alignment: Qt.AlignHCenter
-            text: Icons.device
-            font.family: Theme.fontFamilyIcons
-            font.pixelSize: 32
-            color: Theme.textSecondary
-            opacity: 0.5
-        }
-
-        StyledText {
-            Layout.alignment: Qt.AlignHCenter
-            text: "No peripherals detected"
-            font.pixelSize: Theme.fontSizeBase
-            color: Theme.textSecondary
-        }
-
-        Item {
-            Layout.fillHeight: true
-        }
+    // Tabs stay loaded, so read the batteries again each time this tab is shown
+    onShownChanged: {
+        if (shown)
+            PeripheralBatteries.repollRequested();
+    }
+    Component.onCompleted: {
+        if (shown)
+            PeripheralBatteries.repollRequested();
     }
 
-    // Device list
-    ScrollView {
-        visible: Peripherals.devices.length > 0
+    // One section: reversed, it only stands on the bottom
+    ColumnLayout {
         Layout.fillWidth: true
-        Layout.fillHeight: true
-        clip: true
+        spacing: 2
 
-        ColumnLayout {
-            width: parent.width
-            spacing: 2
+        SectionHeader {
+            text: "Batteries"
+            meta: Peripherals.devices.length > 0 ? `${Peripherals.devices.length} device${Peripherals.devices.length === 1 ? "" : "s"}` : ""
+        }
 
-            Repeater {
-                model: ScriptModel {
-                    values: Peripherals.devices
-                }
+        Repeater {
+            model: ScriptModel {
+                values: Peripherals.devices
+            }
 
-                PeripheralDeviceItem {
-                    required property var modelData
-                    Layout.fillWidth: true
-                    device: modelData
-                }
+            PeripheralDeviceItem {
+                required property var modelData
+                Layout.fillWidth: true
+                device: modelData
             }
         }
-    }
 
-    Component.onCompleted: {
-        PeripheralBatteries.repollRequested();
+        EmptyState {
+            Layout.fillWidth: true
+            visible: Peripherals.devices.length === 0
+            text: "No battery devices"
+            icon: Lucide.monitorSmartphone
+        }
     }
 }

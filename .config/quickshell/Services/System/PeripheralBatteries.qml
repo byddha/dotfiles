@@ -23,6 +23,25 @@ Singleton {
     // Custom device state for the UI — rebuilt on each poll
     property var customDevices: []
 
+    // Every peripheral with a battery, from UPower and from the config's custom sources:
+    // { name, type (a getIconForType() name), percentage, charging }
+    readonly property var devices: {
+        const configDevices = Config.options.peripheralBatteries?.devices ?? [];
+        const fromUPower = UPower.devices.values.filter(d => isPeripheral(d, configDevices)).map(d => ({
+                    name: getDeviceLabel(d),
+                    type: upowerTypeName(d.type),
+                    percentage: Math.round(d.percentage * 100),
+                    charging: d.state === UPowerDeviceState.Charging
+                }));
+        const fromConfig = customDevices.map((d, i) => d?.present ? {
+                name: d.name,
+                type: configDevices[i]?.type ?? "",
+                percentage: d.percentage,
+                charging: d.charging
+            } : null).filter(d => d !== null);
+        return fromUPower.concat(fromConfig);
+    }
+
     function _isReplaced(device): bool {
         if (!device?.model)
             return false;
@@ -52,50 +71,44 @@ Singleton {
     function getIconForType(type: string): string {
         switch (type) {
         case "trackpad":
-            return Icons.trackpad;
+            return Lucide.touchpad;
         case "mouse":
-            return Icons.mouse;
+            return Lucide.mouse;
         case "keyboard":
-            return Icons.keyboard;
+            return Lucide.keyboard;
         case "headphones":
-            return Icons.headphones;
+            return Lucide.headphones;
         case "headset":
-            return Icons.headset;
+            return Lucide.headset;
         case "speakers":
-            return Icons.speaker;
+            return Lucide.speaker;
         case "gamepad":
-            return Icons.controller;
+            return Lucide.gamepad2;
         case "phone":
-            return Icons.phone;
+            return Lucide.smartphone;
         default:
-            return Icons.device;
+            return Lucide.batteryMedium;
         }
     }
 
-    function getDeviceIcon(device): string {
-        if (!device)
-            return Icons.device;
+    readonly property var _upowerTypeMap: ({
+            [UPowerDeviceType.Touchpad]: "trackpad",
+            [UPowerDeviceType.Mouse]: "mouse",
+            [UPowerDeviceType.Keyboard]: "keyboard",
+            [UPowerDeviceType.Headphones]: "headphones",
+            [UPowerDeviceType.Headset]: "headset",
+            [UPowerDeviceType.Speakers]: "speakers",
+            [UPowerDeviceType.GamingInput]: "gamepad",
+            [UPowerDeviceType.Phone]: "phone"
+        })
 
-        switch (device.type) {
-        case UPowerDeviceType.Touchpad:
-            return Icons.trackpad;
-        case UPowerDeviceType.Mouse:
-            return Icons.mouse;
-        case UPowerDeviceType.Keyboard:
-            return Icons.keyboard;
-        case UPowerDeviceType.Headphones:
-            return Icons.headphones;
-        case UPowerDeviceType.Headset:
-            return Icons.headset;
-        case UPowerDeviceType.Speakers:
-            return Icons.speaker;
-        case UPowerDeviceType.GamingInput:
-            return Icons.controller;
-        case UPowerDeviceType.Phone:
-            return Icons.phone;
-        default:
-            return Icons.device;
-        }
+    // UPower device type -> the type names used by getIconForType() and the config
+    function upowerTypeName(type): string {
+        return _upowerTypeMap[type] ?? "";
+    }
+
+    function getDeviceIcon(device): string {
+        return getIconForType(upowerTypeName(device?.type));
     }
 
     function getDeviceLabel(device): string {
@@ -104,7 +117,8 @@ Singleton {
         return device.model || UPowerDeviceType.toString(device.type) || "Device";
     }
 
-    function getLowBatteryDevices(threshold: int): var {
+    function getLowBatteryDevices(): var {
+        const threshold = 40;
         const results = [];
         const configDevices = Config.options.peripheralBatteries?.devices ?? [];
 
@@ -136,22 +150,14 @@ Singleton {
         return results;
     }
 
-    function getDeviceStatusText(device): string {
-        if (!device)
-            return "Unknown device";
-
-        const pct = Math.round((device.percentage ?? 0) * 100);
-        const label = getDeviceLabel(device);
-        const charging = device.state === UPowerDeviceState.Charging;
-        const full = device.state === UPowerDeviceState.FullyCharged;
-
-        let status = `${label}: ${pct}%`;
-        if (charging)
-            status += " - Charging";
-        else if (full)
-            status += " - Fully charged";
-
-        return status;
+    function _notifyLevel(label, percentage, critical) {
+        if (critical) {
+            Quickshell.execDetached(["notify-send", "-e", `Critical Battery: ${label}`, `${label} at ${percentage}%! Charge now!`, "-u", "critical", "-a", "Battery"]);
+            Logger.error(`Critical peripheral battery: ${label} at ${percentage}%`);
+        } else {
+            Quickshell.execDetached(["notify-send", "-e", `Low Battery: ${label}`, `${label} at ${percentage}%. Consider charging.`, "-u", "normal", "-a", "Battery"]);
+            Logger.warn(`Low peripheral battery: ${label} at ${percentage}%`);
+        }
     }
 
     function _updateCustomDevice(index, name, icon, percentage, charging, present) {
@@ -176,7 +182,8 @@ Singleton {
     Process {
         id: hidrawMonitor
         running: true
-        command: ["udevadm", "monitor", "--subsystem-match=hidraw", "--udev"]
+        // setpriv: the kernel ends it with qs, also when qs dies without cleaning up (SIGTERM, crash)
+        command: ["setpriv", "--pdeathsig", "TERM", "--", "udevadm", "monitor", "--subsystem-match=hidraw", "--udev"]
         stdout: SplitParser {
             onRead: hidrawDebounce.restart()
         }
@@ -243,23 +250,15 @@ Singleton {
             }
 
             onIsLowChanged: {
-                if (isLow && !_notifiedLow) {
-                    _notifiedLow = true;
-                    Quickshell.execDetached(["notify-send", "-e", `Low Battery: ${deviceName}`, `${deviceName} at ${percentage}%. Consider charging.`, "-u", "normal", "-a", "Battery"]);
-                    Logger.warn(`Low peripheral battery: ${deviceName} at ${percentage}%`);
-                } else if (!isLow) {
-                    _notifiedLow = false;
-                }
+                if (isLow && !_notifiedLow)
+                    root._notifyLevel(deviceName, percentage, false);
+                _notifiedLow = isLow;
             }
 
             onIsCriticalChanged: {
-                if (isCritical && !_notifiedCritical) {
-                    _notifiedCritical = true;
-                    Quickshell.execDetached(["notify-send", "-e", `Critical Battery: ${deviceName}`, `${deviceName} at ${percentage}%! Charge now!`, "-u", "critical", "-a", "Battery"]);
-                    Logger.error(`Critical peripheral battery: ${deviceName} at ${percentage}%`);
-                } else if (!isCritical) {
-                    _notifiedCritical = false;
-                }
+                if (isCritical && !_notifiedCritical)
+                    root._notifyLevel(deviceName, percentage, true);
+                _notifiedCritical = isCritical;
             }
 
             property var _repollConnection: Connections {
@@ -293,30 +292,16 @@ Singleton {
             property bool _notifiedCritical: false
 
             onIsLowChanged: {
-                if (isLow && !_notifiedLow) {
-                    _notifiedLow = true;
-                    const label = root.getDeviceLabel(modelData);
-                    Quickshell.execDetached(["notify-send", "-e", `Low Battery: ${label}`, `${label} at ${percentage}%. Consider charging.`, "-u", "normal", "-a", "Battery"]);
-                    Logger.warn(`Low peripheral battery: ${label} at ${percentage}%`);
-                } else if (!isLow) {
-                    _notifiedLow = false;
-                }
+                if (isLow && !_notifiedLow)
+                    root._notifyLevel(root.getDeviceLabel(modelData), percentage, false);
+                _notifiedLow = isLow;
             }
 
             onIsCriticalChanged: {
-                if (isCritical && !_notifiedCritical) {
-                    _notifiedCritical = true;
-                    const label = root.getDeviceLabel(modelData);
-                    Quickshell.execDetached(["notify-send", "-e", `Critical Battery: ${label}`, `${label} at ${percentage}%! Charge now!`, "-u", "critical", "-a", "Battery"]);
-                    Logger.error(`Critical peripheral battery: ${label} at ${percentage}%`);
-                } else if (!isCritical) {
-                    _notifiedCritical = false;
-                }
+                if (isCritical && !_notifiedCritical)
+                    root._notifyLevel(root.getDeviceLabel(modelData), percentage, true);
+                _notifiedCritical = isCritical;
             }
         }
-    }
-
-    Component.onCompleted: {
-        Logger.info("Service initialized");
     }
 }

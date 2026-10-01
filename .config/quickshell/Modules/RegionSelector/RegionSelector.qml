@@ -1,10 +1,6 @@
 import QtQuick
 import Quickshell
-import Quickshell.Wayland
-import Quickshell.Hyprland
 import "../../Config"
-import "../../Services"
-import "../../Utils"
 
 Scope {
     id: root
@@ -15,23 +11,12 @@ Scope {
     }
 
     property int action: RegionSelector.SnipAction.Copy
+    // Sound for Record mode; off every time the selector opens so nothing records sound by accident
+    property bool recordAudio: false
+    property bool recordMic: false
 
     function dismiss() {
         Settings.regionSelectorVisible = false;
-    }
-
-    function screenshot() {
-        root.action = RegionSelector.SnipAction.Copy;
-        Settings.regionSelectorVisible = true;
-    }
-
-    function record() {
-        root.action = RegionSelector.SnipAction.Record;
-        Settings.regionSelectorVisible = true;
-    }
-
-    function setAction(newAction) {
-        root.action = newAction;
     }
 
     // Reset to screenshot mode whenever overlay opens
@@ -40,6 +25,8 @@ Scope {
         function onRegionSelectorVisibleChanged() {
             if (Settings.regionSelectorVisible) {
                 root.action = RegionSelector.SnipAction.Copy;
+                root.recordAudio = false;
+                root.recordMic = false;
             }
         }
     }
@@ -55,8 +42,12 @@ Scope {
             sourceComponent: SelectionWindow {
                 screen: windowLoader.modelData
                 action: root.action
+                recordAudio: root.recordAudio
+                recordMic: root.recordMic
                 onDismiss: root.dismiss()
-                onActionChangeRequested: newAction => root.setAction(newAction)
+                onActionChangeRequested: newAction => root.action = newAction
+                onAudioToggleRequested: root.recordAudio = !root.recordAudio
+                onMicToggleRequested: root.recordMic = !root.recordMic
             }
         }
     }

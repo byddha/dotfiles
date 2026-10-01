@@ -7,16 +7,13 @@ QtObject {
     id: backend
 
     property string type: "niri"
-    property bool isHyprland: false
+    // Its windows have no positions yet (see _normalizeWindow)
+    readonly property bool hasWindowGeometry: false
 
     property var workspaces: []
-    property int activeWorkspace: 1
     property string focusedMonitorName: ""
-    property int focusedMonitorId: -1
 
     property var windowList: []
-    property var addresses: []
-    property var windowByAddress: ({})
     property var monitors: []
 
     signal workspaceFocusChanged
@@ -31,7 +28,6 @@ QtObject {
     property bool _pendingFullUpdate: false
 
     Component.onCompleted: {
-        Logger.info("Running on Niri");
         updateAllData();
         eventStream.running = true;
     }
@@ -42,14 +38,6 @@ QtObject {
         // Chain: workspaces first, then windows + outputs (they need workspace data)
         _pendingFullUpdate = true;
         getWorkspaces.running = true;
-    }
-
-    function updateWindowList() {
-        getWindows.running = true;
-    }
-
-    function updateMonitorData() {
-        getOutputs.running = true;
     }
 
     property var _wsProc: Process {
@@ -139,24 +127,16 @@ QtObject {
                 }));
 
         const focused = _workspacesRaw.find(ws => ws.is_focused);
-        if (focused) {
-            activeWorkspace = focused.id;
-            if (focused.output && _monitorNameToId[focused.output] !== undefined) {
-                focusedMonitorName = focused.output;
-                focusedMonitorId = _monitorNameToId[focused.output];
-            }
-        }
+        if (focused?.output && _monitorNameToId[focused.output] !== undefined)
+            focusedMonitorName = focused.output;
 
         _updateMonitorActiveWorkspaces();
         workspaceFocusChanged();
-        Logger.trace("Workspaces updated:", workspaces.length);
     }
 
     function _processWindows(raw) {
         windowList = raw.map(w => _normalizeWindow(w));
-        _rebuildWindowMaps();
         windowDataUpdated();
-        Logger.trace("Windows updated:", windowList.length);
     }
 
     function _processMonitors() {
@@ -186,13 +166,10 @@ QtObject {
         _monitorNameToId = nameToId;
 
         const focused = _workspacesRaw.find(ws => ws.is_focused);
-        if (focused?.output && nameToId[focused.output] !== undefined) {
+        if (focused?.output && nameToId[focused.output] !== undefined)
             focusedMonitorName = focused.output;
-            focusedMonitorId = nameToId[focused.output];
-        }
 
         monitorDataUpdated();
-        Logger.trace("Monitors updated:", monitors.length, "displays");
     }
 
     function _normalizeWindow(win) {
@@ -216,14 +193,6 @@ QtObject {
             focusHistoryID: -(win.focus_timestamp ?? 0),
             _niriId: win.id
         };
-    }
-
-    function _rebuildWindowMaps() {
-        const byAddr = {};
-        for (let i = 0; i < windowList.length; ++i)
-            byAddr[windowList[i].address] = windowList[i];
-        windowByAddress = byAddr;
-        addresses = windowList.map(w => w.address);
     }
 
     function _getActiveWorkspaceForOutput(outputName) {
@@ -280,12 +249,10 @@ QtObject {
             } else {
                 windowList = [...windowList, normalized];
             }
-            _rebuildWindowMaps();
             windowDataUpdated();
         } else if (event.WindowClosed) {
             const addr = "niri-" + event.WindowClosed.id;
             windowList = windowList.filter(w => w.address !== addr);
-            _rebuildWindowMaps();
             windowDataUpdated();
         } else if (event.WindowFocusTimestampChanged) {
             const {
@@ -300,7 +267,6 @@ QtObject {
                     focusHistoryID: -(focus_timestamp ?? 0)
                 });
                 windowList = newList;
-                _rebuildWindowMaps();
                 windowDataUpdated();
             }
         }
@@ -320,15 +286,6 @@ QtObject {
     }
 
     // --- Data query functions ---
-
-    function biggestWindowForWorkspace(workspaceId) {
-        const windows = windowList.filter(w => w.workspace.id == workspaceId);
-        return windows.reduce((maxWin, win) => {
-            const maxArea = (maxWin?.size?.[0] ?? 0) * (maxWin?.size?.[1] ?? 0);
-            const winArea = (win?.size?.[0] ?? 0) * (win?.size?.[1] ?? 0);
-            return winArea > maxArea ? win : maxWin;
-        }, null);
-    }
 
     function getWorkspaceApps(workspaceId) {
         const windows = windowList.filter(w => w.workspace.id == workspaceId);
@@ -352,6 +309,18 @@ QtObject {
         const appList = Object.values(classMap);
         appList.sort((a, b) => b.count - a.count);
         return appList;
+    }
+
+    function toplevelFor(address) {
+        return null;
+    }
+
+    function coversWorkspace(window) {
+        return window.fullscreen > 0;
+    }
+
+    function shownWindows(workspaceId) {
+        return backend.windowList.filter(w => w.workspace?.id === workspaceId);
     }
 
     function monitorForScreen(screen) {
@@ -379,11 +348,8 @@ QtObject {
         return mon?.activeWorkspaceId ?? 1;
     }
 
-    function windowForToplevel(toplevel) {
-        const appId = toplevel.appId ?? "";
-        const title = toplevel.title ?? "";
-        return windowList.find(w => w.class === appId && w.title === title) ?? null;
-    }
+    // Niri's IPC does not list binds, so no bar item shows keys there
+    readonly property var describedBinds: []
 
     function getCursorPosition(callback) {
         // Not available via Niri IPC
@@ -401,22 +367,19 @@ QtObject {
             Logger.error("switchWorkspace: unknown workspace id", id);
             return;
         }
-        Logger.debug("Switching to workspace", id, "(idx:", ws.idx + ")");
         actionComponent.createObject(backend, {
             command: ["niri", "msg", "action", "focus-workspace", String(ws.idx)]
         }).running = true;
     }
 
-    function moveWindowToWorkspace(id) {
-        const ws = _workspacesRaw.find(w => w.id === id);
-        if (!ws) {
-            Logger.error("moveWindowToWorkspace: unknown workspace id", id);
-            return;
-        }
-        Logger.debug("Moving window to workspace", id, "(idx:", ws.idx + ")");
+    function focusWindow(address) {
         actionComponent.createObject(backend, {
-            command: ["niri", "msg", "action", "move-window-to-workspace", String(ws.idx)]
+            command: ["niri", "msg", "action", "focus-window", "--id", address.replace("niri-", "")]
         }).running = true;
+    }
+
+    // The event stream keeps the windows current
+    function refreshWindows() {
     }
 
     function logout() {

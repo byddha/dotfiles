@@ -3,33 +3,28 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import "../../Services"
-import "../../Utils"
 
 Singleton {
     id: root
 
     function poweroff() {
-        Logger.info("PowerActions: poweroff");
         Quickshell.execDetached(["systemctl", "poweroff"]);
     }
 
     function reboot() {
-        Logger.info("PowerActions: reboot");
         Quickshell.execDetached(["systemctl", "reboot"]);
     }
 
     function suspend() {
-        Logger.info("PowerActions: suspend");
         Quickshell.execDetached(["systemctl", "suspend"]);
     }
 
     function logout() {
-        Logger.info("PowerActions: logout");
         Compositor.logout();
     }
 
+    // Whatever locker listens for the session's Lock signal (hypridle's lock_cmd)
     function lock() {
-        Logger.info("PowerActions: lock");
-        SessionLock.lock();
+        Quickshell.execDetached(["loginctl", "lock-session"]);
     }
 }
