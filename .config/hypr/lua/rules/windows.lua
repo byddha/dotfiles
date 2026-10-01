@@ -56,8 +56,9 @@ local rules = {
         size   = { 1300, 800 },
     },
     {
-        name   = "kitty-yazi-floating",
-        match  = { class = "^(kitty)$", title = "^(Yazi)$", initial_title = "^(Yazi)$" },
+        -- vicinae runs yazi.desktop in ghostty with the desktop id as its class
+        name   = "yazi-floating",
+        match  = { class = "^(yazi\\.desktop)$" },
         float  = true,
         center = true,
         size   = { 1300, 800 },

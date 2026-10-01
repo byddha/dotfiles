@@ -129,7 +129,6 @@ local hardware_binds = {
 }
 
 local submap_binds = {
-    { "<D-TAB>", hl.dsp.submap("apps"),        "+apps" },
     { "<D-m>",   hl.dsp.submap("window-mode"), "+window-mode" },
     { "<D-u>",   hl.dsp.submap("toggles"),     "+toggles" },
 }

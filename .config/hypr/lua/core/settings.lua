@@ -13,7 +13,6 @@ M.main_mod     = "SUPER"
 M.programs     = {
     terminal     = "ghostty",
     file_manager = "krusader",
-    launch       = home .. "/dotfiles/.config/hypr/scripts/run_or_focus.sh",
 }
 
 local local_config = machines.for_hostname(hostname)
