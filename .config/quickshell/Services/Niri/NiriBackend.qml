@@ -10,6 +10,7 @@ QtObject {
     property string type: "niri"
     // Its windows have no positions yet (see _normalizeWindow)
     readonly property bool hasWindowGeometry: false
+    readonly property bool hasFocusGrab: false
     readonly property bool hasHdrControl: false
 
     property string focusedMonitorName: ""

@@ -78,7 +78,7 @@ PanelWindow {
     }
 
     WlrLayershell.layer: WlrLayer.Top
-    WlrLayershell.keyboardFocus: visible ? (Compositor.useHyprlandFocusGrab ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.Exclusive) : WlrKeyboardFocus.None
+    WlrLayershell.keyboardFocus: visible ? (Compositor.hasFocusGrab ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.Exclusive) : WlrKeyboardFocus.None
     WlrLayershell.exclusionMode: ExclusionMode.Ignore
     exclusiveZone: 0
 
@@ -88,7 +88,7 @@ PanelWindow {
         if (visible) {
             contentWarm = true;
             // The grab must be switched on after the window is mapped, never bound to visible
-            Qt.callLater(() => focusGrab.active = root.useFocusGrab && Compositor.useHyprlandFocusGrab);
+            Qt.callLater(() => focusGrab.active = root.useFocusGrab && Compositor.hasFocusGrab);
         } else {
             focusGrab.active = false;
             panelClosed();

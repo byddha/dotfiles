@@ -12,7 +12,6 @@ Singleton {
     property var backend: null
     property bool isHyprland: backend?.type === "hyprland"
     property bool isNiri: backend?.type === "niri"
-    property bool useHyprlandFocusGrab: isHyprland
 
     Component.onCompleted: {
         var backendPath;
@@ -46,6 +45,9 @@ Singleton {
     readonly property var windows: backend?.windows ?? []
     // Whether windows carry real positions (x, y), so a map of a workspace can be drawn
     readonly property bool hasWindowGeometry: backend?.hasWindowGeometry ?? false
+    // Whether a FocusGrab works: the compositor tells a popup about clicks outside it, so the popup
+    // need not cover the screen and take every key
+    readonly property bool hasFocusGrab: backend?.hasFocusGrab ?? false
     // Whether setHdr can switch a monitor between HDR and SDR
     readonly property bool hasHdrControl: backend?.hasHdrControl ?? false
 

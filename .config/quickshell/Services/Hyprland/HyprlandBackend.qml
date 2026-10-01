@@ -10,6 +10,7 @@ QtObject {
 
     property string type: "hyprland"
     readonly property bool hasWindowGeometry: true
+    readonly property bool hasFocusGrab: true
     readonly property bool hasHdrControl: true
 
     property string focusedMonitorName: Hyprland.focusedMonitor?.name ?? ""
