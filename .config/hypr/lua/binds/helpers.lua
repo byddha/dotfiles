@@ -44,7 +44,7 @@ function M.bind(keys, dispatcher, description, flags)
     if description then
         flags.description = description
     end
-    hl.bind(parse_keys(keys), dispatcher, flags)
+    return hl.bind(parse_keys(keys), dispatcher, flags)
 end
 
 function M.reset_submap()

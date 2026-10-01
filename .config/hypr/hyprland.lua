@@ -10,6 +10,7 @@ local modules = {
     "lua.rules.windows",
     "lua.binds.keybinds",
     "lua.binds.submaps",
+    "lua.binds.vicinae",
     "lua.startup.autostart",
 }
 
