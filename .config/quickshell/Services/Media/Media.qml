@@ -27,6 +27,9 @@ Singleton {
     property string title: ""
     property string artist: ""
     property string artUrl: ""
+    property string url: ""
+    // YouTube sends a Short's art as 16:9, with the vertical video in the middle between plain bars
+    readonly property bool isShort: /^https:\/\/(www\.|m\.)?youtube\.com\/shorts\//.test(url)
     // Seconds; 0 when the player never said
     property real length: 0
     property string _trackKey: ""
@@ -136,6 +139,7 @@ Singleton {
         const key = `${url}\n${trackTitle}`;
         const sameTrack = key === _trackKey;
         _trackKey = key;
+        root.url = url;
         title = trackTitle;
         // A list by the spec; some players send a plain string
         const artists = metadata["xesam:artist"] ?? "";
@@ -150,6 +154,7 @@ Singleton {
 
     function _clearTrack() {
         _trackKey = "";
+        url = "";
         title = "";
         artist = "";
         artUrl = "";

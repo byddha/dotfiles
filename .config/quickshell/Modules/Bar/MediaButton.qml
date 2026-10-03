@@ -49,6 +49,8 @@ BarItem {
     tooltipTitle: Media.title
     tooltipDetail: [Media.artist, Media.length > 0 ? formatTime(Media.length) : ""].filter(line => line).join("\n")
     tooltipImage: Media.artUrl
+    tooltipImageAspect: Media.isShort ? 9 / 16 : 0
+    tooltipFallbackIcon: Lucide.music
 
     onWheel: wheel => {
         if (wheel.angleDelta.y > 0)
