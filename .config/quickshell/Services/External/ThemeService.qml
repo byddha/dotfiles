@@ -48,6 +48,10 @@ Singleton {
     property string base0A: "#cec45c"
     property string base0B: "#80c683"
 
+    // The colors a wallpaper is recolored with: all 16 ansi slots and the main material roles,
+    // each once, space-separated so an unchanged palette is an unchanged value
+    property string imagePalette: ""
+
     // Raw parse of dms-colors.json, re-applied whenever either file lands
     property var colorData: null
 
@@ -136,6 +140,9 @@ Singleton {
         root.base09 = ansi(9);
         root.base0A = ansi(3);
         root.base0B = ansi(10);
+
+        const roles = [c.background, c.surface_container, c.surface_container_high, c.on_surface, c.primary, c.secondary, c.tertiary];
+        root.imagePalette = [...new Set(Object.values(k).map(slot => slot[root.mode]).concat(roles))].sort().join(" ");
     }
 
     Process {

@@ -40,7 +40,8 @@ Singleton {
 
     // Every window, each { id (opaque, stable while it exists), appId, title, tag (xdg tag or ""), workspaceId,
     // monitorName, x, y, width, height (global logical px), floating, covers (drawn over every other window on
-    // its workspace), focused, hidden (not drawn: unmapped, or a group member behind another) }
+    // its workspace), fullscreen (over the whole monitor and every other window, the bar too; maximized is not), focused,
+    // hidden (not drawn: unmapped, or a group member behind another) }
     readonly property var windows: backend?.windows ?? []
     // Whether windows carry real positions (x, y), so a map of a workspace can be drawn
     readonly property bool hasWindowGeometry: backend?.hasWindowGeometry ?? false

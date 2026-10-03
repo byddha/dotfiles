@@ -86,6 +86,24 @@ Item {
     }
 
     IpcHandler {
+        target: "wallpaper"
+
+        // For the idle daemon, next to turning the monitors off: nothing is seen, so video
+        // wallpapers need not decode
+        function pause(): string {
+            Settings.wallpaperPaused = true;
+            Logger.info("IPC: wallpaper.pause");
+            return "Wallpaper videos paused";
+        }
+
+        function resume(): string {
+            Settings.wallpaperPaused = false;
+            Logger.info("IPC: wallpaper.resume");
+            return "Wallpaper videos playing";
+        }
+    }
+
+    IpcHandler {
         target: "hyprwhichkey"
 
         function toggle(): string {

@@ -181,6 +181,8 @@ QtObject {
             height: size[1],
             floating: win.is_floating ?? false,
             covers: false,
+            // Niri's IPC does not say which window is fullscreen
+            fullscreen: false,
             focused: win.is_focused ?? false,
             hidden: false
         };

@@ -37,6 +37,7 @@ QtObject {
                 // fullscreen: 1 = maximized, 2 = fullscreen. The default handler draws it over the rest; a layout
                 // that handles it itself (scrolling) keeps it beside the others
                 covers: w.fullscreen > 0 && w.fullscreenHandler === "default",
+                fullscreen: w.fullscreen >= 2 && w.fullscreenHandler === "default",
                 focused: w.focusHistoryID === 0,
                 // Unmapped windows and the hidden members of a group are not drawn
                 hidden: !w.mapped || w.hidden

@@ -13,6 +13,7 @@ import "Modules/OSD"
 import "Modules/ShutdownReminder"
 import "Modules/GameLauncher"
 import "Modules/RegionSelector"
+import "Modules/Background"
 
 ShellRoot {
     id: root
@@ -27,6 +28,10 @@ ShellRoot {
     // IPCManager must be outside LazyLoader to register properly
     IPCManager {
         id: ipcManager
+    }
+
+    Wallpaper {
+        id: wallpaper
     }
 
     Bar {

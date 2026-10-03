@@ -11,6 +11,8 @@ Singleton {
     property bool gameLauncherVisible: false
     property bool regionSelectorVisible: false
     property bool shutdownReminderVisible: false
+    // Set by the idle daemon while the monitors are off: video wallpapers stop decoding
+    property bool wallpaperPaused: false
 
     // For bar buttons: open the sidebar on their tab, or close it when that tab is already open.
     // A toggle, not an open, because a click right after opening still lands on the button (the

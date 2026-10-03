@@ -6,6 +6,10 @@ Compositor: `hyprland` or `niri`
 
 Theme: `~/dotfiles/scripts/theme-set` (writes `~/.cache/theme/dms-colors.json`)
 
+Video wallpapers: `qt6-multimedia`, `qt6-multimedia-ffmpeg`
+
+Wallpaper recolored with the theme (`wallpaperRecolor`): `lutgen`; videos also `ffmpeg`
+
 Wifi: `networkmanager` (`nmcli`)
 
 Bluetooth: `bluez`, `blueman` (manager button)
@@ -32,7 +36,9 @@ Fill monitors in ~/.config/bidshell/config.json. Keys are the monitor `model` fr
         "MO34WQC2": {
             "hdrCapable": true,
             "primary": true,
-            "workspaces": [1, 5]
+            "workspaces": [1, 5],
+            "wallpaper": "~/Pictures/wallpapers/forest.png",
+            "wallpaperRecolor": true
         },
         "0x1920": {
             "hdrCapable": false,
