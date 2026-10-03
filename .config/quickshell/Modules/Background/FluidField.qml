@@ -146,8 +146,10 @@ Item {
                     stage.push = Qt.point(0, 0);
                     continue;
                 }
-                // The cursor went straight from frameCursor to cursor during the frame
-                const at = ((i + 1) * root.stepTime - before) / frame;
+                // The cursor went straight from frameCursor to cursor during the frame. Two frames can
+                // come in the same millisecond, with a whole step pending: 0 / 0 would put NaN in
+                // the field, and the wallpaper would draw grey until the stir ends.
+                const at = frame > 0 ? ((i + 1) * root.stepTime - before) / frame : 1;
                 const to = Qt.point(root.frameCursor.x + (root.cursor.x - root.frameCursor.x) * at, root.frameCursor.y + (root.cursor.y - root.frameCursor.y) * at);
                 stage.dt = root.stepTime;
                 stage.cursor = Qt.point(to.x / root.width, to.y / root.height);
