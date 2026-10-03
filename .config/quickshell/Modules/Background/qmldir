@@ -3,3 +3,5 @@ module Background
 Wallpaper 1.0 Wallpaper.qml
 WallpaperVideo 1.0 WallpaperVideo.qml
 DiscReveal 1.0 DiscReveal.qml
+FluidField 1.0 FluidField.qml
+FluidWarp 1.0 FluidWarp.qml

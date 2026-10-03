@@ -38,7 +38,8 @@ Fill monitors in ~/.config/bidshell/config.json. Keys are the monitor `model` fr
             "primary": true,
             "workspaces": [1, 5],
             "wallpaper": "~/Pictures/wallpapers/forest.png",
-            "wallpaperRecolor": true
+            "wallpaperRecolor": true,
+            "wallpaperFluid": true
         },
         "0x1920": {
             "hdrCapable": false,

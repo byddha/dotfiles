@@ -167,7 +167,8 @@ Singleton {
             // Keys are monitor model strings from EDID (e.g., "MO34WQC2", "0x1920")
             // Fields: workspaces ([start, end]), hdrCapable (bool), primary (bool),
             // wallpaper (image or video path, "~/" allowed; empty or absent draws none),
-            // wallpaperRecolor (bool: recolor it with the theme palette, needs lutgen, and ffmpeg for a video)
+            // wallpaperRecolor (bool: recolor it with the theme palette, needs lutgen, and ffmpeg for a video),
+            // wallpaperFluid (bool: the cursor stirs it like a fluid over the empty desktop)
             // Exactly one monitor should set primary: true (notifications).
             property var monitors: (
                 // Example:

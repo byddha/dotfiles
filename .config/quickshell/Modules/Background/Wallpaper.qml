@@ -22,6 +22,9 @@ import "../../Utils"
  * monitor, windows over all of the monitor beside the bar but their gaps, or
  * `qs ipc call wallpaper pause` from the idle daemon while the monitors are off.
  *
+ * With monitors.<key>.wallpaperFluid the cursor stirs the wallpaper like a fluid where it moves
+ * over the empty desktop; it settles within a few seconds and then costs nothing.
+ *
  * With monitors.<key>.wallpaperRecolor the wallpaper is first recolored with the theme palette
  * (lutgen, luminosity kept; a video through ffmpeg with a lutgen Hald CLUT), again on each theme
  * change. The result is cached under a name made from the file's bytes and the palette, so a new
@@ -133,10 +136,14 @@ Variants {
             return root.coverage(shown.map(w => [w.x - g, w.y - g, w.x + w.width + g, w.y + w.height + g]), area) >= root.hiddenCoverage;
         }
         readonly property bool playing: !hidden && !Settings.wallpaperPaused
+        readonly property bool fluid: root.configFor(modelData)?.wallpaperFluid === true
 
         screen: modelData
         color: "transparent"
-        mask: Region {}
+        // Input only for the fluid: the compositor sends the pointer to the wallpaper only over the
+        // empty desktop, and a click there has nothing else to reach
+        mask: fluid ? null : noInput
+        property Region noInput: Region {}
 
         WlrLayershell.namespace: "bidshell:wallpaper"
         WlrLayershell.layer: WlrLayer.Background
@@ -155,7 +162,7 @@ Variants {
             if (shown === "" || current?.source.toString() === source)
                 return;
             if (!root.isVideo(shown)) {
-                current = image.createObject(window.contentItem, {
+                current = image.createObject(stack, {
                     source: source,
                     revealFrom: Qt.point(Math.random(), Math.random())
                 });
@@ -167,7 +174,7 @@ Variants {
                 Logger.error("Wallpaper video not shown:", root.videoComponent.errorString());
                 return;
             }
-            current = root.videoComponent.createObject(window.contentItem, {
+            current = root.videoComponent.createObject(stack, {
                 source: source,
                 host: window,
                 revealFrom: Qt.point(Math.random(), Math.random())
@@ -198,6 +205,31 @@ Variants {
         Component.onCompleted: {
             startRecolor();
             show();
+        }
+
+        // The wallpapers; drawn through the fluid's warp only while it moves
+        Item {
+            id: stack
+
+            anchors.fill: parent
+            layer.enabled: fluidLoader.item?.active ?? false
+            layer.effect: FluidWarp {
+                field: fluidLoader.item?.texture ?? null
+            }
+        }
+
+        Loader {
+            id: fluidLoader
+
+            anchors.fill: parent
+            active: window.fluid
+            sourceComponent: FluidField {}
+        }
+
+        HoverHandler {
+            // Not in the gaps of a covered monitor: the fluid stops where a video would pause
+            enabled: window.fluid && window.playing
+            onPointChanged: fluidLoader.item?.move(point.position)
         }
 
         Process {
