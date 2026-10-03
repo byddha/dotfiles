@@ -4,7 +4,7 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
 import { useEffect, useState } from "react";
-import { Action, ActionPanel, Grid, Icon, showToast, Toast } from "@vicinae/api";
+import { Action, ActionPanel, closeMainWindow, Grid, Icon, showToast, Toast } from "@vicinae/api";
 
 const run = promisify(execFile);
 const THEME_SET = join(homedir(), "dotfiles/scripts/theme-set");
@@ -48,27 +48,41 @@ async function loadThemes(): Promise<Theme[]> {
   return [...themes.values()];
 }
 
-function readActive(): string {
+type State = { theme?: string; flavor?: string; accent?: string; variant?: string };
+
+function readState(): State {
   try {
-    const s = JSON.parse(readFileSync(STATE, "utf8"));
-    return [s.theme, s.flavor && `--flavor ${s.flavor}`, s.accent && `--accent ${s.accent}`, s.variant && `--variant ${s.variant}`]
-      .filter(Boolean)
-      .join(" ");
+    return JSON.parse(readFileSync(STATE, "utf8"));
   } catch {
-    return "";
+    return {};
   }
+}
+
+function readActive(): string {
+  const s = readState();
+  return [s.theme, s.flavor && `--flavor ${s.flavor}`, s.accent && `--accent ${s.accent}`, s.variant && `--variant ${s.variant}`]
+    .filter(Boolean)
+    .join(" ");
+}
+
+function activeLabel(themes: Theme[] | undefined): string {
+  const s = readState();
+  if (!s.theme) return "";
+  const name = themes?.find((t) => t.id === s.theme)?.name ?? pretty(s.theme);
+  return [name, ...[s.flavor, s.accent, s.variant].filter(Boolean).map((p) => pretty(p!))].join(" ");
 }
 
 function useActive() {
   const [active, setActive] = useState(readActive);
 
-  async function apply(args: string[], label: string) {
+  async function apply(args: string[], label: string, close = false) {
     const toast = await showToast({ style: Toast.Style.Animated, title: `Applying ${label}` });
     try {
       await run(THEME_SET, args);
       setActive(readActive());
       toast.style = Toast.Style.Success;
       toast.title = `Theme: ${label}`;
+      if (close) await closeMainWindow();
     } catch (e) {
       toast.style = Toast.Style.Failure;
       toast.title = "theme-set failed";
@@ -77,6 +91,15 @@ function useActive() {
   }
 
   return { active, apply };
+}
+
+function ApplyActions({ apply, args, label }: { apply: ReturnType<typeof useActive>["apply"]; args: string[]; label: string }) {
+  return (
+    <ActionPanel>
+      <Action title="Apply" icon={Icon.Brush} onAction={() => apply(args, label)} />
+      <Action title="Apply and Close" icon={Icon.Brush} onAction={() => apply(args, label, true)} />
+    </ActionPanel>
+  );
 }
 
 function VariantGrid({ theme }: { theme: Theme }) {
@@ -96,11 +119,7 @@ function VariantGrid({ theme }: { theme: Theme }) {
                 title={v.title}
                 subtitle={active === v.args.join(" ") ? "Active" : undefined}
                 keywords={[group]}
-                actions={
-                  <ActionPanel>
-                    <Action title="Apply" icon={Icon.Brush} onAction={() => apply(v.args, `${theme.name} ${group} ${v.title}`.trim())} />
-                  </ActionPanel>
-                }
+                actions={<ApplyActions apply={apply} args={v.args} label={`${theme.name} ${group} ${v.title}`.trim()} />}
               />
             ))}
         </Grid.Section>
@@ -120,9 +139,15 @@ export default function PickTheme() {
   }, []);
 
   return (
-    <Grid columns={4} aspectRatio="4/3" fit={Grid.Fit.Contain} isLoading={!themes} searchBarPlaceholder="Search themes...">
+    <Grid
+      columns={4}
+      aspectRatio="4/3"
+      fit={Grid.Fit.Contain}
+      isLoading={!themes}
+      navigationTitle={activeLabel(themes) ? `Pick Theme · Current: ${activeLabel(themes)}` : "Pick Theme"}
+      searchBarPlaceholder="Search themes..."
+    >
       {themes?.map((t) => {
-        const applyDefault = <Action title="Apply" icon={Icon.Brush} onAction={() => apply([t.id], t.name)} />;
         const isActive = active.split(" ")[0] === t.id;
 
         return (
@@ -132,16 +157,13 @@ export default function PickTheme() {
             title={t.name}
             subtitle={isActive ? "Active" : t.variants.length ? `${t.variants.length} variants` : undefined}
             actions={
-              <ActionPanel>
-                {t.variants.length ? (
-                  <>
-                    <Action.Push title="Show Variants" icon={Icon.AppWindowGrid3x3} target={<VariantGrid theme={t} />} />
-                    {applyDefault}
-                  </>
-                ) : (
-                  applyDefault
-                )}
-              </ActionPanel>
+              t.variants.length ? (
+                <ActionPanel>
+                  <Action.Push title="Show Variants" icon={Icon.AppWindowGrid3x3} target={<VariantGrid theme={t} />} />
+                </ActionPanel>
+              ) : (
+                <ApplyActions apply={apply} args={[t.id]} label={t.name} />
+              )
             }
           />
         );
