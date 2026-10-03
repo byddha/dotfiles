@@ -78,8 +78,9 @@ Item {
             property real decay: 1.9
             property real diffusion: 36
             property real aspect: root.width / root.height
-            // 130 px on every monitor, not a share of its height
-            property real radius: 130 / root.height
+            // A share of the screen's height, so that it covers the same part of the wallpaper on
+            // every monitor
+            property real radius: 0.07
             property real swirl: 0.42
             property point texel: Qt.point(1 / width, 1 / height)
             property point cursor
