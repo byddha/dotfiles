@@ -94,7 +94,8 @@ Singleton {
     }
     // The monitor showing a screen, or null: { name, key (its key in config.json: the bare model, "MO34WQC2"),
     // x, y, width, height (logical rect, transform applied, in the windows' global space), scale, transform,
-    // reserved [left, top, right, bottom], activeWorkspaceId, specialWorkspaceId (0 when none), hdr }
+    // reserved [left, top, right, bottom], activeWorkspaceId, specialWorkspaceId (0 when none), hdr,
+    // refreshRate (Hz) }
     function monitorFor(screen) {
         return backend ? backend.monitorFor(screen) : null;
     }

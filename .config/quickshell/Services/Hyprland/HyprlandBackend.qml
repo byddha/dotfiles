@@ -101,7 +101,8 @@ QtObject {
             reserved: mon.reserved ?? [0, 0, 0, 0],
             activeWorkspaceId: mon.activeWorkspace?.id ?? 1,
             specialWorkspaceId: mon.specialWorkspace?.id ?? 0,
-            hdr: mon.colorManagementPreset === "hdr"
+            hdr: mon.colorManagementPreset === "hdr",
+            refreshRate: mon.refreshRate
         };
     }
 

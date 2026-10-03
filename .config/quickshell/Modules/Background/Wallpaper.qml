@@ -223,7 +223,9 @@ Variants {
 
             anchors.fill: parent
             active: window.fluid
-            sourceComponent: FluidField {}
+            sourceComponent: FluidField {
+                refreshRate: Compositor.monitorFor(window.modelData).refreshRate
+            }
         }
 
         HoverHandler {

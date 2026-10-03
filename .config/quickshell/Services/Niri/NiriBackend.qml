@@ -152,7 +152,9 @@ QtObject {
                     id: _getActiveWorkspaceForOutput(name)
                 },
                 transform: _mapTransform(logical.transform),
-                reserved: [0, 0, 0, 0]
+                reserved: [0, 0, 0, 0],
+                // In mHz. A disabled output has no mode, and no screen either, so its 0 is never read
+                refreshRate: out.current_mode === null ? 0 : out.modes[out.current_mode].refresh_rate / 1000
             };
         });
 
@@ -283,7 +285,8 @@ QtObject {
             reserved: mon.reserved,
             activeWorkspaceId: mon.activeWorkspace.id,
             specialWorkspaceId: 0,
-            hdr: false
+            hdr: false,
+            refreshRate: mon.refreshRate
         };
     }
 
