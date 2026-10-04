@@ -1,0 +1,79 @@
+# Maintainer: cilgin <cilgincc@outlook.com>
+# Maintainer: Arjix <me@arjix.dev>
+# Maintainer: Aurelle <aur@aurelle.dev>
+
+# shellcheck disable=SC2034
+# shellcheck disable=SC2154
+pkgname=vicinae
+pkgver=0.29.1
+pkgrel=1.2
+pkgdesc="A focused launcher for your desktop — native, fast, extensible"
+arch=('x86_64' 'aarch64')
+url="https://github.com/vicinaehq/vicinae"
+license=('GPL3')
+depends=(
+  'nodejs'
+  'qt6-base'
+  'qt6-svg'
+  'layer-shell-qt'
+  'libqalculate'
+  'qtkeychain-qt6'
+  'qt6-declarative'
+  'syntax-highlighting'
+)
+makedepends=(
+  'git'
+  'cmake'
+  'ninja'
+  'npm'
+  'jq'
+  'glaze'
+  'curl'
+  'qt6-shadertools'
+  'qt6-tools'
+  'wayland-protocols'
+  'cmark-gfm'
+)
+provides=("vicinae")
+conflicts=("vicinae" "vicinae-bin")
+source=(
+  "${pkgname}-v${pkgver}.tar.gz::${url}/archive/refs/tags/v$pkgver.tar.gz"
+  "vicinae.hook"
+  "vicinae-focus-after-close.patch"
+)
+
+sha256sums=('ca79782e7c94faa9da1bd12ba1a361cea41970db781447773acb9a580a47cea8'
+            '196fc6a6afea06fc94d6ca4ff45c422bdef02aa25b8f2a80579dce27e56a2ae1'
+            '8b79797c5440207c77dd1f4872c0a2c077257ed51617e3e270fce74249c149df')
+
+prepare() {
+  patch -d "$pkgname-$pkgver" -Np1 -i "$srcdir/vicinae-focus-after-close.patch"
+
+  curl "https://api.github.com/repos/vicinaehq/vicinae/git/ref/tags/v${pkgver}" \
+    --output "${pkgname}-v${pkgver}-meta.yml" \
+    --silent \
+    --follow
+}
+
+build() {
+  SHA=$(jq .object.sha "${pkgname}-v${pkgver}-meta.yml" -r)
+
+  cd $pkgname-$pkgver || exit
+  cmake -G Ninja \
+    -DVICINAE_GIT_TAG="v${pkgver}" \
+    -DVICINAE_GIT_COMMIT_HASH="${SHA:0:7}" \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DVICINAE_PROVENANCE=aur \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -B build
+
+  cmake --build build
+}
+
+package() {
+  cd "$pkgname-$pkgver" || exit
+  DESTDIR="$pkgdir" cmake --install build
+
+  # Pacman hook
+  install -Dm644 "$srcdir/${pkgname%-git}.hook" "$pkgdir/usr/share/libalpm/hooks/${pkgname%-git}.hook"
+}

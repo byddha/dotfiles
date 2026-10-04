@@ -1,0 +1,25 @@
+--- a/src/server/src/actions/window-actions.hpp	2026-10-02 14:26:07.554826227 +0300
++++ b/src/server/src/actions/window-actions.hpp	2026-10-02 14:26:07.563155874 +0300
+@@ -1,5 +1,7 @@
+ #pragma once
+ #include <QCoreApplication>
++#include <QTimer>
++#include "navigation-controller.hpp"
+ #include "service-registry.hpp"
+ #include "services/window-manager/window-manager.hpp"
+ #include "ui/action-panel/action.hpp"
+@@ -9,8 +11,12 @@
+   std::shared_ptr<AbstractWindowManager::AbstractWindow> m_window;
+ 
+   void execute(ApplicationContext *ctx) override {
+-    auto wm = ctx->services->windowManager();
+-    wm->provider()->focusWindowSync(*m_window);
++    // Hyprland refuses focus while the exclusive launcher layer is still mapped, and the
++    // action runs before autoClose hides it, so hide first and focus once it is unmapped
++    ctx->navigation->closeWindow();
++    QTimer::singleShot(50, [wm = ctx->services->windowManager(), window = m_window] {
++      wm->provider()->focusWindowSync(*window);
++    });
+   }
+ 
+ public:
