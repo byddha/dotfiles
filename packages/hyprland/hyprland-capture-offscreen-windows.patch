@@ -1,0 +1,15 @@
+--- a/src/managers/screenshare/ScreenshareManager.cpp	2026-10-01 11:39:48.439523208 +0300
++++ b/src/managers/screenshare/ScreenshareManager.cpp	2026-10-01 11:39:48.446542385 +0300
+@@ -32,12 +32,6 @@
+         if (frame->m_session->monitor() != monitor)
+             return;
+ 
+-        if (frame->m_session->m_type == SHARE_WINDOW) {
+-            CBox geometry = frame->m_session->m_window->geometricBox(Desktop::View::IGeometric::GEOMETRIC_CURRENT);
+-            if (geometry.intersection({monitor->m_position, monitor->m_size}).empty())
+-                return;
+-        }
+-
+         frame->copy();
+     });
+ 
