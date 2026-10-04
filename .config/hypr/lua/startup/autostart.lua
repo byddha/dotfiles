@@ -6,6 +6,8 @@ local function after_notification_daemon(command)
 end
 
 local commands = {
+    -- Hands the login password kept by pam_kwallet to ksecretd, which unlocks kdewallet
+    "/usr/lib/pam_kwallet_init",
     "hypridle > ~/.cache/hypridle.log 2>&1",
     "systemctl --user start hyprpolkitagent",
     "qs -d",
