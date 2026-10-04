@@ -201,7 +201,17 @@ QtObject {
         return override.startsWith("/") ? `file://${override}` : Quickshell.iconPath(override, true);
     }
 
-    function getDisplayName(className, title, xdgTag) {
-        return xdgTag === "proton-game" ? "Game" : findEntry(className, title);
+    function getDisplayName(className, title) {
+        // Every Proton game's class contains "steam", which would name it Steam
+        const steamApp = /^steam_app_(\d+)$/.exec(className ?? "");
+        if (steamApp)
+            return steamGameName(steamApp[1]) || title || "Steam";
+        return findEntry(className, title);
+    }
+
+    // The game's name from the .desktop Steam installs for it, found by the icon Steam names after the app id
+    function steamGameName(appId) {
+        const icon = `steam_icon_${appId}`;
+        return DesktopEntries.applications.values.find(entry => entry.icon === icon)?.name ?? "";
     }
 }

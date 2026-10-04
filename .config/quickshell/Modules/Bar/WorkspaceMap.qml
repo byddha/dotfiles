@@ -199,7 +199,7 @@ BarAnchoredPopup {
                 elide: Text.ElideRight
                 role: "tertiary"
                 font.pixelSize: Theme.fontSizeTiny
-                text: root.hoveredWindow ? AppIcons.getDisplayName(root.hoveredWindow.appId, root.hoveredWindow.title, root.hoveredWindow.tag) : root.detail
+                text: root.hoveredWindow ? AppIcons.getDisplayName(root.hoveredWindow.appId, root.hoveredWindow.title) : root.detail
             }
             Row {
                 anchors.horizontalCenter: parent.horizontalCenter

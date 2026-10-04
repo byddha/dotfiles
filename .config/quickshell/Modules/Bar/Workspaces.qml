@@ -229,7 +229,7 @@ Grid {
             readonly property string workspaceTitle: `Workspace ${modelData.label}`
             readonly property string keys: Compositor.keysFor(`Workspace ${modelData.id}`)
             readonly property string detail: apps.length === 0 ? "Empty" : apps.map(app => {
-                const name = AppIcons.getDisplayName(app.appId, app.title, app.tag);
+                const name = AppIcons.getDisplayName(app.appId, app.title);
                 return app.count > 1 ? `${name} ×${app.count}` : name;
             }).join(" · ")
 

@@ -75,7 +75,7 @@ Rectangle {
             }
 
             StyledText {
-                text: AppIcons.getDisplayName(root.clientDimensions.appId, root.clientDimensions.title, "") || root.clientDimensions.appId || "Window"
+                text: AppIcons.getDisplayName(root.clientDimensions.appId, root.clientDimensions.title) || root.clientDimensions.appId || "Window"
                 font.pixelSize: Theme.fontSizeTitle
             }
         }

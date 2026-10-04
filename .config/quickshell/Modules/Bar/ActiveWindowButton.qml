@@ -24,6 +24,6 @@ BarItem {
         id: name
 
         visible: !root.vertical && root.level < 2
-        text: AppIcons.getDisplayName(root.appClass, root.window?.title ?? "", "")
+        text: AppIcons.getDisplayName(root.appClass, root.window?.title ?? "")
     }
 }
