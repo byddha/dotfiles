@@ -208,7 +208,7 @@ Singleton {
         // Detached so the tunnel survives shell reloads. The password goes in through stdin
         // (openfortivpn prompts on it), never through argv or the script text.
         Quickshell.execDetached({
-            command: ["bash", "-c", 'exec sudo openfortivpn --set-dns=1 <<< "$FORTI_PASS"'],
+            command: ["bash", "-c", 'exec sudo /usr/lib/bida/forti-up <<< "$FORTI_PASS"'],
             environment: {
                 FORTI_PASS: password
             }

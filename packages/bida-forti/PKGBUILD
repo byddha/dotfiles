@@ -1,0 +1,19 @@
+pkgname=bida-forti
+pkgver=1
+pkgrel=1
+arch=(any)
+license=(custom)
+depends=(openfortivpn sudo)
+source=(forti-up forti.sudoers)
+sha256sums=('a50e97f41f3e2fa109d581d1b55c557d6dc8592145fcaa920461685168cdb866'
+            '708f6dd4912e01c6ca301869a1f47b09c3dcb937b6a73110f527eeeea0864170')
+
+check() {
+	visudo -cf forti.sudoers
+}
+
+package() {
+	install -Dm755 forti-up "$pkgdir/usr/lib/bida/forti-up"
+	install -dm750 "$pkgdir/etc/sudoers.d"
+	install -m440 forti.sudoers "$pkgdir/etc/sudoers.d/bida-forti"
+}
