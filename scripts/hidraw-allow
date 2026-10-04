@@ -1,0 +1,8 @@
+#!/usr/bin/env zsh
+# Temporary hidraw access for VIA/QMK; gone on unplug or reboot
+for h in /sys/class/hidraw/hidraw*; do
+	print "${h:t}  $(grep -h HID_NAME $h/device/uevent | cut -d= -f2)"
+done
+if [[ -n $1 ]]; then
+	sudo setfacl -m u:$USER:rw /dev/$1
+fi
