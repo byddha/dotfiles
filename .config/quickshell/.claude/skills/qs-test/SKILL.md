@@ -22,6 +22,9 @@ for Qt's QML debug protocol; you do not call it directly.
 - The mouse moves like a hand (ease-out glide, ~0.5 s, real `ydotool` events), because instant jumps skip
   hover and motion events that real bugs depend on. Keys: `wtype` for text and Esc into shell surfaces,
   `ydotool` for Hyprland keybinds (wtype cannot trigger compositor binds).
+- `ydotoold` runs only between `start` and `end` (and the watchdog). Hyprland asks the keyboard permission
+  for its virtual device at `start`: wait for the user to allow it before the first move or key.
+- Screenshots use `grim`, which Hyprland's screencopy permission asks for; the user allows it for the run.
 - A guard stops any move if the cursor is not where the last move left it: the user took the mouse.
   Stop, tell the user, and wait for them before `start` again.
 - `start` plays `assets/testing.mp3` (the user's chosen sound) to the end before anything moves, so the

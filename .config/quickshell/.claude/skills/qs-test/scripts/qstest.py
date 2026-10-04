@@ -509,6 +509,9 @@ def main(args):
         if subprocess.run(["pw-play", SOUND], capture_output=True).returncode != 0:
             run("notify-send", "-t", "2500", "-a", "Claude", "Test starts", "Don't touch the mouse")
             time.sleep(1)
+        # ydotoold runs only during a test, so its virtual keyboard asks Hyprland's keyboard
+        # permission: the user allows it for this run
+        subprocess.run(["systemctl", "--user", "start", "ydotool"], capture_output=True)
         if f":{PORT} " not in run("ss", "-ltn"):
             restart_qs(["--debug", str(PORT)])
         # Startup keeps logging for a moment (async services): wait until the log is quiet for 1 s
@@ -531,8 +534,10 @@ def main(args):
         state["session"] = None
         save(state)
         # The debug port listens on every interface: never leave it open after a test
-        if "--keep" not in flags and f":{PORT} " in run("ss", "-ltn"):
-            restart_qs([])
+        if "--keep" not in flags:
+            subprocess.run(["systemctl", "--user", "stop", "ydotool"], capture_output=True)
+            if f":{PORT} " in run("ss", "-ltn"):
+                restart_qs([])
         print("disarmed")
     elif cmd == "watchdog":
         time.sleep(WATCHDOG_SECONDS)
@@ -540,6 +545,7 @@ def main(args):
             state = load()
             state["armed"] = False
             save(state)
+            subprocess.run(["systemctl", "--user", "stop", "ydotool"], capture_output=True)
             restart_qs([])
     elif cmd == "eval":
         print(evaluate(pos))
