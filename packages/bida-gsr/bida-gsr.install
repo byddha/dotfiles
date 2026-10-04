@@ -1,0 +1,8 @@
+post_install() {
+	setcap -r /usr/bin/gsr-kms-server 2>/dev/null || true
+}
+
+# Back to what the gpu-screen-recorder package sets
+post_remove() {
+	setcap cap_sys_admin+ep /usr/bin/gsr-kms-server
+}

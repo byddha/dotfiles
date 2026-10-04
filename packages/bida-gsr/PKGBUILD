@@ -1,0 +1,13 @@
+pkgname=bida-gsr
+pkgver=1
+pkgrel=1
+arch=(any)
+license=(custom)
+depends=(gpu-screen-recorder libcap)
+install=bida-gsr.install
+source=(bida-gsr.hook)
+sha256sums=('6dbfbb72a741b2d05806eeea5741dbfa26972c4e182291319b03cefdd71a8a09')
+
+package() {
+	install -Dm644 bida-gsr.hook "$pkgdir/usr/share/libalpm/hooks/bida-gsr.hook"
+}
