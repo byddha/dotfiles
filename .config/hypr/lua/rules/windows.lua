@@ -35,6 +35,16 @@ local rules = {
         center = true,
     },
     {
+        -- Keeps the password from going into another window when the mouse moves
+        name         = "polkit-agent",
+        match        = { class = "^(hyprpolkitagent)$" },
+        float        = true,
+        center       = true,
+        stay_focused = true,
+        dim_around   = true,
+        pin          = true,
+    },
+    {
         name      = "file-picker",
         match     = { class = "^(com\\.mitchellh\\.ghostty)$", initial_title = "^(Select Files:|Select Directory:|Save File:)$" },
         animation = "popin 90%",
