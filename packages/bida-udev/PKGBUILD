@@ -1,0 +1,12 @@
+pkgname=bida-udev
+pkgver=1
+pkgrel=2
+arch=(any)
+license=(custom)
+depends=(systemd)
+source=(70-magic-trackpad.rules)
+sha256sums=('618849342da14360fffcbda8bd67504ee9af7339c6b802e4b656ce4196401b12')
+
+package() {
+	install -Dm644 70-magic-trackpad.rules "$pkgdir/etc/udev/rules.d/70-magic-trackpad.rules"
+}
