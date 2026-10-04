@@ -1,0 +1,8 @@
+// NetworkManager's own default (auth_admin_keep). Arch's networkmanager package adds a rule that
+// lets wheel change system connections without a password, which also hands out stored Wi-Fi
+// passwords and lets any program change DNS; files sort by name, so this one is read first.
+polkit.addRule(function(action, subject) {
+    if (action.id == "org.freedesktop.NetworkManager.settings.modify.system") {
+        return polkit.Result.AUTH_ADMIN_KEEP;
+    }
+});

@@ -1,0 +1,12 @@
+pkgname=bida-polkit
+pkgver=1
+pkgrel=1
+arch=(any)
+license=(custom)
+depends=(polkit)
+source=(10-bida-networkmanager.rules)
+sha256sums=('4ae7457341c7b9d963cc0106c881df11622611c6573828a0244ce0779ba71e7f')
+
+package() {
+	install -Dm644 10-bida-networkmanager.rules "$pkgdir/usr/share/polkit-1/rules.d/10-bida-networkmanager.rules"
+}
