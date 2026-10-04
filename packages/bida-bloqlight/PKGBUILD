@@ -1,0 +1,31 @@
+pkgname=bida-bloqlight
+pkgver=1
+pkgrel=1
+_commit=773f530547df42ab3ff44cac39312b90e637e8fe
+pkgdesc="ROBOBLOQ USB light bar driver, run unprivileged"
+arch=(x86_64)
+options=(!debug)
+url="https://github.com/byddha/bloqlight"
+license=(MIT)
+depends=(glibc)
+makedepends=(go git)
+source=("bloqlight::git+https://github.com/byddha/bloqlight.git#commit=$_commit"
+        bloqlight.service
+        99-lightbar.rules)
+sha256sums=('SKIP'
+            '5b7b0a345a4a34cfe948c11e578ef1a9ba8bfa0b05e1edebe4d7ca82350e5c8a'
+            'e190bc52991d93ea9015e11db6abb35b023aee7724bdf9d1d6962d6cf8d75e28')
+
+build() {
+	cd bloqlight
+	export CGO_CPPFLAGS="$CPPFLAGS" CGO_CFLAGS="$CFLAGS" CGO_CXXFLAGS="$CXXFLAGS" CGO_LDFLAGS="$LDFLAGS"
+	export GOFLAGS="-buildmode=pie -trimpath -ldflags=-linkmode=external -mod=readonly -modcacherw"
+	go build -o bloqlight ./cmd/bloqlight
+}
+
+package() {
+	install -Dm755 bloqlight/bloqlight "$pkgdir/usr/bin/bloqlight"
+	install -Dm644 bloqlight.service "$pkgdir/usr/lib/systemd/system/bloqlight.service"
+	install -Dm644 99-lightbar.rules "$pkgdir/usr/lib/udev/rules.d/99-lightbar.rules"
+	install -Dm644 bloqlight/LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

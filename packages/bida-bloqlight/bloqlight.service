@@ -1,0 +1,26 @@
+[Unit]
+Description=Lightbar UDP-HID bridge for HyperHDR
+StartLimitIntervalSec=60
+StartLimitBurst=20
+
+[Service]
+ExecStart=/usr/bin/bloqlight
+Restart=on-failure
+RestartSec=2
+# The lightbar nodes are 0666 (99-lightbar.rules), so no privileges are needed
+DynamicUser=yes
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+RestrictSUIDSGID=yes
+RestrictRealtime=yes
+RestrictNamespaces=yes
+LockPersonality=yes
+SystemCallArchitectures=native
+CapabilityBoundingSet=

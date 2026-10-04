@@ -3,3 +3,5 @@ pkg/
 *.tar.*
 *.log
 .SRCINFO
+# git sources that makepkg mirrors next to the PKGBUILD
+bida-bloqlight/bloqlight/
