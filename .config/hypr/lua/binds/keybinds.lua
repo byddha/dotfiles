@@ -24,6 +24,8 @@ local app_binds = {
     { "<D-g>",      exec("qs ipc call games toggle"),                  "Games" },
     { "<D-1>",      hl.dsp.workspace.toggle_special("chatapps") },
     { "<D-2>",      hl.dsp.workspace.toggle_special("gaming") },
+    { "<D-S-1>",    hl.dsp.window.move({ workspace = "special:chatapps" }), "Move window to chatapps" },
+    { "<D-S-2>",    hl.dsp.window.move({ workspace = "special:gaming" }),   "Move window to gaming" },
     { "<D-z>",      exec("qs ipc call screenshot region"),             "Screenshot" },
     { "<D-Return>", exec(programs.terminal),                           "Launch terminal" },
 }
