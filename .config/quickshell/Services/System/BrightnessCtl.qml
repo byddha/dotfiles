@@ -29,6 +29,14 @@ Scope {
             pollProcess.running = true;
     }
 
+    // Applies a brightness read from outside, without re-reading max
+    function sync(current) {
+        if (!isNaN(current) && current !== root.currentBrightness) {
+            root.currentBrightness = current;
+            root.brightness = current / root.maxBrightness;
+        }
+    }
+
     function set(value) {
         if (!root.available)
             return;
@@ -46,13 +54,7 @@ Scope {
         command: ["brightnessctl", ...root.deviceArgs, "get"]
 
         stdout: StdioCollector {
-            onStreamFinished: {
-                const current = parseInt(text.trim());
-                if (!isNaN(current) && current !== root.currentBrightness) {
-                    root.currentBrightness = current;
-                    root.brightness = current / root.maxBrightness;
-                }
-            }
+            onStreamFinished: root.sync(parseInt(text.trim()))
         }
     }
 
