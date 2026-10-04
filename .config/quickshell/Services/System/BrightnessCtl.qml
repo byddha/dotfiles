@@ -23,12 +23,6 @@ Scope {
             getProcess.running = true;
     }
 
-    // Picks up external changes without re-reading max
-    function poll() {
-        if (root.available)
-            pollProcess.running = true;
-    }
-
     // Applies a brightness read from outside, without re-reading max
     function sync(current) {
         if (!isNaN(current) && current !== root.currentBrightness) {
@@ -47,15 +41,6 @@ Scope {
 
         setProcess.command = ["brightnessctl", ...root.deviceArgs, "set", absoluteValue.toString()];
         setProcess.running = true;
-    }
-
-    Process {
-        id: pollProcess
-        command: ["brightnessctl", ...root.deviceArgs, "get"]
-
-        stdout: StdioCollector {
-            onStreamFinished: root.sync(parseInt(text.trim()))
-        }
     }
 
     Process {

@@ -38,12 +38,32 @@ Singleton {
         snapToLevels: true
     }
 
-    // Poll for external changes (sysfs doesn't support inotify)
-    Timer {
-        interval: 1000
-        running: root.available
-        repeat: true
-        onTriggered: device.poll()
+    function readBrightnessFile() {
+        brightnessFile.reload();
+        device.sync(parseInt(brightnessFile.text().trim()));
+    }
+
+    FileView {
+        id: brightnessFile
+        path: root.deviceName ? `/sys/class/leds/${root.deviceName}/brightness` : ""
+        blockAllReads: true
+    }
+
+    // Software writes (brightnessctl, upower) modify brightness itself
+    FileView {
+        path: brightnessFile.path
+        preload: false
+        watchChanges: root.available
+        onFileChanged: Qt.callLater(root.readBrightnessFile)
+    }
+
+    // Firmware changes (Fn key) only notify brightness_hw_changed, which errors on read until the first one
+    FileView {
+        path: root.deviceName ? `/sys/class/leds/${root.deviceName}/brightness_hw_changed` : ""
+        preload: false
+        printErrors: false
+        watchChanges: root.available
+        onFileChanged: Qt.callLater(root.readBrightnessFile)
     }
 
     Process {
