@@ -8,6 +8,7 @@ local modules = {
     "lua.rules.layers",
     "lua.input.controls",
     "lua.rules.windows",
+    "lua.rules.permissions",
     "lua.binds.keybinds",
     "lua.binds.submaps",
     "lua.binds.vicinae",
