@@ -275,7 +275,7 @@ QtObject {
             return null;
         return {
             name: mon.name,
-            key: screen.model,
+            key: screen.model.trim(),
             x: mon.x,
             y: mon.y,
             width: mon.width,

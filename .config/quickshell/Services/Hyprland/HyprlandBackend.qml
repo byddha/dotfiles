@@ -91,7 +91,7 @@ QtObject {
         const turned = (mon.transform ?? 0) % 2 === 1;
         return {
             name: mon.name,
-            key: screen.model,
+            key: screen.model.trim(),
             x: mon.x,
             y: mon.y,
             width: (turned ? mon.height : mon.width) / mon.scale,
