@@ -30,4 +30,5 @@ _darcs
 ^/COPYING
 
 pkgs
+packages
 ^/\.pre-commit-config\.yaml
