@@ -1,0 +1,12 @@
+pkgname=bida-sysctl
+pkgver=1
+pkgrel=1
+arch=(any)
+license=(custom)
+depends=(systemd)
+source=(90-bida.conf)
+sha256sums=('37440835103f2ebade6535ff7e61fe2324349dbb29e1889bf5c2aa4d7763003c')
+
+package() {
+	install -Dm644 90-bida.conf "$pkgdir/usr/lib/sysctl.d/90-bida.conf"
+}
