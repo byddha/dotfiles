@@ -6,7 +6,7 @@
 # shellcheck disable=SC2154
 pkgname=vicinae
 pkgver=0.29.1
-pkgrel=1.2
+pkgrel=1.3
 pkgdesc="A focused launcher for your desktop — native, fast, extensible"
 arch=('x86_64' 'aarch64')
 url="https://github.com/vicinaehq/vicinae"
@@ -20,6 +20,8 @@ depends=(
   'qtkeychain-qt6'
   'qt6-declarative'
   'syntax-highlighting'
+  # vicinae-server links libcmark-gfm at runtime; upstream lists it only as a makedepend
+  'cmark-gfm'
 )
 makedepends=(
   'git'
