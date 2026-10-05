@@ -18,14 +18,12 @@ Scope {
             targetScreen: modelData
             visible: Settings.sidebarVisible && modelData.name === Compositor.focusedMonitorName
 
-            WlrLayershell.layer: WlrLayer.Overlay
             WlrLayershell.namespace: "bidshell:sidebar"
 
             // From the screen edges, or from the bar where it is
             readonly property int gap: 10
 
             closeOnDismiss: false
-            useFocusGrab: true
             slideFrom: Placement.sidebarSide
             slideClip: BarLayout.reservedAt(Placement.sidebarSide)
             padding: 12

@@ -3,6 +3,7 @@ import QtQuick.Effects
 import Quickshell
 import Quickshell.Wayland
 import "../../Config"
+import "../../Components"
 
 /**
  * BarWindow - The bar on one screen, along the edge BarLayout names.
@@ -42,6 +43,9 @@ PanelWindow {
     mask: Region {
         item: inputArea
     }
+
+    Component.onCompleted: Popouts.registerBar(root)
+    Component.onDestruction: Popouts.unregisterBar(root)
 
     Item {
         id: inputArea

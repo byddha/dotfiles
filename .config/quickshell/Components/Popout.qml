@@ -10,6 +10,7 @@ import "../Services"
  * Popout - Base for every panel that opens over the desktop (bar popups, sidebar).
  *
  * A full-screen transparent layer window, so outside clicks (also on Niri) close it; Esc closes it too.
+ * It takes no input over the bar, so a click there reaches the bar. Components/Popouts holds the focus grab.
  * The panel sits at panelX / panelY, bound so it moves in the same frame its size changes.
  * It holds exactly one content child, which fills it: the panel takes that child's implicit size
  * (height clamped to maxPanelHeight), and the child gets the real size back. Sizes only flow one way.
@@ -40,7 +41,8 @@ PanelWindow {
     property real slideClip: 0
     // false: the owner closes it (e.g. binds visible) when dismissed() fires
     property bool closeOnDismiss: true
-    property bool useFocusGrab: false
+    // The popout this one opened from: it stays open under this one
+    property PanelWindow parentPopout: null
 
     property bool contentWarm: false
     property bool presented: false
@@ -77,8 +79,9 @@ PanelWindow {
         bottom: true
     }
 
-    WlrLayershell.layer: WlrLayer.Top
-    WlrLayershell.keyboardFocus: visible ? (Compositor.hasFocusGrab ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.Exclusive) : WlrKeyboardFocus.None
+    WlrLayershell.layer: WlrLayer.Overlay
+    // Not before the first frame: Hyprland gives the pointer to a layer that maps with keyboard focus, even over the bar
+    WlrLayershell.keyboardFocus: visible && presented ? (Compositor.hasFocusGrab ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.Exclusive) : WlrKeyboardFocus.None
     WlrLayershell.exclusionMode: ExclusionMode.Ignore
     exclusiveZone: 0
 
@@ -87,13 +90,15 @@ PanelWindow {
         wrapper.escapePressed = false;
         if (visible) {
             contentWarm = true;
-            // The grab must be switched on after the window is mapped, never bound to visible
-            Qt.callLater(() => focusGrab.active = root.useFocusGrab && Compositor.hasFocusGrab);
+            Popouts.opened(root);
         } else {
-            focusGrab.active = false;
+            Popouts.closed(root);
             panelClosed();
         }
     }
+
+    // A screen going away destroys its popouts without hiding them
+    Component.onDestruction: Popouts.closed(root)
 
     function hidePanel() {
         visible = false;
@@ -105,13 +110,6 @@ PanelWindow {
             hidePanel();
     }
 
-    FocusGrab {
-        id: focusGrab
-        windows: [root]
-        active: false
-        onCleared: root.dismiss()
-    }
-
     Connections {
         target: wrapper.Window.window
         enabled: root.visible && !root.presented
@@ -121,8 +119,17 @@ PanelWindow {
         }
     }
 
+    mask: Region {
+        item: dismissArea
+    }
+
     MouseArea {
-        anchors.fill: parent
+        id: dismissArea
+
+        x: BarLayout.reservedAt("left")
+        y: BarLayout.reservedAt("top")
+        width: parent.width - x - BarLayout.reservedAt("right")
+        height: parent.height - y - BarLayout.reservedAt("bottom")
         enabled: root.visible
         onClicked: root.dismiss()
     }

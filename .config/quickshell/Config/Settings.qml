@@ -15,8 +15,7 @@ Singleton {
     property bool wallpaperPaused: false
 
     // For bar buttons: open the sidebar on their tab, or close it when that tab is already open.
-    // A toggle, not an open, because a click right after opening still lands on the button (the
-    // sidebar's click-outside surface is not up yet) and must close it as well.
+    // The sidebar leaves the bar free, so a second click on the button reaches it and closes the sidebar.
     function toggleSidebarTab(tab) {
         if (sidebarVisible && sidebarSelectedTab === tab) {
             sidebarVisible = false;

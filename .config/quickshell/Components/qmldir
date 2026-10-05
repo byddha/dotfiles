@@ -16,6 +16,7 @@ ListRow 1.0 ListRow.qml
 ScrollList 1.0 ScrollList.qml
 ToggleTile 1.0 ToggleTile.qml
 Popout 1.0 Popout.qml
+singleton Popouts 1.0 Popouts.qml
 Icon 1.0 Icon.qml
 Spinner 1.0 Spinner.qml
 Keycap 1.0 Keycap.qml
