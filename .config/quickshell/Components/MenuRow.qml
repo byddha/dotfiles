@@ -1,11 +1,10 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell.Widgets
-import "../../Config"
-import "../../Services"
-import "../../Components"
+import "../Config"
+import "../Services"
 
-// One row of a menu that opens from the bar (power, tray)
+// One row of a menu: the bar's power and tray menus, and the power menu of the lock and the greeter
 Rectangle {
     id: row
 

@@ -20,5 +20,7 @@ singleton Popouts 1.0 Popouts.qml
 Icon 1.0 Icon.qml
 Spinner 1.0 Spinner.qml
 Keycap 1.0 Keycap.qml
+MenuRow 1.0 MenuRow.qml
+PowerMenuList 1.0 PowerMenuList.qml
 WindowPreview 1.0 WindowPreview.qml
 ScreenSnapshot 1.0 ScreenSnapshot.qml

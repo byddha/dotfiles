@@ -23,7 +23,7 @@ BarPopout {
             spacing: Theme.spacingBase
 
             Icon {
-                text: Battery.charging ? Lucide.batteryCharging : Battery.isCritical ? Lucide.batteryWarning : Battery.percentage >= 80 ? Lucide.batteryFull : Battery.percentage >= 40 ? Lucide.batteryMedium : Lucide.batteryLow
+                text: Battery.icon
                 size: Theme.iconSizeLarge
                 color: Battery.charging ? Theme.accentGreen : Battery.isCritical ? Theme.accentRed : Battery.isLow ? Theme.accentOrange : Theme.textColor
             }

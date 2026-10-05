@@ -33,6 +33,8 @@ ShellRoot {
         id: wallpaper
     }
 
+    BatteryNotifier {}
+
     Bar {
         id: bar
     }

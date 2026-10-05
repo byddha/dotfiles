@@ -1,0 +1,10 @@
+module Lock
+
+LockView 1.0 LockView.qml
+LockWallpaper 1.0 LockWallpaper.qml
+FakeAuth 1.0 FakeAuth.qml
+singleton LockConfig 1.0 LockConfig.qml
+CapsLock 1.0 CapsLock.qml
+PamAuth 1.0 PamAuth.qml
+GreetdAuth 1.0 GreetdAuth.qml
+Sessions 1.0 Sessions.qml
