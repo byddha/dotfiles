@@ -34,7 +34,7 @@ BarItem {
     }
 
     Icon {
-        text: Battery.charging ? Lucide.batteryCharging : Battery.isCritical ? Lucide.batteryWarning : Battery.percentage >= 80 ? Lucide.batteryFull : Battery.percentage >= 40 ? Lucide.batteryMedium : Lucide.batteryLow
+        text: Battery.icon
         color: Battery.charging ? Theme.accentGreen : root.tint
     }
     Row {

@@ -3,7 +3,6 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Services.UPower
-import "../../Utils"
 import ".."
 
 /**
@@ -39,6 +38,8 @@ Singleton {
 
     readonly property bool isLow: available && !charging && percentage <= lowThreshold
     readonly property bool isCritical: available && !charging && percentage <= criticalThreshold
+
+    readonly property string icon: charging ? Lucide.batteryCharging : isCritical ? Lucide.batteryWarning : percentage >= 80 ? Lucide.batteryFull : percentage >= 40 ? Lucide.batteryMedium : Lucide.batteryLow
 
     // Format time as "Xh Ym"
     function formatTime(seconds: int): string {
@@ -76,29 +77,5 @@ Singleton {
         }
 
         return status;
-    }
-
-    // Low battery notifications
-    property bool _notifiedLow: false
-    property bool _notifiedCritical: false
-
-    onIsLowChanged: {
-        if (isLow && !_notifiedLow) {
-            _notifiedLow = true;
-            Quickshell.execDetached(["notify-send", "-e", "Low Battery", `Battery at ${percentage}%. Consider plugging in.`, "-u", "normal", "-a", "Battery"]);
-            Logger.warn(`Low battery: ${percentage}%`);
-        } else if (!isLow) {
-            _notifiedLow = false;
-        }
-    }
-
-    onIsCriticalChanged: {
-        if (isCritical && !_notifiedCritical) {
-            _notifiedCritical = true;
-            Quickshell.execDetached(["notify-send", "-e", "Critical Battery", `Battery at ${percentage}%! Plug in now!`, "-u", "critical", "-a", "Battery"]);
-            Logger.error(`Critical battery: ${percentage}%`);
-        } else if (!isCritical) {
-            _notifiedCritical = false;
-        }
     }
 }

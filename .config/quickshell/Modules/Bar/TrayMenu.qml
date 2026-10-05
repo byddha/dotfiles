@@ -6,6 +6,7 @@ import Quickshell
 import Quickshell.Wayland
 import "../../Config"
 import "../../Services"
+import "../../Components"
 
 // A tray app's menu. Submenus replace the list, with a Back row on top.
 BarPopout {
@@ -61,7 +62,7 @@ BarPopout {
                 anchors.fill: parent
                 spacing: 1
 
-                BarMenuRow {
+                MenuRow {
                     visible: level.isSubmenu
                     icon: Lucide.chevronLeft
                     label: "Back"
@@ -89,7 +90,7 @@ BarPopout {
                             color: Theme.outlineVariant
                         }
 
-                        BarMenuRow {
+                        MenuRow {
                             id: row
 
                             visible: !entry.modelData.isSeparator
