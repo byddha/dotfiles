@@ -14,8 +14,8 @@ Card {
     id: root
 
     property bool shown: false
-    property int selectedTab: Settings.sidebarSelectedTab
-    onSelectedTabChanged: Settings.sidebarSelectedTab = selectedTab
+    // Read-only: an assignment here would break the binding, and the bar buttons would stop switching tabs
+    readonly property int selectedTab: Settings.sidebarSelectedTab
 
     readonly property var tabModel: [
         {
@@ -100,9 +100,7 @@ Card {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        root.selectedTab = tab.index;
-                    }
+                    onClicked: Settings.sidebarSelectedTab = tab.index
                 }
             }
         }
