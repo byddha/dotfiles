@@ -19,7 +19,6 @@ ShellRoot {
     id: root
 
     Component.onCompleted: {
-        Config.init();
         WeatherService.init();
         RssFeedNotifier.init();
         Logger.info("Components initialized");

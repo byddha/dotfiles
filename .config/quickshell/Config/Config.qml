@@ -10,15 +10,15 @@ import "../Utils"
 Singleton {
     id: config
 
-    function init() {
-        loadConfig();
-    }
-
     readonly property string configDir: (StandardPaths.writableLocation ? StandardPaths.writableLocation(StandardPaths.ConfigLocation) : "~/.config") + "/bidshell"
     readonly property string configFile: configDir + "/config.json"
 
-    property bool configLoaded: false
     property alias options: adapter
+
+    // As DankMaterialShell's SettingsData: read the file before anything uses the options, or every
+    // window is built first with the defaults. blockLoading makes text() wait for the file, and the
+    // adapter fills from the dataChanged it sends.
+    Component.onCompleted: fileView.text()
 
     readonly property string primaryMonitor: {
         const monitors = adapter.monitors || {};
@@ -28,10 +28,6 @@ Singleton {
         }
         const models = Object.keys(monitors);
         return models.length > 0 ? models[0] : (Compositor.monitorFor(Quickshell.screens[0])?.key ?? "");
-    }
-
-    function loadConfig() {
-        fileView.reload();
     }
 
     // Every setting into the file: its own values, and the defaults of the ones it leaves out. Keys
@@ -66,11 +62,9 @@ Singleton {
         onExited: (code, status) => {
             if (code === 0) {
                 Logger.info("Config directory created, saving defaults...");
-                config.configLoaded = true;
                 fileView.writeAdapter();
             } else {
                 Logger.error("Failed to create config directory");
-                config.configLoaded = true;
             }
         }
     }
@@ -79,6 +73,7 @@ Singleton {
         id: fileView
         path: config.configFile
         watchChanges: true
+        blockLoading: true
 
         onFileChanged: {
             Logger.info("Config file changed");
@@ -93,7 +88,6 @@ Singleton {
 
         onLoaded: {
             Logger.info("Config loaded from:", config.configFile);
-            config.configLoaded = true;
             Logger.debugEnabled = adapter.general.debugLogging;
             Logger.traceEnabled = adapter.general.traceLogging;
         }
