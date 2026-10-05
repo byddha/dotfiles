@@ -6,6 +6,8 @@ import "../../Components"
 BarItem {
     id: root
 
+    property BatteryPopout popout: BatteryPopout {}
+
     readonly property color tint: Battery.isCritical ? Theme.accentRed : Battery.isLow ? Theme.accentOrange : Theme.textColor
 
     visible: Battery.available
@@ -18,8 +20,18 @@ BarItem {
     }
     fill: Battery.isCritical ? Theme.alpha(Theme.accentRed, 0.16) : "transparent"
     hoverFill: Battery.isCritical ? Theme.alpha(Theme.accentRed, 0.26) : Theme.chipSurface
-    tooltipTitle: `Battery ${Battery.percentage}%`
-    tooltipDetail: Battery.getStatusText()
+    highlighted: popout.visible
+    tooltipTitle: popout.visible ? "" : `Battery ${Battery.percentage}%`
+    tooltipDetail: `${Battery.getStatusText()}\n${PowerMode.name(PowerMode.profile)} profile · Click for details`
+
+    onClicked: mouse => {
+        if (mouse.button !== Qt.LeftButton)
+            return;
+        if (popout.visible)
+            popout.hidePanel();
+        else
+            popout.openFrom(root);
+    }
 
     Icon {
         text: Battery.charging ? Lucide.batteryCharging : Battery.isCritical ? Lucide.batteryWarning : Battery.percentage >= 80 ? Lucide.batteryFull : Battery.percentage >= 40 ? Lucide.batteryMedium : Lucide.batteryLow

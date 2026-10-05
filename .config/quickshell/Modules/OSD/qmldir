@@ -2,3 +2,4 @@ module OSD
 
 OSD 1.0 OSD.qml
 OsdValueIndicator 1.0 OsdValueIndicator.qml
+OsdLabelIndicator 1.0 OsdLabelIndicator.qml

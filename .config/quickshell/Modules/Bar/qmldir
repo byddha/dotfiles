@@ -22,6 +22,7 @@ TrayItems 1.0 TrayItems.qml
 TrayMenu 1.0 TrayMenu.qml
 DeviceBatteriesButton 1.0 DeviceBatteriesButton.qml
 LaptopBatteryButton 1.0 LaptopBatteryButton.qml
+BatteryPopout 1.0 BatteryPopout.qml
 NotificationsButton 1.0 NotificationsButton.qml
 BarAnchoredPopup 1.0 BarAnchoredPopup.qml
 MediaButton 1.0 MediaButton.qml

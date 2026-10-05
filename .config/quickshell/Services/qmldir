@@ -1,5 +1,6 @@
 singleton Battery 1.0 System/Battery.qml
 singleton Brightness 1.0 System/Brightness.qml
+singleton PowerMode 1.0 System/PowerMode.qml
 singleton KeyboardBrightness 1.0 System/KeyboardBrightness.qml
 BrightnessCtl 1.0 System/BrightnessCtl.qml
 singleton Idle 1.0 System/Idle.qml

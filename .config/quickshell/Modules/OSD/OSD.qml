@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
+import Quickshell.Services.UPower
 import "../../Config"
 import "../../Services"
 import "../../Utils"
@@ -50,6 +51,13 @@ Scope {
             if (!Brightness.available)
                 return;
             root.triggerOsd("brightness");
+        }
+    }
+
+    Connections {
+        target: PowerProfiles
+        function onProfileChanged() {
+            root.triggerOsd("powerProfile");
         }
     }
 
@@ -110,6 +118,8 @@ Scope {
                             return microphoneIndicator;
                         case "brightness":
                             return brightnessIndicator;
+                        case "powerProfile":
+                            return powerProfileIndicator;
                         }
                         return null;
                     }
@@ -136,6 +146,14 @@ Scope {
                     OsdValueIndicator {
                         value: Brightness.brightness
                         icon: Lucide.sun
+                    }
+                }
+
+                Component {
+                    id: powerProfileIndicator
+                    OsdLabelIndicator {
+                        icon: PowerMode.icon(PowerMode.profile)
+                        label: PowerMode.name(PowerMode.profile)
                     }
                 }
             }

@@ -17,6 +17,7 @@ RowLayout {
     property bool isMuted: false
     // Replaces the percentage, e.g. "2/3"
     property string labelText: ""
+    property bool showLabel: true
 
     readonly property bool boosted: slider.value > 1.0
     readonly property real boostStart: slider.to > 1 ? 1.0 / slider.to : 1
@@ -151,6 +152,7 @@ RowLayout {
     }
 
     StyledText {
+        visible: root.showLabel
         Layout.preferredWidth: 44
         horizontalAlignment: Text.AlignRight
         text: root.isMuted && root.showMuteIcon ? "Muted" : root.labelText !== "" ? root.labelText : Math.round(slider.value * 100) + "%"
