@@ -1,9 +1,11 @@
 #!/bin/bash
 # greetd's greeter command: greeter.qml inside its own niri (greeter/niri.kdl), then tuigreet when
 # that did not launch a session (a crash, niri or qs failing), so a login is always there.
-# BIDSHELL_GREETER_HOME: the greeter's home, where greeter/sync puts the user's theme and wallpapers.
+# Its own files (state, caches) in its home, only its own; the user's theme and wallpapers from the
+# copy greeter/sync makes in another dir. BIDSHELL_GREETER_HOME and BIDSHELL_GREETER_DATA move them.
 export BIDSHELL_SHELL=$(dirname "$(readlink -f "$0")")/..
 export HOME=${BIDSHELL_GREETER_HOME:-/var/lib/bidshell-greeter}
+export BIDSHELL_USER_HOME=${BIDSHELL_GREETER_DATA:-/var/cache/bidshell-greeter}
 # Everything under that home, also when a caller has them set to its own (and no Qt theme tool,
 # whose config is not there)
 unset XDG_CONFIG_HOME XDG_CACHE_HOME XDG_STATE_HOME XDG_DATA_HOME QT_QPA_PLATFORMTHEME

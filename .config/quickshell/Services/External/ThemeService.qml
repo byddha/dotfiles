@@ -18,7 +18,8 @@ import "../../Utils"
 Singleton {
     id: root
 
-    readonly property string stateDir: `${Quickshell.env("HOME")}/.cache/theme`
+    // The greeter shows the user's theme from the copy greeter/sync makes (greeter/start sets this)
+    readonly property string stateDir: `${Quickshell.env("BIDSHELL_USER_HOME") || Quickshell.env("HOME")}/.cache/theme`
     readonly property string themeSetBin: `${Quickshell.env("HOME")}/dotfiles/scripts/theme-set`
 
     // Active theme, mirrored from state.json
