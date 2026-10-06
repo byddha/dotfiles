@@ -2,7 +2,9 @@
 # so work in progress or another branch never reaches the login, and what checks the password is
 # not writable by the user. Rebuild (makepkg -si) after changing the lock or the greeter.
 pkgname=bida-shell
-pkgver=r614.532f4be
+# Fixed: a pkgver() would make makepkg write each new version into this tracked file. The commit
+# a build comes from is in /usr/share/bidshell/COMMIT.
+pkgver=1
 pkgrel=1
 arch=(any)
 license=(custom)
@@ -11,15 +13,12 @@ backup=(etc/greetd/bidshell.toml)
 source=(bidshell.toml bidshell-greetd.pam greetd.conf bidshell.tmpfiles)
 sha256sums=(SKIP SKIP SKIP SKIP)
 
-pkgver() {
-	printf "r%s.%s" "$(git -C "$startdir" rev-list --count HEAD)" "$(git -C "$startdir" rev-parse --short HEAD)"
-}
-
 package() {
 	install -d "$pkgdir/usr/share/bidshell"
 	# From the top: below it, git reads the path as a relative one
 	git -C "$(git -C "$startdir" rev-parse --show-toplevel)" -c tar.umask=0022 archive HEAD:.config/quickshell |
 		tar -x -C "$pkgdir/usr/share/bidshell" --exclude=.claude
+	git -C "$startdir" rev-parse --short HEAD >"$pkgdir/usr/share/bidshell/COMMIT"
 	install -Dm644 bidshell.toml "$pkgdir/etc/greetd/bidshell.toml"
 	install -Dm644 bidshell-greetd.pam "$pkgdir/etc/pam.d/bidshell-greetd"
 	install -Dm644 greetd.conf "$pkgdir/usr/lib/systemd/system/greetd.service.d/bidshell.conf"
