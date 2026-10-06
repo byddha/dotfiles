@@ -123,6 +123,12 @@ Item {
         }
 
         function onError(error) {
+            // After a failed login Quickshell cancels the session, and greetd answers that with an
+            // error: its PAM worker has already gone (greetd context.rs cancel). Not this attempt's.
+            if (settle.running) {
+                Logger.info("Greeter: greetd error after a failed login:", error);
+                return;
+            }
             Logger.error("Greeter: greetd error:", error);
             root.fail("Login error");
         }

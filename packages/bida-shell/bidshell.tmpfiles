@@ -1,3 +1,5 @@
-# The greeter's home: its state and Qt caches, and the user's theme copied in by greeter/sync, which
-# needs the user in the greeter group
-d /var/lib/bidshell-greeter 2770 greeter greeter -
+# The greeter's home: its state and caches, its own only, so nothing it loads can be planted there
+d /var/lib/bidshell-greeter 0700 greeter greeter -
+# The user's theme and wallpapers for the greeter: greeter/sync writes them (the user is in the
+# greeter group), the greeter only reads them
+d /var/cache/bidshell-greeter 2770 greeter greeter -

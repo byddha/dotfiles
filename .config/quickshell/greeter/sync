@@ -1,12 +1,12 @@
 #!/bin/bash
-# Copies what the lock shows from this user into the greeter's home, so the greeter looks the same:
-# the theme, the monitors and the wallpapers (recolored ones and posters too). The paths there are
-# the ones they have here, so the greeter's code reads them unchanged. Copies, never links: the
-# greeter cannot read this home. Nothing to do before the greeter is installed.
+# Copies what the lock shows from this user to where the greeter reads it, so the greeter looks the
+# same: the theme, the monitors and the wallpapers (recolored ones and posters too). The paths there
+# are the ones they have in this home (greeter/start points the greeter at it). Copies, never links:
+# the greeter cannot read this home. Nothing to do before the greeter is installed.
 # Run by theme-set (theme-set.d/greeter.sh) and by the shell after a wallpaper change.
-dest=${BIDSHELL_GREETER_HOME:-/var/lib/bidshell-greeter}
+dest=${BIDSHELL_GREETER_DATA:-/var/cache/bidshell-greeter}
 [ -w "$dest" ] || exit 0
-# Only for the greeter's group, like the setgid home they go into
+# Only for the greeter's group, like the setgid dir they go into
 umask 027
 
 config=${XDG_CONFIG_HOME:-$HOME/.config}

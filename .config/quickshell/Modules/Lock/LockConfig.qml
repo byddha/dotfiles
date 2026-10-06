@@ -17,8 +17,11 @@ Singleton {
     id: root
 
     property var monitors: ({})
+    // The greeter's copy of the user's files (greeter/sync makes it, greeter/start sets this), laid
+    // out as in the user's home; empty for the lock, which reads the user's own
+    readonly property string userHome: Quickshell.env("BIDSHELL_USER_HOME") ?? ""
     // The shell keeps one recolored file per monitor here, named <monitor key>-<hash>
-    readonly property string cacheDir: StandardPaths.standardLocations(StandardPaths.CacheLocation)[0].toString().replace("file://", "") + "/bidshell/wallpaper"
+    readonly property string cacheDir: (userHome !== "" ? userHome + "/.cache/quickshell" : StandardPaths.standardLocations(StandardPaths.CacheLocation)[0].toString().replace("file://", "")) + "/bidshell/wallpaper"
 
     function keyOf(screen) {
         return screen?.model.trim() ?? "";
@@ -46,7 +49,7 @@ Singleton {
     FileView {
         id: config
 
-        path: StandardPaths.writableLocation(StandardPaths.ConfigLocation) + "/bidshell/config.json"
+        path: (root.userHome !== "" ? root.userHome + "/.config" : StandardPaths.writableLocation(StandardPaths.ConfigLocation)) + "/bidshell/config.json"
         blockLoading: true
         watchChanges: true
 
