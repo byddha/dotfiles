@@ -1,0 +1,11 @@
+# greetd with the shell's greeter (/usr/share/bidshell/greeter/start)
+
+[terminal]
+vt = 1
+
+[general]
+service = "bidshell-greetd"
+
+[default_session]
+command = "/usr/share/bidshell/greeter/start"
+user = "greeter"
