@@ -6,6 +6,8 @@
 # Run by theme-set (theme-set.d/greeter.sh) and by the shell after a wallpaper change.
 dest=${BIDSHELL_GREETER_HOME:-/var/lib/bidshell-greeter}
 [ -w "$dest" ] || exit 0
+# Only for the greeter's group, like the setgid home they go into
+umask 027
 
 config=${XDG_CONFIG_HOME:-$HOME/.config}
 cache=${XDG_CACHE_HOME:-$HOME/.cache}
