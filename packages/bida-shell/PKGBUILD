@@ -1,6 +1,7 @@
 # The shell's lock screen and greeter, root-owned: a copy of the last commit of .config/quickshell,
 # so work in progress or another branch never reaches the login, and what checks the password is
-# not writable by the user. Rebuild (makepkg -si) after changing the lock or the greeter.
+# not writable by the user. After changing the lock or the greeter: makepkg -sif (the version is
+# fixed, so without -f makepkg reinstalls the package it built before).
 pkgname=bida-shell
 # Fixed: a pkgver() would make makepkg write each new version into this tracked file. The commit
 # a build comes from is in /usr/share/bidshell/COMMIT.

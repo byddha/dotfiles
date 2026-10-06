@@ -5,7 +5,10 @@
 # the greeter cannot read this home. Nothing to do before the greeter is installed.
 # Run by theme-set (theme-set.d/greeter.sh) and by the shell after a wallpaper change.
 dest=${BIDSHELL_GREETER_DATA:-/var/cache/bidshell-greeter}
-[ -w "$dest" ] || exit 0
+if [ ! -w "$dest" ]; then
+    [ -t 2 ] && echo "greeter/sync: $dest is not writable: the greeter is not installed, or this login is from before joining the greeter group" >&2
+    exit 0
+fi
 # Only for the greeter's group, like the setgid dir they go into
 umask 027
 
