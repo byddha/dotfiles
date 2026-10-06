@@ -8,7 +8,7 @@ Item {
     id: root
 
     property string user: ""
-    // {command: [...], env: [...]}, from Sessions
+    // {id, name, command, env}, from Sessions
     property var session: null
     property bool busy: false
     property string message: ""
@@ -18,6 +18,9 @@ Item {
     property string prompt: ""
     property bool echo: false
     property string password: ""
+    // greetd's info and error lines of this attempt (e.g. pam_faillock's lockout notice), shown
+    // instead of a generic error
+    property var info: []
 
     signal failed
     // Before the session starts and the greeter quits: the time to remember the user and session
@@ -26,21 +29,31 @@ Item {
     function submit(text) {
         if (busy)
             return;
-        error = false;
-        message = "";
-        busy = true;
         if (prompt !== "") {
             prompt = "";
             echo = false;
+            busy = true;
             Greetd.respond(text);
+            return;
+        }
+        const name = user.trim();
+        if (text === "" || name === "")
+            return;
+        if (!session) {
+            fail("No session to start");
             return;
         }
         if (!Greetd.available) {
             fail("greetd is not running");
             return;
         }
+        user = name;
+        info = [];
+        error = false;
+        message = "";
         password = text;
-        Greetd.createSession(user);
+        busy = true;
+        Greetd.createSession(name);
     }
 
     function cancel() {
@@ -49,16 +62,37 @@ Item {
         prompt = "";
         echo = false;
         Greetd.cancelSession();
+        settle.restart();
     }
 
     function fail(text) {
-        busy = false;
         password = "";
         prompt = "";
         echo = false;
         error = true;
-        message = text;
+        message = info.length > 0 ? info.join("\n") : text;
         failed();
+        settle.restart();
+    }
+
+    // Stays busy a moment after a failure: Quickshell cancels the failed session itself and takes
+    // greetd's reply to that for the next login's (quickshell #1266), so a new attempt waits for it
+    Timer {
+        id: settle
+
+        interval: 300
+        onTriggered: root.busy = false
+    }
+
+    // An attempt greetd never answers would leave the fields read-only for good
+    Timer {
+        interval: 15000
+        running: root.busy && !settle.running
+        onTriggered: {
+            Logger.warn("Greeter: greetd did not answer");
+            Greetd.cancelSession();
+            root.fail("Login timed out");
+        }
     }
 
     Connections {
@@ -67,6 +101,8 @@ Item {
         // An info or error line answers itself: Quickshell sends greetd the empty reply
         function onAuthMessage(message, error, responseRequired, echoResponse) {
             if (!responseRequired) {
+                if (message !== "")
+                    root.info = root.info.concat([message]);
                 root.message = message;
                 root.error = error;
                 return;
@@ -92,16 +128,14 @@ Item {
         }
 
         function onReadyToLaunch() {
+            // Not a real success: the reply to a cancel taken for one (quickshell #1266)
+            if (!root.busy || Greetd.state !== GreetdState.ReadyToLaunch) {
+                Logger.warn("Greeter: not ready to launch");
+                root.fail("Login error");
+                return;
+            }
             root.launching();
-            launch.start();
+            Greetd.launch(root.session.command, root.session.env, true);
         }
-    }
-
-    // A moment for `launching` to write what it remembers: the greeter quits on launch
-    Timer {
-        id: launch
-
-        interval: 150
-        onTriggered: Greetd.launch(root.session?.command ?? [], root.session?.env ?? [], true)
     }
 }

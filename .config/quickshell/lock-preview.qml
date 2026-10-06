@@ -17,6 +17,10 @@ ShellRoot {
         id: fakeAuth
     }
 
+    LockInput {
+        id: lockInput
+    }
+
     Variants {
         model: Quickshell.screens
 
@@ -43,6 +47,7 @@ ShellRoot {
                 anchors.fill: parent
                 screen: window.modelData
                 auth: fakeAuth
+                input: lockInput
             }
         }
     }

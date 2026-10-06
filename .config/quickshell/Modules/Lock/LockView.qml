@@ -9,6 +9,9 @@ import "../../Components"
  * LockView - What the lock and the greeter show on one monitor: its wallpaper, and on the primary
  * monitor the clock, the password field, the battery and the power menu.
  *
+ * The typed text lives in `input`, one for all monitors: Hyprland gives the keyboard to the monitor
+ * under the pointer, so a secondary monitor takes the keys too and feeds the same field.
+ *
  * The auth behind the field is any object with: busy, message, error, failed() and submit(password).
  * The lock gives PAM, the greeter greetd, the preview a fake one. The greeter's also has the user,
  * the session, and greetd's own questions (prompt, echo, cancel()).
@@ -18,6 +21,10 @@ Item {
 
     required property ShellScreen screen
     required property QtObject auth
+    // A LockInput
+    required property QtObject input
+    // False while the monitors are off: the wallpaper's video stops decoding
+    property bool playing: true
     // "lock" or "greeter": the power menu of the greeter has no Log out
     property string context: "lock"
     readonly property bool greeter: context === "greeter"
@@ -28,6 +35,7 @@ Item {
     LockWallpaper {
         anchors.fill: parent
         screen: root.screen
+        playing: root.playing
     }
 
     // Dimmed, so the text stays readable over any wallpaper, a moving one too
@@ -40,6 +48,31 @@ Item {
         anchors.fill: parent
         active: root.primary
         sourceComponent: formComponent
+    }
+
+    // A secondary monitor shows no field, but typing there still fills the one on the primary
+    Loader {
+        active: !root.primary
+        sourceComponent: Item {
+            focus: true
+            Component.onCompleted: forceActiveFocus()
+
+            Keys.onPressed: event => {
+                event.accepted = true;
+                if (root.auth.busy)
+                    return;
+                if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                    if (root.input.text !== "")
+                        root.auth.submit(root.input.text);
+                } else if (event.key === Qt.Key_Escape) {
+                    root.input.text = "";
+                } else if (event.key === Qt.Key_Backspace) {
+                    root.input.text = root.input.text.slice(0, -1);
+                } else if (event.text.length === 1 && event.text >= " ") {
+                    root.input.text += event.text;
+                }
+            }
+        }
     }
 
     Component {
@@ -138,6 +171,9 @@ Item {
                 Rectangle {
                     Layout.alignment: Qt.AlignHCenter
                     Layout.topMargin: Theme.spacingLarge
+                    transform: Translate {
+                        id: shake
+                    }
                     implicitWidth: 320
                     implicitHeight: 44
                     radius: Theme.radiusWindow
@@ -168,14 +204,18 @@ Item {
                             visible: field.text !== "" && field.cursorVisible
                         }
 
-                        onAccepted: root.auth.submit(text)
+                        onTextEdited: root.input.text = text
+                        onAccepted: {
+                            if (text !== "")
+                                root.auth.submit(text);
+                        }
                         Keys.onEscapePressed: {
                             if (form.openMenu !== "")
                                 form.openMenu = "";
                             else if (form.prompt !== "")
                                 root.auth.cancel();
                             else
-                                clear();
+                                root.input.text = "";
                         }
                         Keys.onBacktabPressed: {
                             if (root.greeter)
@@ -199,7 +239,8 @@ Item {
                     // Kept in the layout when empty, so the field does not move when a message comes
                     opacity: root.auth.busy || showMessage || capsLock.on ? 1 : 0
                     color: showMessage && root.auth.error ? Theme.accentRed : !root.auth.busy && !showMessage ? Theme.accentOrange : Theme.alpha(Theme.textSecondary, Theme.secondaryOpacity)
-                    text: root.auth.busy ? "Checking…" : showMessage ? root.auth.message : capsLock.on ? "Caps Lock is on" : " "
+                    // A message from the check itself (e.g. a lockout notice) wins over "Checking…"
+                    text: showMessage ? root.auth.message : root.auth.busy ? "Checking…" : capsLock.on ? "Caps Lock is on" : " "
                     font.pixelSize: Theme.fontSizeSmall
                 }
             }
@@ -346,6 +387,41 @@ Item {
                 }
             }
 
+            SequentialAnimation {
+                id: shakeAnimation
+
+                NumberAnimation {
+                    target: shake
+                    property: "x"
+                    to: -10
+                    duration: 40
+                }
+                NumberAnimation {
+                    target: shake
+                    property: "x"
+                    to: 10
+                    duration: 70
+                }
+                NumberAnimation {
+                    target: shake
+                    property: "x"
+                    to: -6
+                    duration: 60
+                }
+                NumberAnimation {
+                    target: shake
+                    property: "x"
+                    to: 6
+                    duration: 60
+                }
+                NumberAnimation {
+                    target: shake
+                    property: "x"
+                    to: 0
+                    duration: 50
+                }
+            }
+
             // A message stays a few seconds, then the line is empty again
             Timer {
                 id: messageTimer
@@ -363,12 +439,23 @@ Item {
                 }
 
                 function onFailed() {
-                    field.clear();
+                    root.input.text = "";
+                    shakeAnimation.restart();
                 }
 
                 // A new question gets an empty field: the password typed before must not show in it
                 function onPromptChanged() {
-                    field.clear();
+                    root.input.text = "";
+                }
+            }
+
+            // Text typed on a secondary monitor
+            Connections {
+                target: root.input
+
+                function onTextChanged() {
+                    if (field.text !== root.input.text)
+                        field.text = root.input.text;
                 }
             }
 

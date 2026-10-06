@@ -17,6 +17,12 @@ ShellRoot {
 
     property var remembered: ({})
 
+    // Called when the sessions or the memory arrive, in either order
+    function pickSession() {
+        const list = sessionList.list;
+        greetd.session = list.find(s => s.id === remembered.session) ?? list.find(s => s.id === "hyprland") ?? list[0] ?? null;
+    }
+
     // No reload while it runs: the files may change under it
     Binding {
         target: Quickshell
@@ -27,10 +33,11 @@ ShellRoot {
     Sessions {
         id: sessionList
 
-        onListChanged: {
-            if (!greetd.session)
-                greetd.session = list.find(s => s.id === root.remembered.session) ?? list.find(s => s.id === "hyprland") ?? list[0] ?? null;
-        }
+        onListChanged: root.pickSession()
+    }
+
+    LockInput {
+        id: lockInput
     }
 
     GreetdAuth {
@@ -47,8 +54,12 @@ ShellRoot {
 
         path: Quickshell.statePath("greeter.json")
         blockLoading: true
+        // Written before the launch, after which the greeter quits at once
+        blockWrites: true
         // Missing until the first login
         printErrors: false
+
+        onSaveFailed: error => Logger.warn("Greeter: memory not written:", error)
 
         onLoaded: {
             try {
@@ -58,6 +69,7 @@ ShellRoot {
             }
             if (root.remembered.user)
                 greetd.user = root.remembered.user;
+            root.pickSession();
         }
     }
 
@@ -99,6 +111,7 @@ ShellRoot {
                 anchors.fill: parent
                 screen: window.modelData
                 auth: greetd
+                input: lockInput
                 context: "greeter"
                 sessions: sessionList
             }

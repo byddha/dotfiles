@@ -11,6 +11,7 @@ import "Utils"
  *
  *   qs -n -p ~/.config/quickshell/lock.qml
  *   qs -p ~/.config/quickshell/lock.qml ipc call lock unlock   (the session's Unlock signal)
+ *   qs -p ~/.config/quickshell/lock.qml ipc call lock pause    (monitors off; resume when on)
  */
 ShellRoot {
     id: root
@@ -21,6 +22,14 @@ ShellRoot {
     readonly property int maxRetries: 3
     property int retries: 0
     property bool retryPending: false
+    property bool paused: false
+
+    // Quits here too, not only when `locked` turns false: while a retry is pending it already is
+    function finish() {
+        wanted = false;
+        if (!sessionLock.locked)
+            Qt.quit();
+    }
 
     // No reload while locked: the files are edited while the lock is up
     Binding {
@@ -32,7 +41,11 @@ ShellRoot {
     PamAuth {
         id: pamAuth
 
-        onSucceeded: root.wanted = false
+        onSucceeded: root.finish()
+    }
+
+    LockInput {
+        id: lockInput
     }
 
     WlSessionLock {
@@ -71,6 +84,8 @@ ShellRoot {
                 anchors.fill: parent
                 screen: surface.screen
                 auth: pamAuth
+                input: lockInput
+                playing: !root.paused
             }
         }
     }
@@ -86,7 +101,15 @@ ShellRoot {
         target: "lock"
 
         function unlock(): void {
-            root.wanted = false;
+            root.finish();
+        }
+
+        function pause(): void {
+            root.paused = true;
+        }
+
+        function resume(): void {
+            root.paused = false;
         }
 
         // The compositor's confirmation, not only our request

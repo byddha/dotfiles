@@ -7,6 +7,7 @@ Item {
     id: root
 
     required property ShellScreen screen
+    property bool playing: true
 
     readonly property string key: LockConfig.keyOf(screen)
     readonly property var monitor: LockConfig.monitors[key]
@@ -28,9 +29,8 @@ Item {
     // Each path segment encoded, so a "#" or "?" in a file name stays part of the name
     readonly property string source: shown === "" ? "" : "file://" + shown.split("/").map(encodeURIComponent).join("/")
 
-    // What WallpaperVideo asks of the wallpaper window: here a video is always the current one,
-    // shown at once
-    readonly property bool playing: true
+    // What WallpaperVideo asks of the wallpaper window (and `playing`): here a video is always the
+    // current one, shown at once
     readonly property int revealDuration: 0
     readonly property Item current: videoLoader.item
 
@@ -55,7 +55,8 @@ Item {
         fillMode: Image.PreserveAspectCrop
         // Decoded at the monitor's pixel size: a large file decoded at its own size can pass
         // Qt's image allocation limit and not load at all
-        sourceSize: Qt.size(width * root.screen.devicePixelRatio, height * root.screen.devicePixelRatio)
+        // A lock surface gets its screen only after it is made
+        sourceSize: Qt.size(width * (root.screen?.devicePixelRatio ?? 1), height * (root.screen?.devicePixelRatio ?? 1))
     }
 
     // By URL, not as a type: without QtMultimedia only a video fails, not the whole lock

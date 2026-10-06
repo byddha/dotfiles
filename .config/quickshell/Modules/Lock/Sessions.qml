@@ -3,7 +3,8 @@ import Quickshell
 import Quickshell.Io
 import "../../Utils"
 
-// The Wayland sessions the greeter can start: /usr/share/wayland-sessions, without the hidden ones
+// The Wayland sessions the greeter can start: wayland-sessions/ of the XDG data dirs (an earlier dir
+// wins for the same file name), without the hidden ones and those whose TryExec is not installed
 Item {
     id: root
 
@@ -28,13 +29,15 @@ Item {
             if (!fields.Exec || fields.NoDisplay === "true" || fields.Hidden === "true")
                 continue;
             const id = path.split("/").pop().replace(/\.desktop$/, "");
-            const desktop = fields.DesktopNames?.split(";").filter(name => name !== "").join(":") || id;
+            if (sessions.some(s => s.id === id))
+                continue;
+            const desktop = fields.DesktopNames?.split(";").filter(name => name !== "").join(":") ?? "";
             sessions.push({
                 id: id,
                 name: fields.Name || id,
                 // Field codes (%f and the like) have no meaning for a session
                 command: fields.Exec.split(/\s+/).filter(arg => arg !== "" && !/^%[a-zA-Z]$/.test(arg)),
-                env: ["XDG_SESSION_TYPE=wayland", `XDG_SESSION_DESKTOP=${id}`, `DESKTOP_SESSION=${id}`, `XDG_CURRENT_DESKTOP=${desktop}`]
+                env: ["XDG_SESSION_TYPE=wayland", `XDG_SESSION_DESKTOP=${id}`, `DESKTOP_SESSION=${id}`].concat(desktop !== "" ? [`XDG_CURRENT_DESKTOP=${desktop}`] : [])
             });
         }
         return sessions.sort((a, b) => a.name.localeCompare(b.name));
@@ -42,12 +45,21 @@ Item {
 
     Process {
         running: true
-        command: ["sh", "-c", "for f in /usr/share/wayland-sessions/*.desktop; do printf '\\001%s\\n' \"$f\"; cat \"$f\"; done"]
+        command: ["sh", "-c", `IFS=:
+            for dir in \${XDG_DATA_DIRS:-/usr/local/share:/usr/share}; do
+                for f in "$dir"/wayland-sessions/*.desktop; do
+                    [ -f "$f" ] || continue
+                    try=$(sed -n 's/^TryExec=//p' "$f" | head -n 1)
+                    [ -z "$try" ] || command -v "$try" >/dev/null 2>&1 || continue
+                    printf '\\001%s\\n' "$f"
+                    cat "$f"
+                done
+            done`]
         stdout: StdioCollector {
             onStreamFinished: {
                 root.list = root.parse(text);
                 if (root.list.length === 0)
-                    Logger.error("Greeter: no sessions in /usr/share/wayland-sessions");
+                    Logger.error("Greeter: no Wayland sessions found");
             }
         }
     }

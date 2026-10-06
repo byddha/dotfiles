@@ -25,7 +25,10 @@ Item {
         error = false;
         message = "";
         busy = true;
-        pam.start();
+        if (!pam.start()) {
+            Logger.error("Lock: PAM did not start");
+            fail("Authentication error");
+        }
     }
 
     function fail(text) {
@@ -54,13 +57,20 @@ Item {
         configDirectory: Quickshell.shellDir + "/assets/pam.d"
         user: Quickshell.env("USER")
 
-        onMessageChanged: {
-            if (message !== "" && !responseRequired)
-                root.info = root.info.concat([message]);
-        }
-        onResponseRequiredChanged: {
-            if (responseRequired)
+        // Here, not on messageChanged: that comes before responseRequired is set, so a prompt would
+        // read as an info line. Each message comes here, also a prompt like the one before it.
+        onPamMessage: {
+            if (!responseRequired) {
+                if (message !== "")
+                    root.info = root.info.concat([message]);
+            } else if (responseVisible || root.password === "") {
+                // Only the password is known here: a second or a shown question cannot be answered
+                pam.abort();
+                root.fail("Authentication error");
+            } else {
                 respond(root.password);
+                root.password = "";
+            }
         }
         onCompleted: result => {
             if (result === PamResult.Success) {
@@ -69,6 +79,8 @@ Item {
                 root.succeeded();
                 return;
             }
+            if (!root.busy)
+                return;
             Logger.warn("Lock: PAM auth failed:", result);
             root.fail(root.info.length > 0 ? root.info.join("\n") : result === PamResult.MaxTries ? "Too many attempts" : result === PamResult.Error ? "Authentication error" : "Incorrect password");
         }
