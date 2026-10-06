@@ -35,8 +35,10 @@ Item {
             sessions.push({
                 id: id,
                 name: fields.Name || id,
-                // Field codes (%f and the like) have no meaning for a session
-                command: fields.Exec.split(/\s+/).filter(arg => arg !== "" && !/^%[a-zA-Z]$/.test(arg)),
+                // Field codes (%f and the like) have no meaning for a session. Its output goes to the
+                // journal: greetd leaves it on the console, where it would flash between the greeter
+                // and the session.
+                command: ["systemd-cat", "-t", id].concat(fields.Exec.split(/\s+/).filter(arg => arg !== "" && !/^%[a-zA-Z]$/.test(arg))),
                 env: ["XDG_SESSION_TYPE=wayland", `XDG_SESSION_DESKTOP=${id}`, `DESKTOP_SESSION=${id}`].concat(desktop !== "" ? [`XDG_CURRENT_DESKTOP=${desktop}`] : [])
             });
         }
