@@ -282,6 +282,9 @@ Variants {
             onExited: code => {
                 if (code !== 0)
                     Logger.warn("Wallpaper poster not made:", window.shown, posterErr.text.trim());
+                else
+                    // The greeter gets the new wallpaper and its poster; nothing without the greeter
+                    Quickshell.execDetached([Quickshell.shellPath("greeter/sync")]);
                 if (pending) {
                     pending = false;
                     window.makePoster();

@@ -1,0 +1,38 @@
+#!/bin/bash
+# Copies what the lock shows from this user into the greeter's home, so the greeter looks the same:
+# the theme, the monitors and the wallpapers (recolored ones and posters too). The paths there are
+# the ones they have here, so the greeter's code reads them unchanged. Copies, never links: the
+# greeter cannot read this home. Nothing to do before the greeter is installed.
+# Run by theme-set (theme-set.d/greeter.sh) and by the shell after a wallpaper change.
+dest=${BIDSHELL_GREETER_HOME:-/var/lib/bidshell-greeter}
+[ -w "$dest" ] || exit 0
+
+config=${XDG_CONFIG_HOME:-$HOME/.config}
+cache=${XDG_CACHE_HOME:-$HOME/.cache}
+# Readable by the greeter's group, which owns the setgid home
+sync=(rsync -rt --delete --chmod=D2750,F640 --exclude='*.tmp.*' --exclude='*.lut.*')
+
+mkdir -p "$dest/.cache/theme" "$dest/.cache/quickshell/bidshell" "$dest/.config/bidshell" "$dest/.local/share/bidshell-greeter" || exit 1
+"${sync[@]}" "$HOME/.cache/theme/dms-colors.json" "$HOME/.cache/theme/state.json" "$dest/.cache/theme/" || exit 1
+"${sync[@]}" "$cache/quickshell/bidshell/wallpaper" "$dest/.cache/quickshell/bidshell/" || exit 1
+
+# Only the monitors block (the file also holds API keys). A wallpaper that is not recolored is
+# copied, and named by its new path: the original sits in this home.
+monitors=$(jq '.monitors // {} | with_entries(.value |= {primary, wallpaper, wallpaperRecolor})' "$config/bidshell/config.json") || exit 1
+copies=$dest/.local/share/bidshell-greeter
+for key in $(jq -r 'to_entries[] | select(.value.wallpaperRecolor != true and (.value.wallpaper // "") != "") | .key' <<<"$monitors"); do
+    path=$(jq -r --arg key "$key" '.[$key].wallpaper' <<<"$monitors")
+    path=${path/#\~/$HOME}
+    copy=$copies/$key.${path##*.}
+    "${sync[@]}" "$path" "$copy" || continue
+    monitors=$(jq --arg key "$key" --arg copy "$copy" '.[$key].wallpaper = $copy' <<<"$monitors")
+done
+# Copies of wallpapers no longer set
+for copy in "$copies"/*; do
+    [ -e "$copy" ] || continue
+    jq -e --arg copy "$copy" 'any(.[]; .wallpaper == $copy)' <<<"$monitors" >/dev/null || rm -f "$copy"
+done
+
+jq -n --argjson monitors "$monitors" '{monitors: $monitors}' > "$dest/.config/bidshell/config.json.tmp" &&
+    chmod 640 "$dest/.config/bidshell/config.json.tmp" &&
+    mv -f "$dest/.config/bidshell/config.json.tmp" "$dest/.config/bidshell/config.json"

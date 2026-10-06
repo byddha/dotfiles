@@ -1,0 +1,51 @@
+// The greeter's own niri, started by greeter/start: only a place for greeter.qml to draw, quit
+// once greeter.qml quits. The monitors as in hypr/lua/displays/monitors.lua, which niri cannot read,
+// by connector: niri names an unknown maker differently from Hyprland's descriptions there.
+
+output "DP-3" {
+    scale 1.0
+    position x=0 y=0
+}
+
+// Below the main monitor, centred: 1920x1200 at scale 1.2 is 1600 logical px wide
+output "HDMI-A-1" {
+    scale 1.2
+    position x=920 y=1440
+}
+
+output "eDP-1" {
+    scale 1.5
+}
+
+input {
+    keyboard {
+        xkb {
+            layout "us"
+        }
+    }
+}
+
+cursor {
+    xcursor-size 24
+}
+
+hotkey-overlay {
+    skip-at-startup
+}
+
+gestures {
+    hot-corners {
+        off
+    }
+}
+
+layout {
+    background-color "#000000"
+}
+
+animations {
+    off
+}
+
+// greeter/start reads the exit status: 0 is a launched session, anything else brings up tuigreet
+spawn-sh-at-startup "qs -p \"$BIDSHELL_SHELL/greeter.qml\"; echo $? > \"$BIDSHELL_GREETER_STATUS\"; niri msg action quit --skip-confirmation"

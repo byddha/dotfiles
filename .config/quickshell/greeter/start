@@ -1,0 +1,20 @@
+#!/bin/bash
+# greetd's greeter command: greeter.qml inside its own niri (greeter/niri.kdl), then tuigreet when
+# that did not launch a session (a crash, niri or qs failing), so a login is always there.
+# BIDSHELL_GREETER_HOME: the greeter's home, where greeter/sync puts the user's theme and wallpapers.
+export BIDSHELL_SHELL=$(dirname "$(readlink -f "$0")")/..
+export HOME=${BIDSHELL_GREETER_HOME:-/var/lib/bidshell-greeter}
+# Everything under that home, also when a caller has them set to its own
+unset XDG_CONFIG_HOME XDG_CACHE_HOME XDG_STATE_HOME XDG_DATA_HOME
+export BIDSHELL_GREETER_STATUS=$XDG_RUNTIME_DIR/bidshell-greeter.status
+export QT_NO_XDG_DESKTOP_PORTAL=1
+rm -f "$BIDSHELL_GREETER_STATUS"
+
+# No console text under the greeter, or between it and the session
+printf '\033[2J\033[H\033[3J\033[?25l' > /dev/tty 2>/dev/null
+
+# Straight into the journal: a pipe through a reader process can die and break the compositor's output
+systemd-cat -t bidshell-greeter niri -c "$BIDSHELL_SHELL/greeter/niri.kdl"
+
+[ "$(cat "$BIDSHELL_GREETER_STATUS" 2>/dev/null)" = 0 ] && exit 0
+exec tuigreet --time --remember --remember-session --asterisks
