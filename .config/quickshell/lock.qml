@@ -25,6 +25,13 @@ ShellRoot {
 
     onPausedChanged: Logger.info(paused ? "Lock: wallpaper paused (monitors off)" : "Lock: wallpaper resumed")
 
+    // Started with the monitors already off (scripts/lock keeps this file while they are)
+    FileView {
+        path: Quickshell.env("XDG_RUNTIME_DIR") + "/bidshell-monitors-off"
+        printErrors: false
+        onLoaded: root.paused = true
+    }
+
     // Quits here too, not only when `locked` turns false: while a retry is pending it already is
     function finish() {
         wanted = false;
