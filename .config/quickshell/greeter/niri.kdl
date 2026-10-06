@@ -47,5 +47,6 @@ animations {
     off
 }
 
-// greeter/start reads the exit status: 0 is a launched session, anything else brings up tuigreet
-spawn-sh-at-startup "qs -p \"$BIDSHELL_SHELL/greeter.qml\"; echo $? > \"$BIDSHELL_GREETER_STATUS\"; niri msg action quit --skip-confirmation"
+// greeter/start reads the exit status: 0 is a launched session, anything else brings up tuigreet.
+// Its output to the journal: niri gives what it spawns no output of its own.
+spawn-sh-at-startup "systemd-cat -t bidshell-greeter qs -p \"$BIDSHELL_SHELL/greeter.qml\"; echo $? > \"$BIDSHELL_GREETER_STATUS\"; niri msg action quit --skip-confirmation"
