@@ -15,6 +15,8 @@ Rectangle {
     property string keys: ""
     property bool danger: false
     property bool submenu: false
+    // The chosen one of a list (e.g. the greeter's session): a check at the end
+    property bool selected: false
     // Shown as hovered, e.g. the armed Shut down
     property bool filled: false
     readonly property bool lit: area.containsMouse || filled
@@ -47,7 +49,7 @@ Rectangle {
         Icon {
             visible: row.icon !== ""
             text: row.icon
-            color: row.danger ? (row.lit ? Theme.textColor : Theme.accentRed) : Theme.alpha(Theme.textSecondary, Theme.secondaryOpacity)
+            color: row.danger ? (row.lit ? Theme.accentRedText : Theme.accentRed) : Theme.alpha(Theme.textSecondary, Theme.secondaryOpacity)
         }
         IconImage {
             visible: row.icon === "" && row.iconSource !== ""
@@ -57,11 +59,18 @@ Rectangle {
         StyledText {
             Layout.fillWidth: true
             text: row.label
+            // On the red fill, in the color made for text on it
+            color: row.danger && row.lit ? Theme.accentRedText : Theme.textColor
             elide: Text.ElideRight
         }
         Keycap {
             visible: row.keys !== ""
             text: row.keys
+        }
+        Icon {
+            visible: row.selected
+            text: Lucide.check
+            color: Theme.primary
         }
         Icon {
             visible: row.submenu
