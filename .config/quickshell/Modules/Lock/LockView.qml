@@ -129,6 +129,8 @@ Item {
                     Layout.alignment: Qt.AlignHCenter
                     Layout.topMargin: Theme.spacingBase
                     Layout.bottomMargin: -Theme.spacingBase
+                    // Not 0 wide when empty, or a click on the placeholder reaches nothing
+                    Layout.preferredWidth: Math.max(implicitWidth, 120)
                     visible: root.greeter
                     text: root.greeter ? root.auth.user : ""
                     readOnly: root.auth.busy || form.prompt !== ""
@@ -141,7 +143,8 @@ Item {
                     cursorDelegate: Rectangle {
                         width: 1
                         color: Theme.textColor
-                        visible: userField.cursorVisible
+                        // Hidden while empty: centered, it would cut through the placeholder
+                        visible: userField.text !== "" && userField.cursorVisible
                     }
 
                     onTextEdited: root.auth.user = text
@@ -153,7 +156,7 @@ Item {
                     Rectangle {
                         anchors.top: parent.bottom
                         anchors.horizontalCenter: parent.horizontalCenter
-                        width: Math.max(parent.width, 80)
+                        width: parent.width
                         height: 1
                         color: Theme.primary
                         visible: userField.activeFocus
@@ -240,7 +243,8 @@ Item {
                     opacity: root.auth.busy || showMessage || capsLock.on ? 1 : 0
                     color: showMessage && root.auth.error ? Theme.accentRed : !root.auth.busy && !showMessage ? Theme.accentOrange : Theme.alpha(Theme.textSecondary, Theme.secondaryOpacity)
                     // A message from the check itself (e.g. a lockout notice) wins over "Checking…"
-                    text: showMessage ? root.auth.message : root.auth.busy ? "Checking…" : capsLock.on ? "Caps Lock is on" : " "
+                    // Caps Lock stays told beside a message: a wrong password is when it matters most
+                    text: (showMessage ? root.auth.message : root.auth.busy ? "Checking…" : "") + (capsLock.on ? (showMessage || root.auth.busy ? " · " : "") + "Caps Lock is on" : "") || " "
                     font.pixelSize: Theme.fontSizeSmall
                 }
             }
@@ -332,7 +336,7 @@ Item {
                             required property var modelData
 
                             label: modelData.name
-                            filled: modelData.id === root.auth.session?.id
+                            selected: modelData.id === root.auth.session?.id
                             onActivated: {
                                 root.auth.session = modelData;
                                 form.openMenu = "";
