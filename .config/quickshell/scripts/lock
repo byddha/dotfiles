@@ -7,9 +7,21 @@
 # is a symlink, so a caller with the other spelling of the path would not find the running lock.
 lock=$(dirname "$(readlink -f "$0")")/../lock.qml
 
+# Kept while the monitors are off, for a lock that starts after they went off (an idle lock comes
+# later than the monitors' timeout): it starts with its video paused
+off=$XDG_RUNTIME_DIR/bidshell-monitors-off
+
 case $1 in
 "") ;;
 log) exec qs log -p "$lock" ;;
+pause)
+    touch "$off"
+    exec qs -p "$lock" ipc call lock pause
+    ;;
+resume)
+    rm -f "$off"
+    exec qs -p "$lock" ipc call lock resume
+    ;;
 *) exec qs -p "$lock" ipc call lock "$1" ;;
 esac
 
