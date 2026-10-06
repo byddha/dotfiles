@@ -4,11 +4,11 @@
 # A clean exit is an unlock, or a lock already running (qs -n).
 shell=$(dirname "$(readlink -f "$0")")/..
 
-for _ in 1 2 3 4 5; do
+for attempt in 1 2 3 4 5; do
     qs -n -p "$shell/lock.qml" && exit 0
     # No session any more (a logout, the compositor gone): nothing to lock
     [ -S "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" ] || exit 0
-    sleep 1
+    [ "$attempt" = 5 ] || sleep 1
 done
 
 notify-send -u critical -a Lock "Lock screen failed" "It crashed 5 times; see qs log -p $shell/lock.qml"
