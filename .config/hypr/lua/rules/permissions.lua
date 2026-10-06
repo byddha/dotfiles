@@ -2,6 +2,10 @@
 -- Everything not allowed below asks (screencopy, cursorpos, input-capture and plugin default to ask).
 hl.config({ ecosystem = { enforce_permissions = true } })
 
+-- A lock screen that crashes leaves the session locked, with nothing to type into: a new lock may
+-- take over (quickshell/scripts/lock starts it again) instead of a dead screen until a TTY login
+hl.config({ misc = { allow_session_lock_restore = true } })
+
 local allow = {
     -- Screen share (Discord, Zen, OBS) goes through the portal
     { "/usr/(lib|libexec|lib64)/xdg-desktop-portal-hyprland", "screencopy" },
