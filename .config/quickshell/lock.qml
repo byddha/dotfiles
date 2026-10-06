@@ -9,9 +9,8 @@ import "Utils"
  * The lock: a process of its own, so a crash or a reload of the shell never touches it. It locks
  * when it starts and quits once unlocked; hypridle starts it for the session's Lock signal:
  *
- *   qs -n -p ~/.config/quickshell/lock.qml
- *   qs -p ~/.config/quickshell/lock.qml ipc call lock unlock   (the session's Unlock signal)
- *   qs -p ~/.config/quickshell/lock.qml ipc call lock pause    (monitors off; resume when on)
+ *   scripts/lock                     (hypridle's lock_cmd)
+ *   scripts/lock unlock|pause|resume (its IPC, through the script so the path matches)
  */
 ShellRoot {
     id: root
