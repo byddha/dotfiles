@@ -8,3 +8,4 @@ CapsLock 1.0 CapsLock.qml
 PamAuth 1.0 PamAuth.qml
 GreetdAuth 1.0 GreetdAuth.qml
 Sessions 1.0 Sessions.qml
+LockInput 1.0 LockInput.qml

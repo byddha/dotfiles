@@ -25,11 +25,11 @@ Singleton {
     }
 
     // The password field goes on the primary monitor, or on the first one when that is not
-    // connected, so there is always one
+    // connected, so there is always exactly one (two monitors of the same model: the first of them)
     function isPrimary(screen) {
         const primary = Object.keys(monitors).find(key => monitors[key]?.primary === true) ?? "";
         const screens = Quickshell.screens;
-        return screens.some(s => keyOf(s) === primary) ? keyOf(screen) === primary : screen === screens[0];
+        return screen === (screens.find(s => keyOf(s) === primary) ?? screens[0]);
     }
 
     FileView {
