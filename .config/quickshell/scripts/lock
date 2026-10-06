@@ -1,15 +1,26 @@
 #!/bin/bash
-# Locks the session with lock.qml, and starts it again if it crashes: the session stays locked
-# (Hyprland's misc:allow_session_lock_restore lets the new one take over the dead one's lock).
-# A clean exit is an unlock, or a lock already running (qs -n).
-shell=$(dirname "$(readlink -f "$0")")/..
+# The lock screen, for hypridle and for hand use:
+#   lock                         lock with lock.qml, and start it again if it crashes
+#   lock unlock | pause | resume its IPC (pause/resume: the wallpaper video while the monitors are off)
+#   lock log                     its log
+# Every call goes through here: qs tells instances apart by the config's path, and ~/.config/quickshell
+# is a symlink, so a caller with the other spelling of the path would not find the running lock.
+lock=$(dirname "$(readlink -f "$0")")/../lock.qml
 
+case $1 in
+"") ;;
+log) exec qs log -p "$lock" ;;
+*) exec qs -p "$lock" ipc call lock "$1" ;;
+esac
+
+# After a crash the session stays locked (Hyprland's misc:allow_session_lock_restore lets the new
+# lock take over the dead one's). A clean exit is an unlock, or a lock already running (qs -n).
 for attempt in 1 2 3 4 5; do
-    qs -n -p "$shell/lock.qml" && exit 0
+    qs -n -p "$lock" && exit 0
     # No session any more (a logout, the compositor gone): nothing to lock
     [ -S "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" ] || exit 0
     [ "$attempt" = 5 ] || sleep 1
 done
 
-notify-send -u critical -a Lock "Lock screen failed" "It crashed 5 times; see qs log -p $shell/lock.qml"
+notify-send -u critical -a Lock "Lock screen failed" "It crashed 5 times; see: lock log"
 exit 1
