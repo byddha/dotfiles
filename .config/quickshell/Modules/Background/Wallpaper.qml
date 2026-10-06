@@ -30,6 +30,9 @@ import "../../Utils"
  * change. The result is cached under a name made from the file's bytes and the palette, so a new
  * theme or a new file is always a new name: nothing has to notice a file changing in place, and a
  * half-written file is never shown.
+ *
+ * The first frame of what is shown is kept as posters/<monitor>.jpg in the cache: the lock and the
+ * greeter, processes of their own, show it at once while they load the wallpaper.
  */
 Variants {
     id: root
@@ -59,6 +62,18 @@ Variants {
         fi
         find "$dir" -maxdepth 1 -name "$prefix-*" ! -path "$out" -delete
         echo "$out"`
+
+    // $1 image or video, $2 the poster to write; with no $1 the poster goes. A poster newer than
+    // the same file (named in <poster>.src) is kept, so a restart of the shell makes none.
+    readonly property string posterScript: `
+        src=$1 out=$2
+        [ -n "$src" ] || { rm -f "$out" "$out.src"; exit 0; }
+        [ "$out" -nt "$src" ] && [ "$(cat "$out.src" 2>/dev/null)" = "$src" ] && exit 0
+        mkdir -p "$(dirname "$out")" || exit 1
+        ffmpeg -v error -y -i "$src" -frames:v 1 -q:v 2 "$out.tmp.jpg" && mv -f "$out.tmp.jpg" "$out" && printf %s "$src" > "$out.src"
+        status=$?
+        rm -f "$out.tmp.jpg"
+        exit $status`
 
     // Made on the first video, so that without QtMultimedia only videos fail
     property Component videoComponent: null
@@ -193,7 +208,26 @@ Variants {
 
         // Later in the same turn: a config change sets wallpaper and wallpaperRecolor one after
         // the other, and the source between the two is neither the old nor the new one
+        // One at a time, the last asked for when one ran
+        function makePoster() {
+            // No key yet, or a recolor still running: nothing to show, but the old poster stays
+            if (key === "" || (shown === "" && path !== ""))
+                return;
+            const job = JSON.stringify([shown]);
+            if (posterProcess.running) {
+                posterProcess.pending = true;
+                return;
+            }
+            if (posterProcess.job === job)
+                return;
+            posterProcess.job = job;
+            posterProcess.command = ["bash", "-c", root.posterScript, "bidshell-poster", shown, root.cacheDir + "/posters/" + key + ".jpg"];
+            posterProcess.running = true;
+        }
+
         onSourceChanged: Qt.callLater(show)
+        onShownChanged: Qt.callLater(makePoster)
+        onKeyChanged: Qt.callLater(makePoster)
         onRecolorJobChanged: {
             if (recolorJob === "" && key !== "") {
                 recolored = "";
@@ -205,6 +239,7 @@ Variants {
         Component.onCompleted: {
             startRecolor();
             show();
+            makePoster();
         }
 
         // The wallpapers; drawn through the fluid's warp only while it moves
@@ -232,6 +267,26 @@ Variants {
             // Not in the gaps of a covered monitor: the fluid stops where a video would pause
             enabled: window.fluid && window.playing
             onPointChanged: fluidLoader.item?.move(point.position)
+        }
+
+        Process {
+            id: posterProcess
+
+            property string job: ""
+            property bool pending: false
+
+            stderr: StdioCollector {
+                id: posterErr
+            }
+
+            onExited: code => {
+                if (code !== 0)
+                    Logger.warn("Wallpaper poster not made:", window.shown, posterErr.text.trim());
+                if (pending) {
+                    pending = false;
+                    window.makePoster();
+                }
+            }
         }
 
         Process {
