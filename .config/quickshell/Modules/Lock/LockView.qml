@@ -353,7 +353,8 @@ Item {
                 anchors.right: powerButton.left
                 anchors.rightMargin: Theme.spacingBase
                 anchors.verticalCenter: powerButton.verticalCenter
-                visible: root.greeter
+                // Not before the sessions are read: it would say "No session" for a moment
+                visible: root.greeter && root.auth.session !== null
                 implicitWidth: sessionRow.implicitWidth + Theme.spacingLarge * 2
                 implicitHeight: 40
                 radius: Theme.radiusBase
@@ -377,7 +378,7 @@ Item {
                     }
                     StyledText {
                         anchors.verticalCenter: parent.verticalCenter
-                        text: root.auth.session?.name ?? "No session"
+                        text: root.auth.session?.name ?? ""
                     }
                 }
 
