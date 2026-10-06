@@ -1,0 +1,14 @@
+#%PAM-1.0
+# greetd's logins: the local login stack, and KWallet opened with the login password, as with ly.
+# pam_kwallet needs the session type: the greeter passes XDG_SESSION_TYPE, which greetd puts in the
+# PAM environment before the session opens.
+
+auth       include      system-local-login
+-auth      optional     pam_kwallet5.so
+
+account    include      system-local-login
+
+password   include      system-local-login
+
+session    include      system-local-login
+-session   optional     pam_kwallet5.so      auto_start kwalletd=/usr/bin/ksecretd
