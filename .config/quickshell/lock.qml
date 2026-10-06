@@ -24,6 +24,8 @@ ShellRoot {
     property bool retryPending: false
     property bool paused: false
 
+    onPausedChanged: Logger.info(paused ? "Lock: wallpaper paused (monitors off)" : "Lock: wallpaper resumed")
+
     // Quits here too, not only when `locked` turns false: while a retry is pending it already is
     function finish() {
         wanted = false;
