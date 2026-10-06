@@ -32,19 +32,26 @@ Singleton {
         return screen === (screens.find(s => keyOf(s) === primary) ?? screens[0]);
     }
 
+    function parse(text) {
+        try {
+            monitors = JSON.parse(text).monitors ?? {};
+        } catch (e) {
+            Logger.warn("Lock: config not read:", e);
+        }
+    }
+
+    // Read now, not on the thread pool: the first frame already shows the wallpaper's poster
+    Component.onCompleted: parse(config.text())
+
     FileView {
+        id: config
+
         path: StandardPaths.writableLocation(StandardPaths.ConfigLocation) + "/bidshell/config.json"
         blockLoading: true
         watchChanges: true
 
         onFileChanged: reload()
-        onLoaded: {
-            try {
-                root.monitors = JSON.parse(text()).monitors ?? {};
-            } catch (e) {
-                Logger.warn("Lock: config not read:", e);
-            }
-        }
+        onLoaded: root.parse(text())
         onLoadFailed: error => Logger.warn("Lock: config not read:", error)
     }
 }

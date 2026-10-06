@@ -47,7 +47,20 @@ Item {
         color: "black"
     }
 
+    // The shell's poster of this wallpaper (its first frame), in the first frame drawn: the wallpaper
+    // itself takes a moment to load, a video most of all. Unloaded once that is shown.
     Image {
+        anchors.fill: parent
+        source: root.key !== "" && (root.monitor?.wallpaper ?? "") !== "" && !(root.video ? root.current?.ready === true : wallpaper.status === Image.Ready) ? "file://" + LockConfig.cacheDir + "/posters/" + root.key + ".jpg" : ""
+        asynchronous: false
+        cache: false
+        fillMode: Image.PreserveAspectCrop
+        sourceSize: Qt.size(width * (root.screen?.devicePixelRatio ?? 1), height * (root.screen?.devicePixelRatio ?? 1))
+    }
+
+    Image {
+        id: wallpaper
+
         anchors.fill: parent
         visible: !root.video
         source: root.video ? "" : root.source
