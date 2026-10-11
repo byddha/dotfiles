@@ -11,13 +11,12 @@
 {
    "$schema": "https://vicinae.com/schemas/config.json",
    "pop_to_root_on_close": true,
-   "close_on_focus_loss": true,
    "input_server": {
       "enabled": false
    },
    "launcher_window": {
       "layer_shell": {
-         "keyboard_interactivity": "on_demand"
+         "keyboard_interactivity": "exclusive"
       }
    },
    "global_shortcuts": {
