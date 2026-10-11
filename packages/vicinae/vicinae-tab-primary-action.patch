@@ -1,0 +1,49 @@
+--- a/src/server/src/ui/qml/actions/ActionListPanel.qml	2026-09-30 15:32:42.000000000 +0300
++++ b/src/server/src/ui/qml/actions/ActionListPanel.qml	2026-10-11 13:11:57.212482943 +0300
+@@ -287,6 +287,7 @@
+                     }
+                     Keys.onReturnPressed: root.activateCurrent()
+                     Keys.onEnterPressed: root.activateCurrent()
++                    Keys.onTabPressed: root.activateCurrent()
+                 }
+             }
+         }
+--- a/src/server/src/ui/qml/launcher/ArgCompleter.qml	2026-09-30 15:32:42.000000000 +0300
++++ b/src/server/src/ui/qml/launcher/ArgCompleter.qml	2026-10-11 13:12:02.995949269 +0300
+@@ -147,7 +147,7 @@
+                         }
+                         Keys.onTabPressed: event => {
+                             if (argLoader.isLast) {
+-                                root.focusSearchInput();
++                                Launcher.forwardKey(Qt.Key_Return, Qt.NoModifier, 0);
+                                 event.accepted = true;
+                             } else {
+                                 event.accepted = false;
+@@ -232,7 +232,7 @@
+ 
+                         Keys.onTabPressed: event => {
+                             if (argLoader.isLast) {
+-                                root.focusSearchInput();
++                                Launcher.forwardKey(Qt.Key_Return, Qt.NoModifier, 0);
+                                 event.accepted = true;
+                             } else {
+                                 event.accepted = false;
+--- a/src/server/src/ui/qml/launcher/SearchBar.qml	2026-09-30 15:32:42.000000000 +0300
++++ b/src/server/src/ui/qml/launcher/SearchBar.qml	2026-10-11 13:11:57.212528118 +0300
+@@ -310,8 +310,15 @@
+                         event.accepted = Launcher.forwardKey(event.key, event.modifiers, event.nativeScanCode);
+                     }
+                 }
++                // left-hand use: Tab and Shift+Tab act as Return and Shift+Return, so they run
++                // the primary and secondary action instead of moving focus out of the search bar
++                Keys.onTabPressed: event => {
++                    Launcher.forwardKey(Qt.Key_Return, Qt.NoModifier, 0);
++                    event.accepted = true;
++                }
+                 Keys.onBacktabPressed: event => {
+-                    event.accepted = false;
++                    Launcher.forwardKey(Qt.Key_Return, Qt.ShiftModifier, 0);
++                    event.accepted = true;
+                 }
+                 Keys.onPressed: event => {
+                     if (_handleEmacsEditing(event)) {

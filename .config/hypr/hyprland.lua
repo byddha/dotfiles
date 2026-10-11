@@ -11,7 +11,6 @@ local modules = {
     "lua.rules.permissions",
     "lua.binds.keybinds",
     "lua.binds.submaps",
-    "lua.binds.vicinae",
     "lua.startup.autostart",
 }
 

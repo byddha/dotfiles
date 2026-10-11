@@ -18,7 +18,7 @@ local allow = {
     { ".*[Aa][Tt]2040[Uu][Ss][Bb].*", "keyboard" },
     { "[Pp]ower[- ][Bb]utton.*", "keyboard" },
     { "[Vv]ideo[- ][Bb]us", "keyboard" },
-    -- vicinae Tab binds and whisper paste type through wtype (whisper stays cross-compositor)
+    -- whisper pastes by typing through wtype, so it stays cross-compositor
     { "hl-virtual-keyboard-wtype", "keyboard" },
 }
 
