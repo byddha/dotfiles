@@ -1,0 +1,37 @@
+# Valve's SteamOS helper that puts the Steam Frame Wireless Adapter (rtw89) in
+# low latency mode. Steam runs it on connect when it exists; without it Steam
+# logs "No holo-realtek-firmware-toggles helper script found".
+# Changes from Valve's package: polkit only allows the active local session;
+# low latency mode goes on when the MCS cap fails (iw always sends a 2.4 GHz
+# mask, which the kernel rejects once rtw89-steam-frame drops that band).
+pkgname=holo-realtek-firmware-toggles
+pkgver=1.3
+pkgrel=4
+_valverel=3
+pkgdesc='Tool to toggle realtek rtw89 driver bits (Valve SteamOS helper)'
+arch=(any)
+license=(MIT)
+url='https://gitlab.steamos.cloud/holo/holo'
+depends=(bash iw polkit)
+source=("https://steamdeck-packages.steamos.cloud/archlinux-mirror/sources/holo-main/$pkgname-$pkgver-$_valverel.src.tar.gz")
+sha256sums=('667531fcc3bd01360f03f9b7fb91b7a98c78da527931adaea02c2fb9d22bb422')
+
+prepare() {
+	cd "$pkgname"
+	# The sums from Valve's own PKGBUILD inside the source archive.
+	sha256sum -c - <<-EOF
+	a73258ba8bef37d7e993708376cd1caa7cb30816886791ee580c55400164352f  holo-realtek-firmware-toggles
+	7e1c21c1b23b67d7baea989b85f96a8d8c611778b09449fb181619064cf7231e  org.valve.holo-realtek-firmware-toggles.policy
+	EOF
+	sed -i -e 's|<allow_any>yes</allow_any>|<allow_any>no</allow_any>|' \
+		-e 's|<allow_inactive>yes</allow_inactive>|<allow_inactive>no</allow_inactive>|' \
+		org.valve.holo-realtek-firmware-toggles.policy
+	grep -q '^                    "$0" set-mcs-rates 0-9$' holo-realtek-firmware-toggles
+	sed -i 's|^                    "$0" set-mcs-rates 0-9$|&  \|\| true|' holo-realtek-firmware-toggles
+}
+
+package() {
+	cd "$pkgname"
+	install -Dm755 holo-realtek-firmware-toggles "$pkgdir/usr/bin/holo-polkit-helpers/holo-realtek-firmware-toggles"
+	install -Dm644 org.valve.holo-realtek-firmware-toggles.policy "$pkgdir/usr/share/polkit-1/actions/org.valve.holo-realtek-firmware-toggles.policy"
+}
