@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Drive the live quickshell like a user, for tests.
 
+  qstest.py perms                       once per Hyprland session, before start: open Hyprland's permission prompts
+                                        (ydotoold keyboard, grim screencopy); the user allows them and says "gata"
   qstest.py start                       play the "testing" sound, restart qs with the debug port, arm the guard
   qstest.py click NAME [N] [--right] [--force]  glide to the Nth match and click (system toggles need --force)
   qstest.py hover NAME [N]              glide there, no click
@@ -504,13 +506,25 @@ def main(args):
 
     if cmd == "batch":
         batch(pos, flags)
+    elif cmd == "perms":
+        # Hyprland keeps an allow until it exits, so the prompts only come in a new session; opened here
+        # instead of mid-test, where the user has to take the mouse to answer them
+        subprocess.run(["systemctl", "--user", "start", "ydotool"], capture_output=True)
+        os.makedirs(RUNTIME, exist_ok=True)
+        # grim waits while the prompt is open: do not wait for it
+        subprocess.Popen(["grim", os.path.join(RUNTIME, "perms.png")], stdout=subprocess.DEVNULL,
+                         stderr=subprocess.DEVNULL, start_new_session=True)
+        state = load()
+        state["perms"] = os.environ.get("HYPRLAND_INSTANCE_SIGNATURE")
+        save(state)
+        print("prompts open: ask the user to allow ydotoold and grim, and wait for their \"gata\" before start")
     elif cmd == "start":
+        if load().get("perms") != os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
+            die("new Hyprland session: run `perms` first, and wait for the user's \"gata\"")
         # Tell the user to let go of the mouse: play the sound to the end (it is the warning time)
         if subprocess.run(["pw-play", SOUND], capture_output=True).returncode != 0:
             run("notify-send", "-t", "2500", "-a", "Claude", "Test starts", "Don't touch the mouse")
             time.sleep(1)
-        # ydotoold runs only during a test, so its virtual keyboard asks Hyprland's keyboard
-        # permission: the user allows it for this run
         subprocess.run(["systemctl", "--user", "start", "ydotool"], capture_output=True)
         if f":{PORT} " not in run("ss", "-ltn"):
             restart_qs(["--debug", str(PORT)])
@@ -523,7 +537,7 @@ def main(args):
             time.sleep(0.2)
         shutil.rmtree(SHOTS, ignore_errors=True)
         session = str(time.time())
-        save({"armed": True, "session": session, "cursor": list(cursor()), "log": len(log_lines()),
+        save({"perms": load().get("perms"), "armed": True, "session": session, "cursor": list(cursor()), "log": len(log_lines()),
               "reloads": reload_count()})
         subprocess.Popen([sys.executable, os.path.abspath(__file__), "watchdog", session],
                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)

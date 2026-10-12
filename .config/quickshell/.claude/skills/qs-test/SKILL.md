@@ -22,9 +22,11 @@ for Qt's QML debug protocol; you do not call it directly.
 - The mouse moves like a hand (ease-out glide, ~0.5 s, real `ydotool` events), because instant jumps skip
   hover and motion events that real bugs depend on. Keys: `wtype` for text and Esc into shell surfaces,
   `ydotool` for Hyprland keybinds (wtype cannot trigger compositor binds).
-- `ydotoold` runs only between `start` and `end` (and the watchdog). Hyprland asks the keyboard permission
-  for its virtual device at `start`: wait for the user to allow it before the first move or key.
-- Screenshots use `grim`, which Hyprland's screencopy permission asks for; the user allows it for the run.
+- `ydotoold` runs only between `start` and `end` (and the watchdog).
+- Hyprland asks a permission for ydotoold's virtual keyboard and for `grim`'s screencopy, and keeps the
+  answer until it exits. `perms` opens both prompts before the test; `start` refuses until `perms` ran in
+  this Hyprland session. After `perms`, tell the user to allow both and **wait for them to say "gata"**
+  before `start`: a prompt answered mid-test means the user takes the mouse and the guard stops the test.
 - A guard stops any move if the cursor is not where the last move left it: the user took the mouse.
   Stop, tell the user, and wait for them before `start` again.
 - `start` plays `assets/testing.mp3` (the user's chosen sound) to the end before anything moves, so the
@@ -35,6 +37,7 @@ for Qt's QML debug protocol; you do not call it directly.
 ```bash
 # a function, not Q="python3 ...": zsh does not word-split variables
 Q() { python3 /home/bida/dotfiles/.config/quickshell/.claude/skills/qs-test/scripts/qstest.py "$@"; }
+Q perms                        # new Hyprland session only (start says so): then wait for the user's "gata"
 Q start                        # sound, restart qs with the debug port, arm guard + watchdog
 Q test "sidebar vpn row"       # one test = one behaviour; marks the log
 ...steps...
