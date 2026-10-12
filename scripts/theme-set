@@ -21,6 +21,9 @@
 #     the chain is: QT_QPA_PLATFORMTHEME=qt6ct (hypr/lua/env.lua)
 #       -> qt6ct.conf custom_palette=true + color_scheme_path=DankMatugen.colors
 #       -> style=Breeze (Kvantum ignores the palette, don't use it)
+#     after a qt6 minor bump (6.11 -> 6.12), qt6ct-kde (AUR) must be rebuilt,
+#     qt drops a plugin built on the old private api:
+#       paru -S --rebuild qt6ct-kde
 #
 #   gtk3 apps look half-recolored?
 #     colors live inside ~/.local/share/themes/adw-gtk3*/gtk-3.0/*.css, between
