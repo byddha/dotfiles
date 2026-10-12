@@ -1,0 +1,32 @@
+--- a/drivers/net/wireless/realtek/rtw89/regd.c
++++ b/drivers/net/wireless/realtek/rtw89/regd.c
+@@ -1129,6 +1129,11 @@
+ 	return true;
+ }
+ 
++static bool rtw89_steam_frame_lpi;
++module_param_named(steam_frame_lpi, rtw89_steam_frame_lpi, bool, 0644);
++MODULE_PARM_DESC(steam_frame_lpi,
++		 "Steam Frame Wireless Adapter: use the LPI power limits instead of the VLP ones its headset's hotspot advertises");
++
+ static int rtw89_reg_6ghz_power_recalc(struct rtw89_dev *rtwdev,
+ 				       struct rtw89_vif_link *rtwvif_link, bool active,
+ 				       unsigned int *changed)
+@@ -1171,6 +1176,17 @@
+ 
+ 	rcu_read_unlock();
+ 
++	/* The Steam Frame's hotspot advertises VLP, which limits its adapter to a
++	 * few dBm; Windows drives the same adapter far higher. The 2 GHz quirk is
++	 * only set for that adapter (28de:2432).
++	 */
++	if (rtw89_steam_frame_lpi && !dflt &&
++	    rtwvif_link->reg_6ghz_power == RTW89_REG_6GHZ_POWER_VLP &&
++	    test_bit(RTW89_QUIRK_DISABLE_2GHZ, rtwdev->quirks)) {
++		rtwvif_link->reg_6ghz_power = RTW89_REG_6GHZ_POWER_LPI;
++		rtw89_info(rtwdev, "6 GHz: using LPI instead of VLP (steam_frame_lpi)\n");
++	}
++
+ 	if (!dflt && blocked[rtwvif_link->reg_6ghz_power]) {
+ 		rtw89_debug(rtwdev, RTW89_DBG_REGD,
+ 			    "%c%c 6 GHz power type-%u is blocked by policy\n",

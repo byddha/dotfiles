@@ -1,0 +1,52 @@
+# rtw89 Wi-Fi driver for the running kernel with two fixes for the Steam Frame
+# Wireless Adapter (28de:2432). Built only for this exact kernel: after a
+# kernel update the stock driver loads again until this is rebuilt with the
+# new version (bump _kernver/pkgver and the archive's sum).
+#   0001: upstream (Realtek, in 7.3): no 2.4 GHz for the adapter; scanning
+#         there crashes its firmware and drops it off USB.
+#   0002: ours: opt-in steam_frame_lpi parameter (rtw89-steam-frame.conf).
+pkgname=rtw89-steam-frame
+_kernver=7.2.9-arch1-1
+_srcver=7.2.9
+pkgver=7.2.9.arch1
+pkgrel=1
+pkgdesc='rtw89 driver with Steam Frame Wireless Adapter fixes, for linux 7.2.9-arch1-1'
+arch=(x86_64)
+license=(GPL-2.0-only)
+url='https://github.com/ValveSoftware/SteamVR-for-Linux/issues/965'
+makedepends=(linux-headers zstd)
+backup=(etc/modprobe.d/rtw89-steam-frame.conf)
+# The archive's sum was checked against kernel.org's signature
+# (linux-7.2.9.tar.sign, Greg Kroah-Hartman 647F28654894E3BD457199BE38DBBDC86092693E).
+source=("https://cdn.kernel.org/pub/linux/kernel/v7.x/linux-$_srcver.tar.xz"
+        0001-wifi-rtw89-8852cu-add-quirk-to-disable-2.4-GHz-band.patch
+        0002-rtw89-steam_frame_lpi-parameter.patch
+        rtw89-steam-frame.conf)
+noextract=("linux-$_srcver.tar.xz")
+sha256sums=('b4c5dfbe51a364a6c7f03869200f88c8e1f77403539005f14b7fc6bc91b8d8ba'
+            'c1ecbcbd14770955137415e063b4c43311b3fc445bf3c905df2b9ef698b6e71d'
+            'd9e5d1f62b648c531531d943d617983b8ec76728e585174401d504f2419fdba3'
+            '57cebf4eaa10730a7d2f3a663e4896982d8db8a407d6d877616f811c0af2a640')
+
+_rtw89=drivers/net/wireless/realtek/rtw89
+
+prepare() {
+	rm -rf "linux-$_srcver"
+	tar -xf "linux-$_srcver.tar.xz" "linux-$_srcver/$_rtw89"
+	cd "linux-$_srcver"
+	patch -Np1 -i ../0001-wifi-rtw89-8852cu-add-quirk-to-disable-2.4-GHz-band.patch
+	patch -Np1 -i ../0002-rtw89-steam_frame_lpi-parameter.patch
+}
+
+build() {
+	make -C "/usr/lib/modules/$_kernver/build" M="$srcdir/linux-$_srcver/$_rtw89" modules
+}
+
+package() {
+	local dest="$pkgdir/usr/lib/modules/$_kernver/updates/rtw89-steam-frame" ko
+	install -dm755 "$dest"
+	for ko in "$srcdir/linux-$_srcver/$_rtw89"/*.ko; do
+		zstd -q -19 "$ko" -o "$dest/$(basename "$ko").zst"
+	done
+	install -Dm644 rtw89-steam-frame.conf "$pkgdir/etc/modprobe.d/rtw89-steam-frame.conf"
+}
