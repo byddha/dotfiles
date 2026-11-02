@@ -23,6 +23,13 @@ local rules = {
         no_anim    = true,
     },
     {
+        -- vicinae tab switching asks zen to raise itself; kept off globally so games
+        -- (Deadlock at round start) cannot steal focus and drop out of fullscreen
+        name              = "zen-focus-on-activate",
+        match             = { class = "^(zen)$" },
+        focus_on_activate = true,
+    },
+    {
         name   = "xdg-desktop-portal-gtk-dialog",
         match  = { class = "^(Xdg-desktop-portal-gtk)$" },
         float  = true,
@@ -84,18 +91,9 @@ local rules = {
     {
         name      = "special-chatapps",
         match     = {
-            class = "^(vesktop|chrome-web\\.whatsapp\\.com__-Default|chrome-teams\\.cloud\\.microsoft__-Default)$",
+            class = "^(vesktop|dev\\.vencord\\.Vesktop|chrome-web\\.whatsapp\\.com__-Default|chrome-teams\\.cloud\\.microsoft__-Default)$",
         },
         workspace = "special:chatapps silent",
-    },
-    {
-        name      = "special-chatapps-chromium-xwayland",
-        match     = {
-            class         = "^Chromium$",
-            initial_title = "^(web\\.whatsapp\\.com_/|teams\\.cloud\\.microsoft_/)$",
-        },
-        workspace = "special:chatapps silent",
-        float     = false
     },
     {
         name      = "special-gaming",
