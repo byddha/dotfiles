@@ -5,8 +5,9 @@
 # shellcheck disable=SC2034
 # shellcheck disable=SC2154
 pkgname=vicinae
-pkgver=0.29.1
-pkgrel=1.4
+pkgver=0.29.2
+pkgrel=1.1
+_commit=4e7af129ca89fbb6574c8409a4d32ad468c7161d
 pkgdesc="A focused launcher for your desktop — native, fast, extensible"
 arch=('x86_64' 'aarch64')
 url="https://github.com/vicinaehq/vicinae"
@@ -28,9 +29,7 @@ makedepends=(
   'cmake'
   'ninja'
   'npm'
-  'jq'
   'glaze'
-  'curl'
   'qt6-shadertools'
   'qt6-tools'
   'wayland-protocols'
@@ -45,7 +44,7 @@ source=(
   "vicinae-tab-primary-action.patch"
 )
 
-sha256sums=('ca79782e7c94faa9da1bd12ba1a361cea41970db781447773acb9a580a47cea8'
+sha256sums=('8836ab5f046a6f6b40c510e689834dd94c348129e102d867e07692c29b1da1dd'
             '196fc6a6afea06fc94d6ca4ff45c422bdef02aa25b8f2a80579dce27e56a2ae1'
             '8b79797c5440207c77dd1f4872c0a2c077257ed51617e3e270fce74249c149df'
             'd572d99bc7b0e0c77c7265dfa0bd1e3106fb5e03bb68d00e461dc3891601b6e4')
@@ -53,26 +52,19 @@ sha256sums=('ca79782e7c94faa9da1bd12ba1a361cea41970db781447773acb9a580a47cea8'
 prepare() {
   patch -d "$pkgname-$pkgver" -Np1 -i "$srcdir/vicinae-focus-after-close.patch"
   patch -d "$pkgname-$pkgver" -Np1 -i "$srcdir/vicinae-tab-primary-action.patch"
-
-  curl "https://api.github.com/repos/vicinaehq/vicinae/git/ref/tags/v${pkgver}" \
-    --output "${pkgname}-v${pkgver}-meta.yml" \
-    --silent \
-    --follow
 }
 
 build() {
-  SHA=$(jq .object.sha "${pkgname}-v${pkgver}-meta.yml" -r)
-
   cd $pkgname-$pkgver || exit
   cmake -G Ninja \
     -DVICINAE_GIT_TAG="v${pkgver}" \
-    -DVICINAE_GIT_COMMIT_HASH="${SHA:0:7}" \
+    -DVICINAE_GIT_COMMIT_HASH="${_commit:0:7}" \
     -DCMAKE_BUILD_TYPE=Release \
     -DVICINAE_PROVENANCE=aur \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -B build
 
-  cmake --build build
+  cmake --build build --parallel "${CMAKE_BUILD_PARALLEL_LEVEL:-8}"
 }
 
 package() {
