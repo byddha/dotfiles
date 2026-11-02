@@ -4,8 +4,8 @@
 # Contributor: Gabriel Fox <inbox@gabrielfox.dev>
 
 pkgname=(hyprland hyprpm)
-pkgver=0.56.2
-pkgrel=4.1
+pkgver=0.57.0
+pkgrel=3.1
 pkgdesc='a highly customizable dynamic tiling Wayland compositor'
 arch=(x86_64 aarch64)
 url="https://github.com/hyprwm/${pkgname^}"
@@ -21,10 +21,12 @@ depends=(cairo # libcairo.so
          hyprgraphics libhyprgraphics.so
          hyprland-guiutils
          hyprlang libhyprlang.so
-         hyprutils libhyprutils.so
+         'hyprutils>=0.14.3' libhyprutils.so
          hyprwire libhyprwire.so
          lcms2 liblcms2.so
+         libcanberra libcanberra.so
          libdrm # libdrm.so
+         libei libeis.so
          libglvnd libEGL.so libGLESv2.so
          libinput # libinput.so
          libx11
@@ -41,6 +43,8 @@ depends=(cairo # libcairo.so
          pango libpango-1.0.so libpangocairo-1.0.so
          pixman libpixman-1.so
          re2 libre2.so
+         readline libreadline.so
+         sdbus-cpp libsdbus-c++.so
          tomlplusplus libtomlplusplus.so
          util-linux-libs libuuid.so
          wayland libwayland-server.so
@@ -54,8 +58,9 @@ depends=(cairo # libcairo.so
          xcb-util-wm # libxcb-ewmh.so  libxcb-icccm.so 
          xorg-xwayland)
 makedepends=(cmake
+             git
              glaze
-             hyprland-protocols
+             'hyprland-protocols>=0.8.0'
              hyprwayland-scanner
              meson
              ninja
@@ -64,16 +69,20 @@ optdepends=('hyprpm: build and install plugins'
             'hyprshutdown: clean logout and shutdown helper'
             'xdg-desktop-portal-hyprland: xdg-desktop-portal backend for hyprland')
 provides=(wayland-compositor)
-_archive="${pkgname^}-$pkgver"
-source=("$_archive.tar.gz::$url/releases/download/v$pkgver/source-v$pkgver.tar.gz"
+# Hyprland v0.57.0, pinned to its release commit.
+_commit=0aa6745f705f2c4b0a5004eb019ef76e5bbdb426
+source=("hyprland::git+$url.git#commit=$_commit"
+        "udis86::git+https://github.com/canihavesomecoffee/udis86.git"
         hyprland-capture-offscreen-windows.patch)
-sha256sums=('03ad3f5ef152ff44116ffd56fcf808486211ecabf4f0ba567108ee746ba5cd2e'
-            '4da8ae18a8fd02f0c5dae0b6fbf693b0430bfcb568a758562e3ba7e5623e2125')
+sha256sums=('SKIP'
+            'SKIP'
+            'a6ea00116d09eb85f98297acfde85d29bf5b421b87f41e42fa3e97969169cada')
 
 prepare() {
-	ln -sf hyprland-source "$_archive"
-	cd "$_archive"
-	sed -i -e '/^release:/{n;s/-D/-DCMAKE_SKIP_RPATH=ON -D/}' Makefile
+	cd hyprland
+	git submodule init subprojects/udis86
+	git config submodule.subprojects/udis86.url "$srcdir/udis86"
+	git -c protocol.file.allow=always submodule update subprojects/udis86
 	sed -i -e '/find_package.glaze/s/7...<8 //' {.,hyprpm,start}/CMakeLists.txt
 	# toplevel export: also copy windows wholly off their monitor (a scrolling layout's
 	# other columns), so shells can preview them
@@ -81,12 +90,16 @@ prepare() {
 }
 
 build() {
-	cd "$_archive"
-	make release PREFIX=/usr
+	cd hyprland
+	cmake -S . -B build \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_SKIP_RPATH=ON
+	cmake --build build --parallel "${CMAKE_BUILD_PARALLEL_LEVEL:-8}"
 }
 
 package_hyprland() {
-	cd "$_archive"
+	cd hyprland
 	make DESTDIR="$pkgdir" install
 	rm -fv "$pkgdir/usr/include/hyprland/src/version.h.in"
 	find $pkgdir -name '*hyprpm*' -delete
@@ -102,7 +115,7 @@ package_hyprpm() {
 	         hyprland-protocols
 	         hyprwayland-scanner
 	         meson)
-	cd "$_archive"
+	cd hyprland
 	make DESTDIR="$pkgdir" install
 	find $pkgdir -type f,l -not -name '*hyprpm*' -delete
 	find $pkgdir -type d -empty -delete

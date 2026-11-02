@@ -5,3 +5,7 @@ pkg/
 .SRCINFO
 # git sources that makepkg mirrors next to the PKGBUILD
 bida-bloqlight/bloqlight/
+hyprland/hyprland/
+hyprland/udis86/
+# Legacy source cache still present from the 0.56.2 builds.
+hyprland/hyprland-protocols/

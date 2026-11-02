@@ -1,7 +1,7 @@
 --- a/src/managers/screenshare/ScreenshareManager.cpp	2026-10-01 11:39:48.439523208 +0300
 +++ b/src/managers/screenshare/ScreenshareManager.cpp	2026-10-01 11:39:48.446542385 +0300
-@@ -32,12 +32,6 @@
-         if (frame->m_session->monitor() != monitor)
+@@ -37,12 +37,6 @@
+         if (!copyFBPrepared && frame->m_session->m_type != SHARE_WORKSPACE)
              return;
  
 -        if (frame->m_session->m_type == SHARE_WINDOW) {
