@@ -4,6 +4,22 @@ Started 2026-10-11, against stutters and pauses in Beat Saber streamed from
 the PC to the Steam Frame over its Wireless Adapter (28de:2432,
 `rtw89_8852cu`), kernel 7.2.9-arch1-1, RX 9070 XT.
 
+## Prepared update (2026-11-02)
+
+- Helper `1.4-1.1`, built from Valve's official SteamOS source package
+  `1.4-1`. Keeps the active-session-only polkit policy and allows the MCS
+  rate cap to fail. Upstream 1.4 filters out P2P interfaces and no longer
+  enables aggressive EDCA on the host: Valve now sets it on the AP side.
+- Driver `rtw89-steam-frame 7.2.11.arch1-1`, rebuilt for
+  `7.2.11-arch1-1` with both patches. The uncompressed kernel archive's
+  detached signature was verified with Greg KH's key, retrieved through
+  kernel.org WKD: `647F28654894E3BD457199BE38DBBDC86092693E`.
+- These archives are ready to install; check `pacman -Q` for installed
+  versions. The original setup and measurements below are historical.
+- For AUR-only upgrades, use
+  `paru -Sua --ignore vicinae,holo-realtek-firmware-toggles`: `-a` excludes
+  the local `[bida]` PKGBUILD repository from upgrade resolution.
+
 ## What the logs showed
 
 - vrlink "stream reset" storms (`Reset video stream because we had a stream
@@ -28,7 +44,7 @@ The known issue: https://github.com/ValveSoftware/SteamVR-for-Linux/issues/965
    ~4-7 dBm (Windows: 13-16 dBm), so the link retransmits constantly.
 3. vrlink on Linux recovers badly from short stalls (only Valve can fix).
 
-## Done
+## Original setup (2026-10-11)
 
 1. This package: Valve's own helper from the SteamOS sources
    (steamdeck-packages.steamos.cloud, holo-main, 1.3-3; the PKGBUILD checks the

@@ -5,22 +5,22 @@
 # low latency mode goes on when the MCS cap fails (iw always sends a 2.4 GHz
 # mask, which the kernel rejects once rtw89-steam-frame drops that band).
 pkgname=holo-realtek-firmware-toggles
-pkgver=1.3
-pkgrel=4
-_valverel=3
+pkgver=1.4
+pkgrel=1.1
+_valverel=1
 pkgdesc='Tool to toggle realtek rtw89 driver bits (Valve SteamOS helper)'
 arch=(any)
 license=(MIT)
 url='https://gitlab.steamos.cloud/holo/holo'
 depends=(bash iw polkit)
 source=("https://steamdeck-packages.steamos.cloud/archlinux-mirror/sources/holo-main/$pkgname-$pkgver-$_valverel.src.tar.gz")
-sha256sums=('667531fcc3bd01360f03f9b7fb91b7a98c78da527931adaea02c2fb9d22bb422')
+sha256sums=('d99ed9c10841495ea0ae2cd8919669c35ef9f22e63f50259ef8914c487f427f0')
 
 prepare() {
 	cd "$pkgname"
 	# The sums from Valve's own PKGBUILD inside the source archive.
 	sha256sum -c - <<-EOF
-	a73258ba8bef37d7e993708376cd1caa7cb30816886791ee580c55400164352f  holo-realtek-firmware-toggles
+	0534273eb532593bfe977835666f88a9f50f5f2edd8d6792f55202f65ba757f8  holo-realtek-firmware-toggles
 	7e1c21c1b23b67d7baea989b85f96a8d8c611778b09449fb181619064cf7231e  org.valve.holo-realtek-firmware-toggles.policy
 	EOF
 	sed -i -e 's|<allow_any>yes</allow_any>|<allow_any>no</allow_any>|' \

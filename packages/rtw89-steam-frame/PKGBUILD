@@ -6,24 +6,25 @@
 #         there crashes its firmware and drops it off USB.
 #   0002: ours: opt-in steam_frame_lpi parameter (rtw89-steam-frame.conf).
 pkgname=rtw89-steam-frame
-_kernver=7.2.9-arch1-1
-_srcver=7.2.9
-pkgver=7.2.9.arch1
+_kernver=7.2.11-arch1-1
+_srcver=7.2.11
+pkgver=7.2.11.arch1
 pkgrel=1
-pkgdesc='rtw89 driver with Steam Frame Wireless Adapter fixes, for linux 7.2.9-arch1-1'
+pkgdesc='rtw89 driver with Steam Frame Wireless Adapter fixes, for linux 7.2.11-arch1-1'
 arch=(x86_64)
 license=(GPL-2.0-only)
 url='https://github.com/ValveSoftware/SteamVR-for-Linux/issues/965'
 makedepends=(linux-headers zstd)
 backup=(etc/modprobe.d/rtw89-steam-frame.conf)
-# The archive's sum was checked against kernel.org's signature
-# (linux-7.2.9.tar.sign, Greg Kroah-Hartman 647F28654894E3BD457199BE38DBBDC86092693E).
+# SHA256 checked against kernel.org; the uncompressed archive's detached
+# signature was verified with Greg KH's key, retrieved through kernel.org WKD:
+# 647F28654894E3BD457199BE38DBBDC86092693E (linux-7.2.11.tar.sign).
 source=("https://cdn.kernel.org/pub/linux/kernel/v7.x/linux-$_srcver.tar.xz"
         0001-wifi-rtw89-8852cu-add-quirk-to-disable-2.4-GHz-band.patch
         0002-rtw89-steam_frame_lpi-parameter.patch
         rtw89-steam-frame.conf)
 noextract=("linux-$_srcver.tar.xz")
-sha256sums=('b4c5dfbe51a364a6c7f03869200f88c8e1f77403539005f14b7fc6bc91b8d8ba'
+sha256sums=('fd0fc479f983a8c05313f13e9c36330fe6651cf725396748c40d5cd93fa1e6a4'
             'c1ecbcbd14770955137415e063b4c43311b3fc445bf3c905df2b9ef698b6e71d'
             'd9e5d1f62b648c531531d943d617983b8ec76728e585174401d504f2419fdba3'
             '57cebf4eaa10730a7d2f3a663e4896982d8db8a407d6d877616f811c0af2a640')
