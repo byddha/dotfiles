@@ -1,0 +1,86 @@
+#!/usr/bin/env zsh
+# gitkeep <url>: archive a repo as <name>/{<name>.git, code/, submodules/}
+
+_gitkeep_norm() {  # also rewrites git:// (dead on GitHub since 2022), http and ssh forms to https
+  local u=${1%/}
+  u=${u/#git:\/\//https://}
+  u=${u/#http:\/\//https://}
+  u=${u/#ssh:\/\/git@/https://}
+  [[ $u == git@*:* ]] && u=https://${${u#git@}/://}
+  print -r -- ${u%.git}
+}
+
+_gitkeep_canon() {  # follow GitHub renames/transfers so old and new names land in one mirror
+  local u=$(_gitkeep_norm $1) c
+  [[ $u == https://github.com/*/* ]] && (( $+commands[gh] )) &&
+    c=$(gh api repos/${u#https://github.com/} --jq .html_url 2>/dev/null) && u=$c
+  print -r -- $u
+}
+
+_gitkeep_same() { [[ ${(L)$(_gitkeep_norm $1)} == ${(L)$(_gitkeep_norm $2)} ]] }
+
+_gitkeep_dest() {  # <base>/<name>.git, or <base>/<owner>-<name>.git if taken by another repo
+  local base=$1 url=$2 name=${2:t}
+  if [[ -d $base/$name.git ]] && ! _gitkeep_same "$(git -C $base/$name.git remote get-url origin)" $url; then
+    name=${${url%/*}##*[/:]}-$name
+  fi
+  print -r -- $base/$name.git
+}
+
+_gitkeep_mirror() {
+  local url=$1 dest=$2 wiki=${2%.git}.wiki.git
+  if [[ -d $dest ]]; then
+    git -C $dest remote update || return
+    [[ -d $wiki ]] && git -C $wiki remote update
+  else
+    # no prompt: deleted repos make GitHub ask for credentials and hang
+    GIT_TERMINAL_PROMPT=0 git clone --mirror $url $dest || return
+    GIT_TERMINAL_PROMPT=0 git clone --mirror $url.wiki.git $wiki 2>/dev/null
+  fi
+  return 0
+}
+
+# Main repo: every submodule URL in its history. Nested submodules: only their default
+# branch's, otherwise big deps (protobuf, fmt) drag in a decade of dead URLs.
+_gitkeep_suburls() {
+  if [[ $2 == all ]]; then
+    git -C $1 log --all -p -- .gitmodules | grep -oP '^\+\s*url\s*=\s*\K\S+'
+  else
+    git -C $1 show HEAD:.gitmodules 2>/dev/null | grep -oP '^\s*url\s*=\s*\K\S+'
+  fi | sort -u
+}
+
+gitkeep() {
+  local url=$(_gitkeep_canon $1) name dir main repo sub origin dest mode=all
+  name=${url:t}; dir=$name
+  if [[ -d $dir/$name.git ]] && ! _gitkeep_same "$(git -C $dir/$name.git remote get-url origin)" $url; then
+    dir=${${url%/*}##*[/:]}-$name
+  fi
+  main=$PWD/$dir/$name.git
+  mkdir -p $dir
+  _gitkeep_mirror $url $main || return
+
+  if [[ -d $dir/code ]]; then
+    git -C $dir/code checkout -q --detach $(git -C $main rev-parse HEAD)
+  else
+    git -C $main worktree add -q --detach $PWD/$dir/code HEAD
+  fi
+
+  local -A seen=(${(L)url} 1); local -a queue=($main)
+  while (( $#queue )); do
+    repo=$queue[1]; shift queue
+    origin=$(_gitkeep_norm "$(git -C $repo remote get-url origin)")
+    for sub in $(_gitkeep_suburls $repo $mode); do
+      [[ $sub == ../* ]] && sub=${origin%/*}/${sub#../}
+      sub=$(_gitkeep_canon $sub)
+      [[ -n $seen[${(L)sub}] ]] && continue; seen[${(L)sub}]=1
+      dest=$(_gitkeep_dest $PWD/$dir/submodules $sub)
+      mkdir -p ${dest:h}
+      _gitkeep_mirror $sub $dest && queue+=($dest)
+    done
+    mode=current
+  done
+}
+
+(( $# == 1 )) || { print -u2 "usage: gitkeep <repo-url>"; exit 1 }
+gitkeep $1
