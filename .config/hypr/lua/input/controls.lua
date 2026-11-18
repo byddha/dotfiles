@@ -32,3 +32,9 @@ hl.device({
 hl.gesture({ fingers = 3, direction = "swipe", action = "scroll_move" })
 hl.gesture({ fingers = 3, direction = "swipe", mods = "ALT", action = "move" })
 hl.gesture({ fingers = 4, direction = "horizontal", action = "workspace" })
+
+-- Software cursor: xdph has no cursor metadata mode, so with hardware cursors
+-- screen captures (SteamVR desktop view, screen share) show no moving cursor.
+hl.config({
+    cursor = { no_hardware_cursors = 1 },
+})
