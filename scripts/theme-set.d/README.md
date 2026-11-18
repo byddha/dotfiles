@@ -44,6 +44,26 @@ Templates are inert until step 3 — the file just sits there.
 | `zen.sh` | ours covers 56 CSS variables vs their 13, including `about:preferences` and newtab |
 | `btop.sh` `konsole.sh` | DMS has no template for these |
 
+## Lazygit / Delta
+
+`lazygit.py` runs automatically after the DMS templates when `theme-set` applies
+a theme. It starts the configured Neovim once, loads CodeDiff if available, and
+exports its effective line/word diff backgrounds plus syntax colors. The syntax
+palette is mapped to TextMate scopes; Delta still uses Syntect, not Tree-sitter.
+
+Generated files live in `~/.cache/theme/lazygit/`: `delta.gitconfig`, the exported
+`theme-set-nvim.tmTheme`, and a private `bat/` asset cache. The Lazygit renderer
+reads those files, so no theme-specific hex values belong in its tracked config.
+The global Git/Delta configuration and the normal bat cache are not changed.
+
+Requires `nvim`, `delta`, and `bat` (with a cache format compatible with Delta).
+A generation/rendering failure leaves the previous palette in place. Refresh or
+reopen Lazygit after switching themes. To re-export only this app's theme:
+
+```bash
+~/dotfiles/scripts/theme-set.d/lazygit.py
+```
+
 ## Flatpak
 
 Sandboxed apps see none of the generated files by default. One-time:
