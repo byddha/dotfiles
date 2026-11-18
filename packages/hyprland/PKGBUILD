@@ -5,7 +5,7 @@
 
 pkgname=(hyprland hyprpm)
 pkgver=0.57.0
-pkgrel=3.1
+pkgrel=3.2
 pkgdesc='a highly customizable dynamic tiling Wayland compositor'
 arch=(x86_64 aarch64)
 url="https://github.com/hyprwm/${pkgname^}"
@@ -73,10 +73,12 @@ provides=(wayland-compositor)
 _commit=0aa6745f705f2c4b0a5004eb019ef76e5bbdb426
 source=("hyprland::git+$url.git#commit=$_commit"
         "udis86::git+https://github.com/canihavesomecoffee/udis86.git"
-        hyprland-capture-offscreen-windows.patch)
+        hyprland-capture-offscreen-windows.patch
+        hyprland-scrolling-start-alignment.patch)
 sha256sums=('SKIP'
             'SKIP'
-            'a6ea00116d09eb85f98297acfde85d29bf5b421b87f41e42fa3e97969169cada')
+            'a6ea00116d09eb85f98297acfde85d29bf5b421b87f41e42fa3e97969169cada'
+            '4ddb75064114c97410699868b50d5069b2f2ed30830f2d1414affd86093512f7')
 
 prepare() {
 	cd hyprland
@@ -87,6 +89,8 @@ prepare() {
 	# toplevel export: also copy windows wholly off their monitor (a scrolling layout's
 	# other columns), so shells can preview them
 	patch -Np1 -i "$srcdir/hyprland-capture-offscreen-windows.patch"
+	# Allow fitting scrolling columns to stay at the starting edge.
+	patch -Np1 -i "$srcdir/hyprland-scrolling-start-alignment.patch"
 }
 
 build() {

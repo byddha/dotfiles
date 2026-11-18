@@ -1,0 +1,28 @@
+--- a/src/config/values/ConfigValues.cpp
++++ b/src/config/values/ConfigValues.cpp
+@@ -816,6 +816,8 @@
+ 
+         MS<Bool>("scrolling:fullscreen_on_one_column", "when enabled, a single column on a workspace will always span the entire screen.", true,
+                  {.refresh = Supplementary::REFRESH_LAYOUTS}),
++        MS<Bool>("scrolling:center_content", "center scrolling content when it fits the viewport; otherwise align to the starting edge", true,
++                 {.refresh = Supplementary::REFRESH_LAYOUTS}),
+         MS<Float>("scrolling:column_width", "the default width of a column.", 0.5, {.min = 0.1, .max = 1.0}),
+         MS<Int>("scrolling:focus_fit_method", "When a column is focused, what method should be used to bring it into view", 1,
+                 {.min = 0, .max = 1, .map = OptionMap{{"center", 0}, {"fit", 1}}}),
+--- a/src/layout/algorithm/tiled/scrolling/ScrollTapeController.cpp
++++ b/src/layout/algorithm/tiled/scrolling/ScrollTapeController.cpp
+@@ -228,8 +228,12 @@
+     if (isBeingDragged())
+         return m_offset;
+ 
+-    // if the content fits in viewport, center it
+-    if (maxExtent < usablePrimary)
++    // Keep fitting content centered or aligned to the direction's starting edge.
++    // Include exact fits in start alignment to discard stale camera offsets.
++    static const auto PCENTERCONTENT = CConfigValue<Hyprlang::INT>("scrolling:center_content");
++    if (!*PCENTERCONTENT && maxExtent <= usablePrimary)
++        setOffset(0.0);
++    else if (*PCENTERCONTENT && maxExtent < usablePrimary)
+         setOffset(std::round((maxExtent - usablePrimary) / 2.0));
+ 
+     // if the offset is negative but we already extended and fit method is not center, reset offset to 0
