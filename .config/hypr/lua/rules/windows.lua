@@ -83,11 +83,11 @@ local rules = {
     --     match       = { float = false, workspace = "f[1]" },
     --     border_size = 0,
     -- },
-    -- {
-    --     name            = "zen-scrolling-width",
-    --     match           = { initial_class = "^(zen)$" },
-    --     scrolling_width = 1,
-    -- },
+    {
+        name            = "zen-scrolling-width",
+        match           = { initial_class = "^(zen)$" },
+        scrolling_width = 1,
+    },
     {
         name      = "special-chatapps",
         match     = {
