@@ -1,4 +1,7 @@
 hl.config({
+    general = {
+        no_focus_fallback = true,
+    },
     dwindle   = {
         preserve_split         = true,
         split_width_multiplier = 1.3,

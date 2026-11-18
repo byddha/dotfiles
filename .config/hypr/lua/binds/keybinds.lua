@@ -31,15 +31,15 @@ local app_binds = {
 }
 
 
+local focus_left      = hl.dsp.focus({ direction = "l" })
+local focus_right     = hl.dsp.focus({ direction = "r" })
 local focus_binds     = {
-    { "<D-h>",           hl.dsp.layout("focus l"),           "Move focus left" },
-    { "<D-l>",           hl.dsp.layout("focus r"),           "Move focus right" },
-    -- { "<D-h>",           hl.dsp.focus({ direction = "l" }),  "Move focus up" },
-    -- { "<D-l>",           hl.dsp.focus({ direction = "r" }),  "Move focus down" },
+    { "<D-h>",           focus_left,                         "Move focus left" },
+    { "<D-l>",           focus_right,                        "Move focus right" },
     { "<D-k>",           hl.dsp.focus({ direction = "u" }),  "Move focus up" },
     { "<D-j>",           hl.dsp.focus({ direction = "d" }),  "Move focus down" },
-    { "<D-mouse_up>",    hl.dsp.layout("focus l") },
-    { "<D-mouse_down>",  hl.dsp.layout("focus r") },
+    { "<D-mouse_up>",    focus_left },
+    { "<D-mouse_down>",  focus_right },
     { "<D-mouse_left>",  hl.dsp.focus({ workspace = "e-1" }) },
     { "<D-mouse_right>", hl.dsp.focus({ workspace = "e+1" }) },
 }
