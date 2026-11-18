@@ -14,29 +14,58 @@
    "input_server": {
       "enabled": false
    },
+   "global_shortcuts": {
+      "toggle": "super+f"
+   },
+   "theme": {
+      "light": {
+         "name": "theme-set"
+      },
+      "dark": {
+         "name": "theme-set"
+      }
+   },
    "launcher_window": {
       "layer_shell": {
          "keyboard_interactivity": "exclusive"
       }
    },
-   "global_shortcuts": {
-      "toggle": "super+f"
-   },
    "providers": {
       "applications": {
          "entrypoints": {
-            "dev.vencord.Vesktop": { "alias": "d" },
-            "steam": { "alias": "s" },
-            "webapp-teams": { "alias": "t" },
-            "webapp-whatsapp": { "alias": "wh" },
-            "zen": { "alias": "z", "preferences": { "defaultAction": "launch" } },
-            "yazi": { "alias": "w", "preferences": { "defaultAction": "launch" } },
-            "org.kde.dolphin": { "alias": "ww", "preferences": { "defaultAction": "launch" } }
-         }
-      },
-      "theme": {
-         "entrypoints": {
-            "set": { "enabled": false }
+            "bs-manager": {
+               "alias": "beat saber"
+            },
+            "dev.vencord.Vesktop": {
+               "alias": "d"
+            },
+            "org.kde.dolphin": {
+               "alias": "ww",
+               "preferences": {
+                  "defaultAction": "launch"
+               }
+            },
+            "steam": {
+               "alias": "s"
+            },
+            "webapp-teams": {
+               "alias": "t"
+            },
+            "webapp-whatsapp": {
+               "alias": "wh"
+            },
+            "yazi": {
+               "alias": "w",
+               "preferences": {
+                  "defaultAction": "launch"
+               }
+            },
+            "zen": {
+               "alias": "z",
+               "preferences": {
+                  "defaultAction": "launch"
+               }
+            }
          }
       },
       "files": {
@@ -47,14 +76,13 @@
                "/home/bida/Pictures"
             ]
          }
-      }
-   },
-   "theme": {
-      "light": {
-         "name": "theme-set"
       },
-      "dark": {
-         "name": "theme-set"
+      "theme": {
+         "entrypoints": {
+            "set": {
+               "enabled": false
+            }
+         }
       }
    }
 }
