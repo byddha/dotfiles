@@ -15,3 +15,8 @@ hl.config({
         follow_min_visible       = 1.0,
     },
 })
+
+-- The local package adds this option; keep config compatible until it is running.
+if hl.get_config("scrolling:center_content") ~= nil then
+    hl.config({ scrolling = { center_content = false } })
+end
